@@ -34,6 +34,8 @@ public class AudioEntry
 
     [Range(0f, 1f)] public float volume = 1f;
     [Range(0.1f, 3f)] public float pitchVariation = 1f;
+    [Tooltip("Continuously slow playback and lower pitch with gameplay slow motion. Trigger timing remains action-frame based.")]
+    public bool slowMotionAware;
 
     public Color trackColor = new Color(0.2f, 0.8f, 0.4f); // green
 }

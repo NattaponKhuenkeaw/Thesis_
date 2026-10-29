@@ -31,6 +31,7 @@ public class HitBoxDamage : MonoBehaviour
     private PlayerCombat rewardOwner;
     private CharacterObject rewardCharacter;
     private AuraEnergyRewardClaim auraEnergyRewardClaim;
+    private CombatExecutionContext execution;
     private DamageRequest currentDamageRequest;
     private DamageResult currentDamageResult;
 
@@ -133,7 +134,8 @@ public class HitBoxDamage : MonoBehaviour
         AdditionalDamageEffectDefinition[] additionalDamageEffects,
         PlayerCombat sourceCombat,
         CharacterObject sourceCharacter,
-        AuraEnergyRewardClaim actionRewardClaim)
+        AuraEnergyRewardClaim actionRewardClaim,
+        CombatExecutionContext sourceExecution = null)
     {
         currentAttackerStats = attackerStats;
         currentSourceAttack = Mathf.Max(0f, sourceAttack);
@@ -143,6 +145,7 @@ public class HitBoxDamage : MonoBehaviour
         rewardOwner = sourceCombat;
         rewardCharacter = sourceCharacter;
         auraEnergyRewardClaim = actionRewardClaim;
+        execution = sourceExecution;
         currentIsCrit = false;
         currentResolvedDamage = currentDamage;
     }
@@ -156,6 +159,18 @@ public class HitBoxDamage : MonoBehaviour
         rewardOwner = null;
         rewardCharacter = null;
         auraEnergyRewardClaim = null;
+        execution = null;
+    }
+
+    public bool IsConfiguredFor(NormalHitbox hitbox) => ReferenceEquals(currentNormalHitbox, hitbox);
+
+    public void CopyHitHistoryTo(HitBoxDamage destination)
+    {
+        if (destination == null) return;
+        foreach (EnemyController enemy in hitEnemiesThisActivation)
+            destination.hitEnemiesThisActivation.Add(enemy);
+        destination.hasTriggeredHitStopThisActivation = hasTriggeredHitStopThisActivation;
+        destination.hasTriggeredShakeThisActivation = hasTriggeredShakeThisActivation;
     }
 
     public void ResetActivationState()
@@ -298,7 +313,6 @@ public class HitBoxDamage : MonoBehaviour
         runtimeContext.damageDelivery = DamageDelivery.Primary;
         RuntimeEffectDamageInput damageInput = BuildRuntimeDamageInput(runtimeContext, currentDamage, enemy);
         ApplyRuntimeDamageInputModifiers(damageInput);
-        ApplyActionDamageInputModifiers(damageInput);
         runtimeContext.damage = damageInput.baseDamage;
         currentDamageRequest = new DamageRequest
         {
@@ -312,6 +326,7 @@ public class HitBoxDamage : MonoBehaviour
             defenderDefense = damageInput.defenderDefense,
             defenderDamageResistance = damageInput.defenderDamageResistance,
             descriptor = new DamageDescriptor(DamageDelivery.Primary, elementType),
+            execution = execution,
             category = sourceCategory,
             actionId = sourceActionId,
             actionName = sourceActionName,
@@ -678,29 +693,6 @@ public class HitBoxDamage : MonoBehaviour
         }
     }
 
-    private void ApplyActionDamageInputModifiers(RuntimeEffectDamageInput input)
-    {
-        string stepName = sourceStepData != null ? sourceStepData.stepName : null;
-        if (HasMatchingPassiveController())
-        {
-            passiveController.ModifyActionDamageInput(
-                sourceCategory,
-                sourceActionId,
-                sourceActionName,
-                stepName,
-                input);
-            return;
-        }
-
-        DeployedCharacterDamageModifierEvaluator.ModifyDamageInput(
-            rewardCharacter,
-            sourceCategory,
-            sourceActionId,
-            sourceActionName,
-            stepName,
-            input);
-    }
-
     private bool HasMatchingPassiveController()
     {
         return passiveController != null
@@ -758,6 +750,8 @@ public class HitBoxDamage : MonoBehaviour
 
     private int GetConfiguredHitstopFrames()
     {
+        if (currentGrabHitbox != null && currentGrabHitbox.suppressImpactFeedback
+            || currentNormalHitbox != null && currentNormalHitbox.suppressImpactFeedback) return 0;
         if (currentGrabHitbox != null)
             return currentIsCrit ? Mathf.Max(2, currentGrabHitbox.impactFreezeFrames) : currentGrabHitbox.impactFreezeFrames;
 

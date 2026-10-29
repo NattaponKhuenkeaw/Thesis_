@@ -36,6 +36,31 @@ public class CharacterPassiveController : MonoBehaviour
     private PlayerMetaProgression subscribedMetaProgression;
 
     public CombatRuntimeState RuntimeState => runtimeState;
+    public CombatMeterDefinition CombatMeter => GetKitDefinition()?.combatMeter;
+
+    public int GetMeterBoxCount()
+    {
+        CombatMeterDefinition meter = CombatMeter;
+        if (meter == null || !meter.IsConfigured) return 0;
+        int boxes = meter.baseBoxes;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            if (node?.meterCapacityModifiers == null) continue;
+            foreach (PassiveMeterCapacityModifier modifier in node.meterCapacityModifiers)
+                if (modifier != null && modifier.counterId == meter.counterId)
+                    boxes += modifier.additionalBoxes;
+        }
+        return Mathf.Clamp(boxes, 1, Mathf.Max(1, meter.maximumBoxes));
+    }
+
+    public void ClampCombatMeter()
+    {
+        CombatMeterDefinition meter = CombatMeter;
+        if (meter == null || !meter.IsConfigured || runtimeState == null) return;
+        int current = runtimeState.GetCounter(meter.counterId);
+        int clamped = Mathf.Clamp(current, 0, GetMeterBoxCount() * Mathf.Max(1, meter.pointsPerBox));
+        if (current != clamped) runtimeState.SetCounter(meter.counterId, clamped);
+    }
     public PlayerMetaProgression MetaProgression => metaProgression;
 
     void Awake()
@@ -62,6 +87,7 @@ public class CharacterPassiveController : MonoBehaviour
         BindMetaProgressionEvents();
         InvalidatePotentialCaches();
         RebuildHooks();
+        ClampCombatMeter();
     }
 
     public void InitializeFromCharacterData()
@@ -79,6 +105,7 @@ public class CharacterPassiveController : MonoBehaviour
         InvalidatePotentialCaches();
         RebuildHooks();
         RefreshConditionalStateEffects();
+        ClampCombatMeter();
     }
 
     public CharacterKitDefinition GetKitDefinition()
@@ -387,6 +414,21 @@ public class CharacterPassiveController : MonoBehaviour
         return Mathf.Max(0f, result);
     }
 
+    public float ModifyActionCriticalRate(AttackCategory category, string actionId, string actionName, string stepName, float baseValue)
+    {
+        float result = baseValue;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            if (node?.actionModifiers == null) continue;
+            foreach (PassiveActionModifierDefinition modifier in node.actionModifiers)
+            {
+                if (modifier != null && modifier.Matches(category, actionId, actionName, stepName, runtimeState))
+                    result = ApplyValueModifier(result, modifier.criticalRateOperation, modifier.criticalRateValue);
+            }
+        }
+        return Mathf.Clamp(result, 0f, 100f);
+    }
+
     public float ModifyActionCriticalDamage(AttackCategory category, string actionId, string actionName, float baseValue)
     {
         float result = baseValue;
@@ -541,7 +583,7 @@ public class CharacterPassiveController : MonoBehaviour
                     continue;
                 }
 
-                if (modifier.ignoreDefense)
+                if (modifier.ignoreDefense && (!modifier.ignoreDefenseRequiresCriticalHit || input.context?.isCriticalHit == true))
                 {
                     input.defenderDefense = 0f;
                 }
@@ -930,9 +972,11 @@ public class CharacterPassiveController : MonoBehaviour
         NotifyActionStarted(category, null, actionName, stepData);
     }
 
-    public void NotifyActionStarted(AttackCategory category, string actionId, string actionName, AttackStepData stepData)
+    public void NotifyActionStarted(AttackCategory category, string actionId, string actionName, AttackStepData stepData,
+        CombatExecutionContext execution = null)
     {
         PassiveEventContext context = BuildContext(category, actionId, actionName, stepData, null);
+        context.actionStartExecution = execution;
         ApplyTriggeredEffects(PassiveTriggerType.OnActionStarted, context);
 
         for (int i = 0; i < activeHooks.Count; i++)
@@ -1514,7 +1558,7 @@ public class CharacterPassiveController : MonoBehaviour
 
         if (inventory == null)
         {
-            if (applyTarget == RuntimeEffectApplyTarget.Self
+            if ((applyTarget == RuntimeEffectApplyTarget.Self || applyTarget == RuntimeEffectApplyTarget.Allies)
                 && MatchesRuntimeEffectTarget(effect, sourceCharacter))
             {
                 if (resolvedRecipe != null)
@@ -2544,6 +2588,7 @@ public class CharacterPassiveController : MonoBehaviour
 
         InvalidatePotentialCaches();
         RebuildHooks();
+        ClampCombatMeter();
     }
 
     private PassiveEventContext BuildContext(
@@ -2759,7 +2804,7 @@ public class CharacterPassiveController : MonoBehaviour
                 runtimeState.SetCounter(effect.counterId, effect.value);
                 break;
             case PassiveCounterOperation.Add:
-                runtimeState.AddCounter(effect.counterId, effect.value);
+                runtimeState.AddCounter(effect.counterId, ModifyCounterGain(effect.counterId, effect.value));
                 break;
             case PassiveCounterOperation.Subtract:
                 runtimeState.AddCounter(effect.counterId, -effect.value);
@@ -2767,7 +2812,39 @@ public class CharacterPassiveController : MonoBehaviour
             case PassiveCounterOperation.Reset:
                 runtimeState.SetCounter(effect.counterId, 0);
                 break;
+            case PassiveCounterOperation.Transfer:
+                runtimeState.TransferCounter(effect.counterId, effect.value, effect.destinationCounterId, effect.destinationValue);
+                break;
         }
+        ClampCombatMeter();
+    }
+
+    private int ModifyCounterGain(string counterId, int value)
+    {
+        if (value <= 0) return value;
+        float result = value;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            if (node?.counterGainModifiers == null) continue;
+            foreach (PassiveCounterGainModifierDefinition modifier in node.counterGainModifiers)
+            {
+                if (modifier == null || !string.Equals(modifier.counterId, counterId, StringComparison.Ordinal)) continue;
+                bool requirementsMet = true;
+                if (modifier.requiredRuntimeEffectStacks != null)
+                {
+                    foreach (RuntimeEffectStackRequirement requirement in modifier.requiredRuntimeEffectStacks)
+                    {
+                        if (requirement != null && !requirement.Matches(this))
+                        {
+                            requirementsMet = false;
+                            break;
+                        }
+                    }
+                }
+                if (requirementsMet) result *= Mathf.Max(0f, modifier.multiplier);
+            }
+        }
+        return Mathf.Max(0, Mathf.RoundToInt(result));
     }
 
     public void ClearActionAvailabilityWindow(AttackCategory category, string actionId, string actionName)

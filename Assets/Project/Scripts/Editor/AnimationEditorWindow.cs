@@ -23,6 +23,9 @@ public class AnimationEditorWindow : EditorWindow
     private GameObject previewInstance;
     private int selectedSceneHitboxIndex = -1;
     private Dictionary<VFXEntry, GameObject> vfxPreviewInstances = new Dictionary<VFXEntry, GameObject>();
+    private ProceduralSlashField _slashPreview;
+    private ActionEventEntry _slashPreviewEntry;
+    private string _slashPreviewSettings;
     
     // Persistent State
     private object lastSelectedDataRef;
@@ -31,6 +34,8 @@ public class AnimationEditorWindow : EditorWindow
     private ActionTreeController treeController;
     private PropertyCardBuilder cardBuilder;
     private TimelineGridElement timelineGrid;
+    private CameraAnimationPreviewElement cameraAnimationPreview;
+    private Label cameraAnimationPreviewLabel;
 
     // ── Element References ──
     private Label breadcrumbLabel;
@@ -248,6 +253,14 @@ public class AnimationEditorWindow : EditorWindow
         previewClipLabel.AddToClassList("preview-viewport__clip-name");
         viewport.Add(previewClipLabel);
 
+        cameraAnimationPreviewLabel = new Label();
+        cameraAnimationPreviewLabel.style.fontSize = 10;
+        cameraAnimationPreviewLabel.style.whiteSpace = WhiteSpace.Normal;
+        viewport.Add(cameraAnimationPreviewLabel);
+        cameraAnimationPreview = new CameraAnimationPreviewElement();
+        cameraAnimationPreview.style.display = DisplayStyle.None;
+        viewport.Add(cameraAnimationPreview);
+
         return viewport;
     }
 
@@ -432,6 +445,8 @@ public class AnimationEditorWindow : EditorWindow
         if (node == null || selectedCharacter == null) return;
 
         Undo.RecordObject(selectedCharacter, "Change Clip");
+        if (node.Category?.StartsWith("QTE_") == true && selectedCharacter.actionResolverTable != null)
+            Undo.RecordObject(selectedCharacter.actionResolverTable, "Change QTE Clip");
 
         if (node.DataType == "AttackStep" && node.DataRef is AttackStepData step)
             step.animationClip = evt.newValue as AnimationClip;
@@ -441,6 +456,8 @@ public class AnimationEditorWindow : EditorWindow
             dash.animationClip = evt.newValue as AnimationClip;
 
         EditorUtility.SetDirty(selectedCharacter);
+        if (node.Category?.StartsWith("QTE_") == true && selectedCharacter.actionResolverTable != null)
+            EditorUtility.SetDirty(selectedCharacter.actionResolverTable);
         RebuildSelectedNode();
     }
 
@@ -593,7 +610,7 @@ public class AnimationEditorWindow : EditorWindow
             cancel = step.cancelWindowStartFrame;
             int phaseTotal = su + act + rec;
             int clipFrames = clip != null ? Mathf.CeilToInt(clip.length * LOGIC_FPS) : 0;
-            totalFrames = Mathf.Max(phaseTotal, clipFrames);
+            totalFrames = GetStepDisplayFrames(step);
 
             timelineGrid.Setup(totalFrames, LOGIC_FPS);
 
@@ -704,6 +721,16 @@ public class AnimationEditorWindow : EditorWindow
                             };
                             eventTrack.ranges.Add((eventEntry.triggerFrame, eventEntry.GetTimelineDurationFrames(step.TotalFrames)));
                             timelineGrid.Tracks.Add(eventTrack);
+                            if (eventEntry.eventType == ActionEventType.CameraAnimationControl && eventEntry.cameraAnimation?.segments != null)
+                                foreach (var segment in eventEntry.cameraAnimation.segments)
+                                {
+                                    if (segment == null) continue;
+                                    var segmentTrack = new TimelineGridElement.TimelineTrack
+                                    { label = $"{segment.task}: {segment.label}", color = eventEntry.trackColor };
+                                    segmentTrack.ranges.Add((eventEntry.triggerFrame + segment.startFrame,
+                                        Mathf.Max(1, segment.endFrame - segment.startFrame + 1)));
+                                    timelineGrid.Tracks.Add(segmentTrack);
+                                }
                         }
                         break;
                     }
@@ -742,6 +769,7 @@ public class AnimationEditorWindow : EditorWindow
         timelineGrid.PlayheadFrame = scrubberFrame;
 
         timelineGrid.Refresh();
+        RefreshCameraAnimationPreview(step);
 
         // Update frame counter
         if (frameCounterLabel != null)
@@ -815,12 +843,8 @@ public class AnimationEditorWindow : EditorWindow
     private int GetCurrentTotalFrames()
     {
         var node = treeController?.SelectedNode;
-        if (node?.DataType == "AttackStep" && node.DataRef is AttackStepData step)
-        {
-            int phaseTotal = step.startupFrames + step.activeFrames + step.recoveryFrames;
-            int clipFrames = step.animationClip != null ? Mathf.CeilToInt(step.animationClip.length * FrameDataConstants.LOGIC_FPS) : 0;
-            return Mathf.Max(phaseTotal, clipFrames);
-        }
+        var step = node?.GetStepData();
+        if (step != null) return GetStepDisplayFrames(step);
         if (node?.DataType == "Dash" && node.DataRef is DashData dash)
         {
             int phaseTotal = dash.startupFrames + dash.activeFrames + dash.recoveryFrames;
@@ -828,6 +852,47 @@ public class AnimationEditorWindow : EditorWindow
             return Mathf.Max(phaseTotal, clipFrames);
         }
         return 0;
+    }
+
+    private static int GetStepDisplayFrames(AttackStepData step)
+    {
+        int clipFrames = step.animationClip != null ? Mathf.CeilToInt(step.animationClip.length * LOGIC_FPS) : 0;
+        int total = Mathf.Max(step.TotalFrames, clipFrames);
+        if (step.eventData?.entries != null)
+            foreach (var entry in step.eventData.entries)
+                if (entry?.eventType == ActionEventType.CameraAnimationControl)
+                    total = Mathf.Max(total, entry.triggerFrame + entry.GetTimelineDurationFrames());
+        return total;
+    }
+
+    private void RefreshCameraAnimationPreview(AttackStepData step)
+    {
+        if (cameraAnimationPreview == null) return;
+        cameraAnimationPreview.style.display = DisplayStyle.None;
+        cameraAnimationPreviewLabel.text = "";
+        ActionEventEntry chosen = null;
+        if (step?.eventData?.entries != null)
+            foreach (var entry in step.eventData.entries)
+                if (entry?.eventType == ActionEventType.CameraAnimationControl
+                    && entry.triggerFrame <= scrubberFrame && (chosen == null || entry.triggerFrame >= chosen.triggerFrame)) chosen = entry;
+        if (chosen == null) return;
+        string error = chosen.cameraAnimation?.GetValidationError() ?? (chosen.cameraAnimation == null ? "Missing sequence" : null);
+        if (error != null) { cameraAnimationPreviewLabel.text = "Camera preview: " + error; return; }
+        Camera output = Camera.main;
+        bool hasCamera = output != null && output.orthographic;
+        var baseline = new CameraAnimationPose(hasCamera ? (Vector2)output.transform.position : Vector2.zero, hasCamera ? output.orthographicSize : 5f);
+        float aspect = hasCamera ? output.aspect : 16f / 9f;
+        int frame = scrubberFrame - chosen.triggerFrame;
+        var sampler = new CameraAnimationSampler(chosen.cameraAnimation, baseline, aspect);
+        var scenePlayer = previewInstance == null ? Object.FindFirstObjectByType<PlayerCharacter>() : null;
+        Vector2 playerReference = previewInstance != null ? (Vector2)previewInstance.transform.position
+            : scenePlayer != null ? (Vector2)scenePlayer.transform.position : baseline.Position;
+        var pose = frame >= sampler.DurationFrames ? baseline : sampler.Sample(frame, baseline, playerReference, _ => playerReference);
+        cameraAnimationPreview.SetPose(baseline, pose, aspect);
+        cameraAnimationPreview.style.display = DisplayStyle.Flex;
+        cameraAnimationPreviewLabel.text = $"Camera schematic — local frame {frame}, size {pose.Size:0.###}, XY {pose.Position}";
+        if (chosen.cameraAnimation.segments.Exists(s => s != null && s.positionSpace == CameraAnimationPositionSpace.Player))
+            cameraAnimationPreviewLabel.text += " (static player reference; live tracking runs in gameplay)";
     }
 
     private AttackStepData GetCurrentStep()
@@ -881,6 +946,7 @@ public class AnimationEditorWindow : EditorWindow
     // =========================================================
     private void UpdateVFXPreviews(AttackStepData step, int absoluteFrame)
     {
+        UpdateProceduralSlashPreview(step, absoluteFrame);
         if (step?.vfxData == null)
         {
             CleanupVfxPreviews();
@@ -893,7 +959,7 @@ public class AnimationEditorWindow : EditorWindow
 
         foreach (var entry in step.vfxData.entries)
         {
-            if (entry == null || (entry.vfxPrefab == null && entry.vfxType == Project.Combat.VFXType.None)) continue;
+            if (entry == null || (entry.vfxPrefab == null && entry.vfxType == Project.Combat.VFXType.None && entry.vfxClip == null)) continue;
 
             // Determine if VFX should be active
             bool shouldBeActive = false;
@@ -931,6 +997,14 @@ public class AnimationEditorWindow : EditorWindow
                 {
                     UpdateVfxTransform(instance, entry, relativeFrame);
                     SampleVfxState(instance, entry, relativeFrame);
+                    var impact = instance.GetComponent<CutImpactVfxSource>();
+                    if (entry.impactDistortion?.enabled == true)
+                    {
+                        if (impact == null) impact = instance.AddComponent<CutImpactVfxSource>();
+                        impact.BeginSprite(entry.impactDistortion, instance.GetComponentInChildren<SpriteRenderer>(), null, entry.duration, true);
+                        impact.SampleSprite(relativeFrame);
+                    }
+                    else if (impact != null) impact.Stop();
                 }
             }
         }
@@ -948,6 +1022,35 @@ public class AnimationEditorWindow : EditorWindow
         foreach (var key in toRemove) vfxPreviewInstances.Remove(key);
     }
 
+    private void UpdateProceduralSlashPreview(AttackStepData step, int frame)
+    {
+        ActionEventEntry active = null;
+        if (step?.eventData?.entries != null)
+            foreach (var entry in step.eventData.entries)
+                if (entry != null && entry.eventType == ActionEventType.ProceduralSlashField
+                    && entry.slashFieldSettings != null && frame >= entry.triggerFrame
+                    && frame < entry.triggerFrame + entry.slashFieldSettings.endFrame) { active = entry; break; }
+        if (active == null || previewInstance == null)
+        {
+            if (_slashPreview != null) _slashPreview.Stop();
+            _slashPreviewEntry = null; return;
+        }
+        string settings = JsonUtility.ToJson(active.slashFieldSettings);
+        if (_slashPreview == null)
+        {
+            var host = new GameObject("Slash Field Preview") { hideFlags = HideFlags.HideAndDontSave };
+            _slashPreview = host.AddComponent<ProceduralSlashField>();
+        }
+        if (_slashPreviewEntry != active || _slashPreviewSettings != settings)
+        {
+            var renderer = previewInstance.GetComponentInChildren<SpriteRenderer>();
+            Vector3 origin = step.motionData != null ? EvaluateMotionOffset(step.motionData, active.triggerFrame) : Vector3.zero;
+            _slashPreview.Begin(null, active.slashFieldSettings, origin, 1, renderer, true);
+            _slashPreviewEntry = active; _slashPreviewSettings = settings;
+        }
+        _slashPreview.Sample(frame - active.triggerFrame);
+    }
+
     private GameObject GetOrCreateVfxInstance(VFXEntry entry)
     {
         if (vfxPreviewInstances.TryGetValue(entry, out GameObject instance) && instance != null)
@@ -955,7 +1058,7 @@ public class AnimationEditorWindow : EditorWindow
 
         GameObject prefab = entry.vfxPrefab;
         // Fallback to library generic prefab if direct prefab is null
-        if (prefab == null && entry.vfxType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
+        if (prefab == null && (entry.vfxType != Project.Combat.VFXType.None || entry.vfxClip != null) && Project.Combat.VFXManager.Instance != null)
         {
             var generic = Project.Combat.VFXManager.Instance.VFXPrefab;
             if (generic != null) prefab = generic.gameObject;
@@ -1037,6 +1140,15 @@ public class AnimationEditorWindow : EditorWindow
     private void SampleVfxState(GameObject instance, VFXEntry entry, int relativeFrame)
     {
         float time = relativeFrame / FrameDataConstants.LOGIC_FPS;
+
+        if (entry.vfxClip != null && entry.vfxType == Project.Combat.VFXType.None)
+        {
+            if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
+            AnimationMode.BeginSampling();
+            AnimationMode.SampleAnimationClip(instance, entry.vfxClip, time);
+            AnimationMode.EndSampling();
+            return;
+        }
 
         // 1. Process Animator if present
         var anim = instance.GetComponent<Animator>();
@@ -1251,6 +1363,8 @@ public class AnimationEditorWindow : EditorWindow
 
     private void CleanupPreview()
     {
+        if (_slashPreview != null) DestroyImmediate(_slashPreview.gameObject);
+        _slashPreview = null; _slashPreviewEntry = null; _slashPreviewSettings = null;
         CleanupVfxPreviews();
 
         if (AnimationMode.InAnimationMode())
@@ -1278,6 +1392,16 @@ public class AnimationEditorWindow : EditorWindow
 
         AttackStepData step = GetCurrentStep();
         if (step == null) return;
+
+        if (step.eventData?.entries != null)
+            foreach (var cameraEvent in step.eventData.entries)
+                if (cameraEvent != null && cameraEvent.eventType == ActionEventType.ActionCameraMotion
+                    && cameraEvent.cameraMotionSettings != null && scrubberFrame >= cameraEvent.triggerFrame)
+                {
+                    cameraEvent.cameraMotionSettings.Sample(scrubberFrame - cameraEvent.triggerFrame, out float size, out float offset);
+                    Handles.Label(previewInstance.transform.position + Vector3.up * 4f,
+                        $"Camera size x{size:F3} / horizontal {offset:P2}");
+                }
         
         if (step.hitData != null && step.hitData.hitboxes != null && selectedSceneHitboxIndex >= step.hitData.hitboxes.Count)
             selectedSceneHitboxIndex = -1;

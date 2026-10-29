@@ -9,6 +9,7 @@ public class PlayerUltimateState : CombatPlayerState
 {
     private UltimateAction activeUltimateAction;
     private bool energyConsumed;
+    private bool activeUltimateInputHeld;
 
     public PlayerUltimateState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -25,13 +26,25 @@ public class PlayerUltimateState : CombatPlayerState
     public override bool LocksFacing => true;
 
     protected override AttackCategory GetAttackCategory() => AttackCategory.Ultimate;
-    protected override InterruptPolicy GetInterruptPolicy() => InterruptPolicy.Ultimate;
+    protected override InterruptPolicy GetInterruptPolicy()
+    {
+        InterruptPolicy policy = InterruptPolicy.Ultimate;
+        if (activeUltimateAction != null && !activeUltimateAction.allowUltimateInterrupt)
+        {
+            policy.startup &= ~ActionCategory.Ultimate;
+            policy.active &= ~ActionCategory.Ultimate;
+            policy.recovery &= ~ActionCategory.Ultimate;
+            policy.cancel &= ~ActionCategory.Ultimate;
+        }
+        return policy;
+    }
 
     public override void Enter(TransitionContext context)
     {
         base.Enter(context);
         activeUltimateAction = null;
         energyConsumed = false;
+        activeUltimateInputHeld = false;
         if (player != null)
         {
             player.HasSuperArmor = false;
@@ -64,6 +77,8 @@ public class PlayerUltimateState : CombatPlayerState
 
     public override void OnUltimateInput()
     {
+        if (currentPhase != ActionPhase.None && !CanBeInterruptedBy(ActionCategory.Ultimate)) return;
+        InputContext ctx = BuildInputContext(preserveActiveActionInput: false);
         Buffer?.ConsumeUltimate();
 
         if (player.Combat == null || resolverTable == null)
@@ -74,13 +89,13 @@ public class PlayerUltimateState : CombatPlayerState
 
         if (currentPhase == ActionPhase.None)
         {
-            TryStartFreshUltimateAction(exitOnFailure: true, requireDifferentAction: false, endCurrentActionBeforePreview: false);
+            TryStartFreshUltimateAction(ctx, exitOnFailure: true, requireDifferentAction: false, endCurrentActionBeforePreview: false);
             return;
         }
 
         if (IsRecoveryOrCancelPhase)
         {
-            if (TryStartFreshUltimateAction(exitOnFailure: false, requireDifferentAction: true, endCurrentActionBeforePreview: true))
+            if (TryStartFreshUltimateAction(ctx, exitOnFailure: false, requireDifferentAction: true, endCurrentActionBeforePreview: true))
             {
                 return;
             }
@@ -92,11 +107,17 @@ public class PlayerUltimateState : CombatPlayerState
         }
     }
 
-    private bool TryStartFreshUltimateAction(bool exitOnFailure, bool requireDifferentAction, bool endCurrentActionBeforePreview)
+    protected override InputContext BuildInputContext(bool preserveActiveActionInput = true)
+    {
+        InputContext ctx = base.BuildInputContext(preserveActiveActionInput);
+        if (preserveActiveActionInput && resolver.IsActive) ctx.ultimateInputHeld = activeUltimateInputHeld;
+        return ctx;
+    }
+
+    private bool TryStartFreshUltimateAction(InputContext ctx, bool exitOnFailure, bool requireDifferentAction, bool endCurrentActionBeforePreview)
     {
         UltimateAction previousAction = activeUltimateAction;
 
-        InputContext ctx = BuildInputContext(preserveActiveActionInput: !requireDifferentAction);
         ActionResolver previewResolver = new ActionResolver();
         AttackStepData previewStep = previewResolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
         UltimateAction previewUltimateAction = previewResolver.ActiveCombatAction as UltimateAction;
@@ -129,7 +150,7 @@ public class PlayerUltimateState : CombatPlayerState
         float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
         float requiredAE = teamLoader != null
             ? teamLoader.GetUltimateCost(player.characterObject, previewUltimateAction)
-            : TeamLoader.DefaultUltimateAuraEnergyCost;
+            : Mathf.Max(0f, previewUltimateAction.energyCost);
 
         bool waiveCost = player.PassiveController != null && player.PassiveController.RuntimeState != null && player.PassiveController.RuntimeState.HasTag("waive_next_ultimate_cost");
         if (!waiveCost && currentAE < requiredAE)
@@ -159,6 +180,7 @@ public class PlayerUltimateState : CombatPlayerState
         }
 
         energyConsumed = false;
+        activeUltimateInputHeld = ctx.ultimateInputHeld;
         hasStartedCooldown = false;
         TryStartCooldown();
         ExecuteCombatStep(step, ctx, false);

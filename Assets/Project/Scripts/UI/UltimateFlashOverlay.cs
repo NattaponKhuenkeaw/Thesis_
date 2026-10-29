@@ -23,6 +23,7 @@ public class UltimateFlashOverlay : MonoBehaviour
 
     private Coroutine activationCoroutine;
     private Coroutine hitFlashCoroutine;
+    private Coroutine impactFlashCoroutine;
     private System.Action blackScreenStartedCallback;
     private System.Action sequenceEndedCallback;
 
@@ -131,6 +132,12 @@ public class UltimateFlashOverlay : MonoBehaviour
             hitFlashCoroutine = null;
         }
 
+        if (impactFlashCoroutine != null)
+        {
+            StopCoroutine(impactFlashCoroutine);
+            impactFlashCoroutine = null;
+        }
+
         blackScreenStartedCallback = onBlackScreenStarted;
         sequenceEndedCallback = onSequenceEnded;
         
@@ -142,13 +149,24 @@ public class UltimateFlashOverlay : MonoBehaviour
 
     public void StopSequence(bool invokeEndedCallback = false)
     {
+        bool impactFlashIsActive = impactFlashCoroutine != null;
+
         if (activationCoroutine != null)
         {
             StopCoroutine(activationCoroutine);
             activationCoroutine = null;
         }
 
-        SetAlpha(0f);
+        if (hitFlashCoroutine != null)
+        {
+            StopCoroutine(hitFlashCoroutine);
+            hitFlashCoroutine = null;
+        }
+
+        if (!impactFlashIsActive)
+        {
+            SetAlpha(0f);
+        }
 
         System.Action ended = sequenceEndedCallback;
         blackScreenStartedCallback = null;
@@ -162,7 +180,7 @@ public class UltimateFlashOverlay : MonoBehaviour
 
     public void PlayHitFlash()
     {
-        if (activationCoroutine != null)
+        if (activationCoroutine != null || impactFlashCoroutine != null)
         {
             return;
         }
@@ -173,6 +191,30 @@ public class UltimateFlashOverlay : MonoBehaviour
         }
 
         hitFlashCoroutine = StartCoroutine(HitFlashRoutine());
+    }
+
+    public void PlayImpactFlash(BackgroundOverlayFlashSettings settings)
+    {
+        if (flashRenderer == null || activationCoroutine != null)
+        {
+            return;
+        }
+
+        settings ??= new BackgroundOverlayFlashSettings();
+
+        if (hitFlashCoroutine != null)
+        {
+            StopCoroutine(hitFlashCoroutine);
+            hitFlashCoroutine = null;
+        }
+
+        if (impactFlashCoroutine != null)
+        {
+            StopCoroutine(impactFlashCoroutine);
+            impactFlashCoroutine = null;
+        }
+
+        impactFlashCoroutine = StartCoroutine(ImpactFlashRoutine(settings));
     }
 
     private IEnumerator ActivationFlashRoutine(UltimateOverlaySequenceSettings settings)
@@ -247,6 +289,34 @@ public class UltimateFlashOverlay : MonoBehaviour
         SetAlpha(0f);
 
         hitFlashCoroutine = null;
+    }
+
+    private IEnumerator ImpactFlashRoutine(BackgroundOverlayFlashSettings settings)
+    {
+        if (flashRenderer == null)
+        {
+            impactFlashCoroutine = null;
+            yield break;
+        }
+
+        Color flashColor = settings.flashColor;
+        float peakAlpha = Mathf.Clamp01(settings.peakAlpha);
+        int fadeOutFrames = Mathf.Max(1, settings.fadeOutFrames);
+        float fadeDuration = fadeOutFrames / (float)CombatCore.FrameDataConstants.LOGIC_FPS;
+
+        flashRenderer.color = WithAlpha(flashColor, peakAlpha);
+
+        float elapsed = 0f;
+        while (elapsed < fadeDuration)
+        {
+            yield return null;
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / fadeDuration);
+            flashRenderer.color = WithAlpha(flashColor, peakAlpha * (1f - t));
+        }
+
+        SetAlpha(0f);
+        impactFlashCoroutine = null;
     }
 
     private void SetAlpha(float alpha)

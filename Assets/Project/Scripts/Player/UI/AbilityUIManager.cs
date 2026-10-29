@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Drives both the Skill and Ultimate ability UI slots.
+/// Drives Skill, Ultimate, Dash cooldowns and committed normal-attack feedback.
 ///
 /// Per-slot elements (Skill and Ultimate each have their own set):
 ///   CooldownOverlay  — fillAmount 1→0 while cooling down;
@@ -22,7 +22,7 @@ public class AbilityUIManager : MonoBehaviour
 {
     public static AbilityUIManager Instance;
 
-    public enum AbilityType { Skill, Ultimate }
+    public enum AbilityType { Skill, Ultimate, Dash, NormalAttack }
 
     [Header("References")]
     [SerializeField] private PlayerCharacter playerCharacter;
@@ -43,6 +43,15 @@ public class AbilityUIManager : MonoBehaviour
     [SerializeField] private TMP_Text ultCountdownText;
     [SerializeField] private Image ultAEOverlay;
     [SerializeField] private RectTransform ultFeedbackRoot;
+
+    [Header("Dash Slot")]
+    [SerializeField] private Image dashCooldownOverlay;
+    [SerializeField] private Image dashIcon;
+    [SerializeField] private TMP_Text dashCountdownText;
+    [SerializeField] private RectTransform dashFeedbackRoot;
+
+    [Header("Normal Attack Slot")]
+    [SerializeField] private RectTransform normalAttackFeedbackRoot;
 
     // ─── Ready Rush ──────────────────────────────────────────────────────────
     [Header("Ready Rush")]
@@ -99,11 +108,12 @@ public class AbilityUIManager : MonoBehaviour
 
     private readonly Dictionary<string, CooldownDisplayState> skillCooldowns     = new();
     private readonly Dictionary<string, CooldownDisplayState> ultimateCooldowns  = new();
-    private readonly List<string> cooldownKeyBuffer = new();
-    private readonly List<string> cooldownClearBuffer = new();
 
     private SlotRushState skillRush;
     private SlotRushState ultRush;
+    private SlotRushState dashRush;
+    private bool dashWasCoolingDown;
+    private bool suppressReadyFeedback;
 
     private PlayerCharacter subscribedPlayer;
     private string          displayedCharacterKey      = string.Empty;
@@ -136,12 +146,13 @@ public class AbilityUIManager : MonoBehaviour
         ResetSlot(skillCooldownOverlay, skillCountdownText, skillFollowUpOverlay, skillIcon);
         ResetSlot(ultCooldownOverlay, ultCountdownText, ultFollowUpOverlay, ultIcon);
         SetOverlayFill(ultAEOverlay, 0f, active: false);
+        ResetSlot(dashCooldownOverlay, dashCountdownText, null, dashIcon);
     }
 
     private void Start()
     {
         RebindPlayer();
-        RefreshActiveCharacterUI();
+        RefreshWithoutReadyFeedback();
     }
 
     private void OnEnable()
@@ -152,7 +163,7 @@ public class AbilityUIManager : MonoBehaviour
             teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
             teamLoader.OnCharacterAuraEnergyUpdated += HandleCharacterAuraEnergyUpdated;
         }
-        RefreshActiveCharacterUI();
+        RefreshWithoutReadyFeedback();
     }
 
     private void OnDisable()
@@ -160,6 +171,15 @@ public class AbilityUIManager : MonoBehaviour
         UnbindPlayer();
         if (teamLoader != null)
             teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+            _fadeCoroutine = null;
+        }
     }
 
     private void Update()
@@ -170,10 +190,9 @@ public class AbilityUIManager : MonoBehaviour
         // Tick rush animations first (before refresh, so we read correct rush state)
         TickRush(ref skillRush,   AbilityType.Skill,   skillCooldownOverlay,   skillIcon);
         TickRush(ref ultRush,     AbilityType.Ultimate, ultCooldownOverlay,    ultIcon);
+        TickRush(ref dashRush, AbilityType.Dash, dashCooldownOverlay, dashIcon);
 
-        // Tick cooldown timers; on expiry → start rush instead of immediate clear
-        TickCooldownDictionary(skillCooldowns,    AbilityType.Skill,    ref skillRush);
-        TickCooldownDictionary(ultimateCooldowns, AbilityType.Ultimate, ref ultRush);
+        // Read gameplay timers below; presentation must not run a second clock.
 
         string currentCharacterKey = GetCurrentCharacterKey();
         if (currentCharacterKey != displayedCharacterKey)
@@ -184,6 +203,8 @@ public class AbilityUIManager : MonoBehaviour
             skillFollowUpWasActiveLastFrame    = false;
             ultimateFollowUpWasActiveLastFrame = false;
             lastObservedUltimateAE             = GetCurrentAuraEnergy();
+            RefreshWithoutReadyFeedback();
+            return;
         }
 
         RefreshActiveCharacterUI();
@@ -195,6 +216,8 @@ public class AbilityUIManager : MonoBehaviour
 
     public void TriggerCooldown(AbilityType type, float duration)
     {
+        // Dash is read from movement; normal attacks have no cooldown slot.
+        if (type != AbilityType.Skill && type != AbilityType.Ultimate) return;
         if (duration <= 0f)
         {
             RefreshActiveCharacterUI();
@@ -224,6 +247,7 @@ public class AbilityUIManager : MonoBehaviour
 
     public void ResetCooldown(AbilityType type)
     {
+        if (type != AbilityType.Skill && type != AbilityType.Ultimate) return;
         string characterKey = GetCurrentCharacterKey();
         if (string.IsNullOrEmpty(characterKey)) return;
 
@@ -243,7 +267,7 @@ public class AbilityUIManager : MonoBehaviour
     public void PlayAbilityRejectedFeedback(AbilityType type)
     {
         RectTransform targetRect = ResolveFeedbackRoot(type);
-        if (targetRect == null) return;
+        if (targetRect == null || !targetRect.gameObject.activeInHierarchy) return;
 
         EnsureFeedbackDriver();
         if (feedbackDriver == null) return;
@@ -251,48 +275,6 @@ public class AbilityUIManager : MonoBehaviour
         Vector2 origin = targetRect.anchoredPosition;
         feedbackDriver.PlayWiggle(targetRect, origin, rejectedWiggleDistance, rejectedFeedbackDuration);
         feedbackDriver.PlayGlint(targetRect, rejectedFlashColor, rejectedFeedbackDuration);
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Cooldown Timer Tick
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private void TickCooldownDictionary(
-        Dictionary<string, CooldownDisplayState> cooldowns,
-        AbilityType type,
-        ref SlotRushState rush)
-    {
-        if (cooldowns.Count == 0) return;
-
-        cooldownKeyBuffer.Clear();
-        cooldownClearBuffer.Clear();
-        cooldownKeyBuffer.AddRange(cooldowns.Keys);
-        string currentKey = GetCurrentCharacterKey();
-
-        for (int i = 0; i < cooldownKeyBuffer.Count; i++)
-        {
-            string key   = cooldownKeyBuffer[i];
-            CooldownDisplayState state = cooldowns[key];
-            state.current = Mathf.Max(0f, state.current - Time.deltaTime);
-
-            if (state.current <= 0f || state.max <= 0f)
-            {
-                cooldownClearBuffer.Add(key);
-
-                // Kick off ready-rush for the current character's slot
-                if (string.Equals(key, currentKey, System.StringComparison.Ordinal)
-                    && !rush.isRushing)
-                {
-                    rush = new SlotRushState { isRushing = true, rushTimer = 0f };
-                }
-                continue;
-            }
-
-            cooldowns[key] = state;
-        }
-
-        for (int i = 0; i < cooldownClearBuffer.Count; i++)
-            cooldowns.Remove(cooldownClearBuffer[i]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -341,6 +323,51 @@ public class AbilityUIManager : MonoBehaviour
 
         UpdateSkillUI(characterKey);
         UpdateUltimateUI(characterKey);
+        UpdateDashUI();
+    }
+
+    private void RefreshWithoutReadyFeedback()
+    {
+        suppressReadyFeedback = true;
+        skillRush = default;
+        ultRush = default;
+        dashRush = default;
+        RefreshActiveCharacterUI();
+        suppressReadyFeedback = false;
+    }
+
+    private void UpdateDashUI()
+    {
+        PlayerMovement movement = playerCharacter != null ? playerCharacter.Movement : null;
+        float remaining = movement != null ? movement.DashCooldownRemaining : 0f;
+        float duration = movement != null ? movement.DashCooldownDuration : 0f;
+        bool coolingDown = remaining > 0f;
+
+        if (coolingDown)
+        {
+            dashRush = default;
+            SetOverlayFill(dashCooldownOverlay, duration > 0f ? Mathf.Clamp01(remaining / duration) : 0f, true);
+            SetCountdownText(dashCountdownText, remaining);
+        }
+        else
+        {
+            if (dashWasCoolingDown && !suppressReadyFeedback)
+                dashRush = new SlotRushState { isRushing = true };
+            if (!dashRush.isRushing)
+                SetOverlayFill(dashCooldownOverlay, 0f, false);
+            SetTextActive(dashCountdownText, false);
+        }
+
+        SetIconAlpha(dashIcon, movement != null && movement.CanDash() ? AlphaReady : AlphaDimmed);
+        dashWasCoolingDown = coolingDown;
+    }
+
+    public void PlayNormalAttackCommittedFeedback()
+    {
+        if (!isActiveAndEnabled || normalAttackFeedbackRoot == null
+            || !normalAttackFeedbackRoot.gameObject.activeInHierarchy) return;
+        EnsureFeedbackDriver();
+        feedbackDriver.PlayPulse(normalAttackFeedbackRoot, readyPulseScale, readyFeedbackDuration);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -406,8 +433,8 @@ public class AbilityUIManager : MonoBehaviour
             SetTextActive(skillCountdownText, false);
 
             // Fire ready pulse on the transition to ready
-            if (!skillWasReadyLastFrame)
-                PlayAbilityReadyFeedback(AbilityType.Skill);
+            if (!skillWasReadyLastFrame && !suppressReadyFeedback)
+                skillRush = new SlotRushState { isRushing = true };
         }
 
         skillWasReadyLastFrame = !onCooldown;
@@ -487,8 +514,8 @@ public class AbilityUIManager : MonoBehaviour
                 SetIconAlpha(ultIcon, isReady ? AlphaReady : AlphaDimmed);
                 SetTextActive(ultCountdownText, false);
 
-                if (isReady && !ultimateWasReadyLastFrame)
-                    PlayAbilityReadyFeedback(AbilityType.Ultimate);
+                if (isReady && !ultimateWasReadyLastFrame && !suppressReadyFeedback)
+                    ultRush = new SlotRushState { isRushing = true };
             }
         }
         else
@@ -498,7 +525,7 @@ public class AbilityUIManager : MonoBehaviour
             SetTextActive(ultCountdownText, false);
         }
 
-        ultimateWasReadyLastFrame = isReady && !ultRush.isRushing;
+        ultimateWasReadyLastFrame = isReady;
 
         // ── Follow-Up Overlay ────────────────────────────────────────────────
         UpdateFollowUpOverlay(AttackCategory.Ultimate, ultFollowUpOverlay,
@@ -675,10 +702,10 @@ public class AbilityUIManager : MonoBehaviour
 
     private void PlayAbilityReadyFeedback(AbilityType type)
     {
-        if (!playFallbackReadyFeedback) return;
+        if (!playFallbackReadyFeedback || suppressReadyFeedback || !isActiveAndEnabled) return;
 
         RectTransform targetRect = ResolveFeedbackRoot(type);
-        if (targetRect == null) return;
+        if (targetRect == null || !targetRect.gameObject.activeInHierarchy) return;
 
         EnsureFeedbackDriver();
         if (feedbackDriver == null) return;
@@ -694,7 +721,7 @@ public class AbilityUIManager : MonoBehaviour
         if (now - lastAuraGainFeedbackTime < auraGainFeedbackMinInterval) return;
 
         RectTransform targetRect = ResolveFeedbackRoot(AbilityType.Ultimate);
-        if (targetRect == null) return;
+        if (targetRect == null || !targetRect.gameObject.activeInHierarchy) return;
 
         EnsureFeedbackDriver();
         if (feedbackDriver == null) return;
@@ -706,6 +733,11 @@ public class AbilityUIManager : MonoBehaviour
 
     private RectTransform ResolveFeedbackRoot(AbilityType type)
     {
+        if (type == AbilityType.Dash)
+            return dashFeedbackRoot != null ? dashFeedbackRoot
+                : dashCooldownOverlay != null ? dashCooldownOverlay.transform.parent as RectTransform : null;
+        if (type == AbilityType.NormalAttack)
+            return normalAttackFeedbackRoot;
         if (type == AbilityType.Skill)
         {
             if (skillFeedbackRoot != null) return skillFeedbackRoot;
@@ -786,7 +818,7 @@ public class AbilityUIManager : MonoBehaviour
         skillRush                          = default;
         ultRush                            = default;
         lastObservedUltimateAE             = GetCurrentAuraEnergy();
-        RefreshActiveCharacterUI();
+        RefreshWithoutReadyFeedback();
     }
 
     // ─────────────────────────────────────────────────────────────────────────

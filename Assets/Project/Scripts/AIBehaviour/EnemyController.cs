@@ -844,6 +844,9 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive || !IsGameplayActive) return 0f;
 
+        if (reactionData.breaksArmor && !IsSecondaryDamage(reactionData.damageDelivery))
+            ShieldGuard?.BreakGuard();
+
         // Grabs counter directional blocking; explicit reaction/armor immunity still applies below.
         if (reactionData.reactionKind != EnemyReactionKind.Grab
             && ShieldGuard != null && ShieldGuard.BlocksHit(attackerPosition, reactionData.damageDelivery))
@@ -1344,6 +1347,23 @@ public class EnemyController : MonoBehaviour
     public bool ReleaseGrab(int ownerId)
     {
         return hitReactionHandler != null && hitReactionHandler.ReleaseGrab(ownerId);
+    }
+
+    public bool TryHoldAtActionAnchor(int ownerId, Transform anchor, int holdFrames)
+    {
+        if (!IsTargetable || anchor == null || hitReactionHandler == null || !ShouldApplyHitReaction()) return false;
+        if (IsGrabbed && hitReactionHandler.CurrentReactionOwnerId != ownerId) return false;
+        hitReactionHandler.StartReaction(new HitReactionData
+        {
+            reactionKind = EnemyReactionKind.Grab,
+            reactionOwnerId = ownerId,
+            attackerTransform = anchor,
+            grabSocket = anchor,
+            reactionTiming = HitReactionData.CreateTiming(0, Mathf.Max(1, holdFrames), 0),
+            juggleLaunchScale = 1f,
+            juggleStunScale = 1f
+        }, anchor.position);
+        return true;
     }
 
     public bool MaintainGrab(int ownerId, Transform grabSocket, Vector2 grabOffset, int holdFrames, int recoveryFrames = 0)

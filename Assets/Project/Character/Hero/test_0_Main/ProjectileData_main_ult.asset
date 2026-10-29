@@ -35,7 +35,7 @@ MonoBehaviour:
   trackDelaySeconds: 0
   trackingRadius: 0
   speed: 0
-  lifetime: 2
+  lifetime: 0.5
   maxHits: 2
   hitCountMode: 1
   routineHitbox:
@@ -80,9 +80,12 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
-        offset: {x: 0, y: 2}
-        size: {x: 10, y: 5}
+        offset: {x: 0, y: 4}
+        size: {x: 10, y: 7}
         damageRatio: 0.14285715
         impactTier: 0
         useDeterministicReaction: 1
@@ -102,8 +105,9 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 8300000, guid: 7c1b8c226596fc4498a647193d825b4d, type: 3}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0

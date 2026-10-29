@@ -21,7 +21,11 @@ public class InputHandler_Player : MonoBehaviour
     public float dashBufferTime = 0.12f;
 
     private Vector2 moveInput;
-
+    private bool ultimatePressed;
+    private bool ultimatePending;
+    private float ultimatePressedAt;
+    private float ultimateHoldDuration;
+    private CharacterObject ultimateInputCharacter;
     void Awake()
     {
         if (playerInput == null)
@@ -41,6 +45,7 @@ public class InputHandler_Player : MonoBehaviour
 
     void OnDisable()
     {
+        CancelUltimateGesture();
         UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
@@ -70,10 +75,13 @@ public class InputHandler_Player : MonoBehaviour
     {
         if (Project.UI.InputLockManager.IsLocked)
         {
+            CancelUltimateGesture();
             moveInput = Vector2.zero;
             stateMachine?.RouteMoveInput(Vector2.zero);
             return;
         }
+
+        UpdateUltimateGesture();
 
         // Always update directional snapshot in the buffer
         if (stateMachine != null && stateMachine.InputBuffer != null)
@@ -128,10 +136,9 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnDash(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-        if (!value.isPressed) return;
-
-        // Route through FSM — it handles buffering internally
+        if (Project.UI.InputLockManager.IsLocked || !value.isPressed) return;
+        moveInput = GetLatestMoveInput();
+        stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
         stateMachine?.RouteDashInput(moveInput.x);
     }
 
@@ -167,13 +174,89 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnUltimate(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-        if (InteractableWorldUI.IsPlayerInInteractableArea) return;
-        if (value.isPressed)
+        if (Project.UI.InputLockManager.IsLocked || InteractableWorldUI.IsPlayerInInteractableArea)
         {
-            stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
-            stateMachine?.RouteUltimateInput();
+            CancelUltimateGesture();
+            return;
         }
+        if (!value.isPressed)
+        {
+            ReleaseUltimateGesture();
+            return;
+        }
+        if (ultimatePressed) return;
+        ultimatePressed = true;
+
+        PlayerCharacter actor = stateMachine != null ? stateMachine.playerCharacter : null;
+        // Resolve the hold candidate through the same authored conditions and
+        // locomotion context. Characters without one keep immediate press input.
+        if (actor != null && actor.TryResolveActionForContext(AttackCategory.Ultimate,
+                out CombatAction action, out _, ultimateInputHeld: true)
+            && action is UltimateAction ultimate && ultimate.inputTrigger == UltimateInputTrigger.Hold)
+        {
+            ultimatePending = true;
+            ultimatePressedAt = Time.unscaledTime;
+            ultimateHoldDuration = Mathf.Max(0.01f, ultimate.holdDuration);
+            ultimateInputCharacter = actor.characterObject;
+            return;
+        }
+        DispatchUltimateGesture(held: false);
+    }
+
+    private void UpdateUltimateGesture()
+    {
+        if (!ultimatePressed) return;
+        if (!IsUltimateGestureValid())
+        {
+            CancelUltimateGesture();
+            return;
+        }
+        InputAction action = playerInput != null && playerInput.actions != null
+            ? playerInput.actions.FindAction("Ultimate", throwIfNotFound: false) : null;
+        if (action == null || !action.enabled)
+        {
+            CancelUltimateGesture();
+            return;
+        }
+        if (!action.IsPressed())
+        {
+            ReleaseUltimateGesture();
+            return;
+        }
+        if (ultimatePending && Time.unscaledTime - ultimatePressedAt >= ultimateHoldDuration)
+            DispatchUltimateGesture(held: true);
+    }
+
+    private bool IsUltimateGestureValid() => !Project.UI.InputLockManager.IsLocked
+        && !Project.UI.PauseMenuController.IsOpen && !InteractableWorldUI.IsPlayerInInteractableArea
+        && stateMachine != null && stateMachine.playerCharacter != null
+        && playerInput != null && playerInput.currentActionMap != null && playerInput.currentActionMap.enabled
+        && (!ultimatePending || stateMachine.playerCharacter.characterObject == ultimateInputCharacter);
+
+    private void ReleaseUltimateGesture()
+    {
+        if (ultimatePending && IsUltimateGestureValid())
+            DispatchUltimateGesture(Time.unscaledTime - ultimatePressedAt >= ultimateHoldDuration);
+        CancelUltimateGesture();
+    }
+
+    private void DispatchUltimateGesture(bool held)
+    {
+        ultimatePending = false;
+        stateMachine?.InputBuffer?.SetDirectionalInput(GetLatestMoveInput());
+        stateMachine?.RouteUltimateInput(held);
+    }
+
+    private void CancelUltimateGesture()
+    {
+        ultimatePressed = false;
+        ultimatePending = false;
+        ultimateInputCharacter = null;
+    }
+
+    private void OnApplicationFocus(bool focused)
+    {
+        if (!focused) CancelUltimateGesture();
     }
 
     private bool TryPrioritizeJumpBeforeCombatInput()

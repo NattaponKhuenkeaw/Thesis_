@@ -32,6 +32,10 @@ public abstract class HitboxBase
     [Header("Damage")]
     public ElementType elementType = ElementType.None;
     public CombatDamageTag damageTags = CombatDamageTag.None;
+    [Tooltip("Skip camera impulse and global hitstop, including the critical-hit minimum. Does not change damage or enemy reaction.")]
+    public bool suppressImpactFeedback;
+    [Tooltip("Skip generic contact sparks; the authored action VFX still plays.")]
+    public bool suppressContactVfx;
 
     [Header("Debug")]
     public Color debugColor = Color.red;
@@ -98,6 +102,8 @@ public class NormalHitbox : HitboxBase
     // ── Hit Feedback ──
     [Header("Hit Feedback")]
     public AudioClip hitSFX;
+    [Range(0f, 2f)] public float hitSFXVolume = 1f;
+    [Range(0.1f, 3f)] public float hitSFXPitch = 1f;
     public Project.Combat.VFXType hitVFXType = Project.Combat.VFXType.None;
     public GameObject hitVFXPrefab;
     public Vector2 hitVFXOffset;
@@ -107,7 +113,7 @@ public class NormalHitbox : HitboxBase
     public bool breaksGrab = false;
 
     [Header("Armor Interaction")]
-    [Tooltip("If true, this hit breaks trash Super Armor (orange armored state).")]
+    [Tooltip("If true, this hit breaks trash Super Armor (orange armored state) and permanently breaks enemy shield guard.")]
     public bool breaksArmor = false;
 }
 
@@ -147,6 +153,8 @@ public class GrabHitbox : HitboxBase
     // ── Hit Feedback ──
     [Header("Hit Feedback")]
     public AudioClip hitSFX;
+    [Range(0f, 2f)] public float hitSFXVolume = 1f;
+    [Range(0.1f, 3f)] public float hitSFXPitch = 1f;
     public Project.Combat.VFXType hitVFXType = Project.Combat.VFXType.None;
     public GameObject hitVFXPrefab;
     public Vector2 hitVFXOffset;

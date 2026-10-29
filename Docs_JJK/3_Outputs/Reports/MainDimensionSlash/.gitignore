@@ -1,0 +1,4 @@
+# Local camera readbacks remain available for rebuilding the review media.
+Revision*/Runtime/*/frame*.rgb
+Revision*/Runtime/*/frame*.png
+Revision*/Runtime/**/*.ffconcat

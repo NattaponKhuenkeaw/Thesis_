@@ -970,6 +970,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4860859214657599119}
   - component: {fileID: 3236367016635035437}
+  - component: {fileID: 7900271300000000001}
   m_Layer: 0
   m_Name: TeamManager
   m_TagString: Untagged
@@ -1016,6 +1017,24 @@ MonoBehaviour:
   defeatSwitchDelaySeconds: 0.35
   currentIndex: 0
   lastSwitchTime: -999
+--- !u!114 &7900271300000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5952287311886967453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b52d95ca78457614c94c1cfdedf4e9e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QteTeamSwapController
+  windowSeconds: 5
+  reduceUiMotion: 0
+  introTimeScale: 0.08
+  introSlowMotionSeconds: 0.5
+  introCameraSizeReduction: 0.5
+  introCameraImpactFrames: 45
 --- !u!1 &7291009428317185000
 GameObject:
   m_ObjectHideFlags: 0

@@ -5625,6 +5625,8 @@ MonoBehaviour:
   expansionSeconds: 0.22
   attackFadeSeconds: 0.16
   loopOpacity: 0.14
+  shockwaveScale: 4
+  shockwaveDurationMultiplier: 2
 --- !u!1 &6917044645599511611
 GameObject:
   m_ObjectHideFlags: 0

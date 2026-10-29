@@ -555,6 +555,16 @@ public class PlayerAnimator : MonoBehaviour
         }
     }
 
+    public void SampleActionFrame(int logicFrame, int totalFrames)
+    {
+        if (anim == null || totalFrames <= 0 || actionAnimationLayer < 0
+            || actionAnimationLayer >= anim.layerCount || actionAnimationStateHash == 0) return;
+        // Opt-in finite clips use a zero-speed state; only the gameplay clock
+        // advances their pose, including on hitstop and fixed-step catch-up.
+        anim.Play(actionAnimationStateHash, actionAnimationLayer, Mathf.Clamp01((float)logicFrame / totalFrames));
+        anim.Update(0f);
+    }
+
     private void ResetActionAnimationTarget()
     {
         actionAnimationLayer = -1;

@@ -6,11 +6,11 @@ using UnityEngine;
 public class RunCurrencyHudTests
 {
     [Test]
-    public void FormatRunCurrencyMatchesShopPrefix()
+    public void FormatRunCurrencyWithoutDollarPrefix()
     {
-        Assert.That(PlayerHUD.FormatRunCurrency(0), Is.EqualTo("$0"));
-        Assert.That(PlayerHUD.FormatRunCurrency(1000), Is.EqualTo("$1000"));
-        Assert.That(PlayerHUD.FormatRunCurrency(-25), Is.EqualTo("$0"));
+        Assert.That(PlayerHUD.FormatRunCurrency(0), Is.EqualTo("0"));
+        Assert.That(PlayerHUD.FormatRunCurrency(1000), Is.EqualTo("1000"));
+        Assert.That(PlayerHUD.FormatRunCurrency(-25), Is.EqualTo("0"));
     }
 
     [Test]

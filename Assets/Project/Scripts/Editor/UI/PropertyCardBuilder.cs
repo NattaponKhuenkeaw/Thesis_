@@ -11,7 +11,7 @@ namespace CombatEditor.UI
     /// <summary>
     /// Builds Inspector-style foldout component cards for the right panel.
     /// </summary>
-    public class PropertyCardBuilder
+    public partial class PropertyCardBuilder
     {
         private readonly VisualElement container;
         private readonly Action onDataChanged;
@@ -546,6 +546,12 @@ namespace CombatEditor.UI
                     step.cancelWindowStartFrame = value;
                     MarkDirty();
                 });
+                AddToggleField(body, "Sync Actor to Action Frames", step.syncAnimationToActionFrames, value =>
+                {
+                    RecordUndo("Edit Actor Frame Sync");
+                    step.syncAnimationToActionFrames = value;
+                    MarkDirty();
+                });
 
                 AddSeparator(body, "Behavior Flags");
                 AddToggleField(body, "Auto Chain to Next", step.autoChainToNext, value =>
@@ -683,6 +689,27 @@ namespace CombatEditor.UI
                     MarkDirtyAndRebuild();
                 });
 
+                AddTextField(body, "Resource Counter", action.resourceCounterId, value => {
+                    RecordUndo("Edit Action Resource"); action.resourceCounterId = value; MarkDirty();
+                });
+                AddIntField(body, "Resource Cost", action.resourceCost, value => {
+                    RecordUndo("Edit Action Cost"); action.resourceCost = Mathf.Max(0, value); MarkDirty();
+                });
+                AddToggle(body, "Commit Dash Cooldown", action.commitsDash, value => {
+                    RecordUndo("Edit Dash Commitment"); action.commitsDash = value; MarkDirty();
+                });
+                AddToggle(body, "Reselect On Attack Input", action.reselectOnAttackInput, value => {
+                    RecordUndo("Edit Input Reselection"); action.reselectOnAttackInput = value; MarkDirty();
+                });
+                AddToggle(body, "Require Enemy Target", action.requiresEnemyTarget, value => {
+                    RecordUndo("Edit Target Requirement"); action.requiresEnemyTarget = value; MarkDirty();
+                });
+                AddFloatField(body, "Target Radius", action.GetTargetSearchRadius(), value => {
+                    RecordUndo("Edit Target Radius"); action.SetTargetSearchRadius(value); MarkDirty();
+                });
+                if (action.GetEntryTargetMotion() != null)
+                    body.Add(new HelpBox("Shared with the entry target-motion keyframe. Selection and movement use this same radius.", HelpBoxMessageType.Info));
+
                 AddEnumField(body, "Input Context", action.context, value => {
                     RecordUndo("Edit Input Context");
                     action.context = (CombatActionContext)value;
@@ -735,6 +762,23 @@ namespace CombatEditor.UI
 
                 if (action is UltimateAction ultimate)
                 {
+                    AddSeparator(body, "Ultimate Input");
+                    AddEnumField(body, "Input Trigger", ultimate.inputTrigger, value => {
+                        RecordUndo("Edit Ultimate Input Trigger");
+                        ultimate.inputTrigger = (UltimateInputTrigger)value;
+                        MarkDirtyAndRebuild();
+                    });
+                    if (ultimate.inputTrigger == UltimateInputTrigger.Hold)
+                        AddFloatField(body, "Hold Seconds", ultimate.holdDuration, value => {
+                            RecordUndo("Edit Ultimate Hold Duration");
+                            ultimate.holdDuration = Mathf.Max(0.01f, value);
+                            MarkDirty();
+                        });
+                    AddToggleField(body, "Allow Ultimate Cancel", ultimate.allowUltimateInterrupt, value => {
+                        RecordUndo("Edit Ultimate Cancel");
+                        ultimate.allowUltimateInterrupt = value;
+                        MarkDirty();
+                    });
                     AddSeparator(body, "Aura Energy Cost");
                     AddFloatField(body, "AE Cost", ultimate.energyCost, value => {
                         RecordUndo("Edit Ultimate AE Cost");
@@ -768,6 +812,11 @@ namespace CombatEditor.UI
                     AddObjectField(body, "Activation SFX", ultimate.activationSFX, value => {
                         RecordUndo("Edit SFX");
                         ultimate.activationSFX = value;
+                        MarkDirty();
+                    });
+                    AddFloatField(body, "Activation SFX Volume", ultimate.activationSFXVolume, value => {
+                        RecordUndo("Edit Activation SFX Volume");
+                        ultimate.activationSFXVolume = Mathf.Clamp01(value);
                         MarkDirty();
                     });
                     AddFloatField(body, "Voice Delay", ultimate.voiceDelay, value => {
@@ -813,6 +862,8 @@ namespace CombatEditor.UI
             if (string.IsNullOrEmpty(cat)) return null;
 
             int idx = -1;
+            if (cat.StartsWith("QTE_") && int.TryParse(cat.Substring(4), out idx) && idx < character.actionResolverTable.qteActions.Count)
+                return character.actionResolverTable.qteActions[idx];
             if (cat.StartsWith("Combo_") && int.TryParse(cat.Substring(6), out idx) && idx < character.actionResolverTable.comboActions.Count)
                 return character.actionResolverTable.comboActions[idx];
             if (cat.StartsWith("Skill_") && int.TryParse(cat.Substring(6), out idx) && idx < character.actionResolverTable.skillActions.Count)
@@ -1192,6 +1243,11 @@ namespace CombatEditor.UI
 
         private void BuildMotionCard(VisualElement body, MotionFrameData motion)
         {
+            AddToggleField(body, "Follow Slow Motion", motion.followSlowMotion, value =>
+            {
+                RecordUndo("Edit Motion Slow Motion Clock"); motion.followSlowMotion = value; MarkDirty();
+            });
+            body.Add(new HelpBox("When off, active movement runs at normal speed. Motion triggers, attacks and hit frames still follow the action clock. Pause/hitstop still stop motion.", HelpBoxMessageType.Info));
             if (motion.keyframes == null) motion.keyframes = new List<MotionKeyframe>();
 
             VisualElement itemList = new VisualElement();
@@ -1220,8 +1276,42 @@ namespace CombatEditor.UI
                     {
                         RecordUndo("Edit Motion Task Type");
                         keyframe.taskType = (MotionTaskType)value;
-                        MarkDirty();
+                        MarkDirtyAndRebuild();
                     });
+                    if (keyframe.taskType == MotionTaskType.DashThroughTarget || keyframe.taskType == MotionTaskType.SnapToEnemy)
+                    {
+                        AddFloatField(inner, "Target Radius", keyframe.targetRadius, value => {
+                            RecordUndo("Edit Motion Target Radius");
+                            keyframe.targetRadius = Mathf.Max(0f, value);
+                            CombatAction owner = GetCurrentAction();
+                            if (owner?.GetEntryTargetMotion() == keyframe) owner.SetTargetSearchRadius(keyframe.targetRadius);
+                            MarkDirty();
+                        });
+                    }
+                    if (keyframe.taskType == MotionTaskType.DashThroughTarget)
+                    {
+                        AddToggle(inner, "Horizontal Only", keyframe.horizontalOnly, value => {
+                            RecordUndo("Edit Target Dash Axis"); keyframe.horizontalOnly = value; MarkDirty();
+                        });
+                        AddToggle(inner, "Align Held Target To Dash Height", keyframe.alignTargetToDashPlane, value => {
+                            RecordUndo("Edit Target Dash Height"); keyframe.alignTargetToDashPlane = value; MarkDirty();
+                        });
+                        AddFloatField(inner, "Minimum Travel Distance", keyframe.minimumTravelDistance, value => {
+                            RecordUndo("Edit Minimum Dash Travel"); keyframe.minimumTravelDistance = Mathf.Max(0f, value); MarkDirty();
+                        });
+                        AddFloatField(inner, "Pass Through Distance", keyframe.passThroughDistance, value => {
+                            RecordUndo("Edit Pass Through Distance"); keyframe.passThroughDistance = Mathf.Max(0f, value); MarkDirty();
+                        });
+                        AddToggle(inner, "Hold Target At Anchor", keyframe.holdTargetAtAnchor, value => {
+                            RecordUndo("Edit Target Hold"); keyframe.holdTargetAtAnchor = value; MarkDirty();
+                        });
+                        AddVector2Field(inner, "Target Anchor Offset", keyframe.targetAnchorOffset, value => {
+                            RecordUndo("Edit Target Anchor"); keyframe.targetAnchorOffset = value; MarkDirty();
+                        });
+                        AddToggle(inner, "Face Target On Arrival", keyframe.faceTargetOnArrival, value => {
+                            RecordUndo("Edit Arrival Facing"); keyframe.faceTargetOnArrival = value; MarkDirty();
+                        });
+                    }
                     AddEnumField(inner, "Easing", keyframe.easing, value =>
                     {
                         RecordUndo("Edit Motion Easing");
@@ -1339,6 +1429,7 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
 
+                    BuildCutImpactFields(inner, entry.impactDistortion ??= new CutImpactDistortionSettings());
                     AddSeparator(inner, "Transform Keys");
                     if (entry.transformKeys == null) entry.transformKeys = new List<VFXTransformKey>();
 
@@ -1397,6 +1488,7 @@ namespace CombatEditor.UI
 
         private void BuildAudioCard(VisualElement body, AudioFrameData audio)
         {
+            body.Add(new HelpBox("Slow Motion Aware changes that clip's playback speed and pitch while it plays. Trigger frames still follow the action. Leave it off for normal-speed sound.", HelpBoxMessageType.Info));
             if (audio.entries == null) audio.entries = new List<AudioEntry>();
 
             VisualElement itemList = new VisualElement();
@@ -1451,6 +1543,10 @@ namespace CombatEditor.UI
                         entry.pitchVariation = value;
                         MarkDirty();
                     });
+                    AddToggleField(inner, "Slow Motion Aware", entry.slowMotionAware, value =>
+                    {
+                        RecordUndo("Edit Audio Slow Motion Awareness"); entry.slowMotionAware = value; MarkDirty();
+                    });
                     AddColorField(inner, "Track Color", entry.trackColor, value =>
                     {
                         RecordUndo("Edit Audio Color");
@@ -1492,37 +1588,30 @@ namespace CombatEditor.UI
             {
                 int idx = i;
                 ActionEventEntry entry = eventData.entries[i];
-                if (entry.overlaySettings == null)
+                if (entry == null) continue;
+                if (entry.eventType == ActionEventType.UltimateOverlaySequence && entry.overlaySettings == null)
                 {
                     entry.overlaySettings = new UltimateOverlaySequenceSettings();
                 }
-                if (entry.teleportSettings == null)
+                if (entry.eventType == ActionEventType.TeleportToNearestEnemy && entry.teleportSettings == null)
                 {
                     entry.teleportSettings = new TeleportEventSettings();
                 }
-                if (entry.teleportSettings.screenFlickSettings == null)
+                if (entry.eventType == ActionEventType.TeleportToNearestEnemy && entry.teleportSettings.screenFlickSettings == null)
                 {
                     entry.teleportSettings.screenFlickSettings = new UltimateOverlaySequenceSettings();
                 }
-                if (entry.screenImpulseSettings == null)
-                {
-                    entry.screenImpulseSettings = new ScreenImpulseEventSettings();
-                }
-                if (entry.screenImpulseSettings.impulse == null)
-                {
-                    entry.screenImpulseSettings.impulse = GameImpulseRequest.CreateActionEventDefault();
-                }
-                if (entry.screenImpulseSettings.impulse.slowMotion == null)
-                {
-                    entry.screenImpulseSettings.impulse.slowMotion = new SlowMotionSettings();
-                }
-                if (entry.afterImageSettings == null)
+                if (entry.eventType == ActionEventType.AfterImage && entry.afterImageSettings == null)
                 {
                     entry.afterImageSettings = new AfterImageEventSettings();
                 }
-                if (entry.facingDirectionSettings == null)
+                if (entry.eventType == ActionEventType.SetFacingDirection && entry.facingDirectionSettings == null)
                 {
                     entry.facingDirectionSettings = new FacingDirectionEventSettings();
+                }
+                if (entry.eventType == ActionEventType.BackgroundOverlayFlash && entry.backgroundOverlayFlashSettings == null)
+                {
+                    entry.backgroundOverlayFlashSettings = new BackgroundOverlayFlashSettings();
                 }
 
                 BuildFoldoutCard($"Event #{idx + 1}: {entry.label}", $"event_entry_{idx}", entry.trackColor, inner =>
@@ -1537,6 +1626,8 @@ namespace CombatEditor.UI
                     {
                         RecordUndo("Edit Event Type");
                         entry.eventType = (ActionEventType)value;
+                        if (entry.eventType == ActionEventType.CameraAnimationControl)
+                            entry.cameraAnimation ??= new CameraAnimationFrameData();
                         MarkDirtyAndRebuild();
                     });
                     AddIntField(inner, "Trigger Frame", entry.triggerFrame, value =>
@@ -1573,6 +1664,22 @@ namespace CombatEditor.UI
                         case ActionEventType.SetFacingDirection:
                             BuildFacingDirectionActionEventFields(inner, entry);
                             break;
+
+                        case ActionEventType.BackgroundOverlayFlash:
+                            BuildBackgroundOverlayFlashFields(inner, entry);
+                            break;
+
+                        case ActionEventType.ActionCameraMotion:
+                            BuildActionCameraMotionFields(inner, entry);
+                            break;
+
+                        case ActionEventType.CameraAnimationControl:
+                            BuildCameraAnimationFields(inner, entry);
+                            break;
+
+                        case ActionEventType.ProceduralSlashField:
+                            BuildProceduralSlashFields(inner, entry);
+                            break;
                     }
                 }, () =>
                 {
@@ -1583,6 +1690,10 @@ namespace CombatEditor.UI
                 {
                     ReorderListItem(eventData.entries, idx, newIndex, "Reorder Action Event");
                 }, reorderIndex: idx, reorderCount: eventData.entries.Count);
+
+                if (entry.eventType == ActionEventType.ActionCameraMotion
+                    || (entry.eventType == ActionEventType.ScreenImpulse && entry.screenImpulseSettings?.cameraControl?.enabled == true))
+                    BuildCameraConversion(itemList, eventData, entry);
             }
 
             Button addButton = new Button(() =>
@@ -1596,6 +1707,13 @@ namespace CombatEditor.UI
             };
             addButton.AddToClassList("component-add-entry-btn");
             body.Add(addButton);
+            body.Add(new Button(() =>
+            {
+                RecordUndo("Add Camera Animation Event");
+                eventData.entries.Add(new ActionEventEntry { eventType = ActionEventType.CameraAnimationControl,
+                    label = "Camera Animation", cameraAnimation = new CameraAnimationFrameData() });
+                MarkDirtyAndRebuild();
+            }) { text = "Add Camera Animation Control" });
         }
 
         private void BuildUltimateActionEventFields(VisualElement inner, ActionEventEntry entry)
@@ -1668,6 +1786,12 @@ namespace CombatEditor.UI
                 entry.activationSFX = value as AudioClip;
                 MarkDirty();
             });
+            AddFloatField(inner, "SFX Volume", entry.activationSFXVolume, value =>
+            {
+                RecordUndo("Edit Event SFX Volume");
+                entry.activationSFXVolume = Mathf.Clamp01(value);
+                MarkDirty();
+            });
             AddFloatField(inner, "Voice Delay", entry.voiceDelay, value =>
             {
                 RecordUndo("Edit Event Voice Delay");
@@ -1729,12 +1853,21 @@ namespace CombatEditor.UI
 
         private void BuildScreenImpulseActionEventFields(VisualElement inner, ActionEventEntry entry)
         {
-            ScreenImpulseEventSettings settings = entry.screenImpulseSettings ??= new ScreenImpulseEventSettings();
-            settings.impulse ??= GameImpulseRequest.CreateActionEventDefault();
-            settings.impulse.slowMotion ??= new SlowMotionSettings();
+            ScreenImpulseEventSettings settings = entry.screenImpulseSettings;
 
             AddSeparator(inner, "Screen Impulse");
-            BuildGameImpulseRequestFields(inner, settings.impulse, "Screen Impulse");
+            if (settings?.impulse?.slowMotion != null)
+                BuildGameImpulseRequestFields(inner, settings.impulse, "Screen Impulse");
+            else
+                inner.Add(new Button(() =>
+                {
+                    RecordUndo("Initialize Screen Impulse");
+                    entry.screenImpulseSettings ??= new ScreenImpulseEventSettings();
+                    entry.screenImpulseSettings.impulse ??= GameImpulseRequest.CreateActionEventDefault();
+                    entry.screenImpulseSettings.impulse.slowMotion ??= new SlowMotionSettings();
+                    MarkDirtyAndRebuild();
+                }) { text = "Initialize Impulse Settings" });
+            inner.Add(new HelpBox(settings?.cameraControl?.enabled == true ? "Legacy embedded camera control is active. Use the conversion preview below to split it into a Camera Animation Control event." : "Author camera motion with a separate Camera Animation Control event.", HelpBoxMessageType.Info));
         }
 
         private void BuildAfterImageActionEventFields(VisualElement inner, ActionEventEntry entry)
@@ -1778,6 +1911,84 @@ namespace CombatEditor.UI
                 settings.mode = (ActionFacingMode)value;
                 MarkDirty();
             });
+        }
+
+        private void BuildBackgroundOverlayFlashFields(VisualElement inner, ActionEventEntry entry)
+        {
+            BackgroundOverlayFlashSettings settings = entry.backgroundOverlayFlashSettings ??= new BackgroundOverlayFlashSettings();
+            AddSeparator(inner, "Background Impact Flash");
+            AddIntField(inner, "Fade Out Frames", settings.fadeOutFrames, value =>
+            {
+                RecordUndo("Edit Impact Flash Fade Frames");
+                settings.fadeOutFrames = Mathf.Max(1, value);
+                MarkDirty();
+            });
+            AddColorField(inner, "Flash Color", settings.flashColor, value =>
+            {
+                RecordUndo("Edit Impact Flash Color");
+                settings.flashColor = value;
+                MarkDirty();
+            });
+            AddFloatField(inner, "Peak Alpha", settings.peakAlpha, value =>
+            {
+                RecordUndo("Edit Impact Flash Alpha");
+                settings.peakAlpha = Mathf.Clamp01(value);
+                MarkDirty();
+            });
+        }
+
+        private void BuildProceduralSlashFields(VisualElement inner, ActionEventEntry entry)
+        {
+            var settings = entry.slashFieldSettings ??= new ProceduralSlashFieldSettings();
+            AddObjectField(inner, "Ribbon Material", settings.material, value => { RecordUndo("Edit Slash Material"); settings.material = value as Material; MarkDirty(); });
+            AddFloatField(inner, "Overall VFX Scale", settings.overallScale, value => { RecordUndo("Edit Slash Scale"); settings.overallScale = Mathf.Max(0.1f, value); MarkDirty(); });
+            AddToggleField(inner, "Fullscreen Glow Slash", settings.fullScreenSlash, value => { RecordUndo("Edit Fullscreen Slash"); settings.fullScreenSlash = value; MarkDirtyAndRebuild(); });
+            AddToggleField(inner, "Fit Visible Screen", settings.fitViewport, value => { RecordUndo("Edit Slash Viewport"); settings.fitViewport = value; MarkDirty(); });
+            AddFloatField(inner, "Screen Coverage", settings.viewportCoverage, value => { RecordUndo("Edit Slash Coverage"); settings.viewportCoverage = Mathf.Clamp(value, 0.5f, 2f); MarkDirty(); });
+            AddIntField(inner, "Full Screen Slashes", settings.screenSpanningCount, value => { RecordUndo("Edit Full Screen Slashes"); settings.screenSpanningCount = Mathf.Max(0, value); MarkDirty(); });
+            AddFloatField(inner, "Foreground Share", settings.foregroundFraction, value => { RecordUndo("Edit Slash Depth Share"); settings.foregroundFraction = Mathf.Clamp01(value); MarkDirty(); });
+            AddTextField(inner, "Normal Sorting Layer", settings.normalSortingLayer, value => { RecordUndo("Edit Slash Normal Layer"); settings.normalSortingLayer = value; MarkDirty(); });
+            AddIntField(inner, "Normal Order", settings.normalSortingOrder, value => { RecordUndo("Edit Slash Normal Order"); settings.normalSortingOrder = value; MarkDirty(); });
+            AddTextField(inner, "Foreground Sorting Layer", settings.foregroundSortingLayer, value => { RecordUndo("Edit Slash Front Layer"); settings.foregroundSortingLayer = value; MarkDirty(); });
+            AddIntField(inner, "Foreground Order", settings.foregroundSortingOrder, value => { RecordUndo("Edit Slash Front Order"); settings.foregroundSortingOrder = value; MarkDirty(); });
+            AddIntField(inner, "Slash Count", settings.slashCount, value => { RecordUndo("Edit Slash Count"); settings.slashCount = Mathf.Clamp(value, 1, 64); MarkDirty(); });
+            AddIntField(inner, "Seam Count", settings.seamCount, value => { RecordUndo("Edit Seam Count"); settings.seamCount = Mathf.Clamp(value, 0, 32); MarkDirty(); });
+            AddIntField(inner, "First Frame", settings.firstFrame, value => { RecordUndo("Edit Slash Start"); settings.firstFrame = Mathf.Max(0, value); MarkDirty(); });
+            AddIntField(inner, "Interval", settings.intervalFrames, value => { RecordUndo("Edit Slash Interval"); settings.intervalFrames = Mathf.Max(1, value); MarkDirty(); });
+            AddIntField(inner, "End Frame", settings.endFrame, value => { RecordUndo("Edit Slash End"); settings.endFrame = Mathf.Max(1, value); MarkDirty(); });
+            AddIntField(inner, "Seed (0 random)", settings.seed, value => { RecordUndo("Edit Slash Seed"); settings.seed = value; MarkDirty(); });
+            AddVector2Field(inner, "Field Center", settings.center, value => { RecordUndo("Edit Slash Center"); settings.center = value; MarkDirty(); });
+            AddVector2Field(inner, "Field Spread", settings.spread, value => { RecordUndo("Edit Slash Spread"); settings.spread = value; MarkDirty(); });
+            AddVector2Field(inner, "Length Range", settings.lengthRange, value => { RecordUndo("Edit Slash Length"); settings.lengthRange = value; MarkDirty(); });
+            AddVector2Field(inner, "Width Range", settings.widthRange, value => { RecordUndo("Edit Slash Width"); settings.widthRange = value; MarkDirty(); });
+            AddVector2Field(inner, "Slash Angle Range (deg)", settings.angleRange, value => { RecordUndo("Edit Slash Angles"); settings.angleRange = value; MarkDirty(); });
+            AddFloatField(inner, "Screen Cut Angle (deg)", settings.fullScreenAngle, value => { RecordUndo("Edit Screen Cut Angle"); settings.fullScreenAngle = value; MarkDirty(); });
+            AddVector2Field(inner, "Reveal Frames", settings.revealFrames, value => { RecordUndo("Edit Slash Reveal"); settings.revealFrames = value; MarkDirty(); });
+            AddVector2Field(inner, "Decay Frames", settings.decayFrames, value => { RecordUndo("Edit Slash Decay"); settings.decayFrames = value; MarkDirty(); });
+            if (settings.fullScreenSlash)
+                BuildBackgroundOverlayFlashFields(inner, entry);
+            BuildCutImpactFields(inner, settings.impactDistortion ??= new CutImpactDistortionSettings());
+            AddToggleField(inner, "Hide Actor", settings.hideActor, value => { RecordUndo("Edit Slash Visibility"); settings.hideActor = value; MarkDirty(); });
+            AddIntField(inner, "Hide At", settings.hideFromFrame, value => { RecordUndo("Edit Actor Hide Frame"); settings.hideFromFrame = Mathf.Max(0, value); MarkDirty(); });
+            AddIntField(inner, "Show At", settings.showAtFrame, value => { RecordUndo("Edit Actor Show Frame"); settings.showAtFrame = Mathf.Max(0, value); MarkDirty(); });
+        }
+
+        private void BuildCutImpactFields(VisualElement inner, CutImpactDistortionSettings impact)
+        {
+            AddSeparator(inner, "Cut Impact Distortion");
+            AddToggleField(inner, "Cut-following Refraction", impact.enabled, value => { RecordUndo("Edit Cut Refraction"); impact.enabled = value; MarkDirty(); });
+            AddIntField(inner, "Impact Start Frame", impact.startFrame, value => { RecordUndo("Edit Cut Impact Start"); impact.startFrame = Mathf.Max(0, value); MarkDirty(); });
+            AddIntField(inner, "Impact Duration", impact.durationFrames, value => { RecordUndo("Edit Cut Impact Duration"); impact.durationFrames = Mathf.Max(1, value); MarkDirty(); });
+            AddFloatField(inner, "Cut Distortion Width (screen height)", impact.waveWidth, value => { RecordUndo("Edit Cut Wave Width"); impact.waveWidth = Mathf.Max(0.01f, value); MarkDirty(); });
+            AddFloatField(inner, "Refraction (pixels)", impact.refractionPixels, value => { RecordUndo("Edit Cut Refraction Strength"); impact.refractionPixels = Mathf.Clamp(value, 0f, 64f); MarkDirty(); });
+            AddFloatField(inner, "Chromatic Split (pixels)", impact.chromaticPixels, value => { RecordUndo("Edit Cut Chromatic Split"); impact.chromaticPixels = Mathf.Clamp(value, 0f, 8f); MarkDirty(); });
+            AddFloatField(inner, "Wave Blur (pixels)", impact.blurPixels, value => { RecordUndo("Edit Cut Wave Blur"); impact.blurPixels = Mathf.Clamp(value, 0f, 4f); MarkDirty(); });
+            AddIntField(inner, "Impact Reference Height", impact.referenceHeight, value => { RecordUndo("Edit Cut Pixel Reference"); impact.referenceHeight = Mathf.Max(1, value); MarkDirty(); });
+        }
+
+        private void BuildActionCameraMotionFields(VisualElement inner, ActionEventEntry entry)
+        {
+            inner.Add(new HelpBox("Legacy camera event. Playback is preserved. Use the conversion preview below to edit this as a Camera Animation Control sequence.", HelpBoxMessageType.Info));
         }
 
         private void BuildGameImpulseRequestFields(VisualElement inner, GameImpulseRequest request, string undoPrefix)
@@ -1964,10 +2175,12 @@ namespace CombatEditor.UI
 
                 if (hitbox is NormalHitbox normalHitbox)
                 {
+                    BuildDirectHitFeedbackFields(inner, hitbox);
                     BuildNormalHitboxFields(inner, normalHitbox);
                 }
                 else if (hitbox is GrabHitbox grabHitbox)
                 {
+                    BuildDirectHitFeedbackFields(inner, hitbox);
                     BuildGrabHitboxFields(inner, grabHitbox);
                 }
                 else if (hitbox is ProjectileSpawnHitbox projectileHitbox)
@@ -1983,6 +2196,14 @@ namespace CombatEditor.UI
             {
                 ReorderListItem(hitData.hitboxes, idx, newIndex, "Reorder Hitbox");
             }, reorderIndex: idx, reorderCount: hitData.hitboxes.Count);
+        }
+
+        private void BuildDirectHitFeedbackFields(VisualElement body, HitboxBase hitbox)
+        {
+            AddToggleField(body, "Suppress Hitstop / Camera Impulse", hitbox.suppressImpactFeedback, value =>
+            { RecordUndo("Edit Impact Feedback"); hitbox.suppressImpactFeedback = value; MarkDirty(); });
+            AddToggleField(body, "Suppress Generic Contact VFX", hitbox.suppressContactVfx, value =>
+            { RecordUndo("Edit Contact VFX"); hitbox.suppressContactVfx = value; MarkDirty(); });
         }
 
         private void BuildNormalHitboxFields(VisualElement body, NormalHitbox hitbox)
@@ -2183,6 +2404,18 @@ namespace CombatEditor.UI
                 hitbox.hitSFX = value;
                 MarkDirty();
             });
+            AddFloatSlider(body, "Volume", hitbox.hitSFXVolume, 0f, 2f, value =>
+            {
+                RecordUndo("Edit Hit SFX Volume");
+                hitbox.hitSFXVolume = Mathf.Clamp(value, 0f, 2f);
+                MarkDirty();
+            });
+            AddFloatSlider(body, "Pitch", hitbox.hitSFXPitch, 0.1f, 3f, value =>
+            {
+                RecordUndo("Edit Hit SFX Pitch");
+                hitbox.hitSFXPitch = Mathf.Clamp(value, 0.1f, 3f);
+                MarkDirty();
+            });
             AddEnumField(body, "Hit VFX Type", hitbox.hitVFXType, value =>
             {
                 RecordUndo("Edit Hit VFX Type");
@@ -2282,6 +2515,18 @@ namespace CombatEditor.UI
             {
                 RecordUndo("Edit Grab Hit SFX");
                 hitbox.hitSFX = value;
+                MarkDirty();
+            });
+            AddFloatSlider(body, "Volume", hitbox.hitSFXVolume, 0f, 2f, value =>
+            {
+                RecordUndo("Edit Hit SFX Volume");
+                hitbox.hitSFXVolume = Mathf.Clamp(value, 0f, 2f);
+                MarkDirty();
+            });
+            AddFloatSlider(body, "Pitch", hitbox.hitSFXPitch, 0.1f, 3f, value =>
+            {
+                RecordUndo("Edit Hit SFX Pitch");
+                hitbox.hitSFXPitch = Mathf.Clamp(value, 0.1f, 3f);
                 MarkDirty();
             });
             AddEnumField(body, "Hit VFX Type", hitbox.hitVFXType, value =>

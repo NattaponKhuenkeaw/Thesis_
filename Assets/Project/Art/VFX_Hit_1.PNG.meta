@@ -1,0 +1,397 @@
+fileFormatVersion: 2
+guid: 44168e3874d1c574cb2645afa4aa909d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5075335957044983879
+    second: VFX_Hit_1_0
+  - first:
+      213: 4118918798177251210
+    second: VFX_Hit_1_1
+  - first:
+      213: -4554296386463910921
+    second: VFX_Hit_1_2
+  - first:
+      213: 6211366342714088095
+    second: VFX_Hit_1_3
+  - first:
+      213: 6997992024342981373
+    second: VFX_Hit_1_4
+  - first:
+      213: 5437213839881279710
+    second: VFX_Hit_1_5
+  - first:
+      213: 7515705297921825426
+    second: VFX_Hit_1_6
+  - first:
+      213: 8651496408422912384
+    second: VFX_Hit_1_7
+  - first:
+      213: 1563536753658113171
+    second: VFX_Hit_1_8
+  - first:
+      213: -2861493476938293948
+    second: VFX_Hit_1_9
+  - first:
+      213: 6853486598417863897
+    second: VFX_Hit_1_10
+  - first:
+      213: 3045446686707875355
+    second: VFX_Hit_1_11
+  - first:
+      213: -47729925517328533
+    second: VFX_Hit_1_12
+  - first:
+      213: -7310052598023570527
+    second: VFX_Hit_1_13
+  - first:
+      213: 326101652349679006
+    second: VFX_Hit_1_14
+  - first:
+      213: 2819161871889882063
+    second: VFX_Hit_1_15
+  - first:
+      213: -4971514049388925006
+    second: VFX_Hit_1_16
+  - first:
+      213: -5488342253815450252
+    second: VFX_Hit_1_17
+  - first:
+      213: -6155276691832299177
+    second: VFX_Hit_1_18
+  - first:
+      213: -3456697001587392923
+    second: VFX_Hit_1_19
+  - first:
+      213: 3206290425955110954
+    second: VFX_Hit_1_20
+  - first:
+      213: 2350034817257237012
+    second: VFX_Hit_1_21
+  - first:
+      213: 217910209618260680
+    second: VFX_Hit_1_22
+  - first:
+      213: 3265643995374074765
+    second: VFX_Hit_1_23
+  - first:
+      213: -4187714332865843505
+    second: VFX_Hit_1_24
+  - first:
+      213: -1531237910553630438
+    second: VFX_Hit_1_25
+  - first:
+      213: -5289338121049189495
+    second: VFX_Hit_1_26
+  - first:
+      213: -3335165881903906263
+    second: VFX_Hit_1_27
+  - first:
+      213: -733848670014005328
+    second: VFX_Hit_1_28
+  - first:
+      213: -6179820469562860329
+    second: VFX_Hit_1_29
+  - first:
+      213: 5523697379514213741
+    second: VFX_Hit_1_30
+  - first:
+      213: -5266787593427398152
+    second: VFX_Hit_1_31
+  - first:
+      213: 758152806189959598
+    second: VFX_Hit_1_32
+  - first:
+      213: 8640268076149401024
+    second: VFX_Hit_1_33
+  - first:
+      213: -4261998080585963301
+    second: VFX_Hit_1_34
+  - first:
+      213: 143784578788059828
+    second: VFX_Hit_1_35
+  - first:
+      213: -2923639673427193472
+    second: VFX_Hit_1_36
+  - first:
+      213: -7169403205165080859
+    second: VFX_Hit_1_37
+  - first:
+      213: 4578892800775785654
+    second: VFX_Hit_1_38
+  - first:
+      213: -4751397282581479789
+    second: VFX_Hit_1_39
+  - first:
+      213: 4300320692676692339
+    second: VFX_Hit_1_40
+  - first:
+      213: -4210452329075527490
+    second: VFX_Hit_1_41
+  - first:
+      213: -1352987341446525803
+    second: VFX_Hit_1_42
+  - first:
+      213: 48310494590118204
+    second: VFX_Hit_1_43
+  - first:
+      213: 878271703140123494
+    second: VFX_Hit_1_44
+  - first:
+      213: 6192707866469250046
+    second: VFX_Hit_1_45
+  - first:
+      213: 2305843160364154206
+    second: VFX_Hit_1_46
+  - first:
+      213: 6086988534577595088
+    second: VFX_Hit_1_47
+  - first:
+      213: -4898180392267867990
+    second: VFX_Hit_1_48
+  - first:
+      213: -8173399440075158245
+    second: VFX_Hit_1_49
+  - first:
+      213: 3095032418496068693
+    second: VFX_Hit_1_50
+  - first:
+      213: -3336874769986358169
+    second: VFX_Hit_1_51
+  - first:
+      213: -3041987935834096087
+    second: VFX_Hit_1_52
+  - first:
+      213: -3497505144994876353
+    second: VFX_Hit_1_53
+  - first:
+      213: 2446653164558807701
+    second: VFX_Hit_1_54
+  - first:
+      213: -3216017479507663063
+    second: VFX_Hit_1_55
+  - first:
+      213: -5626938818228322418
+    second: VFX_Hit_1_56
+  - first:
+      213: -8816147676490384068
+    second: VFX_Hit_1_57
+  - first:
+      213: -9206752613993769676
+    second: VFX_Hit_1_58
+  - first:
+      213: 3815487528117947981
+    second: VFX_Hit_1_59
+  - first:
+      213: -327829498679884243
+    second: VFX_Hit_1_60
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 150
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: VFX_Hit_1_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 436
+        height: 444
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 748fe63a9273f6640800000000000000
+      internalID: 5075335957044983879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_Hit_1_1
+      rect:
+        serializedVersion: 2
+        x: 436
+        y: 0
+        width: 436
+        height: 444
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8fa800f2d6592930800000000000000
+      internalID: 4118918798177251210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_Hit_1_2
+      rect:
+        serializedVersion: 2
+        x: 872
+        y: 0
+        width: 436
+        height: 444
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f339f2f093ebc0c0800000000000000
+      internalID: -4554296386463910921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 4cf542dbc80bcf04baef413f4cba27b5
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":4.0,"y":1.0},"gridSpriteSize":{"x":436.0,"y":444.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      VFX_Hit_1_0: 5075335957044983879
+      VFX_Hit_1_1: 4118918798177251210
+      VFX_Hit_1_2: -4554296386463910921
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

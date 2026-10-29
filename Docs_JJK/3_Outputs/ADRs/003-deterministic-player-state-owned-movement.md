@@ -1,5 +1,11 @@
 # ADR-003: Deterministic State-Owned Player Movement
 
+## Approved motion-clock option — 2026-10-29
+
+User approved `../Specs/animation-slow-motion-options-task-card.md` with “lgtm”. MotionFrameData adds Follow Slow Motion, default on. Turning it off changes only an already-triggered motion's progression; action phases, key trigger frames, animation/hit timing, input windows, cancellation and resource authority remain with the existing state/resolver.
+
+Normal motion uses unscaled fixed-step elapsed time and converts each requested displacement into velocity over the actual scaled physics step. Existing collision casts and motor application remain authoritative; only the opt-out path adjusts its minimum integration step for low time scales. Captured-world motion advances through the fixed motor with a per-motion counter and a fixed-time guard against duplicate progression; the action's samples must not rewind it. Full pause/hitstop still gate the generic opt-out. Existing explicit cinematic unscaled behavior remains on its established path. No transform movement from a new render Update loop or global physics setting change is introduced.
+
 - **Status:** Accepted; amended by user-approved action input/output contract
 - **Date:** 2026-07-24; amended 2026-07-27 and 2026-08-10
 - **Decision Owners:** User-approved design/architecture checkpoint

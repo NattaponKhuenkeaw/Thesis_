@@ -378,6 +378,7 @@ public struct ProjectileSpawnContext
     public Transform targetTransform;
     public CharacterPassiveController passiveController;
     public AttackStepData sourceStep;
+    public CombatExecutionContext execution;
     public string sourceActionId;
     public string sourceActionName;
     public AttackCategory category;

@@ -58,7 +58,7 @@ public class VFXSpawner : MonoBehaviour
             float lifespan = entry.duration / CombatCore.FrameDataConstants.LOGIC_FPS;
             AnimationClip clipToPlay = entry.vfxClip;
 
-            return Project.Combat.VFXManager.Instance.SpawnResult(
+            var instance = Project.Combat.VFXManager.Instance.SpawnResult(
                 entry.vfxType, 
                 spawnPos, 
                 flipXForVFX, 
@@ -69,6 +69,14 @@ public class VFXSpawner : MonoBehaviour
                 clipToPlay,
                 entry.fitScreenSize,
                 entry.adjustLayer);
+            if (instance != null && entry.impactDistortion?.enabled == true)
+            {
+                var impact = instance.GetComponent<CutImpactVfxSource>();
+                if (impact == null) impact = instance.gameObject.AddComponent<CutImpactVfxSource>();
+                impact.BeginSprite(entry.impactDistortion, instance.GetComponent<SpriteRenderer>(),
+                    GetComponentInParent<PlayerCombat>()?.CurrentExecution, entry.duration);
+            }
+            return instance;
         }
 
         // 2. Fallback to Prefab instantiation (Legacy path)

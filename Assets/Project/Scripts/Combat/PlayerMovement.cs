@@ -4,7 +4,7 @@ using System.Collections;
 using System;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerMovement : MonoBehaviour
+public partial class PlayerMovement : MonoBehaviour
 {
     private const string PlayerLayerName = "Player";
     private const string EnemyLayerName = "Enemy";
@@ -94,6 +94,7 @@ public class PlayerMovement : MonoBehaviour
     private readonly RaycastHit2D[] oneWayCrossingBuffer = new RaycastHit2D[8];
     private readonly RaycastHit2D[] actionOutputGroundBuffer = new RaycastHit2D[8];
     private readonly RaycastHit2D[] movementWallHits = new RaycastHit2D[64];
+    private readonly Collider2D[] qteClearanceHits = new Collider2D[32];
     private ContactFilter2D groundContactFilter;
     private ContactFilter2D oneWayContactFilter;
 
@@ -120,7 +121,53 @@ public class PlayerMovement : MonoBehaviour
     private float attackMotionVelocityY;
     private Coroutine attackMotionCoroutine;
     private bool isAttackMotionActive;
+    private bool usesWorldTargetMotion;
+    private EnemyController actionMotionTarget;
+    private Vector2 actionTargetPosition;
+    private Transform actionTargetAnchor;
+    private MotionKeyframe resolvedTargetMotion;
+    private Vector2 resolvedTargetMotionDelta;
+
+    public bool TryGetResolvedTargetMotion(out MotionKeyframe keyframe, out Vector2 delta)
+    {
+        keyframe = resolvedTargetMotion;
+        delta = resolvedTargetMotionDelta;
+        return keyframe != null;
+    }
+
+    public void SetActionMotionTarget(EnemyController target)
+    {
+        ClearActionMotionTarget();
+        actionMotionTarget = target;
+        actionTargetPosition = target != null ? (Vector2)target.transform.position : rb.position;
+        if (target != null && Mathf.Abs(actionTargetPosition.x - transform.position.x) > 0.001f)
+            SnapFacingDirection(actionTargetPosition.x >= transform.position.x ? 1 : -1);
+    }
+
+    public void ClearActionMotionTarget()
+    {
+        if (actionMotionTarget != null) actionMotionTarget.ReleaseGrab(GetInstanceID());
+        actionMotionTarget = null;
+        if (actionTargetAnchor != null) Destroy(actionTargetAnchor.gameObject);
+        actionTargetAnchor = null;
+        usesWorldTargetMotion = false;
+    }
+
+    public bool TryCommitCombatDash()
+    {
+        if (!CanDash()) return false;
+        if (fsm != null && fsm.IsAirborneContext)
+        {
+            airDashesUsed++;
+            combat?.ResetAirComboCooldown();
+        }
+        StopAttackMotion();
+        dashInProgress = true;
+        OnDashStart?.Invoke();
+        return true;
+    }
     private bool useUnscaledAttackMotion;
+    private bool attackMotionIgnoresSlowMotion;
 
     // Drop-down
     private Coroutine dropDownCoroutine;
@@ -251,6 +298,7 @@ public class PlayerMovement : MonoBehaviour
         if (dashCooldownFramesRemaining > 0) dashCooldownFramesRemaining--;
 
         UpdateFacing();
+        TickIndependentCapturedMotion();
         CheckGround();
 
         if (!GroundState.IsEffectivelyGrounded
@@ -437,6 +485,62 @@ public class PlayerMovement : MonoBehaviour
         return (Vector3)(nextPosition - previousPosition);
     }
 
+    public bool TryFindQteGroundPosition(float desiredX, out Vector2 position)
+    {
+        position = rb != null ? rb.position : (Vector2)transform.position;
+        if (rb == null || groundCheck == null) return false;
+        float travel = ClipHorizontalTravel(desiredX - rb.position.x);
+        // Support must remain continuous; a QTE is not a traversal teleport over a gap.
+        int samples = Mathf.Max(1, Mathf.CeilToInt(Mathf.Abs(travel) / 0.25f));
+        for (int i = 0; i <= samples; i++)
+        {
+            float x = rb.position.x + travel * i / samples;
+            Vector2 foot = (Vector2)groundCheck.position + Vector2.right * (x - rb.position.x);
+            RaycastHit2D support = Physics2D.Raycast(foot + Vector2.up * 0.25f, Vector2.down, 0.5f, GetGroundCheckMask());
+            if (support.collider == null || support.collider.isTrigger || support.normal.y < MinimumGroundNormalY)
+                return false;
+            if (i == samples) position.y += support.point.y - groundCheck.position.y;
+        }
+        position.x += travel;
+        // A vertical floor correction on a slope must not lift the body into a ceiling.
+        if (solidColliders != null)
+            foreach (Collider2D body in solidColliders)
+            {
+                if (body == null || !body.enabled || body.isTrigger || body.attachedRigidbody != rb) continue;
+                Bounds bounds = body.bounds;
+                var filter = new ContactFilter2D();
+                filter.SetLayerMask(Physics2D.GetLayerCollisionMask(body.gameObject.layer));
+                filter.useTriggers = false;
+                Vector2 center = (Vector2)bounds.center + position - rb.position;
+                float clearanceInset = Mathf.Max(MovementWallSkin, Physics2D.defaultContactOffset * 2f) + 0.03f;
+                Vector2 size = (Vector2)bounds.size - Vector2.one * (clearanceInset * 2f);
+                int count = Physics2D.OverlapBox(center, size, 0f, filter, qteClearanceHits);
+                if (count == qteClearanceHits.Length) return false;
+                for (int i = 0; i < count; i++)
+                {
+                    Collider2D obstacle = qteClearanceHits[i];
+                    if (obstacle == null || obstacle.attachedRigidbody == rb
+                        || obstacle.GetComponentInParent<EnemyController>() != null
+                        || obstacle.GetComponentInParent<PlayerTeamSwitchState>() != null
+                        || Physics2D.GetIgnoreCollision(body, obstacle)
+                        || (obstacle.usedByEffector && obstacle.GetComponent<PlatformEffector2D>() != null)) continue;
+                    return false;
+                }
+            }
+        return true;
+    }
+
+    public void ApplyQteGroundPosition(Vector2 position)
+    {
+        rb.position = position;
+        rb.linearVelocity = Vector2.zero;
+        transform.position = new Vector3(position.x, position.y, transform.position.z);
+        Physics2D.SyncTransforms();
+        GroundState.SynchronizeWithoutTransition(true, 0f);
+        isGrounded = true;
+        CacheGroundCheckPosition();
+    }
+
     public bool SnapToGroundForActionOutput()
     {
         if (rb == null || groundCheck == null || !EnsureProfileAssigned())
@@ -555,14 +659,36 @@ public class PlayerMovement : MonoBehaviour
             : 0;
     }
 
-    public void ApplyAttackMovement(MotionKeyframe keyframe)
+    public void ApplyAttackMovement(MotionKeyframe keyframe, bool followSlowMotion = true)
     {
+        // Captured paths are sampled before hit processing by the owning action state.
+        if (keyframe != null && keyframe.taskType == MotionTaskType.CapturedWorldPoint) return;
         StopAttackMotionVelocityOnly();
-        if (keyframe != null) attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(keyframe));
+        attackMotionIgnoresSlowMotion = keyframe != null && !followSlowMotion;
+        if (keyframe != null) attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(keyframe, followSlowMotion));
     }
 
     public void SetUseUnscaledAttackMotion(bool useUnscaled) => useUnscaledAttackMotion = useUnscaled;
-    public void CancelAttackMotion() => StopAttackMotion();
+    public void CancelAttackMotion()
+    {
+        ClearCapturedWorldMotion();
+        StopAttackMotion();
+        ClearActionMotionTarget();
+        resolvedTargetMotion = null;
+    }
+
+    private void OnDisable()
+    {
+        if (fsm != null) fsm.QteIntroState?.OnOwnerDisabled();
+        ClearCapturedWorldMotion();
+        StopAttackMotion();
+        ClearActionMotionTarget();
+        FinishDash();
+    }
+
+    // The HUD reads the same fixed-step timer that gates the next dash.
+    public float DashCooldownRemaining => Mathf.Max(0, dashCooldownFramesRemaining) * Time.fixedDeltaTime;
+    public float DashCooldownDuration => dashData != null ? Mathf.Max(0, dashData.cooldownFrames) * Time.fixedDeltaTime : 0f;
 
     public bool CanDash() => profile != null && (CanStartGroundDash() || CanStartAirDash());
     public bool CanJump() => profile != null
@@ -790,9 +916,11 @@ public class PlayerMovement : MonoBehaviour
     {
         if (attackMotionCoroutine != null) { StopCoroutine(attackMotionCoroutine); attackMotionCoroutine = null; }
         isAttackMotionActive = false;
+        usesWorldTargetMotion = false;
         attackMotionVelocityX = 0f;
         attackMotionVelocityY = 0f;
         useUnscaledAttackMotion = false;
+        attackMotionIgnoresSlowMotion = false;
     }
 
     private void StopAttackMotion()
@@ -863,6 +991,12 @@ public class PlayerMovement : MonoBehaviour
     private void ApplyMotorVelocity()
     {
         if (rb == null) return;
+        if (_hasCapturedWorldMotion)
+        {
+            rb.linearVelocity = Vector2.zero;
+            lastAppliedMotionVelocityY = 0f;
+            return;
+        }
 
         float baseVerticalVelocity = rb.linearVelocity.y - lastAppliedMotionVelocityY;
         float motionVelocityX = isAttackMotionActive ? attackMotionVelocityX : 0f;
@@ -872,15 +1006,52 @@ public class PlayerMovement : MonoBehaviour
             : GetAllowedHorizontalInput() * BaseMoveSpeed;
         float movementVelocityY = ResolveVerticalVelocity(baseVerticalVelocity, motionVelocityY);
 
-        rb.linearVelocity = new Vector2(
-            ClipHorizontalVelocity(movementVelocityX + motionVelocityX),
-            movementVelocityY + motionVelocityY);
+        Vector2 velocity = new Vector2(movementVelocityX + motionVelocityX, movementVelocityY + motionVelocityY);
+        rb.linearVelocity = usesWorldTargetMotion ? ClipTargetMotionVelocity(velocity)
+            : new Vector2(ClipHorizontalVelocity(velocity.x), velocity.y);
         lastAppliedMotionVelocityY = motionVelocityY;
+    }
+
+    private Vector2 ClipTargetMotionVelocity(Vector2 velocity)
+    {
+        float step = Mathf.Max(Time.fixedDeltaTime, attackMotionIgnoresSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
+        Vector2 travel = velocity * step;
+        float distance = travel.magnitude;
+        if (distance < 0.000001f) return velocity;
+        Vector2 direction = travel / distance;
+        float allowed = distance;
+        if (solidColliders == null)
+            solidColliders = Array.FindAll(GetComponentsInChildren<Collider2D>(),
+                c => c != null && !c.isTrigger && c.attachedRigidbody == rb);
+        foreach (Collider2D body in solidColliders)
+        {
+            if (body == null || !body.enabled || !body.gameObject.activeInHierarchy) continue;
+            int mask = Physics2D.GetLayerCollisionMask(body.gameObject.layer);
+            if (enemyLayer >= 0) mask &= ~(1 << enemyLayer);
+            var filter = new ContactFilter2D();
+            filter.SetLayerMask(mask);
+            filter.useTriggers = false;
+            int count = body.Cast(direction, filter, movementWallHits, distance + MovementWallSkin);
+            if (count == movementWallHits.Length) return Vector2.zero;
+            for (int i = 0; i < count; i++)
+            {
+                RaycastHit2D hit = movementWallHits[i];
+                Collider2D obstacle = hit.collider;
+                if (obstacle == null || obstacle.attachedRigidbody == rb
+                    || obstacle.GetComponentInParent<EnemyController>() != null
+                    || Physics2D.GetIgnoreCollision(body, obstacle)
+                    || (obstacle.usedByEffector && obstacle.GetComponent<PlatformEffector2D>() != null
+                        && direction.y >= 0f)) continue;
+                if (Vector2.Dot(hit.normal, direction) >= -0.01f) continue;
+                allowed = Mathf.Min(allowed, Mathf.Max(0f, hit.distance - MovementWallSkin));
+            }
+        }
+        return direction * (allowed / step);
     }
 
     private float ClipHorizontalVelocity(float velocity)
     {
-        float step = Mathf.Max(Time.fixedDeltaTime, 0.001f);
+        float step = Mathf.Max(Time.fixedDeltaTime, attackMotionIgnoresSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
         return ClipHorizontalTravel(velocity * step, isAttackMotionActive || IsDashing) / step;
     }
 
@@ -995,6 +1166,18 @@ public class PlayerMovement : MonoBehaviour
         wasAttackLockOnActive = true; lastObservedComboStep = step;
     }
 
+    // Buffered actions can replace a step at the same combo depth without an idle
+    // movement tick. Reset on commitment so they get their own initial target turn.
+    public void BeginCombatStepFacing(bool isAutoChain)
+    {
+        attackFacingLockOnCancelledForCurrentAttack =
+            Mathf.Abs(horizontalInput) >= AttackFacingCancelInputThreshold;
+        wasAttackLockOnActive = combat != null && combat.IsAttacking();
+        lastObservedComboStep = combat != null ? combat.GetComboStep() : -1;
+        hasPerformedInitialLockOnForCurrentStep = isAutoChain;
+        TryHandleAttackFacingLockOn();
+    }
+
     private bool TryHandleAttackFacingLockOn()
     {
         if (!_isAutoTargetEnabled) return false;
@@ -1009,6 +1192,7 @@ public class PlayerMovement : MonoBehaviour
 
     private EnemyController GetAttackFacingLockOnTarget()
     {
+        if (actionMotionTarget != null && actionMotionTarget.IsTargetable) return actionMotionTarget;
         EnemyController target = CameraManager.instance != null
             ? CameraManager.instance.GetNearestEngagedEnemy(transform.position)
             : null;
@@ -1112,9 +1296,10 @@ public class PlayerMovement : MonoBehaviour
         if (g != null) Destroy(g);
     }
 
-    private IEnumerator AttackMovementCoroutine(MotionKeyframe k)
+    private IEnumerator AttackMovementCoroutine(MotionKeyframe k, bool followSlowMotion)
     {
         isAttackMotionActive = true;
+        usesWorldTargetMotion = k.taskType == MotionTaskType.DashThroughTarget;
         float dir = FacingDirection;
         Vector2 start = rb.position;
 
@@ -1123,6 +1308,29 @@ public class PlayerMovement : MonoBehaviour
 
         switch (k.taskType)
         {
+            case MotionTaskType.DashThroughTarget:
+                EnemyController targetEnemy = actionMotionTarget != null && actionMotionTarget.IsTargetable
+                    ? actionMotionTarget : (combat as PlayerCombat)?.FindNearestEnemyTarget(k.targetRadius);
+                if (targetEnemy != null)
+                {
+                    if (actionMotionTarget == null) SetActionMotionTarget(targetEnemy);
+                    usesWorldTargetMotion = true;
+                    Vector2 anchor = k.ResolveTargetDashAnchor(start, actionTargetPosition, (int)dir);
+                    totalDelta = k.ResolveTargetDashDestination(start, anchor, (int)dir) - start;
+                    Vector2 direction = totalDelta.sqrMagnitude > 0.0001f ? totalDelta.normalized : new Vector2(dir, 0f);
+                    if (Mathf.Abs(direction.x) > 0.001f) SnapFacingDirection(direction.x > 0f ? 1 : -1);
+                    if (k.holdTargetAtAnchor)
+                    {
+                        if (actionTargetAnchor == null) actionTargetAnchor = new GameObject("ActionTargetAnchor").transform;
+                        actionTargetAnchor.position = anchor;
+                        targetEnemy.TryHoldAtActionAnchor(GetInstanceID(), actionTargetAnchor,
+                            Mathf.Max(1, k.endFrame - k.startFrame + 1));
+                    }
+                }
+                else totalDelta = k.horizontalOnly
+                    ? new Vector2(Mathf.Max(k.minimumTravelDistance, Mathf.Abs(k.position.x)) * dir, 0f)
+                    : new Vector2(k.position.x * dir, k.position.y);
+                break;
             case MotionTaskType.Relative:
                 totalDelta = new Vector2(k.position.x * dir, k.position.y);
                 break;
@@ -1130,7 +1338,7 @@ public class PlayerMovement : MonoBehaviour
                 totalDelta = (Vector2)k.position;
                 break;
             case MotionTaskType.SnapToEnemy:
-                Transform s = GetSnapTarget(8f);
+                Transform s = GetSnapTarget(k.targetRadius);
                 if (s != null)
                 {
                     Vector2 toE = (Vector2)s.position - start;
@@ -1144,21 +1352,26 @@ public class PlayerMovement : MonoBehaviour
                 break;
         }
 
+        if (k.taskType == MotionTaskType.DashThroughTarget || k.taskType == MotionTaskType.SnapToEnemy)
+        {
+            resolvedTargetMotion = k;
+            resolvedTargetMotionDelta = totalDelta;
+        }
         float dur = Mathf.Max(0, k.endFrame - k.startFrame) / (float)FrameDataConstants.LOGIC_FPS;
 
         if (dur <= 0)
         {
             if (totalDelta.sqrMagnitude > 0.000001f)
             {
-                attackMotionVelocityX = totalDelta.x / Mathf.Max(Time.fixedDeltaTime, 0.001f);
-                if (ShouldUseVisualOffset())
+                attackMotionVelocityX = totalDelta.x / Mathf.Max(Time.fixedDeltaTime, followSlowMotion ? 0.001f : 0.000001f);
+                if (!usesWorldTargetMotion && ShouldUseVisualOffset())
                 {
                     visualOffsetY += totalDelta.y;
                     attackMotionVelocityY = 0f;
                 }
                 else
                 {
-                    attackMotionVelocityY = totalDelta.y / Mathf.Max(Time.fixedDeltaTime, 0.001f);
+                    attackMotionVelocityY = totalDelta.y / Mathf.Max(Time.fixedDeltaTime, followSlowMotion ? 0.001f : 0.000001f);
                 }
                 yield return new WaitForFixedUpdate();
             }
@@ -1171,7 +1384,18 @@ public class PlayerMovement : MonoBehaviour
 
             while (elapsed < dur)
             {
-                float delta = useUnscaledAttackMotion ? Time.unscaledDeltaTime : Time.fixedDeltaTime;
+                if (combat != null && combat.HasActiveHitstop)
+                {
+                    attackMotionVelocityX = attackMotionVelocityY = 0f;
+                    yield return new WaitForFixedUpdate();
+                    continue;
+                }
+                float delta = useUnscaledAttackMotion ? Time.unscaledDeltaTime
+                    : AnimationTimePolicy.Delta(followSlowMotion, Time.fixedDeltaTime, Time.fixedUnscaledDeltaTime,
+                        Time.timeScale <= 0f || (GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld));
+                // The motor still integrates over scaled physics time even if the authored path ignores slow motion.
+                float integrationDelta = !followSlowMotion && !useUnscaledAttackMotion ? Time.fixedDeltaTime : delta;
+                float velocityDivisor = Mathf.Max(integrationDelta, !followSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
                 elapsed += delta;
                 float t = Mathf.Clamp01(elapsed / dur);
                 float easedT = TweenEase(0, 1, t, k.easing);
@@ -1179,15 +1403,15 @@ public class PlayerMovement : MonoBehaviour
 
                 float frameDeltaX = totalDelta.x * (easedT - easedPrev);
                 float frameDeltaY = totalDelta.y * (easedT - easedPrev);
-                attackMotionVelocityX = frameDeltaX / Mathf.Max(delta, 0.001f);
-                if (ShouldUseVisualOffset())
+                attackMotionVelocityX = frameDeltaX / velocityDivisor;
+                if (!usesWorldTargetMotion && ShouldUseVisualOffset())
                 {
                     visualOffsetY += frameDeltaY;
                     attackMotionVelocityY = 0f;
                 }
                 else
                 {
-                    attackMotionVelocityY = frameDeltaY / Mathf.Max(delta, 0.001f);
+                    attackMotionVelocityY = frameDeltaY / velocityDivisor;
                 }
 
                 prevT = t;
@@ -1199,6 +1423,8 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        if (usesWorldTargetMotion && k.faceTargetOnArrival && actionMotionTarget != null)
+            SnapFacingDirection(actionMotionTarget.transform.position.x >= rb.position.x ? 1 : -1);
         StopAttackMotionVelocityOnly();
     }
 

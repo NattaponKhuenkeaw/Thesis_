@@ -8,8 +8,7 @@ using Project.InventorySystem.Artifacts;
 namespace Project.TeamBuilder.UI
 {
     /// <summary>
-    /// Detail panel for inspecting an artifact. Overlays the screen and can be dismissed
-    /// by clicking outside its bounds or kept open permanently.
+    /// Artifact details shared by the inline inventory preview and the inspector.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public class ArtifactPreviewPanel : MonoBehaviour
@@ -22,11 +21,14 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TMP_Text descriptionText;
         [SerializeField] private TMP_Text loreText; // Optional lore/flavor text
         [SerializeField] private TMP_Text qualityText;
+        [SerializeField] private Button equipButton;
+        [SerializeField] private TMP_Text equipLabel;
 
 
         [Header("Behavior Settings")]
         [SerializeField] private bool closeOnOutsideClick = false;
-        [SerializeField] private bool keepVisibleWhenEmpty = true;
+        [SerializeField] private bool keepVisibleWhenEmpty = false;
+        private Action<ArtifactInstance> equipAction;
 
         // =========================================================
         // Runtime State
@@ -41,6 +43,21 @@ namespace Project.TeamBuilder.UI
         public bool IsOpen => isOpen;
         public ArtifactInstance CurrentArtifact => currentArtifact;
         public ArtifactDefinition CurrentDefinition => currentDefinition;
+
+        public void SetEquipAction(Action<ArtifactInstance> action)
+        {
+            equipAction = action;
+            if (equipButton != null)
+            {
+                equipButton.onClick.RemoveListener(EquipSelection);
+                equipButton.onClick.AddListener(EquipSelection);
+            }
+        }
+
+        private void EquipSelection()
+        {
+            if (currentArtifact != null) equipAction?.Invoke(currentArtifact);
+        }
 
         private void Awake()
         {
@@ -83,13 +100,12 @@ namespace Project.TeamBuilder.UI
         {
             if (artifact == null || definition == null)
             {
-                if (keepVisibleWhenEmpty)
-                {
-                    ShowEmpty();
-                }
+                ShowEmpty();
                 return;
             }
 
+            // Awake may run on the first activation of an authored inactive preview.
+            gameObject.SetActive(true);
             currentArtifact = artifact;
             currentDefinition = definition;
             currentRollTable = rollTable;
@@ -99,12 +115,17 @@ namespace Project.TeamBuilder.UI
             ResolveMissingReferences();
             PopulateData();
 
-            // Move to front of hierarchy so it renders on top
-            transform.SetAsLastSibling();
+            if (equipButton != null)
+            {
+                equipButton.gameObject.SetActive(equipAction != null);
+                if (equipLabel != null) equipLabel.text = "EQUIP";
+            }
+            if (GetComponent<LayoutElement>() == null) transform.SetAsLastSibling();
         }
 
         public void ShowEmpty()
         {
+            if (!keepVisibleWhenEmpty) { Close(); return; }
             currentArtifact = null;
             currentDefinition = null;
             currentRollTable = null;
@@ -145,8 +166,6 @@ namespace Project.TeamBuilder.UI
 
         public void Close()
         {
-            if (!isOpen) return;
-
             gameObject.SetActive(false);
             isOpen = false;
             currentArtifact = null;
@@ -160,6 +179,7 @@ namespace Project.TeamBuilder.UI
             {
                 foreach (Transform child in statItemContainer)
                 {
+                    child.gameObject.SetActive(false);
                     Destroy(child.gameObject);
                 }
             }
@@ -183,7 +203,7 @@ namespace Project.TeamBuilder.UI
                 if (buttons[i] != null)
                 {
                     if (buttons[i].name.IndexOf("Ascend", StringComparison.OrdinalIgnoreCase) >= 0
-                        || buttons[i].name.IndexOf("Equip", StringComparison.OrdinalIgnoreCase) >= 0)
+                        || (buttons[i] != equipButton && buttons[i].name.IndexOf("Equip", StringComparison.OrdinalIgnoreCase) >= 0))
                     {
                         buttons[i].gameObject.SetActive(false);
                     }

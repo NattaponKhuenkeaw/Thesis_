@@ -138,7 +138,7 @@ public class PlayerSkillState : CombatPlayerState
         resolver.Reset();
         AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Skill);
         activeSkillAction = resolver.ActiveCombatAction as SkillAction;
-        if (step == null || activeSkillAction == null)
+        if (step == null || activeSkillAction == null || !IsSameSkillAction(previewSkillAction, activeSkillAction))
         {
             if (exitOnFailure)
             {
@@ -149,8 +149,12 @@ public class PlayerSkillState : CombatPlayerState
         }
 
         cooldownStartedForCurrentAction = false;
+        if (!ExecuteCombatStep(step, ctx, false))
+        {
+            if (exitOnFailure) ExitToAppropriateMovementState();
+            return false;
+        }
         TryStartCooldown();
-        ExecuteCombatStep(step, ctx, false);
 
         if (player.PassiveController != null && activeSkillAction != null)
         {

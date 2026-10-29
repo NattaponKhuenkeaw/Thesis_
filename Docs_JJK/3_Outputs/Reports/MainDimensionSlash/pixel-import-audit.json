@@ -1,0 +1,98 @@
+[
+  {
+    "name": "MainDimensionSlash_Actor.png",
+    "size": [
+      512,
+      384
+    ],
+    "opaqueColors": 18,
+    "alphaValues": [
+      0,
+      255
+    ]
+  },
+  {
+    "name": "MainDimensionSlash_burst_a.png",
+    "size": [
+      1024,
+      128
+    ],
+    "opaqueColors": 15,
+    "alphaValues": [
+      0,
+      255
+    ]
+  },
+  {
+    "name": "MainDimensionSlash_burst_b.png",
+    "size": [
+      1024,
+      128
+    ],
+    "opaqueColors": 14,
+    "alphaValues": [
+      0,
+      255
+    ]
+  },
+  {
+    "name": "MainDimensionSlash_burst_c.png",
+    "size": [
+      1024,
+      128
+    ],
+    "opaqueColors": 14,
+    "alphaValues": [
+      0,
+      255
+    ]
+  },
+  {
+    "name": "MainDimensionSlash_final.png",
+    "size": [
+      2048,
+      512
+    ],
+    "opaqueColors": 14,
+    "alphaValues": [
+      0,
+      255
+    ]
+  },
+  {
+    "name": "MainDimensionSlash_residual.png",
+    "size": [
+      1024,
+      128
+    ],
+    "opaqueColors": 5,
+    "alphaValues": [
+      0,
+      255
+    ]
+  },
+  {
+    "name": "MainDimensionSlash_seam.png",
+    "size": [
+      2048,
+      256
+    ],
+    "opaqueColors": 8,
+    "alphaValues": [
+      0,
+      255
+    ]
+  },
+  {
+    "name": "MainDimensionSlash_shards.png",
+    "size": [
+      1024,
+      128
+    ],
+    "opaqueColors": 5,
+    "alphaValues": [
+      0,
+      255
+    ]
+  }
+]

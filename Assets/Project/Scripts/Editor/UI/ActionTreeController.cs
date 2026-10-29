@@ -78,6 +78,24 @@ namespace CombatEditor.UI
             }
 
             BuildSingleCategory("🎯 Dash", "Dash", "Dash Move", "Dash", character.DashData);
+            if (character.actionResolverTable?.qteActions?.Count is not > 0 && character.qteSwap?.enabled == true
+                && character.qteSwap.TryResolveIntro(character.actionResolverTable, out _, out var introStep))
+            {
+                const string category = "QteIntro";
+                if (!expandedState.ContainsKey(category)) expandedState[category] = true;
+                var qteRoot = BuildCategoryHeader("QTE Entry Combo", category, () => Build(character));
+                if (expandedState[category])
+                {
+                    var items = new VisualElement(); items.AddToClassList("sidebar-items");
+                    ComboNode introRoot = character.qteSwap.introComboTree?.rootNode;
+                    if (introRoot != null)
+                        BuildTreeNodeRecursive(items, introRoot, category, 0, null, null, new HashSet<ComboNode>());
+                    else
+                        items.Add(CreateLeafItem(new ActionNode(introStep.stepName, category, "AttackStep", introStep)));
+                    qteRoot.Add(items);
+                }
+                container.Add(qteRoot);
+            }
 
             // Auto-select first item if current selection is lost
             if (selectedNode == null && leafElements.Count > 0)
@@ -86,6 +104,7 @@ namespace CombatEditor.UI
 
         private void BuildResolverTableCategories(ActionResolverTable table)
         {
+            BuildActionsForList("QTE Entry", "QTE", table.qteActions, table, AttackCategory.Normal);
             BuildActionsForList("⚁ECombo", "Combo", table.comboActions, table, AttackCategory.Normal);
             BuildActionsForList("🌀 Skill", "Skill", table.skillActions, table, AttackCategory.Skill);
             BuildActionsForList("⚡ Ultimate", "Ultimate", table.ultimateActions, table, AttackCategory.Ultimate);
@@ -212,6 +231,7 @@ namespace CombatEditor.UI
         private void BuildTreeNodeRecursive(VisualElement parent, ComboNode node, string category, int depth, string prefix, System.Action deleteCallback, HashSet<ComboNode> visited)
         {
             if (node == null) return;
+            UnityEngine.Object owner = category == "QteIntro" ? character : character.actionResolverTable;
 
             bool isVisited = visited.Contains(node);
             visited.Add(node);
@@ -238,9 +258,9 @@ namespace CombatEditor.UI
             if (node.defaultNext != null)
             {
                 System.Action delDefaultNext = () => {
-                    Undo.RecordObject(character.actionResolverTable, "Delete Default Next");
+                    Undo.RecordObject(owner, "Delete Default Next");
                     node.defaultNext = null;
-                    EditorUtility.SetDirty(character.actionResolverTable);
+                    EditorUtility.SetDirty(owner);
                     Build(character);
                 };
                 BuildTreeNodeRecursive(parent, node.defaultNext, category, depth + 1, null, delDefaultNext, visited);
@@ -250,9 +270,9 @@ namespace CombatEditor.UI
             if (node.onGrabSuccessNode != null && node.onGrabSuccessNode != node.defaultNext)
             {
                 System.Action delGrabNext = () => {
-                    Undo.RecordObject(character.actionResolverTable, "Delete Grab Success Link");
+                    Undo.RecordObject(owner, "Delete Grab Success Link");
                     node.onGrabSuccessNode = null;
-                    EditorUtility.SetDirty(character.actionResolverTable);
+                    EditorUtility.SetDirty(owner);
                     Build(character);
                 };
                 BuildTreeNodeRecursive(parent, node.onGrabSuccessNode, category, depth + 1, "(Grab)", delGrabNext, visited);
@@ -268,9 +288,9 @@ namespace CombatEditor.UI
                     {
                         var capturedRoute = route;
                         System.Action delRouteTarget = () => {
-                            Undo.RecordObject(character.actionResolverTable, "Delete Route Target");
+                            Undo.RecordObject(owner, "Delete Route Target");
                             capturedRoute.targetNode = null;
-                            EditorUtility.SetDirty(character.actionResolverTable);
+                            EditorUtility.SetDirty(owner);
                             Build(character);
                         };
                         string routePrefix = route.requireGrabbedEnemy ? "(Grab Hit)" : "(Branch)";
@@ -289,9 +309,9 @@ namespace CombatEditor.UI
                     {
                         var capturedTrigger = trigger;
                         System.Action delTriggerTarget = () => {
-                            Undo.RecordObject(character.actionResolverTable, "Delete Trigger Target");
+                            Undo.RecordObject(owner, "Delete Trigger Target");
                             capturedTrigger.targetNode = null;
-                            EditorUtility.SetDirty(character.actionResolverTable);
+                            EditorUtility.SetDirty(owner);
                             Build(character);
                         };
                         BuildTreeNodeRecursive(parent, trigger.targetNode, category, depth + 1, "(Auto)", delTriggerTarget, visited);

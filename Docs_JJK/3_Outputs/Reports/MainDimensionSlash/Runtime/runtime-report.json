@@ -1,0 +1,2038 @@
+{
+    "startedUtc": "2026-10-27T13:41:29.8317371Z",
+    "runs": [
+        {
+            "requestedFps": 30,
+            "requestedFacing": 1,
+            "renderFrames": 31,
+            "observedFps": 17.142688751220704,
+            "armedAfterFive": true,
+            "consumed": true,
+            "ended": true,
+            "cameraReleased": true,
+            "error": "",
+            "contacts": [
+                {
+                    "frame": 12,
+                    "damage": 20.0,
+                    "realtime": 5.948551654815674,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.985020637512207,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 20,
+                    "damage": 23.0,
+                    "realtime": 6.165412902832031,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.985020637512207,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 27,
+                    "damage": 23.0,
+                    "realtime": 6.293628215789795,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.985020637512207,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 33,
+                    "damage": 23.0,
+                    "realtime": 6.405754566192627,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.985020637512207,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 38,
+                    "damage": 23.0,
+                    "realtime": 6.465704441070557,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.985020637512207,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 42,
+                    "damage": 23.0,
+                    "realtime": 6.527428150177002,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.985020637512207,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 54,
+                    "damage": 149.5,
+                    "realtime": 6.7809157371521,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.985020637512207,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "otherDamage": [
+                {
+                    "frame": 44,
+                    "damage": 20.700000762939454,
+                    "realtime": 6.612621307373047,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.985020637512207,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "capturedFrames": 25,
+            "duration": 1.8083510398864747,
+            "targetHpBefore": 998589.0,
+            "targetHpAfter": 998283.8125,
+            "startPosition": {
+                "x": 4.937497138977051,
+                "y": -0.9850000739097595,
+                "z": 0.0
+            },
+            "targetPosition": {
+                "x": 3.0,
+                "y": -0.985020637512207,
+                "z": 0.0
+            },
+            "frames": [
+                {
+                    "logicFrame": 2,
+                    "realtime": 5.760772228240967,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 6,
+                    "realtime": 5.867035388946533,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_01"
+                },
+                {
+                    "logicFrame": 10,
+                    "realtime": 5.924145221710205,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_01"
+                },
+                {
+                    "logicFrame": 12,
+                    "realtime": 5.994466781616211,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 14,
+                    "realtime": 6.088833332061768,
+                    "cameraSize": 6.799133777618408,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 17,
+                    "realtime": 6.1458916664123539,
+                    "cameraSize": 6.7949628829956059,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 21,
+                    "realtime": 6.210080623626709,
+                    "cameraSize": 6.785312175750732,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 24,
+                    "realtime": 6.266125202178955,
+                    "cameraSize": 6.776063919067383,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 28,
+                    "realtime": 6.333716869354248,
+                    "cameraSize": 6.7626051902771,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 32,
+                    "realtime": 6.390843391418457,
+                    "cameraSize": 6.749629497528076,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 35,
+                    "realtime": 6.447787284851074,
+                    "cameraSize": 6.741379261016846,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 39,
+                    "realtime": 6.507593631744385,
+                    "cameraSize": 6.7339043617248539,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 42,
+                    "realtime": 6.568469524383545,
+                    "cameraSize": 6.732000350952148,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 44,
+                    "realtime": 6.650275230407715,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 47,
+                    "realtime": 6.704518795013428,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 51,
+                    "realtime": 6.76187801361084,
+                    "cameraSize": 6.757500171661377,
+                    "actorSprite": "Actor_05"
+                },
+                {
+                    "logicFrame": 54,
+                    "realtime": 6.829439640045166,
+                    "cameraSize": 6.5279998779296879,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 56,
+                    "realtime": 6.989400863647461,
+                    "cameraSize": 6.664000511169434,
+                    "actorSprite": "Actor_07"
+                },
+                {
+                    "logicFrame": 60,
+                    "realtime": 7.058581829071045,
+                    "cameraSize": 6.732000350952148,
+                    "actorSprite": "Actor_08"
+                },
+                {
+                    "logicFrame": 64,
+                    "realtime": 7.113903522491455,
+                    "cameraSize": 6.782370567321777,
+                    "actorSprite": "Actor_08"
+                },
+                {
+                    "logicFrame": 67,
+                    "realtime": 7.173399925231934,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 71,
+                    "realtime": 7.231405258178711,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 74,
+                    "realtime": 7.28668737411499,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 78,
+                    "realtime": 7.348143577575684,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 82,
+                    "realtime": 7.411181449890137,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_11"
+                }
+            ]
+        },
+        {
+            "requestedFps": 30,
+            "requestedFacing": -1,
+            "renderFrames": 31,
+            "observedFps": 18.639747619628908,
+            "armedAfterFive": true,
+            "consumed": true,
+            "ended": true,
+            "cameraReleased": true,
+            "error": "",
+            "contacts": [
+                {
+                    "frame": 12,
+                    "damage": 23.0,
+                    "realtime": 10.602621078491211,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 20,
+                    "damage": 23.0,
+                    "realtime": 10.815385818481446,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 27,
+                    "damage": 23.0,
+                    "realtime": 10.934907913208008,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 33,
+                    "damage": 23.0,
+                    "realtime": 11.052447319030762,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 38,
+                    "damage": 23.0,
+                    "realtime": 11.11115837097168,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 42,
+                    "damage": 23.0,
+                    "realtime": 11.175007820129395,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 54,
+                    "damage": 149.5,
+                    "realtime": 11.437139511108399,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "otherDamage": [
+                {
+                    "frame": 25,
+                    "damage": 20.700000762939454,
+                    "realtime": 10.878915786743164,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": -1,
+                    "damage": 20.700000762939454,
+                    "realtime": 12.066755294799805,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": -5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9851232767105103,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "capturedFrames": 25,
+            "duration": 1.6631126403808594,
+            "targetHpBefore": 998356.6875,
+            "targetHpAfter": 998027.8125,
+            "startPosition": {
+                "x": -5.062497138977051,
+                "y": -0.9850000739097595,
+                "z": 0.0
+            },
+            "targetPosition": {
+                "x": -3.0,
+                "y": -0.9851232767105103,
+                "z": 0.0
+            },
+            "frames": [
+                {
+                    "logicFrame": 2,
+                    "realtime": 10.474984169006348,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 5,
+                    "realtime": 10.532513618469239,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 9,
+                    "realtime": 10.587786674499512,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_01"
+                },
+                {
+                    "logicFrame": 12,
+                    "realtime": 10.64469051361084,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 14,
+                    "realtime": 10.741070747375489,
+                    "cameraSize": 6.799133777618408,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 17,
+                    "realtime": 10.795180320739746,
+                    "cameraSize": 6.7949628829956059,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 21,
+                    "realtime": 10.859478950500489,
+                    "cameraSize": 6.785312175750732,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 25,
+                    "realtime": 10.91945743560791,
+                    "cameraSize": 6.772759914398193,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 28,
+                    "realtime": 10.975759506225586,
+                    "cameraSize": 6.7626051902771,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 32,
+                    "realtime": 11.034140586853028,
+                    "cameraSize": 6.749629497528076,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 35,
+                    "realtime": 11.094138145446778,
+                    "cameraSize": 6.741379261016846,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 38,
+                    "realtime": 11.152671813964844,
+                    "cameraSize": 6.735304355621338,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 42,
+                    "realtime": 11.214932441711426,
+                    "cameraSize": 6.732000350952148,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 45,
+                    "realtime": 11.311605453491211,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 48,
+                    "realtime": 11.368310928344727,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 51,
+                    "realtime": 11.420516967773438,
+                    "cameraSize": 6.757500171661377,
+                    "actorSprite": "Actor_05"
+                },
+                {
+                    "logicFrame": 54,
+                    "realtime": 11.477790832519532,
+                    "cameraSize": 6.5279998779296879,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 57,
+                    "realtime": 11.638834953308106,
+                    "cameraSize": 6.674624919891357,
+                    "actorSprite": "Actor_07"
+                },
+                {
+                    "logicFrame": 60,
+                    "realtime": 11.696698188781739,
+                    "cameraSize": 6.732000350952148,
+                    "actorSprite": "Actor_08"
+                },
+                {
+                    "logicFrame": 64,
+                    "realtime": 11.762632369995118,
+                    "cameraSize": 6.782370567321777,
+                    "actorSprite": "Actor_08"
+                },
+                {
+                    "logicFrame": 68,
+                    "realtime": 11.819320678710938,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 71,
+                    "realtime": 11.875847816467286,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 75,
+                    "realtime": 11.933079719543457,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 78,
+                    "realtime": 11.989006042480469,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 81,
+                    "realtime": 12.046957015991211,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_11"
+                }
+            ]
+        },
+        {
+            "requestedFps": 60,
+            "requestedFacing": 1,
+            "renderFrames": 32,
+            "observedFps": 17.55261993408203,
+            "armedAfterFive": true,
+            "consumed": true,
+            "ended": true,
+            "cameraReleased": true,
+            "error": "",
+            "contacts": [
+                {
+                    "frame": 12,
+                    "damage": 23.0,
+                    "realtime": 15.125384330749512,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 20,
+                    "damage": 23.0,
+                    "realtime": 15.332058906555176,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 27,
+                    "damage": 23.0,
+                    "realtime": 15.477885246276856,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 33,
+                    "damage": 23.0,
+                    "realtime": 15.545145034790039,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 38,
+                    "damage": 23.0,
+                    "realtime": 15.670019149780274,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 2.999999761581421,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 42,
+                    "damage": 23.0,
+                    "realtime": 15.727126121520996,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 54,
+                    "damage": 149.5,
+                    "realtime": 16.073383331298829,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850505590438843,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "otherDamage": [
+                {
+                    "frame": 12,
+                    "damage": 20.700000762939454,
+                    "realtime": 15.126808166503907,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 66,
+                    "damage": 20.700000762939454,
+                    "realtime": 16.3968448638916,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": 4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "capturedFrames": 27,
+            "duration": 1.823089599609375,
+            "targetHpBefore": 998377.375,
+            "targetHpAfter": 998048.5,
+            "startPosition": {
+                "x": 4.937497138977051,
+                "y": -0.9850000739097595,
+                "z": 0.0
+            },
+            "targetPosition": {
+                "x": 3.0,
+                "y": -0.9850504398345947,
+                "z": 0.0
+            },
+            "frames": [
+                {
+                    "logicFrame": 2,
+                    "realtime": 14.985864639282227,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 5,
+                    "realtime": 15.04572582244873,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 9,
+                    "realtime": 15.1068696975708,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_01"
+                },
+                {
+                    "logicFrame": 12,
+                    "realtime": 15.167765617370606,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 13,
+                    "realtime": 15.250540733337403,
+                    "cameraSize": 6.799778461456299,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 17,
+                    "realtime": 15.311553955078125,
+                    "cameraSize": 6.7949628829956059,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 21,
+                    "realtime": 15.376469612121582,
+                    "cameraSize": 6.785312175750732,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 25,
+                    "realtime": 15.45022201538086,
+                    "cameraSize": 6.772759914398193,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 29,
+                    "realtime": 15.525385856628418,
+                    "cameraSize": 6.759240627288818,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 33,
+                    "realtime": 15.587479591369629,
+                    "cameraSize": 6.746688365936279,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 37,
+                    "realtime": 15.652501106262207,
+                    "cameraSize": 6.737037658691406,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 40,
+                    "realtime": 15.712329864501954,
+                    "cameraSize": 6.7328667640686039,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 42,
+                    "realtime": 15.768260955810547,
+                    "cameraSize": 6.732000350952148,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 43,
+                    "realtime": 15.843955993652344,
+                    "cameraSize": 6.766000270843506,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 46,
+                    "realtime": 15.898807525634766,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 49,
+                    "realtime": 15.952001571655274,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 53,
+                    "realtime": 16.03492546081543,
+                    "cameraSize": 6.570500373840332,
+                    "actorSprite": "Actor_05"
+                },
+                {
+                    "logicFrame": 54,
+                    "realtime": 16.127891540527345,
+                    "cameraSize": 6.5279998779296879,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 55,
+                    "realtime": 16.249948501586915,
+                    "cameraSize": 6.5960001945495609,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 59,
+                    "realtime": 16.310049057006837,
+                    "cameraSize": 6.721375465393066,
+                    "actorSprite": "Actor_07"
+                },
+                {
+                    "logicFrame": 63,
+                    "realtime": 16.380231857299806,
+                    "cameraSize": 6.766000270843506,
+                    "actorSprite": "Actor_08"
+                },
+                {
+                    "logicFrame": 66,
+                    "realtime": 16.435420989990236,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 69,
+                    "realtime": 16.492250442504884,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 73,
+                    "realtime": 16.552324295043947,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 76,
+                    "realtime": 16.61202049255371,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 80,
+                    "realtime": 16.667638778686525,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_11"
+                },
+                {
+                    "logicFrame": 83,
+                    "realtime": 16.723697662353517,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_11"
+                }
+            ]
+        },
+        {
+            "requestedFps": 60,
+            "requestedFacing": -1,
+            "renderFrames": 30,
+            "observedFps": 16.929920196533204,
+            "armedAfterFive": true,
+            "consumed": true,
+            "ended": true,
+            "cameraReleased": true,
+            "error": "",
+            "contacts": [
+                {
+                    "frame": 12,
+                    "damage": 23.0,
+                    "realtime": 19.823055267333986,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 20,
+                    "damage": 23.0,
+                    "realtime": 20.02881622314453,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 27,
+                    "damage": 23.0,
+                    "realtime": 20.156471252441408,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 33,
+                    "damage": 23.0,
+                    "realtime": 20.225914001464845,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 38,
+                    "damage": 23.0,
+                    "realtime": 20.356952667236329,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 42,
+                    "damage": 23.0,
+                    "realtime": 20.421092987060548,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 54,
+                    "damage": 149.5,
+                    "realtime": 20.70457649230957,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "otherDamage": [
+                {
+                    "frame": 47,
+                    "damage": 20.700000762939454,
+                    "realtime": 20.57335090637207,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": -4.937497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "capturedFrames": 25,
+            "duration": 1.7720108032226563,
+            "targetHpBefore": 998356.6875,
+            "targetHpAfter": 998048.5,
+            "startPosition": {
+                "x": -4.937497138977051,
+                "y": -0.9850000739097595,
+                "z": 0.0
+            },
+            "targetPosition": {
+                "x": -3.0,
+                "y": -0.9850504994392395,
+                "z": 0.0
+            },
+            "frames": [
+                {
+                    "logicFrame": 1,
+                    "realtime": 19.66073989868164,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 5,
+                    "realtime": 19.721105575561525,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 9,
+                    "realtime": 19.79526138305664,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_01"
+                },
+                {
+                    "logicFrame": 12,
+                    "realtime": 19.865087509155275,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 13,
+                    "realtime": 19.945629119873048,
+                    "cameraSize": 6.799778461456299,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 17,
+                    "realtime": 20.011882781982423,
+                    "cameraSize": 6.7949628829956059,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 21,
+                    "realtime": 20.073055267333986,
+                    "cameraSize": 6.785312175750732,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 25,
+                    "realtime": 20.136796951293947,
+                    "cameraSize": 6.772759914398193,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 29,
+                    "realtime": 20.202638626098634,
+                    "cameraSize": 6.759240627288818,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 33,
+                    "realtime": 20.26917839050293,
+                    "cameraSize": 6.746688365936279,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 36,
+                    "realtime": 20.33387565612793,
+                    "cameraSize": 6.739072322845459,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 40,
+                    "realtime": 20.402807235717775,
+                    "cameraSize": 6.7328667640686039,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 42,
+                    "realtime": 20.46781349182129,
+                    "cameraSize": 6.732000350952148,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 43,
+                    "realtime": 20.550207138061525,
+                    "cameraSize": 6.766000270843506,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 47,
+                    "realtime": 20.618165969848634,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 51,
+                    "realtime": 20.67803955078125,
+                    "cameraSize": 6.757500171661377,
+                    "actorSprite": "Actor_05"
+                },
+                {
+                    "logicFrame": 54,
+                    "realtime": 20.75775718688965,
+                    "cameraSize": 6.5279998779296879,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 55,
+                    "realtime": 20.874019622802736,
+                    "cameraSize": 6.5960001945495609,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 59,
+                    "realtime": 20.941516876220704,
+                    "cameraSize": 6.721375465393066,
+                    "actorSprite": "Actor_07"
+                },
+                {
+                    "logicFrame": 63,
+                    "realtime": 21.00752067565918,
+                    "cameraSize": 6.766000270843506,
+                    "actorSprite": "Actor_08"
+                },
+                {
+                    "logicFrame": 67,
+                    "realtime": 21.06658172607422,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 71,
+                    "realtime": 21.128189086914064,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 75,
+                    "realtime": 21.194007873535158,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 79,
+                    "realtime": 21.260316848754884,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 82,
+                    "realtime": 21.328039169311525,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_11"
+                }
+            ]
+        },
+        {
+            "requestedFps": 120,
+            "requestedFacing": 1,
+            "renderFrames": 33,
+            "observedFps": 19.075233459472658,
+            "armedAfterFive": true,
+            "consumed": true,
+            "ended": true,
+            "cameraReleased": true,
+            "error": "",
+            "contacts": [
+                {
+                    "frame": 12,
+                    "damage": 23.0,
+                    "realtime": 24.371753692626954,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 20,
+                    "damage": 23.0,
+                    "realtime": 24.56857681274414,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 27,
+                    "damage": 23.0,
+                    "realtime": 24.69338607788086,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 33,
+                    "damage": 23.0,
+                    "realtime": 24.835826873779298,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 38,
+                    "damage": 23.0,
+                    "realtime": 24.897418975830079,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 42,
+                    "damage": 34.5,
+                    "realtime": 24.961240768432618,
+                    "critical": true,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 54,
+                    "damage": 149.5,
+                    "realtime": 25.2221736907959,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": 5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "otherDamage": [
+                {
+                    "frame": 35,
+                    "damage": 20.700000762939454,
+                    "realtime": 24.840307235717775,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": 5.062497138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": 3.0,
+                        "y": -0.9850504994392395,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "capturedFrames": 26,
+            "duration": 1.7299919128417969,
+            "targetHpBefore": 998356.6875,
+            "targetHpAfter": 998037.0,
+            "startPosition": {
+                "x": 5.062497138977051,
+                "y": -0.9850000739097595,
+                "z": 0.0
+            },
+            "targetPosition": {
+                "x": 3.0,
+                "y": -0.9850505590438843,
+                "z": 0.0
+            },
+            "frames": [
+                {
+                    "logicFrame": 1,
+                    "realtime": 24.232919692993165,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 5,
+                    "realtime": 24.29143714904785,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 8,
+                    "realtime": 24.35133934020996,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_01"
+                },
+                {
+                    "logicFrame": 12,
+                    "realtime": 24.413040161132814,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 13,
+                    "realtime": 24.48505973815918,
+                    "cameraSize": 6.799778461456299,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 16,
+                    "realtime": 24.54685401916504,
+                    "cameraSize": 6.796696186065674,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 20,
+                    "realtime": 24.61265754699707,
+                    "cameraSize": 6.78807258605957,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 24,
+                    "realtime": 24.671022415161134,
+                    "cameraSize": 6.776063919067383,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 27,
+                    "realtime": 24.740676879882814,
+                    "cameraSize": 6.766000270843506,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 31,
+                    "realtime": 24.81321144104004,
+                    "cameraSize": 6.75272274017334,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 35,
+                    "realtime": 24.88109588623047,
+                    "cameraSize": 6.741379261016846,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 39,
+                    "realtime": 24.939327239990236,
+                    "cameraSize": 6.7339043617248539,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 42,
+                    "realtime": 25.003992080688478,
+                    "cameraSize": 6.732000350952148,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 43,
+                    "realtime": 25.090682983398439,
+                    "cameraSize": 6.766000270843506,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 47,
+                    "realtime": 25.146547317504884,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 50,
+                    "realtime": 25.204301834106447,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_05"
+                },
+                {
+                    "logicFrame": 54,
+                    "realtime": 25.263994216918947,
+                    "cameraSize": 6.5279998779296879,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 55,
+                    "realtime": 25.381175994873048,
+                    "cameraSize": 6.5960001945495609,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 58,
+                    "realtime": 25.439878463745118,
+                    "cameraSize": 6.698000431060791,
+                    "actorSprite": "Actor_07"
+                },
+                {
+                    "logicFrame": 62,
+                    "realtime": 25.50893211364746,
+                    "cameraSize": 6.749629497528076,
+                    "actorSprite": "Actor_08"
+                },
+                {
+                    "logicFrame": 66,
+                    "realtime": 25.568103790283204,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 69,
+                    "realtime": 25.630565643310548,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 73,
+                    "realtime": 25.68909454345703,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 77,
+                    "realtime": 25.745220184326173,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 80,
+                    "realtime": 25.804031372070314,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_11"
+                },
+                {
+                    "logicFrame": 84,
+                    "realtime": 25.875150680541993,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_11"
+                }
+            ]
+        },
+        {
+            "requestedFps": 120,
+            "requestedFacing": -1,
+            "renderFrames": 33,
+            "observedFps": 18.05646324157715,
+            "armedAfterFive": true,
+            "consumed": true,
+            "ended": true,
+            "cameraReleased": true,
+            "error": "",
+            "contacts": [
+                {
+                    "frame": 12,
+                    "damage": 23.0,
+                    "realtime": 29.00216293334961,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 20,
+                    "damage": 34.5,
+                    "realtime": 29.210498809814454,
+                    "critical": true,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 27,
+                    "damage": 23.0,
+                    "realtime": 29.433698654174806,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 33,
+                    "damage": 23.0,
+                    "realtime": 29.500408172607423,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 38,
+                    "damage": 23.0,
+                    "realtime": 29.627975463867189,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 42,
+                    "damage": 23.0,
+                    "realtime": 29.693687438964845,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 54,
+                    "damage": 149.5,
+                    "realtime": 29.973468780517579,
+                    "critical": false,
+                    "actionId": "main.skill.dimension_slash",
+                    "delivery": "Primary",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.985123336315155,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "otherDamage": [
+                {
+                    "frame": 17,
+                    "damage": 20.700000762939454,
+                    "realtime": 29.15189552307129,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9851233959197998,
+                        "z": 0.0
+                    }
+                },
+                {
+                    "frame": 74,
+                    "damage": 20.700000762939454,
+                    "realtime": 30.435989379882814,
+                    "critical": false,
+                    "actionId": "element-dot",
+                    "delivery": "Dot",
+                    "playerPosition": {
+                        "x": -4.874997138977051,
+                        "y": -0.9850000739097595,
+                        "z": 0.0
+                    },
+                    "targetPosition": {
+                        "x": -3.0,
+                        "y": -0.9851232767105103,
+                        "z": 0.0
+                    }
+                }
+            ],
+            "capturedFrames": 26,
+            "duration": 1.8276004791259766,
+            "targetHpBefore": 998233.625,
+            "targetHpAfter": 997893.25,
+            "startPosition": {
+                "x": -4.874997138977051,
+                "y": -0.9850000739097595,
+                "z": 0.0
+            },
+            "targetPosition": {
+                "x": -3.0,
+                "y": -0.985123336315155,
+                "z": 0.0
+            },
+            "frames": [
+                {
+                    "logicFrame": 2,
+                    "realtime": 28.865537643432618,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 5,
+                    "realtime": 28.924646377563478,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_00"
+                },
+                {
+                    "logicFrame": 9,
+                    "realtime": 28.984039306640626,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_01"
+                },
+                {
+                    "logicFrame": 12,
+                    "realtime": 29.04548454284668,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 13,
+                    "realtime": 29.129981994628908,
+                    "cameraSize": 6.799778461456299,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 17,
+                    "realtime": 29.19261360168457,
+                    "cameraSize": 6.7949628829956059,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 20,
+                    "realtime": 29.25252914428711,
+                    "cameraSize": 6.78807258605957,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 21,
+                    "realtime": 29.351482391357423,
+                    "cameraSize": 6.785312175750732,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 25,
+                    "realtime": 29.411155700683595,
+                    "cameraSize": 6.772759914398193,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 29,
+                    "realtime": 29.477262496948243,
+                    "cameraSize": 6.759240627288818,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 33,
+                    "realtime": 29.544158935546876,
+                    "cameraSize": 6.746688365936279,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 36,
+                    "realtime": 29.605316162109376,
+                    "cameraSize": 6.739072322845459,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 40,
+                    "realtime": 29.671344757080079,
+                    "cameraSize": 6.7328667640686039,
+                    "actorSprite": "Actor_02"
+                },
+                {
+                    "logicFrame": 42,
+                    "realtime": 29.737768173217775,
+                    "cameraSize": 6.732000350952148,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 43,
+                    "realtime": 29.819551467895509,
+                    "cameraSize": 6.766000270843506,
+                    "actorSprite": "Actor_03"
+                },
+                {
+                    "logicFrame": 47,
+                    "realtime": 29.88091278076172,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_04"
+                },
+                {
+                    "logicFrame": 51,
+                    "realtime": 29.950340270996095,
+                    "cameraSize": 6.757500171661377,
+                    "actorSprite": "Actor_05"
+                },
+                {
+                    "logicFrame": 54,
+                    "realtime": 30.02389907836914,
+                    "cameraSize": 6.5279998779296879,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 55,
+                    "realtime": 30.154075622558595,
+                    "cameraSize": 6.5960001945495609,
+                    "actorSprite": "Actor_06"
+                },
+                {
+                    "logicFrame": 58,
+                    "realtime": 30.214139938354493,
+                    "cameraSize": 6.698000431060791,
+                    "actorSprite": "Actor_07"
+                },
+                {
+                    "logicFrame": 62,
+                    "realtime": 30.27747344970703,
+                    "cameraSize": 6.749629497528076,
+                    "actorSprite": "Actor_08"
+                },
+                {
+                    "logicFrame": 66,
+                    "realtime": 30.348678588867189,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 70,
+                    "realtime": 30.41675567626953,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_09"
+                },
+                {
+                    "logicFrame": 74,
+                    "realtime": 30.478755950927736,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 78,
+                    "realtime": 30.5408992767334,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_10"
+                },
+                {
+                    "logicFrame": 81,
+                    "realtime": 30.603849411010743,
+                    "cameraSize": 6.800000190734863,
+                    "actorSprite": "Actor_11"
+                }
+            ]
+        }
+    ],
+    "finished": true,
+    "error": "",
+    "pausePreservedWindow": true,
+    "expiredWindowFallsBack": true,
+    "startupDamageReleasesCamera": true
+}

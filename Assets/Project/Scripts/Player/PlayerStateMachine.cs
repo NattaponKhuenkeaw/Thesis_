@@ -37,6 +37,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerDeadState DeadState { get; private set; }
     public PlayerIntroState IntroState { get; private set; }
     public PlayerExitState ExitState { get; private set; }
+    public PlayerQteIntroState QteIntroState { get; private set; }
 
     // =========================================================
     // Debug Configuration
@@ -233,7 +234,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (InputBuffer == null || teamLoader == null || IsCinematicTraversal)
             return false;
 
-        if (!CanSwitchCharacter())
+        if (!CanSwitchCharacterTo(InputBuffer.BufferedSwitchTarget))
             return false;
 
         if (!InputBuffer.ConsumeSwitch(out int targetIndex))
@@ -416,6 +417,10 @@ public class PlayerStateMachine : MonoBehaviour
             ChangeState(DashState);
             CurrentState.OnDashInput(inputX);
         }
+        else if (CurrentState.AcceptsDashInput && playerCharacter.Movement != null)
+        {
+            AbilityUIManager.Instance?.PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Dash);
+        }
     }
 
     /// <summary>
@@ -558,6 +563,9 @@ public class PlayerStateMachine : MonoBehaviour
         {
             CombatActionOutputContext.Ground => PlayerEnvironmentContext.Grounded,
             CombatActionOutputContext.Air => PlayerEnvironmentContext.Airborne,
+            CombatActionOutputContext.Physical => playerCharacter != null && playerCharacter.Movement != null
+                && playerCharacter.Movement.IsPhysicallyGrounded()
+                    ? PlayerEnvironmentContext.Grounded : PlayerEnvironmentContext.Airborne,
             _ => startedGrounded
                 ? PlayerEnvironmentContext.Grounded
                 : PlayerEnvironmentContext.Airborne
@@ -656,12 +664,17 @@ public class PlayerStateMachine : MonoBehaviour
     /// <summary>
     /// Route ultimate pressed. State-first routing.
     /// </summary>
-    public void RouteUltimateInput()
+    public void RouteUltimateInput(bool held = false)
     {
         if (CurrentState == null || IsCinematicTraversal) return;
         using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
-        InputBuffer.BufferUltimate();
+        InputBuffer.BufferUltimate(held: held);
+
+        // A ready follow-up may cut into other states, but never bypass an
+        // Ultimate's own commitment/cancel rules.
+        if (CurrentState is PlayerUltimateState ultimateState && !ultimateState.CanBeInterruptedBy(ActionCategory.Ultimate))
+            return;
 
         if (HasActiveActionWindow(AttackCategory.Ultimate))
         {
@@ -874,6 +887,7 @@ public class PlayerStateMachine : MonoBehaviour
         DeadState = new PlayerDeadState(playerCharacter, this);
         IntroState = new PlayerIntroState(playerCharacter, this);
         ExitState = new PlayerExitState(playerCharacter, this);
+        QteIntroState = new PlayerQteIntroState(playerCharacter, this);
     }
 
     private PlayerState ResolveBasicAttackState()
@@ -991,9 +1005,20 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
 
-    public bool CanSwitchCharacter(int framesThreshold = 2)
+    public bool CanSwitchCharacterTo(int index)
     {
-        if (teamLoader != null && teamLoader.IsSwitchOnCooldown)
+        if (teamLoader == null || !teamLoader.CanSwitchToIndex(index, ignoreCooldown: true)) return false;
+        if (teamLoader.QteSwaps?.TryGetWindow(teamLoader.GetCharacterAtIndex(index), out _, out _) == true
+            && teamLoader.QteSwaps.CanHandoffTo(index)) return true;
+        // An unusable intro must not remove an otherwise legal ordinary swap.
+        return CanSwitchCharacter();
+    }
+
+    public bool CanSwitchCharacter(int framesThreshold = 2, bool ignoreCooldown = false)
+    {
+        if (Project.UI.InputLockManager.IsLocked || Time.timeScale <= 0f || playerCharacter == null
+            || playerCharacter.IsDead || playerCharacter.Combat?.HasGrabbedEnemy() == true) return false;
+        if (!ignoreCooldown && teamLoader != null && teamLoader.IsSwitchOnCooldown)
             return false;
 
         if (CurrentState == null) return false;
@@ -1009,7 +1034,7 @@ public class PlayerStateMachine : MonoBehaviour
         }
 
         // Action states: Attack, Skill, Ultimate
-        if (CurrentStateId == PlayerStateId.Attacking || CurrentStateId == PlayerStateId.Skill || CurrentStateId == PlayerStateId.Ultimate)
+        if (CurrentStateId == PlayerStateId.Attacking || CurrentStateId == PlayerStateId.Skill || CurrentStateId == PlayerStateId.Ultimate || CurrentStateId == PlayerStateId.QteIntro)
         {
             // Team Switch is Ground-only. Use the action-owned context so
             // authored upward MotionData does not incorrectly reject a
@@ -1032,7 +1057,7 @@ public class PlayerStateMachine : MonoBehaviour
                 }
 
                 // Allow switching during recovery or framesThreshold before it starts
-                return fdState.IsInRecoveryOrNearIt(framesThreshold);
+                return fdState.CurrentPhase == ActionPhase.Cancel || fdState.IsInRecoveryOrNearIt(framesThreshold);
             }
         }
 

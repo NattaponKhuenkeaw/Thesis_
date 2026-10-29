@@ -19,7 +19,7 @@ using Project.Core.ZoneState;
 ///   ├── ConfinderBound                   [BoxCollider2D]
 ///   └── CameraLookAheadTarget            [CameraLookAhead]
 /// </summary>
-public class CameraManager : MonoBehaviour
+public partial class CameraManager : MonoBehaviour
 {
     // =========================================================
     // Singleton
@@ -107,16 +107,6 @@ public class CameraManager : MonoBehaviour
     [SerializeField] private float _bossEnemyRadius = 2.75f;
 
     // =========================================================
-    // Y Damping Settings (kept from original)
-    // =========================================================
-    [Header("Y Damping Settings")]
-    [Tooltip("If true, dynamic step damping changes will be triggered on vertical falls. Defaults to false (single source of truth via CameraLookAhead proxy target).")]
-    [SerializeField] private bool _enableLegacyDynamicDamping = false;
-    [SerializeField] private float _fallPanAmount = 0.25f;
-    [SerializeField] private float _normYPanAmount = 2f;
-    [SerializeField] private float _fallYPanTime = 0.35f;
-
-    // =========================================================
     // Screen Shake (Impulse)
     // =========================================================
     [Header("Screen Shake — Impulse")]
@@ -149,9 +139,8 @@ public class CameraManager : MonoBehaviour
     private bool _isInCombat;
     private readonly Dictionary<EnemyController, EngagedEnemyContext> _engagedEnemies = new Dictionary<EnemyController, EngagedEnemyContext>();
 
-    // Y-damping
+    // Temporary camera focus
     private CinemachinePositionComposer _explorePositionComposer;
-    private Coroutine _lerpYPanCoroutine;
     private Coroutine _temporaryPlayerSnapCoroutine;
     private CinemachineBrain _brain;
     private CinemachineBlendDefinition _cachedBrainBlend;
@@ -175,14 +164,9 @@ public class CameraManager : MonoBehaviour
     private CinemachineGroupFraming _combatGroupFraming;
     private Vector2 _defaultCombatOrthoSizeRange = new Vector2(6.8f, 8f);
     private float _defaultCombatFramingSize = 0.47f;
-    private float _defaultCombatFramingDamping = 2f;
     private bool _bossFramingActive;
-    private bool _fastVerticalFollow;
-    private Rigidbody2D _playerBody;
 
     public bool IsInCombat => _isInCombat;
-    public bool IsLerpingYDamping { get; private set; }
-    public bool LerpedFromPlayerFalling { get; set; }
 
     /// <summary>
     /// Returns the collection of enemies currently being tracked by the camera group.
@@ -290,7 +274,7 @@ public class CameraManager : MonoBehaviour
             _zoneStateProvider = Resources.Load<ZoneStateProvider>("CombatSO/ZoneStateProvider");
         }
 
-        // Cache explore cam's PositionComposer for Y-damping
+        // Temporary player focus overrides and restores the composer's damping.
         if (_exploreCam != null)
             _explorePositionComposer = _exploreCam.GetComponent<CinemachinePositionComposer>();
 
@@ -311,7 +295,6 @@ public class CameraManager : MonoBehaviour
 
         _defaultCombatOrthoSizeRange = _combatGroupFraming.OrthoSizeRange;
         _defaultCombatFramingSize = _combatGroupFraming.FramingSize;
-        _defaultCombatFramingDamping = _combatGroupFraming.Damping;
     }
 
     private void Start()
@@ -327,6 +310,7 @@ public class CameraManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        ClearActionCamera();
         if (instance == this)
             instance = null;
 
@@ -338,6 +322,7 @@ public class CameraManager : MonoBehaviour
 
     private void OnDisable()
     {
+        ClearActionCamera();
         FinishPendingFocusReturn();
         DisposeFocusCamera();
     }
@@ -350,7 +335,7 @@ public class CameraManager : MonoBehaviour
             Vector3 center = body != null ? body.bounds.center : _bossSpawnFocusTarget.position;
             _focusCam.transform.position = new Vector3(center.x, center.y, _focusCam.transform.position.z);
         }
-        TickVerticalFollow();
+        EnsurePlayerReferences();
         TickEngagedEnemies();
         FitCombatZoomToRoom();
     }
@@ -478,7 +463,7 @@ public class CameraManager : MonoBehaviour
 
     private bool CanSwitchRoomCameras()
     {
-        if (IsStaticCameraRoom() || _isTemporarilyFocused)
+        if (IsStaticCameraRoom() || _isTemporarilyFocused || _isTemporarilySnappedToPlayer)
         {
             return false;
         }
@@ -768,6 +753,48 @@ public class CameraManager : MonoBehaviour
         BeginTemporaryPlayerSnap(0.05f, smoothTransition: false);
     }
 
+    public void ResetLookAheadForCharacterSwap(Rigidbody2D incomingBody, float centerSeconds)
+    {
+        ClearActionCamera();
+        if (incomingBody == null) return;
+        _playerTransform = incomingBody.transform;
+        if (_cameraLookAhead == null) _cameraLookAhead = Object.FindFirstObjectByType<CameraLookAhead>();
+        float duration = Mathf.Max(Time.unscaledDeltaTime, centerSeconds);
+        _cameraLookAhead?.ResetHorizontalForCharacterSwap(incomingBody, duration);
+        float release = _cameraLookAhead != null ? _cameraLookAhead.horizontalLookAheadDuration : 0.25f;
+        CenterQteIntroX(_exploreCam, incomingBody.transform, duration, release);
+        CenterQteIntroX(_combatCam, incomingBody.transform, duration, release);
+        CenterQteIntroX(_staticCam, incomingBody.transform, duration, release);
+        CenterQteIntroX(_ultimateCam, incomingBody.transform, duration, release);
+    }
+
+    private static void CenterQteIntroX(CinemachineCamera camera, Transform target, float duration, float release)
+    {
+        if (camera == null) return;
+        GetQteIntroCameraImpact(camera).CenterHorizontal(target, duration, release);
+    }
+
+    public void PlayQteIntroImpact(float sizeReduction, int frames)
+    {
+        if (sizeReduction <= 0f) return;
+        PlayQteIntroImpact(_exploreCam, sizeReduction, frames);
+        PlayQteIntroImpact(_combatCam, sizeReduction, frames);
+        PlayQteIntroImpact(_staticCam, sizeReduction, frames);
+        PlayQteIntroImpact(_ultimateCam, sizeReduction, frames);
+    }
+
+    private static void PlayQteIntroImpact(CinemachineCamera camera, float sizeReduction, int frames)
+    {
+        if (camera == null) return;
+        GetQteIntroCameraImpact(camera).Play(sizeReduction, frames);
+    }
+
+    private static QteIntroCameraImpact GetQteIntroCameraImpact(CinemachineCamera camera)
+    {
+        QteIntroCameraImpact impact = camera.GetComponent<QteIntroCameraImpact>();
+        return impact != null ? impact : camera.gameObject.AddComponent<QteIntroCameraImpact>();
+    }
+
     public void BeginTemporaryPlayerSnap(float duration, bool smoothTransition = false, float smoothTime = 0.15f)
     {
         if (_exploreCam == null || _playerTransform == null)
@@ -895,6 +922,7 @@ public class CameraManager : MonoBehaviour
 
     public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f, bool bossSpawn = false)
     {
+        ClearActionCamera();
         CinemachineCamera sourceCam = bossSpawn ? _exploreCam : (_staticCam != null ? _staticCam : _exploreCam);
         if (focusTarget == null || sourceCam == null)
         {
@@ -1121,6 +1149,7 @@ public class CameraManager : MonoBehaviour
 
     public void SetUltimateZoom(bool enable, float size = 5f)
     {
+        if (enable) ClearActionCamera();
         // Stop any in-progress zoom coroutine
         if (_ultimateZoomCoroutine != null)
         {
@@ -1248,20 +1277,6 @@ public class CameraManager : MonoBehaviour
     }
 
     // =========================================================
-    // Public API — Y Damping (Explore cam only)
-    // =========================================================
-
-    public void LerpYDamping(bool isPlayerFalling)
-    {
-        if (_explorePositionComposer == null) return;
-
-        if (_lerpYPanCoroutine != null)
-            StopCoroutine(_lerpYPanCoroutine);
-
-        _lerpYPanCoroutine = StartCoroutine(LerpYAction(isPlayerFalling));
-    }
-
-    // =========================================================
     // Private — Camera Mode Switching (Priority-Based)
     // =========================================================
     private bool IsStaticCameraRoom()
@@ -1338,6 +1353,7 @@ public class CameraManager : MonoBehaviour
 
     private void HandleRoomChanged(RoomData room)
     {
+        ClearActionCamera();
         FinishPendingFocusReturn();
         DisposeFocusCamera();
         ClearEngagedEnemies();
@@ -1713,88 +1729,6 @@ public class CameraManager : MonoBehaviour
                 _playerTransform = playerObj.transform;
             }
         }
-
-        if (_playerBody == null && _playerTransform != null)
-        {
-            _playerBody = _playerTransform.GetComponent<Rigidbody2D>();
-        }
-    }
-
-    private void TickVerticalFollow()
-    {
-        EnsurePlayerReferences();
-
-        // Architectural design: vertical fall leading is delegated to CameraLookAhead (Proxy Target)
-        // to ensure mathematically seamless C1 damping without velocity spikes or threshold fluttering.
-        if (!_enableLegacyDynamicDamping)
-        {
-            return;
-        }
-
-        if (_playerBody == null)
-        {
-            return;
-        }
-
-        Camera outputCamera = _brain != null ? _brain.OutputCamera : Camera.main;
-        float cameraY = outputCamera != null ? outputCamera.transform.position.y : _playerBody.position.y;
-        bool falling = _playerBody.linearVelocity.y < -0.8f;
-        bool farFromCamera = Mathf.Abs(_playerBody.position.y - cameraY) > 2.25f;
-        bool wantFast = falling || farFromCamera;
-        if (wantFast == _fastVerticalFollow)
-        {
-            return;
-        }
-
-        _fastVerticalFollow = wantFast;
-        LerpYDamping(wantFast);
-        if (_combatGroupFraming != null)
-        {
-            _combatGroupFraming.Damping = wantFast ? _fallPanAmount : _defaultCombatFramingDamping;
-        }
-    }
-
-    // =========================================================
-    // Private — Y Damping Lerp (Explore cam)
-    // =========================================================
-    private IEnumerator LerpYAction(bool isPlayerFalling)
-    {
-        if (_explorePositionComposer == null)
-            yield break;
-
-        IsLerpingYDamping = true;
-
-        float startDampAmount = _explorePositionComposer.Damping.y;
-        float endDampAmount;
-
-        if (isPlayerFalling)
-        {
-            endDampAmount = _fallPanAmount;
-            LerpedFromPlayerFalling = true;
-        }
-        else
-        {
-            endDampAmount = _normYPanAmount;
-        }
-
-        float elapsedTime = 0f;
-        while (elapsedTime < _fallYPanTime)
-        {
-            elapsedTime += Time.deltaTime;
-            float lerpedPanAmount = Mathf.Lerp(startDampAmount, endDampAmount, elapsedTime / _fallYPanTime);
-
-            Vector3 currentDamping = _explorePositionComposer.Damping;
-            currentDamping.y = lerpedPanAmount;
-            _explorePositionComposer.Damping = currentDamping;
-
-            yield return null;
-        }
-
-        Vector3 finalDamping = _explorePositionComposer.Damping;
-        finalDamping.y = endDampAmount;
-        _explorePositionComposer.Damping = finalDamping;
-
-        IsLerpingYDamping = false;
     }
 
     private IEnumerator EndTemporaryPlayerSnapAfterDelay(float duration)

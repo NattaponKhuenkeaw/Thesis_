@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
@@ -17,6 +19,14 @@ namespace Project.TeamBuilder.UI
         [Header("Sub-Panels")]
         [SerializeField] private CharacterGridInventoryUI characterGridPanel;
         [SerializeField] private ArtifactGridPanel artifactGridPanel;
+        [SerializeField] private TMP_Text titleText;
+        [SerializeField] private TMP_Text contextText;
+        [SerializeField] private Button characterTab;
+        [SerializeField] private Button artifactTab;
+        [SerializeField] private Button closeButton;
+        [SerializeField] private Sprite activeTabSprite;
+        [SerializeField] private Sprite inactiveTabSprite;
+        [SerializeField] private TeamBuilderInventoryMotion visibilityMotion;
 
         private TeamBuilderUI parentTeamBuilder;
         private Canvas rootCanvas;
@@ -29,6 +39,21 @@ namespace Project.TeamBuilder.UI
         {
             parentTeamBuilder = teamBuilder;
             rootCanvas = canvas;
+            if (characterTab != null)
+            {
+                characterTab.onClick.RemoveListener(OpenCharacterCategory);
+                characterTab.onClick.AddListener(OpenCharacterCategory);
+            }
+            if (artifactTab != null)
+            {
+                artifactTab.onClick.RemoveListener(OpenArtifactCategory);
+                artifactTab.onClick.AddListener(OpenArtifactCategory);
+            }
+            if (closeButton != null && teamBuilder != null)
+            {
+                closeButton.onClick.RemoveListener(teamBuilder.CloseInventoryPanel);
+                closeButton.onClick.AddListener(teamBuilder.CloseInventoryPanel);
+            }
 
             if (characterGridPanel != null)
             {
@@ -41,6 +66,41 @@ namespace Project.TeamBuilder.UI
             }
 
             CloseAll();
+        }
+
+        public void ClearSelection()
+        {
+            characterGridPanel?.ClearSelection();
+            artifactGridPanel?.ClearSelection();
+        }
+
+        public void SetContext(string context)
+        {
+            if (contextText != null) contextText.text = context;
+            if (titleText != null) titleText.text = IsCharacterGridOpen ? "SELECT CHARACTER" : "SELECT ARTIFACT";
+            SetTabColor(characterTab, IsCharacterGridOpen);
+            SetTabColor(artifactTab, IsArtifactGridOpen);
+        }
+
+        private void SetTabColor(Button button, bool selected)
+        {
+            if (button == null) return;
+            var image = button.GetComponent<Image>();
+            image.sprite = selected ? activeTabSprite : inactiveTabSprite;
+            image.color = Color.white;
+            var label = button.GetComponentInChildren<TMP_Text>();
+            if (label != null) label.color = selected ? new Color(.04f, .05f, .08f) : Color.white;
+        }
+
+        private void OpenCharacterCategory()
+        {
+            var slot = parentTeamBuilder.GetActiveOrFirstTeamSlot();
+            if (!IsCharacterGridOpen && slot != null) parentTeamBuilder.BeginCharacterSwitch(slot.SlotIndex);
+        }
+
+        private void OpenArtifactCategory()
+        {
+            if (!IsArtifactGridOpen) parentTeamBuilder.ToggleArtifactGridPanel();
         }
 
         public void Populate(List<CharacterItem> characters, IReadOnlyList<ArtifactInstance> artifacts)
@@ -115,17 +175,20 @@ namespace Project.TeamBuilder.UI
 
         public void CloseAll()
         {
+            ClearSelection();
             if (characterGridPanel != null) characterGridPanel.gameObject.SetActive(false);
             if (artifactGridPanel != null) artifactGridPanel.gameObject.SetActive(false);
         }
 
-        public void SetVisible(bool visible)
+        public void SetVisible(bool visible, bool animated = true)
         {
-            // If we are forcing visibility off, close all sub-panels
-            if (!visible)
+            if (!visible) ClearSelection();
+            if (visibilityMotion != null)
             {
-                CloseAll();
+                visibilityMotion.SetVisible(visible, CloseAll, animated);
+                return;
             }
+            if (!visible) CloseAll();
             gameObject.SetActive(visible);
         }
     }

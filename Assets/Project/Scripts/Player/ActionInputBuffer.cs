@@ -16,6 +16,7 @@ public class ActionInputBuffer
     private float jumpBufferedUntil   = -999f;
     private float skillBufferedUntil  = -999f;
     private float ultimateBufferedUntil = -999f;
+    private bool ultimateInputHeld;
     private float switchBufferedUntil = -999f;
 
     // Directional input snapshot at time of buffer
@@ -46,7 +47,9 @@ public class ActionInputBuffer
     public bool HasJumpBuffer   => Time.time <= jumpBufferedUntil;
     public bool HasSkillBuffer  => Time.time <= skillBufferedUntil;
     public bool HasUltimateBuffer => Time.time <= ultimateBufferedUntil;
+    public bool UltimateInputHeld => HasUltimateBuffer && ultimateInputHeld;
     public bool HasSwitchBuffer => Time.time <= switchBufferedUntil;
+    public int BufferedSwitchTarget => HasSwitchBuffer ? switchTargetIndex : -1;
 
     /// <summary>Directional input at time the buffer was written.</summary>
     public Vector2 DirectionalInput => directionalSnapshot;
@@ -84,9 +87,10 @@ public class ActionInputBuffer
         Log($"Buffered <b>Skill</b> for {duration}s");
     }
 
-    /// <summary>Buffers an ultimate input for the specified duration.</summary>
-    public void BufferUltimate(float duration = DEFAULT_BUFFER_DURATION)
+    /// <summary>Buffers an ultimate input and its resolved tap/hold gesture.</summary>
+    public void BufferUltimate(float duration = DEFAULT_BUFFER_DURATION, bool held = false)
     {
+        ultimateInputHeld = held;
         ultimateBufferedUntil = Time.time + duration;
         Log($"Buffered <b>Ultimate</b> for {duration}s");
     }
@@ -178,6 +182,7 @@ public class ActionInputBuffer
         jumpBufferedUntil   = -999f;
         skillBufferedUntil  = -999f;
         ultimateBufferedUntil = -999f;
+        ultimateInputHeld = false;
         switchBufferedUntil = -999f;
         dashInputX = 0f;
         switchTargetIndex = -1;

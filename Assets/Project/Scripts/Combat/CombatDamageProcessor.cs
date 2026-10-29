@@ -51,29 +51,63 @@ public static class CombatDamageProcessor
             coreRequest.hasCriticalRoll = true;
             coreRequest.criticalRoll01 = Random.value;
         }
-        coreRequest.ignoreTypeReduction = true;
+        ApplyActionCriticalRate(ref coreRequest);
         DamageResult outgoingResult = CombatDamageResolver.ResolveOutgoing(coreRequest);
         float outgoingDamage = ApplyConditionalOutgoingModifiers(coreRequest, outgoingResult);
         outgoingResult = new DamageResult(
             outgoingDamage,
             outgoingResult.IsCriticalHit,
             outgoingResult.Descriptor);
+        ApplyActionDamageInput(ref coreRequest, outgoingResult.IsCriticalHit);
+        bool ignoreTypeReduction = coreRequest.ignoreTypeReduction;
+        coreRequest.ignoreTypeReduction = true;
         DamageResult coreResult = CombatDamageResolver.ResolveMitigation(coreRequest, outgoingResult);
         float resolvedDamage = coreResult.UnroundedDamage;
 
-        if (!request.ignoreTypeReduction && request.target != null && request.target.DamageTypeState != null)
+        if (!ignoreTypeReduction && request.target != null && request.target.DamageTypeState != null)
         {
             resolvedDamage = request.target.DamageTypeState.ModifyIncomingDamage(
                 request.descriptor.elementType,
                 resolvedDamage);
         }
-        else if (!request.ignoreTypeReduction && Mathf.Abs(request.typeReductionPercent) > Mathf.Epsilon)
+        else if (!ignoreTypeReduction && Mathf.Abs(request.typeReductionPercent) > Mathf.Epsilon)
         {
             float reduction = Mathf.Clamp(request.typeReductionPercent, -95f, 95f);
             resolvedDamage *= 1f - reduction / 100f;
         }
 
         return new DamageResult(resolvedDamage, coreResult.IsCriticalHit, coreResult.Descriptor);
+    }
+
+    private static void ApplyActionCriticalRate(ref DamageRequest request)
+    {
+        if (request.descriptor.delivery != DamageDelivery.Primary || request.sourceStats == null) return;
+        float current = request.sourceStats.critRate;
+        float resolved = request.sourcePassiveController != null
+            ? request.sourcePassiveController.ModifyActionCriticalRate(request.category, request.actionId, request.actionName, request.stepData?.stepName, current)
+            : DeployedCharacterDamageModifierEvaluator.ModifyCriticalRate(request.sourceCharacter, request.category, request.actionId, request.actionName, request.stepData?.stepName, current);
+        if (Mathf.Approximately(current, resolved)) return;
+        request.sourceStats = request.sourceStats.Clone();
+        request.sourceStats.critRate = resolved;
+    }
+
+    private static void ApplyActionDamageInput(ref DamageRequest request, bool isCriticalHit)
+    {
+        if (request.descriptor.delivery != DamageDelivery.Primary) return;
+        var input = new RuntimeEffectDamageInput
+        {
+            context = new RuntimeEffectDamageContext { isCriticalHit = isCriticalHit },
+            defenderDefense = request.defenderDefense,
+            defenderDamageResistance = request.defenderDamageResistance,
+            ignoreTypeReduction = request.ignoreTypeReduction
+        };
+        if (request.sourcePassiveController != null)
+            request.sourcePassiveController.ModifyActionDamageInput(request.category, request.actionId, request.actionName, request.stepData?.stepName, input);
+        else
+            DeployedCharacterDamageModifierEvaluator.ModifyDamageInput(request.sourceCharacter, request.category, request.actionId, request.actionName, request.stepData?.stepName, input);
+        request.defenderDefense = input.defenderDefense;
+        request.defenderDamageResistance = input.defenderDamageResistance;
+        request.ignoreTypeReduction = input.ignoreTypeReduction;
     }
 
     private static float ApplyConditionalOutgoingModifiers(
@@ -265,7 +299,8 @@ public static class CombatDamageProcessor
                     damageDealt,
                     result.IsCriticalHit,
                     killedEnemy,
-                    hitPosition);
+                    hitPosition,
+                    request.execution);
                 CombatEventHub.Shared.Publish(damageEvent);
             }
         }

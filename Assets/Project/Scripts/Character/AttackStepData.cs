@@ -5,7 +5,8 @@ public enum AttackCategory
 {
     Normal,
     Skill,
-    Ultimate
+    Ultimate,
+    Dash
 }
 
 [System.Serializable]
@@ -31,6 +32,9 @@ public class AttackStepData : ActionFrameData
 
     [Header("Editor & Preview")]
     public AnimationClip animationClip;
+
+    [Tooltip("Sample the actor clip from the action logic frame. Use a zero-speed Animator state for this clip.")]
+    public bool syncAnimationToActionFrames;
 
 
     [Header("Phase State overrides")]

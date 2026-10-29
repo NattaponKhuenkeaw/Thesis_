@@ -121,7 +121,7 @@ public sealed class ArtifactAdvancedVisualTests
             Vector2 p = (Vector2)particles[i].position - center;
             Assert.That(p.x * p.x / (2.4f * 2.4f) + p.y * p.y / (4.8f * 4.8f), Is.LessThanOrEqualTo(1f));
         }
-        Sample(blood, 0.5f);
+        Sample(blood, (blood.expansionSeconds + blood.attackFadeSeconds) * blood.shockwaveDurationMultiplier);
         Assert.That(blood.IsFinished, Is.True);
         Assert.That(blood.droplets.particleCount, Is.Zero);
     }
@@ -162,6 +162,39 @@ public sealed class ArtifactAdvancedVisualTests
     {
         _host = Object.Instantiate(Resources.Load<GameObject>("FieldEffects/" + name));
         return _host.GetComponent<ArtifactAreaVisual>();
+    }
+
+    [TestCase("ScalesHexShield")]
+    [TestCase("ChronoBloodExplosion")]
+    [TestCase("DaggerThunderStrike")]
+    [TestCase("CrestDarkFlameMark")]
+    public void ShockwaveIsLargerAndOutlastsTheDamageRing(string prefab)
+    {
+        ArtifactAreaVisual visual = Area(prefab);
+        visual.Begin(Vector2.zero, 3f, verticalMultiplier: 2f);
+        if (visual.style != ArtifactAreaVisual.VisualStyle.BloodExplosion)
+            visual.Pulse(Vector2.zero, 3f, 2f);
+        Sample(visual, visual.expansionSeconds * visual.shockwaveDurationMultiplier);
+        Assert.That(visual.CurrentAttackRadii, Is.EqualTo(new Vector2(3f, 6f)));
+        Assert.That(visual.wave.transform.localScale.x, Is.EqualTo(24f).Within(0.001f));
+        Assert.That(visual.wave.transform.localScale.y, Is.EqualTo(48f).Within(0.001f));
+        Sample(visual, visual.attackFadeSeconds);
+        Assert.That(visual.attackRing.startColor.a, Is.Zero);
+        Assert.That(visual.wave.color.a, Is.GreaterThan(0f));
+        Assert.That(visual.IsFinished, Is.False);
+        Sample(visual, visual.attackFadeSeconds * visual.shockwaveDurationMultiplier);
+        if (visual.style == ArtifactAreaVisual.VisualStyle.BloodExplosion
+            || visual.style == ArtifactAreaVisual.VisualStyle.ThunderStrike)
+        {
+            Assert.That(visual.IsFinished, Is.True);
+            Assert.That(visual.gameObject.activeSelf, Is.False);
+        }
+        else
+            Assert.That(visual.wave.color.a, Is.Zero);
+        visual.ClearImmediately();
+        visual.Begin(Vector2.zero, 3f);
+        if (visual.style != ArtifactAreaVisual.VisualStyle.BloodExplosion)
+            Assert.That(visual.wave.color.a, Is.Zero, "Reuse must clear the previous wave tail.");
     }
 
     [Test]

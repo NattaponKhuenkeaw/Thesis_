@@ -94,6 +94,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private bool isAirCombo;
     private Coroutine dashThroughDamageCoroutine;
 
+    public int FieldSession { get; private set; }
+    public CombatExecutionContext CurrentExecution { get; private set; }
+    public void InvalidateFieldExecutions() { FieldSession++; CurrentExecution = null; }
+
     public PlayerCharacter PlayerCharacter => playerCharacter;
     public Vector2 FacingDirection => GetFacingDirection();
     private bool isExecutingAutoChainStep;
@@ -192,6 +196,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // Hitstop is now handled globally via Time.timeScale in GameFreezeManager.
     }
 
+    void ICharacterCombat.ExecuteStep(AttackStepData step, int depth, bool airCombo, AttackCategory category,
+        string resolvedActionName, string resolvedActionId, bool isAutoChain)
+        => ExecuteStep(step, depth, airCombo, category, resolvedActionName, resolvedActionId, isAutoChain);
+
     public void ExecuteStep(
         AttackStepData step,
         int depth,
@@ -199,7 +207,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         AttackCategory category,
         string resolvedActionName = null,
         string resolvedActionId = null,
-        bool isAutoChain = false)
+        bool isAutoChain = false,
+        bool isQteIntro = false)
     {
         if (step == null)
         {
@@ -210,6 +219,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         hadGrabAtStepStart = HasGrabbedEnemy();
         currentStepData = step;
+        CurrentExecution = new CombatExecutionContext(this, playerCharacter != null ? playerCharacter.characterObject : null, FieldSession, isQteIntro);
         comboDepth = depth;
         isAirCombo = airCombo;
         isExecutingAutoChainStep = isAutoChain;
@@ -223,6 +233,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentAttackFrame = 0;
         hitboxActiveCount = 0;
         cachedStartupFrames = step.startupFrames;
+
+        movement?.BeginCombatStepFacing(isAutoChain);
 
         if (playerCharacter != null && playerCharacter.StateMachine != null && playerCharacter.StateMachine.showCombatLogs)
         {
@@ -271,6 +283,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                         animHandler.TriggerAttackCombo(depth, clipName, currentActionName);
                     break;
             }
+            if (step.syncAnimationToActionFrames)
+                animHandler.SampleActionFrame(0, step.TotalFrames);
         }
 
         if (depth <= 1 && category == AttackCategory.Normal)
@@ -283,7 +297,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             }
         }
 
-        passiveController?.NotifyActionStarted(category, currentActionId, currentActionName, step);
+        if (category == AttackCategory.Normal && !isAutoChain)
+            AbilityUIManager.Instance?.PlayNormalAttackCommittedFeedback();
+
+        passiveController?.NotifyActionStarted(category, currentActionId, currentActionName, step, CurrentExecution);
     }
 
     public void ProcessFrameFromState(int frame, ActionPhase phase)
@@ -336,7 +353,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                     
                     if (currentMotion != null)
                     {
-                        movement?.ApplyAttackMovement(currentMotion);
+                        movement?.ApplyAttackMovement(currentMotion, currentStepData.motionData.followSlowMotion);
                     }
                 }
             }
@@ -370,7 +387,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // Sync visual animation with logic frame (handles visual looping).
         // CRITICAL: We skip this in the 'Done' phase to allow the Animator to 
         // begin its natural exit transitions without logic conflict.
-        if (currentStepData != null
+        if (currentStepData != null && currentStepData.syncAnimationToActionFrames && phase != ActionPhase.Done)
+        {
+            animHandler?.SampleActionFrame(frame, currentStepData.TotalFrames);
+        }
+        else if (currentStepData != null
             && currentStepData.loopActivePhase
             && animHandler != null
             && phase == ActionPhase.Active)
@@ -1092,6 +1113,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             actionDamageSourceStat = currentActionDamageSourceStat,
             auraEnergyReward = currentAuraEnergyReward,
             auraEnergyRewardClaim = currentAuraEnergyRewardClaim,
+            execution = CurrentExecution,
             additionalDamageEffects = currentAdditionalDamageEffects,
             isSkillOrUltimate = currentAttackCategory == AttackCategory.Skill || currentAttackCategory == AttackCategory.Ultimate,
             remainingHits = remainingHits,
@@ -1312,7 +1334,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         {
             if (frame == keyframe.startFrame)
             {
-                movement?.ApplyAttackMovement(keyframe);
+                movement?.ApplyAttackMovement(keyframe, currentStepData.motionData.followSlowMotion);
             }
         }
     }
@@ -1750,7 +1772,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             currentAdditionalDamageEffects,
             this,
             playerCharacter.characterObject,
-            currentAuraEnergyRewardClaim);
+            currentAuraEnergyRewardClaim,
+            CurrentExecution);
     }
 
     public float GetFinalCooldown(AttackCategory category, float baseValue, string actionName = null, string actionId = null)

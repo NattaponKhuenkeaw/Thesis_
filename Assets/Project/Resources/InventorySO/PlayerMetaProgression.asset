@@ -13,11 +13,23 @@ MonoBehaviour:
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
   metaCurrency: 0
-  fragments: []
+  fragments:
+  - sourceItemId: char-0-main
+    displayName: Asura Shin Fragment
+    fragmentType: 0
+    quantity: 76
+  - sourceItemId: char-1-camera_girl
+    displayName: Yureka Rei Fragment
+    fragmentType: 0
+    quantity: 76
   characterPotentials:
   - characterId: char-0-main
-    skillLevel: 0
-    ultimateLevel: 0
-    passiveLevel: 1
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char-1-camera_girl
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
   unlockedCharacterIds: []
   permanentItems: []

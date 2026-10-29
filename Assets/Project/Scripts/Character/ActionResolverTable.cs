@@ -17,6 +17,9 @@ public class ActionResolverTable : ScriptableObject
     public List<SkillAction> skillActions = new List<SkillAction>();
     public List<UltimateAction> ultimateActions = new List<UltimateAction>();
 
+    [Header("QTE Entry Actions (prepared team swaps only)")]
+    public List<ComboAction> qteActions = new List<ComboAction>();
+
     [Header("Standalone Contextual Actions (checked before combo trees)")]
     [Tooltip("One-shot actions like Plunge, post-skill specials, counter-attacks.")]
     public List<StandaloneAction> standaloneActions = new List<StandaloneAction>();

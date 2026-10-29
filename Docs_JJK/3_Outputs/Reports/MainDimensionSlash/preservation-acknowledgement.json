@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-27",
+  "changedFiles": [
+    "Assets/Project/Scenes/Test_Playground.unity",
+    "Assets/Project/Resources/InventorySO/PlayerRunInventory.asset"
+  ],
+  "observedSaveTime": "approximately 20:39 Asia/Bangkok",
+  "userConfirmation": "Yes, keep the current files",
+  "action": "Retained current files; no revert attempted.",
+  "note": "runtime-preservation-check.json retains the measured false Unchanged flags for these two files. They must not be relabeled as matching the initial hashes."
+}

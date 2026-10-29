@@ -663,6 +663,11 @@ namespace Project.TeamBuilder.UI.Panels
                 {
                     return;
                 }
+                if (Root.GetComponent<ContentSizeFitter>() != null)
+                {
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(Root.GetComponent<RectTransform>());
+                    return;
+                }
 
                 if (LevelText != null && LevelText.gameObject.activeSelf)
                 {

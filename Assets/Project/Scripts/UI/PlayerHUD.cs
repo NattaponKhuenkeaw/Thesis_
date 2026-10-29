@@ -27,6 +27,9 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     [SerializeField] private TeamLoader teamLoader;
     [SerializeField] private Canvas targetCanvas;
     [SerializeField] private RectTransform hudRoot;
+    [SerializeField] private CombatMeterUI combatMeterUI;
+    [Tooltip("Optional meter row parent. Defaults to the HUD layout between runtime status and player stats.")]
+    [SerializeField] private RectTransform combatMeterAnchor;
     [SerializeField] private Transform runtimeEffectContainer;
     [SerializeField] private RuntimeEffectIconUI runtimeEffectIconPrefab;
     [SerializeField] private Slider shieldSlider;
@@ -43,6 +46,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     [Header("Navigation & Zone")]
     [SerializeField] private GameObject navigationRoot;
+    [Tooltip("Combat ability display root, separate from this always-active HUD controller.")]
+    [SerializeField] private GameObject abilityRoot;
     [SerializeField] private ZoneStateProvider zoneStateProvider;
 
     private GameObject shieldSliderRoot;
@@ -184,6 +189,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             return;
 
         CreateHudIfNeeded();
+        EnsureCombatMeter();
         EnsureCurrencyText();
         RebindEvents();
         RebindRuntimeEffectEvents();
@@ -217,6 +223,31 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             subscribedPlayer.OnCharacterChanged += HandleCharacterChanged;
             subscribedPlayer.OnDied += HandleDied;
         }
+    }
+
+    private void EnsureCombatMeter()
+    {
+        if (hudRoot == null) return;
+        if (combatMeterUI == null) combatMeterUI = hudRoot.GetComponentInChildren<CombatMeterUI>(true);
+        if (combatMeterUI == null)
+        {
+            Transform parent = combatMeterAnchor != null ? combatMeterAnchor : hudRoot;
+            var row = new GameObject("ShadowMeter", typeof(RectTransform), typeof(LayoutElement));
+            RectTransform rowRect = row.GetComponent<RectTransform>();
+            rowRect.SetParent(parent, false);
+            rowRect.sizeDelta = new Vector2(hudRoot.rect.width, 28f);
+            row.GetComponent<LayoutElement>().preferredHeight = 28f;
+            row.transform.SetSiblingIndex(runtimeEffectContainer != null && runtimeEffectContainer.parent == parent
+                ? runtimeEffectContainer.GetSiblingIndex() + 1 : 0);
+            var meterObject = new GameObject("CombatMeter", typeof(RectTransform), typeof(CombatMeterUI));
+            RectTransform rect = meterObject.GetComponent<RectTransform>();
+            rect.SetParent(row.transform, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            combatMeterUI = meterObject.GetComponent<CombatMeterUI>();
+        }
+        combatMeterUI.Bind(playerCharacter);
     }
 
     private void CreateHudIfNeeded()
@@ -466,7 +497,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     public static string FormatRunCurrency(int amount)
     {
-        return $"${Mathf.Max(0, amount)}";
+        return $"{Mathf.Max(0, amount)}";
     }
 
     private void EnsureCurrencyText()
@@ -1029,17 +1060,29 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     public void OnZoneChanged(ZoneMode newMode)
     {
-        UpdateNavigationVisibility();
+        ApplyZoneVisibility(newMode == ZoneMode.SafeZone);
     }
 
     public void UpdateNavigationVisibility()
     {
-        GameObject navGo = FindNavigationRoot();
-        if (navGo == null)
-            return;
+        ApplyZoneVisibility(IsSafeRoom());
+    }
 
-        bool isSafe = IsSafeRoom();
-        if (navGo.activeSelf != isSafe)
+    private void ApplyZoneVisibility(bool isSafe)
+    {
+        if (hudRoot != null && hudRoot.gameObject != gameObject)
+            hudRoot.gameObject.SetActive(!isSafe);
+
+        if (abilityRoot == null && targetCanvas != null)
+        {
+            Transform abilities = FindChildRecursive(targetCanvas.transform, "Cool");
+            if (abilities != null) abilityRoot = abilities.gameObject;
+        }
+        if (abilityRoot != null && abilityRoot != gameObject)
+            abilityRoot.SetActive(!isSafe);
+
+        GameObject navGo = FindNavigationRoot();
+        if (navGo != null && navGo.activeSelf != isSafe)
         {
             navGo.SetActive(isSafe);
 
@@ -1060,12 +1103,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
                 return false;
 
             if (zoneStateProvider.CurrentMode == ZoneMode.SafeZone)
-            {
-                if (IsCombatSceneOrHostPresent())
-                    return false;
-
                 return true;
-            }
         }
 
         return !IsCombatSceneOrHostPresent();

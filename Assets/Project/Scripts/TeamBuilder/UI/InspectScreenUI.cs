@@ -39,6 +39,17 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Button equipmentTabButton;
         [SerializeField] private Transform characterSliderGridParent;
         [SerializeField] private GameObject characterSliderItemPrefab;
+        [Header("Folder Presentation")]
+        [SerializeField] private RectTransform folderDocument;
+        [SerializeField] private CanvasGroup folderDocumentGroup;
+        [SerializeField] private Sprite activeFolderTabSprite;
+        [SerializeField] private Sprite inactiveFolderTabSprite;
+        [SerializeField] private float folderSlideDuration = .18f;
+        [SerializeField] private float folderSlideOffset = 20f;
+        private Coroutine folderMotion;
+        private Vector2 folderOrigin;
+        private bool folderInitialized;
+        private InspectPage presentedPage;
 
         [Header("Data Sources")]
         [SerializeField] private PlayerRunInventory playerInventory;
@@ -151,6 +162,7 @@ namespace Project.TeamBuilder.UI
             }
 
             StopPageTransition();
+            ResetFolderMotion();
         }
 
         private void HandleZoneChanged(ZoneMode newMode)
@@ -376,7 +388,7 @@ namespace Project.TeamBuilder.UI
 
             PopulateCharacterSlider();
             PopulateData();
-            PlayContentSlideTransition();
+            if (!isAlreadyOpen || folderDocument == null) PlayContentSlideTransition();
         }
 
         public void Open(CharacterItem character)
@@ -434,6 +446,19 @@ namespace Project.TeamBuilder.UI
 
         private void PlayFadeTransition(bool opening)
         {
+            if (!Application.isPlaying)
+            {
+                if (rootCanvasGroup != null)
+                {
+                    rootCanvasGroup.alpha = opening ? 1f : 0f;
+                    rootCanvasGroup.interactable = rootCanvasGroup.blocksRaycasts = opening;
+                }
+                if (!opening)
+                {
+                    gameObject.SetActive(false); currentCharacter = null; ClearCharacterSlider();
+                }
+                return;
+            }
             // Always stop on the cached driver — the coroutine was started there.
             if (fadeCoroutine != null && cachedDriver != null)
             {
@@ -476,6 +501,7 @@ namespace Project.TeamBuilder.UI
         private void PlayContentSlideTransition()
         {
             if (panelRectTransform == null) return;
+            if (!Application.isPlaying) { panelRectTransform.anchoredPosition = openAnchoredPosition; return; }
 
             // Stop on the correct owner.
             if (slideCoroutine != null && cachedDriver != null)
@@ -503,8 +529,15 @@ namespace Project.TeamBuilder.UI
         private void PopulateData()
         {
             ResolveSubPanelsIfNeeded();
+            PresentFolderPage();
 
             bool hasCharacter = currentCharacter != null && currentCharacter.characterObjectData != null;
+            if (folderDocument != null)
+            {
+                folderDocument.gameObject.SetActive(hasCharacter);
+                if (infoTabButton != null) infoTabButton.gameObject.SetActive(hasCharacter);
+                if (skillTabButton != null) skillTabButton.gameObject.SetActive(hasCharacter);
+            }
             if (emptyStatePanel != null)
             {
                 emptyStatePanel.SetActive(!hasCharacter);
@@ -538,6 +571,52 @@ namespace Project.TeamBuilder.UI
                 }
 
                 panel.PopulateData(currentCharacter, currentArtifactInstances);
+            }
+        }
+
+        private void PresentFolderPage()
+        {
+            if (folderDocument == null || folderDocumentGroup == null) return;
+            if (!folderInitialized) { folderOrigin = folderDocument.anchoredPosition; folderInitialized = true; }
+            bool changed = presentedPage != activePage;
+            presentedPage = activePage;
+            StyleFolderTab(infoTabButton, activePage == InspectPage.Info || activePage == InspectPage.Equipment);
+            StyleFolderTab(skillTabButton, activePage == InspectPage.Skill);
+            ResetFolderMotion();
+            if (changed && Application.isPlaying && isActiveAndEnabled && activePage != InspectPage.Potential)
+                folderMotion = StartCoroutine(AnimateFolderPage());
+        }
+
+        private void StyleFolderTab(Button tab, bool active)
+        {
+            if (tab == null) return;
+            tab.GetComponent<Image>().sprite = active ? activeFolderTabSprite : inactiveFolderTabSprite;
+            var label = tab.GetComponentInChildren<TMP_Text>();
+            if (label != null) label.color = active ? new Color(.04f, .05f, .09f) : new Color(.7f, .73f, .82f);
+        }
+
+        private IEnumerator AnimateFolderPage()
+        {
+            float elapsed = 0f;
+            while (elapsed < folderSlideDuration)
+            {
+                float t = Mathf.Clamp01(elapsed / Mathf.Max(.01f, folderSlideDuration));
+                float eased = 1f - Mathf.Pow(1f - t, 3f);
+                folderDocument.anchoredPosition = folderOrigin + Vector2.right * folderSlideOffset * (1f - eased);
+                folderDocumentGroup.alpha = Mathf.Lerp(.35f, 1f, eased);
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            folderDocument.anchoredPosition = folderOrigin; folderDocumentGroup.alpha = 1f; folderMotion = null;
+        }
+
+        private void ResetFolderMotion()
+        {
+            if (folderMotion != null) StopCoroutine(folderMotion);
+            folderMotion = null;
+            if (folderInitialized && folderDocument != null && folderDocumentGroup != null)
+            {
+                folderDocument.anchoredPosition = folderOrigin; folderDocumentGroup.alpha = 1f;
             }
         }
 
@@ -843,6 +922,14 @@ namespace Project.TeamBuilder.UI
 
         private void PopulateCharacterSlider()
         {
+            bool sameRoster = sliderItems.Count == availableCharacters.Count;
+            for (int i = 0; sameRoster && i < sliderItems.Count; i++)
+                sameRoster = sliderItems[i] != null && sliderItems[i].CharacterData == availableCharacters[i];
+            if (sameRoster)
+            {
+                for (int i = 0; i < sliderItems.Count; i++) sliderItems[i].SetSelected(i == selectedCharacterIndex);
+                return;
+            }
             ClearCharacterSlider();
             if (characterSliderGridParent == null || characterSliderItemPrefab == null)
             {
@@ -865,7 +952,8 @@ namespace Project.TeamBuilder.UI
                     continue;
                 }
 
-                itemUI.Init(character, null, i == selectedCharacterIndex, SelectCharacterFromSlider);
+                itemUI.Init(character, null, false, SelectCharacterFromSlider, ResolveRunInventory());
+                itemUI.SetSelected(i == selectedCharacterIndex);
                 sliderItems.Add(itemUI);
             }
         }
@@ -876,7 +964,9 @@ namespace Project.TeamBuilder.UI
             {
                 if (sliderItems[i] != null)
                 {
-                    Destroy(sliderItems[i].gameObject);
+                    sliderItems[i].gameObject.SetActive(false);
+                    if (Application.isPlaying) Destroy(sliderItems[i].gameObject);
+                    else DestroyImmediate(sliderItems[i].gameObject);
                 }
             }
 
@@ -885,7 +975,7 @@ namespace Project.TeamBuilder.UI
 
         private void SelectCharacterFromSlider(CharacterItem character)
         {
-            Open(character);
+            if (character != currentCharacter) Open(character);
         }
 
         private void PopulateFallbackCharacterSlider()

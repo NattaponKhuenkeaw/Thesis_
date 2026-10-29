@@ -90,5 +90,13 @@ namespace Project.Combat
         Orochi_Ult_Start = 153,
         Orochi_Ult_Loop = 154,
         Orochi_Ult_End = 155,
+
+        Main_DimensionSlash_BurstA = 160,
+        Main_DimensionSlash_BurstB = 161,
+        Main_DimensionSlash_BurstC = 162,
+        Main_DimensionSlash_Residual = 163,
+        Main_DimensionSlash_Seam = 164,
+        Main_DimensionSlash_Final = 165,
+        Main_DimensionSlash_Shards = 166,
     }
 }

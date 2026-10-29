@@ -216,6 +216,7 @@
 /* ─── TIMELINE DASHBOARD ─── */
 .timeline-dashboard {
     flex-grow: 1;
+    flex-basis: 0;
     margin: 0 8px 8px 8px;
     background-color: #141420;
     border-radius: 8px;
@@ -232,6 +233,7 @@
 
 /* Transport Bar */
 .transport-bar {
+    flex-shrink: 0;
     flex-direction: row;
     justify-content: center;
     align-items: center;

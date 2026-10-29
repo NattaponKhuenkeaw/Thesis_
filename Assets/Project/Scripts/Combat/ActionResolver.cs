@@ -22,6 +22,18 @@ public class ActionResolver
     // Logging
     private PlayerStateMachine fsm;
 
+    public void BeginExplicitStep(CombatAction action, AttackStepData step, bool grounded, ComboTree combo = null)
+    {
+        Reset();
+        ActiveCombatAction = action;
+        activeActionStartedAirborne = !grounded;
+        // Optional authored QTE combo; legacy intros remain terminal and never
+        // walk or mutate the source action's unrelated follow-ups.
+        activeTree = combo;
+        currentNode = combo?.rootNode?.stepData == step ? combo.rootNode : new ComboNode { stepData = step };
+        treeDepth = 1;
+    }
+
     public void SetLogger(PlayerStateMachine stateMachine)
     {
         fsm = stateMachine;
@@ -460,6 +472,14 @@ public class ActionResolver
         {
             return false;
         }
+
+        if (action is UltimateAction ultimate
+            && (ultimate.inputTrigger == UltimateInputTrigger.Hold) != ctx.ultimateInputHeld)
+            return false;
+
+        CombatRuntimeState counters = ctx.runtimeState ?? ctx.passiveController?.RuntimeState;
+        if (action.resourceCost > 0 && (counters == null || string.IsNullOrWhiteSpace(action.resourceCounterId)
+            || counters.GetCounter(action.resourceCounterId) < action.resourceCost)) return false;
 
         if (!ActionConditionUtility.AllMet(action.conditions, ctx))
         {

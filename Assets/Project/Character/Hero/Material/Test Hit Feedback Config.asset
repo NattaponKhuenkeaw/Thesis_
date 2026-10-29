@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Test Hit Feedback Config
   m_EditorClassIdentifier: Assembly-CSharp::HitFeedbackConfig
   lowImpactSFX:
-  - {fileID: 8300000, guid: 596699b64a6156d449c2889dd1ab13a2, type: 3}
+  - {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
   mediumImpactSFX:
   - {fileID: 8300000, guid: bb0a9ac2e5a03764daaef42e6736cccc, type: 3}
   - {fileID: 8300000, guid: dc3aaa85ccf2bda468d3597484218719, type: 3}
@@ -32,5 +32,4 @@ MonoBehaviour:
   ultimateImpactVFX: {fileID: 0}
   guardSFX: []
   whiffSFX: []
-  guardVFXType: 20
   guardVFX: {fileID: 0}

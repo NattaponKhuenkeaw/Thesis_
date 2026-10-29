@@ -20,6 +20,7 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Image elementIcon;
         [SerializeField] private TMP_Text characterNameText;
         [SerializeField] private TMP_Text levelText;
+        [SerializeField] private Button changeCharacterButton;
 
         [Header("Stat Texts")]
         [SerializeField] private TMP_Text atkText;
@@ -87,6 +88,11 @@ namespace Project.TeamBuilder.UI
             canvasGroup = GetComponent<CanvasGroup>();
             rectTransform = GetComponent<RectTransform>();
             feedbackDriver = UIFeedbackDriver.GetOrAdd(gameObject);
+            if (changeCharacterButton != null)
+            {
+                changeCharacterButton.onClick.RemoveListener(ChangeCharacter);
+                changeCharacterButton.onClick.AddListener(ChangeCharacter);
+            }
 
             if (canvasGroup == null)
             {
@@ -220,6 +226,7 @@ namespace Project.TeamBuilder.UI
 
         public void SetLockedVisualState(bool isLocked)
         {
+            if (changeCharacterButton != null) changeCharacterButton.gameObject.SetActive(!isLocked);
             if (lockedOverlay != null)
             {
                 lockedOverlay.SetActive(isLocked);
@@ -315,20 +322,10 @@ namespace Project.TeamBuilder.UI
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (parentBuilder == null)
-            {
-                return;
-            }
-
-            if (parentBuilder.CurrentMode == ZoneMode.CombatZone)
-            {
-                return;
-            }
-            else
-            {
-                parentBuilder.BeginCharacterSwitch(slotIndex);
-            }
+            // Character selection has its own button; portrait input retains drag and inspect behavior.
         }
+
+        public void ChangeCharacter() => parentBuilder?.BeginCharacterSwitch(slotIndex);
 
         public void OnPointerDown(PointerEventData eventData)
         {
@@ -669,16 +666,7 @@ namespace Project.TeamBuilder.UI
             feedbackDriver = feedbackDriver != null ? feedbackDriver : UIFeedbackDriver.GetOrAdd(gameObject);
             if (feedbackDriver != null && rectTransform != null)
             {
-                feedbackDriver.PlayWiggle(rectTransform, baseAnchoredPosition, lockedWiggleDistance, lockedWiggleDuration);
-                if (padlockOverlay != null)
-                {
-                    feedbackDriver.PlayPulse(padlockOverlay.transform, padlockPulseScale, lockedWiggleDuration);
-                }
-
-                if (lockedOverlay != null && lockedOverlay.TryGetComponent(out Graphic lockGraphic))
-                {
-                    feedbackDriver.PlayFlash(lockGraphic, new Color(1f, 0.2f, 0.2f, lockGraphic.color.a), lockedWiggleDuration);
-                }
+                feedbackDriver.PlayPulse(rectTransform, 1.12f, lockedWiggleDuration);
             }
         }
 
@@ -688,7 +676,6 @@ namespace Project.TeamBuilder.UI
             if (feedbackDriver != null && rectTransform != null)
             {
                 feedbackDriver.PlayPulse(rectTransform, 1.08f, 0.12f);
-                feedbackDriver.PlayRadialBurst(rectTransform, placementBurstColor, 8, 34f, 0.12f);
             }
         }
 
@@ -713,79 +700,15 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            bool shouldAnimate = hasStatSnapshot
-                && (Mathf.Abs(previousBaseValue - nextBaseValue) > Mathf.Epsilon
-                    || Mathf.Abs(previousBonusValue - nextBonusValue) > Mathf.Epsilon);
-
             if (activeCoroutine != null)
             {
                 StopCoroutine(activeCoroutine);
                 activeCoroutine = null;
             }
-
-            if (!shouldAnimate)
-            {
-                targetText.text = FormatStatValue(nextBaseValue, nextBonusValue, statName);
-                targetText.color = statNormalColor;
-                targetText.transform.localScale = Vector3.one;
-            }
-            else
-            {
-                activeCoroutine = StartCoroutine(AnimateStatFeedback(
-                    targetText,
-                    previousBaseValue,
-                    previousBonusValue,
-                    nextBaseValue,
-                    nextBonusValue,
-                    statName));
-            }
-
+            targetText.text = FormatStatValue(nextBaseValue, nextBonusValue, statName);
+            targetText.color = statNormalColor;
             previousBaseValue = nextBaseValue;
             previousBonusValue = nextBonusValue;
-        }
-
-        private IEnumerator AnimateStatFeedback(
-            TMP_Text targetText,
-            float startBaseValue,
-            float startBonusValue,
-            float endBaseValue,
-            float endBonusValue,
-            string statName)
-        {
-            float elapsed = 0f;
-
-            // Determine if upgrade or downgrade
-            string statKey = statName != null ? statName.ToLowerInvariant() : "";
-            bool isPercentMultiplier = statKey.Contains("hp") || statKey.Contains("atk") || statKey.Contains("def");
-
-            float startTotal = isPercentMultiplier
-                ? startBonusValue
-                : startBonusValue;
-
-            float endTotal = isPercentMultiplier
-                ? endBonusValue
-                : endBonusValue;
-
-            bool isUpgrade = endTotal > startTotal;
-            Color flashColor = isUpgrade ? statBoostColor : statDowngradeColor;
-
-            while (elapsed < statFeedbackDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / statFeedbackDuration);
-                float eased = 1f - Mathf.Pow(1f - t, 2f);
-                float currentBase = Mathf.Lerp(startBaseValue, endBaseValue, eased);
-                float currentBonus = Mathf.Lerp(startBonusValue, endBonusValue, eased);
-
-                targetText.text = FormatStatValue(currentBase, currentBonus, statName);
-                targetText.color = Color.Lerp(flashColor, statNormalColor, t);
-                targetText.transform.localScale = Vector3.one * Mathf.Lerp(statFeedbackScale, 1f, t);
-                yield return null;
-            }
-
-            targetText.text = FormatStatValue(endBaseValue, endBonusValue, statName);
-            targetText.color = statNormalColor;
-            targetText.transform.localScale = Vector3.one;
         }
 
         private void PlayOverallStatFeedback(bool isUpgrade)
@@ -794,13 +717,6 @@ namespace Project.TeamBuilder.UI
             if (feedbackDriver == null)
             {
                 return;
-            }
-
-            Color feedbackColor = isUpgrade ? statBoostColor : statDowngradeColor;
-            Graphic feedbackGraphic = profileImage != null ? (Graphic)profileImage : atkText;
-            if (feedbackGraphic != null)
-            {
-                feedbackDriver.PlayFlash(feedbackGraphic, feedbackColor, statFeedbackDuration);
             }
 
             if (rectTransform != null)

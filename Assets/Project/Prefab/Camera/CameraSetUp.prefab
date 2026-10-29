@@ -228,10 +228,6 @@ MonoBehaviour:
   _bossOrthoSizeRange: {x: 9.5, y: 12}
   _bossFramingSize: 0.32
   _bossEnemyRadius: 2.75
-  _enableLegacyDynamicDamping: 0
-  _fallPanAmount: 0.25
-  _normYPanAmount: 2
-  _fallYPanTime: 0.35
   _impulseSource: {fileID: 5215209452743578796}
   _lowShake: 0.005
   _mediumShake: 0.05
@@ -442,10 +438,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraLookAhead
   playerRigidbody: {fileID: 0}
-  fallLookAheadTime: 0.35
-  maxFallOffset: 8
-  fallLookAheadSmoothTime: 0.08
-  verticalReturnSmoothTime: 0.25
   horizontalLookAheadDistance: 2
   horizontalLookAheadDuration: 0.25
   horizontalSmoothTime: 0.05
