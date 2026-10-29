@@ -724,6 +724,7 @@ namespace Project.AIBehaviour.Boss
             float maxTravel = ResolveChargeTravelDistance(facing);
             float traveled = 0f;
             bool rushPoseStarted = false;
+            float rushAnimationTime = 0f;
             while (traveled < maxTravel)
             {
                 if (!CanContinuePattern())
@@ -746,6 +747,11 @@ namespace Project.AIBehaviour.Boss
                     animHandler?.SetBossChargePhase(0.3f);
                     PlayChargeRushAudio();
                     rushPoseStarted = true;
+                }
+                if (rushPoseStarted)
+                {
+                    animHandler?.SetBossChargePhase(.3f + Mathf.Repeat(rushAnimationTime, .4f) * .5f);
+                    rushAnimationTime += Time.fixedDeltaTime;
                 }
             }
 
@@ -831,6 +837,8 @@ namespace Project.AIBehaviour.Boss
                     yield break;
 
                 t += Time.deltaTime;
+                if (patternId == BossPatternId.BullCharge)
+                    animHandler?.SetBossChargePhase(Mathf.Min(.2999f, t));
                 yield return null;
             }
         }
@@ -858,7 +866,7 @@ namespace Project.AIBehaviour.Boss
                 if (!CanContinuePattern())
                     break;
                 if (animateLanding)
-                    animHandler?.SetBossJumpPhase(Mathf.Lerp(0.6f, 0.99f, t / Mathf.Max(0.01f, timing.activeDuration)));
+                    animHandler?.SetBossJumpPhase(Mathf.Lerp(0.6f, 0.99f, Mathf.Clamp01(t / .3f)));
                 t += Time.deltaTime;
                 ZeroVelocity();
                 yield return null;
@@ -1132,7 +1140,7 @@ namespace Project.AIBehaviour.Boss
                     GameAudioManager.EnsureInstance().PlayHitSFX(jumpTakeoffSfx, JumpTakeoffSfxVolume);
                 t += Time.fixedDeltaTime / duration;
                 float u = Mathf.Clamp01(t);
-                animHandler?.SetBossJumpPhase(u < (1f / 3f) ? 0f : 0.25f);
+                animHandler?.SetBossJumpPhase(u * duration < .1f ? 0f : 0.25f);
                 Vector2 pos = Vector2.Lerp(start, end, u);
                 pos.y += jumpArcHeight * 4f * u * (1f - u);
                 MoveBossPosition(pos);

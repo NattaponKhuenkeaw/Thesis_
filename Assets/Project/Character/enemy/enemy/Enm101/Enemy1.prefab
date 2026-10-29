@@ -429,7 +429,7 @@ PrefabInstance:
     - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 81101001, guid: e101a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
+      objectReference: {fileID: -982919188, guid: f2d14a41a5b961348b98a3d38b7aa71f, type: 3}
     - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Color.b
       value: 1
@@ -469,7 +469,7 @@ PrefabInstance:
     - target: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 22100000, guid: c1010000000000aaa0b1c2d34e5f8091, type: 2}
+      objectReference: {fileID: 22100000, guid: 3dd2356a1c5805942b2d358487f18466, type: 2}
     - target: {fileID: 5618151998514689905, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 66
@@ -571,8 +571,12 @@ PrefabInstance:
       value: 0.35
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: useMeleeAttackPoses
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.getUp
-      value: Base Layer.Hurt
+      value: Base Layer.GetUp
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.enabled
@@ -580,12 +584,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.knockdown
-      value: Base Layer.Hurt
+      value: Base Layer.Knockdown
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.comboAccentCharacter
       value: 
       objectReference: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.finishGetUpAnimation
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.x
       value: 2.2
@@ -732,21 +740,67 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6947661304475291214}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7667139835136976501}
   m_SourcePrefab: {fileID: 100100000, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+--- !u!212 &330550517057683680 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &3682925780710360539 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
   m_PrefabInstance: {fileID: 4180762667386644137}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 4739200647295624271}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+--- !u!1 &4739200647295624271 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7667139835136976501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4739200647295624271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed71bfb2e4c35964787e8d54557cb6d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyColorVariants
+  targetAnimator: {fileID: 8322916016626319731}
+  targetRenderer: {fileID: 330550517057683680}
+  variants:
+  - name: Color A
+    controller: {fileID: 22100000, guid: 3dd2356a1c5805942b2d358487f18466, type: 2}
+    spawnSprite: {fileID: -982919188, guid: f2d14a41a5b961348b98a3d38b7aa71f, type: 3}
+    projectileFrames: []
+  - name: Color B
+    controller: {fileID: 22100000, guid: 50255befd0eacad4c8df26d897a52182, type: 2}
+    spawnSprite: {fileID: -1411926499, guid: ae36eb7f6057c364cb62c1f9b3287f54, type: 3}
+    projectileFrames: []
+  - name: Color C
+    controller: {fileID: 22100000, guid: 871854702193e6d4c846e8c5c82a05cd, type: 2}
+    spawnSprite: {fileID: 1657899538, guid: b63bbd2d30bb80945b11b866de28bfe9, type: 3}
+    projectileFrames: []
+  originalProjectileFrames: []
 --- !u!4 &7519174093949083380 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &8322916016626319731 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
   m_PrefabInstance: {fileID: 4180762667386644137}
   m_PrefabAsset: {fileID: 0}

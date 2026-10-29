@@ -231,7 +231,10 @@ public sealed class EnemyShieldGuard : MonoBehaviour
         }
         animationHandler?.SetSpeed(0f);
         if (phase == GuardPhase.Guarding || phase == GuardPhase.Turning || phase == GuardPhase.Windup)
+        {
             animationHandler?.PlayShieldGuardPose(phase != GuardPhase.Turning);
+            if (phase == GuardPhase.Windup) animationHandler?.PlayShieldChargeAnticipation();
+        }
         else
         {
             animationHandler?.EndShieldGuardPose();

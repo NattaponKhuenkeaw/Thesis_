@@ -191,6 +191,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: grabCenterAdjustment.x
+      value: -0.083716
+      objectReference: {fileID: 0}
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: grabCenterAdjustment.y
+      value: 0.380505
+      objectReference: {fileID: 0}
     - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -409,7 +417,7 @@ PrefabInstance:
     - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 81103001, guid: e148fe1a5155a05f1cc8ed9f1fd977f8, type: 3}
+      objectReference: {fileID: 1465614201, guid: 0055a58439d5416498cf1f69e5358ace, type: 3}
     - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Color.b
       value: 1
@@ -449,7 +457,7 @@ PrefabInstance:
     - target: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 22100000, guid: 45b7295dcf880586da768d0dceb71711, type: 2}
+      objectReference: {fileID: 22100000, guid: 1ddee3dd6ac52454fa1e1e526201af9f, type: 2}
     - target: {fileID: 5618151998514689905, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 66
@@ -551,16 +559,20 @@ PrefabInstance:
       value: 1.73
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: gifShieldCharge
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: animateShieldGuard
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.fall
-      value: Base Layer.Hurt
+      value: Base Layer.Fall
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.getUp
-      value: Base Layer.Hurt
+      value: Base Layer.GetUp
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.launch
@@ -576,15 +588,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.knockdown
-      value: Base Layer.Hurt
+      value: Base Layer.Knockdown
       objectReference: {fileID: 0}
-    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: grabCenterAdjustment.x
-      value: -0.083716
-      objectReference: {fileID: 0}
-    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: grabCenterAdjustment.y
-      value: 0.380505
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.finishGetUpAnimation
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.x
@@ -616,11 +624,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
-      value: 8.533334
+      value: 6.4
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.y
-      value: 8.533334
+      value: 6.4
       objectReference: {fileID: 0}
     - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_fontSize
@@ -736,7 +744,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 102103000000000001}
+    - targetCorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3498977337664649580}
   m_SourcePrefab: {fileID: 100100000, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+--- !u!212 &330550517057683680 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &3682925780710360539 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
@@ -767,11 +783,44 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShieldGuard
   detectionRadius: 9
   sideDeadzone: 0.15
-  guardWaitDuration: 5
+  guardWaitDuration: 4.5
   rearRecheckDelay: 0.75
   turnDuration: 0.45
+--- !u!114 &3498977337664649580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4739200647295624271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed71bfb2e4c35964787e8d54557cb6d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyColorVariants
+  targetAnimator: {fileID: 8322916016626319731}
+  targetRenderer: {fileID: 330550517057683680}
+  variants:
+  - name: Color A
+    controller: {fileID: 22100000, guid: 1ddee3dd6ac52454fa1e1e526201af9f, type: 2}
+    spawnSprite: {fileID: 1465614201, guid: 0055a58439d5416498cf1f69e5358ace, type: 3}
+    projectileFrames: []
+  - name: Color B
+    controller: {fileID: 22100000, guid: 8bd3f0e16dfbedb4ab4f55a7d5ca3542, type: 2}
+    spawnSprite: {fileID: -50500754, guid: 6949150406339a242ad074b1ed46cb86, type: 3}
+    projectileFrames: []
+  - name: Color C
+    controller: {fileID: 22100000, guid: 16d2a74f25767944eb436b8e6f7b937f, type: 2}
+    spawnSprite: {fileID: 1228989179, guid: 2e22a528f0baa54489188e11e7a3d871, type: 3}
+    projectileFrames: []
+  originalProjectileFrames: []
 --- !u!4 &7519174093949083380 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &8322916016626319731 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
   m_PrefabInstance: {fileID: 4180762667386644137}
   m_PrefabAsset: {fileID: 0}

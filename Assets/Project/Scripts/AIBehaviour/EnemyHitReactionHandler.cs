@@ -600,6 +600,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         if (currentState == EnemyReactionState.Recovering && currentReactionFrame > totalEndFrame)
         {
+            if (animationHandler != null && animationHandler.IsFinishingGetUpAnimation) return;
             CompleteReaction();
             return;
         }
