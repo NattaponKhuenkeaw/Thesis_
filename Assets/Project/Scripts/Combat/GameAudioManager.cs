@@ -5,7 +5,7 @@ using Project.Core;
 using Project.Core.ZoneState;
 using UnityEngine.SceneManagement;
 
-public class GameAudioManager : MonoBehaviour
+public partial class GameAudioManager : MonoBehaviour
 {
     public static GameAudioManager Instance { get; private set; }
     public const float MaxSFXGain = 2f;
@@ -219,6 +219,7 @@ public class GameAudioManager : MonoBehaviour
 
     private void Update()
     {
+        UpdateTimelineAudio();
         RefreshMusicVolume();
         RefreshAmbienceVolume();
     }
@@ -473,29 +474,33 @@ public class GameAudioManager : MonoBehaviour
 
     private void ReturnSource(AudioSource src)
     {
+        ForgetTimelineAudio(src);
         src.Stop();
         src.clip = null;
+        src.pitch = 1f;
         src.ignoreListenerPause = false; // Reset to default
         sourcePool.Enqueue(src);
     }
 
     public void PlayTimelineAudio(AudioEntry entry)
     {
-        if (entry.clip == null)
+        if (entry == null || entry.clip == null)
         {
-            Debug.LogWarning($"GameAudioManager: AudioEntry '{entry.label}' has no AudioClip assigned!", this);
+            Debug.LogWarning($"GameAudioManager: AudioEntry '{entry?.label}' has no AudioClip assigned!", this);
             return;
         }
 
         if (entry.channel == AudioChannel.Voice)
         {
+            ForgetTimelineAudio(voiceSource);
             // Override previous voice
             voiceSource.Stop();
             voiceSource.clip = entry.clip;
             voiceSource.volume = GetEffectiveVoiceVolume(entry.volume);
-            voiceSource.pitch = entry.pitchVariation; // If we want to vary pitch
+            voiceSource.pitch = CombatCore.AnimationTimePolicy.AudioPitch(entry.pitchVariation, Time.timeScale, entry.slowMotionAware);
             voiceSource.ignoreListenerPause = false;
             voiceSource.Play();
+            TrackTimelineAudio(voiceSource, entry, true);
         }
         else
         {
@@ -505,10 +510,10 @@ public class GameAudioManager : MonoBehaviour
             // Action, Hit, etc.
             AudioSource src = GetSource();
             src.clip = entry.clip;
-            src.pitch = entry.pitchVariation;
+            src.pitch = CombatCore.AnimationTimePolicy.AudioPitch(entry.pitchVariation, Time.timeScale, entry.slowMotionAware);
             src.ignoreListenerPause = false;
             PlaySFXSource(src, entry.clip, GetEffectiveSFXVolume(entry.volume) * concurrencyMod);
-            StartCoroutine(ReturnSourceRoutine(src, entry.clip.length / Mathf.Max(0.01f, src.pitch)));
+            TrackTimelineAudio(src, entry, false);
         }
     }
 
@@ -574,6 +579,7 @@ public class GameAudioManager : MonoBehaviour
 
         if (isVoice)
         {
+            ForgetTimelineAudio(voiceSource);
             voiceSource.Stop();
             voiceSource.clip = clip;
             voiceSource.volume = GetEffectiveVoiceVolume(1f);

@@ -93,7 +93,7 @@ public sealed class PlayerQteIntroState : PlayerAttackState
         }
         if (_plungeActive && !_plungeLanded)
         {
-            if (!player.Movement.SampleCapturedWorldMotion(_plungeMotion, frame))
+            if (!player.Movement.SampleCapturedWorldMotion(_plungeMotion, frame, _step.motionData?.followSlowMotion ?? true))
             { AbortPlunge(); return; }
             if (frame >= _step.ActivePhaseStart)
             {

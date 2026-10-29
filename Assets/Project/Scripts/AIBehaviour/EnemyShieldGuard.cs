@@ -28,6 +28,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     private float windupDuration;
     private bool hasTurned;
     private bool ownsPlant;
+    private bool guardBroken;
     private RigidbodyConstraints2D originalConstraints;
 
     public GuardPhase Phase { get; private set; }
@@ -35,7 +36,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     public float EngagementRange => Mathf.Max(.1f, enemy != null
         ? enemy.ResolveAttackRange(detectionRadius) : detectionRadius);
     public bool ShieldRaised => (Phase == GuardPhase.Guarding || Phase == GuardPhase.Windup || Phase == GuardPhase.Striking)
-        && enemy != null && enemy.IsGameplayActive && enemy.CurrentReactionState == EnemyReactionState.None;
+        && !guardBroken && enemy != null && enemy.IsGameplayActive && enemy.CurrentReactionState == EnemyReactionState.None;
 
     private void Awake()
     {
@@ -169,6 +170,15 @@ public sealed class EnemyShieldGuard : MonoBehaviour
         ChangePhase(GuardPhase.Recovery);
     }
 
+    public void BreakGuard()
+    {
+        if (guardBroken)
+            return;
+        // Keep the shield broken across subsequent attack rounds on this instance.
+        guardBroken = true;
+        EndGuard();
+    }
+
     private void StartStrike()
     {
         enemy.FinishAttackWarning();
@@ -230,7 +240,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
             enemy.rb.linearVelocity = new Vector2(0f, enemy.rb.linearVelocity.y);
         }
         animationHandler?.SetSpeed(0f);
-        if (phase == GuardPhase.Guarding || phase == GuardPhase.Turning || phase == GuardPhase.Windup)
+        if (!guardBroken && (phase == GuardPhase.Guarding || phase == GuardPhase.Turning || phase == GuardPhase.Windup))
             animationHandler?.PlayShieldGuardPose(phase != GuardPhase.Turning);
         else
         {

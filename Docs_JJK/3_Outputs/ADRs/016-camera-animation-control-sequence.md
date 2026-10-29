@@ -11,6 +11,10 @@ blocked_by: []
 
 # ADR-016: Camera Animation Control Sequence
 
+## Selectable slow-motion clock — 2026-10-29
+
+User approved `../Specs/animation-slow-motion-options-task-card.md` with “lgtm”. CameraAnimationFrameData exposes Follow Slow Motion, default on. A per-run sampler snapshots this option. When off, the manager advances the active sequence using unscaled elapsed time, gated by full freeze/pause. Event triggering remains action-frame synchronized; lifetime, replacement, bounds and interruption rules remain unchanged. Existing legacy camera adapters continue to follow slow motion.
+
 Accepted: user “lgtm”, 2026-10-29, approving `../Specs/camera-animation-control-impact-analysis.md`.
 
 The canonical camera authoring event is a sequence of Zoom, Move, Hold and Return segments with event-relative start/end frames. Zoom and position are independent channels; same-channel overlap is invalid. Frame sampling is deterministic and allocation-free during playback; a sampler snapshots source data per run. CameraManager retains generation-scoped ownership and its scaled gameplay clock, while the existing Cinemachine extension applies final supported-room viewport bounds.

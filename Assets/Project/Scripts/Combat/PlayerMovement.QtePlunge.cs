@@ -5,6 +5,10 @@ public partial class PlayerMovement
 {
     private bool _hasCapturedWorldMotion;
     private QteEntryPlacement _plungePlacement;
+    private MotionKeyframe _independentCapturedMotion;
+    private float _independentCapturedElapsed;
+    private float _capturedLastFixedTime = float.NegativeInfinity;
+    private bool _capturedMotionFailed;
     public bool HasCapturedWorldMotion => _hasCapturedWorldMotion;
     public Vector2 PlungeSurfacePoint => _plungePlacement.support != null
         ? (Vector2)_plungePlacement.support.transform.TransformPoint(_plungePlacement.supportLocalPoint)
@@ -56,16 +60,53 @@ public partial class PlayerMovement
         StopAttackMotion();
         _plungePlacement = placement;
         _hasCapturedWorldMotion = true;
+        _independentCapturedMotion = null;
+        _independentCapturedElapsed = 0f;
+        _capturedMotionFailed = false;
     }
 
-    public bool SampleCapturedWorldMotion(MotionKeyframe motion, int logicFrame)
+    public bool SampleCapturedWorldMotion(MotionKeyframe motion, int logicFrame, bool followSlowMotion = true)
+    {
+        if (followSlowMotion)
+        {
+            _independentCapturedMotion = null;
+            return SampleCapturedWorldMotionAtFrame(motion, logicFrame);
+        }
+        if (!_hasCapturedWorldMotion || motion == null) return false;
+        if (logicFrame < motion.startFrame) return SampleCapturedWorldMotionAtFrame(motion, logicFrame);
+        if (_independentCapturedMotion != motion)
+        {
+            _independentCapturedMotion = motion;
+            _independentCapturedElapsed = 0f;
+            _capturedLastFixedTime = Time.fixedTime;
+            _capturedMotionFailed = false;
+        }
+        if (Time.inFixedTimeStep) TickIndependentCapturedMotion();
+        if (_capturedMotionFailed) return false;
+        // The fixed motor owns independent progression; repeated logic samples must not advance its clock twice.
+        return !Time.inFixedTimeStep || SampleCapturedWorldMotionAtFrame(motion,
+            motion.startFrame + _independentCapturedElapsed * CombatCore.FrameDataConstants.LOGIC_FPS);
+    }
+
+    private void TickIndependentCapturedMotion()
+    {
+        if (!_hasCapturedWorldMotion || _independentCapturedMotion == null || _capturedMotionFailed
+            || _capturedLastFixedTime == Time.fixedTime) return;
+        _capturedLastFixedTime = Time.fixedTime;
+        _independentCapturedElapsed += CombatCore.AnimationTimePolicy.Delta(false, Time.fixedDeltaTime, Time.fixedUnscaledDeltaTime,
+            Time.timeScale <= 0f || (GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld));
+        _capturedMotionFailed = !SampleCapturedWorldMotionAtFrame(_independentCapturedMotion,
+            _independentCapturedMotion.startFrame + _independentCapturedElapsed * CombatCore.FrameDataConstants.LOGIC_FPS);
+    }
+
+    private bool SampleCapturedWorldMotionAtFrame(MotionKeyframe motion, float logicFrame)
     {
         if (!_hasCapturedWorldMotion || motion == null || _plungePlacement.support == null
             || !_plungePlacement.support.enabled || !_plungePlacement.support.gameObject.activeInHierarchy) return false;
         Vector2 shift = PlungeSurfacePoint - _plungePlacement.surfacePoint;
         Vector2 landing = _plungePlacement.landingBodyPosition + shift;
-        float progress = Mathf.Clamp01((float)(logicFrame - motion.startFrame)
-            / Mathf.Max(1, motion.endFrame - motion.startFrame));
+        float progress = motion.endFrame <= motion.startFrame ? (logicFrame >= motion.startFrame ? 1f : 0f)
+            : Mathf.Clamp01((logicFrame - motion.startFrame) / (motion.endFrame - motion.startFrame));
         float eased = TweenEase(0f, 1f, progress, motion.easing);
         Vector2 desired = Vector2.LerpUnclamped(_plungePlacement.startBodyPosition, landing, eased);
         if (!HasQteBodyClearance(desired) || !HasQtePathClearance(rb.position, desired, _plungePlacement.support)) return false;
@@ -97,6 +138,8 @@ public partial class PlayerMovement
     {
         if (!_hasCapturedWorldMotion) return;
         _hasCapturedWorldMotion = false;
+        _independentCapturedMotion = null;
+        _capturedMotionFailed = false;
         if (rb != null) rb.linearVelocity = Vector2.zero;
         lastAppliedMotionVelocityY = 0f;
         _plungePlacement = default;

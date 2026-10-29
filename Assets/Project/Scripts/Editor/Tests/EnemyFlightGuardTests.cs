@@ -787,6 +787,56 @@ public class EnemyFlightGuardTests
         Assert.That(guard.ShieldRaised, Is.True);
     }
 
+    [TestCase(EnemyShieldGuard.GuardPhase.Guarding)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Windup)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Striking)]
+    public void ArmorBreakingHitboxDestroysShieldAcrossFutureGuardRounds(EnemyShieldGuard.GuardPhase phase)
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("ArmorBreakingHitbox", enemy.transform.position + Vector3.right);
+        var hitbox = target.AddComponent<HitBoxDamage>();
+        guard.BeginGuard(target.transform);
+        if (phase != EnemyShieldGuard.GuardPhase.Guarding)
+            guard.TickGuard(5f);
+        if (phase == EnemyShieldGuard.GuardPhase.Striking)
+            guard.TickGuard(1f);
+        Assert.That(guard.Phase, Is.EqualTo(phase));
+        hitbox.SetHitData(10f, false, false, 0f, 1f,
+            new NormalHitbox { breaksArmor = true, flashFrames = 0 },
+            AttackCategory.Normal, "ShieldBreakTest", null, null);
+
+        float hp = enemy.currentHP;
+        hitbox.ProcessHit(enemy);
+
+        Assert.That(enemy.currentHP, Is.LessThan(hp));
+        Assert.That(guard.IsEngaged, Is.False);
+        Assert.That(guard.ShieldRaised, Is.False);
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        Assert.That(enemy.FacingLocked, Is.False);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX,
+            Is.EqualTo(RigidbodyConstraints2D.None));
+        Assert.That(guard.BeginGuard(target.transform), Is.True, "Enemy can still attack after losing its shield.");
+        Assert.That(guard.ShieldRaised, Is.False);
+        Assert.That(guard.BlocksHit(target.transform.position, DamageDelivery.Primary), Is.False);
+        hp = enemy.currentHP;
+        enemy.TakeResolvedHit(new HitReactionData { damage = 10f }, target.transform.position);
+        Assert.That(enemy.currentHP, Is.LessThan(hp));
+    }
+
+    [TestCase(DamageDelivery.Additional)]
+    [TestCase(DamageDelivery.Dot)]
+    public void SecondaryArmorBreakingDamageDoesNotDestroyShield(DamageDelivery delivery)
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("SecondarySource", enemy.transform.position + Vector3.right);
+        guard.BeginGuard(target.transform);
+        enemy.TakeResolvedHit(new HitReactionData
+        {
+            damage = 10f, breaksArmor = true, damageDelivery = delivery
+        }, target.transform.position);
+        Assert.That(guard.ShieldRaised, Is.True);
+    }
+
     [TestCase(EnemyShieldGuard.GuardPhase.Guarding, false)]
     [TestCase(EnemyShieldGuard.GuardPhase.Windup, false)]
     [TestCase(EnemyShieldGuard.GuardPhase.Striking, false)]

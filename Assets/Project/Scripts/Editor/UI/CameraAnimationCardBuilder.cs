@@ -19,6 +19,11 @@ namespace CombatEditor.UI
                 body.Add(new Button(() => { RecordUndo("Initialize Camera Sequence"); entry.cameraAnimation = new CameraAnimationFrameData(); MarkDirtyAndRebuild(); }) { text = "Initialize Camera Sequence" });
                 return;
             }
+            AddToggleField(body, "Follow Slow Motion", data.followSlowMotion, value =>
+            {
+                RecordUndo("Edit Camera Slow Motion Clock"); data.followSlowMotion = value; MarkDirty();
+            });
+            body.Add(new HelpBox("When off, active camera segments run at normal speed; the event trigger still follows the action. Pause and full hitstop still stop the sequence.", HelpBoxMessageType.Info));
             var validation = new HelpBox("", HelpBoxMessageType.Info);
             var summary = new Label();
             summary.style.whiteSpace = WhiteSpace.Normal;

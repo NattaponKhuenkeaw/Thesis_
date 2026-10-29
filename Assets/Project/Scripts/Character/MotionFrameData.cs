@@ -82,6 +82,8 @@ public class MotionKeyframe
 [System.Serializable]
 public class MotionFrameData : ActionStepComponent
 {
+    [Tooltip("Off: active motion progresses at normal speed during slow motion. Trigger frames still follow the action. Pause/hitstop still stop motion.")]
+    public bool followSlowMotion = true;
     public override string ComponentName => "Motion";
     public override Color TrackColor => Color.white;
 

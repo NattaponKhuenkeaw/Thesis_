@@ -42,6 +42,8 @@ public sealed class CameraAnimationSegment
 [Serializable]
 public sealed class CameraAnimationFrameData
 {
+    [Tooltip("Off: camera playback ignores nonzero slow motion after this event fires. Pause and full hitstop still stop it.")]
+    public bool followSlowMotion = true;
     public List<CameraAnimationSegment> segments = new List<CameraAnimationSegment>();
 
     public int DurationFrames
@@ -112,6 +114,7 @@ public sealed class CameraAnimationSampler
     private readonly float _aspect;
     private readonly int _facing;
     public int DurationFrames { get; }
+    public bool FollowSlowMotion { get; }
 
     public CameraAnimationSampler(CameraAnimationFrameData data, CameraAnimationPose baseline, float aspect, int facing = 1)
     {
@@ -121,6 +124,7 @@ public sealed class CameraAnimationSampler
         _aspect = aspect;
         _facing = facing >= 0 ? 1 : -1;
         DurationFrames = data.DurationFrames;
+        FollowSlowMotion = data.followSlowMotion;
         _segments = new List<CameraAnimationSegment>(data.segments.Count);
         foreach (var segment in data.segments) _segments.Add(segment.Copy());
         // Cuts at a shared boundary apply before a transition starting at that boundary.

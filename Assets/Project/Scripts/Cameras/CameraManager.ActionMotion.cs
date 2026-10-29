@@ -84,9 +84,10 @@ public partial class CameraManager
             ClearActionCamera();
             return;
         }
-        // Scaled gameplay time preserves hitstop, pause and slow motion without being cut short by a step.
         if (Time.frameCount == _timedCameraStartUnityFrame) return;
-        AdvanceTimedCamera(Time.deltaTime);
+        bool followSlowMotion = _cameraAnimation == null || _cameraAnimation.FollowSlowMotion;
+        AdvanceTimedCamera(AnimationTimePolicy.Delta(followSlowMotion, Time.deltaTime, Time.unscaledDeltaTime,
+            Time.timeScale <= 0f || (GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld)));
     }
 
     public void AdvanceTimedCamera(float deltaSeconds)

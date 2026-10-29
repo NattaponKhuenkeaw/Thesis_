@@ -1243,6 +1243,11 @@ namespace CombatEditor.UI
 
         private void BuildMotionCard(VisualElement body, MotionFrameData motion)
         {
+            AddToggleField(body, "Follow Slow Motion", motion.followSlowMotion, value =>
+            {
+                RecordUndo("Edit Motion Slow Motion Clock"); motion.followSlowMotion = value; MarkDirty();
+            });
+            body.Add(new HelpBox("When off, active movement runs at normal speed. Motion triggers, attacks and hit frames still follow the action clock. Pause/hitstop still stop motion.", HelpBoxMessageType.Info));
             if (motion.keyframes == null) motion.keyframes = new List<MotionKeyframe>();
 
             VisualElement itemList = new VisualElement();
@@ -1483,6 +1488,7 @@ namespace CombatEditor.UI
 
         private void BuildAudioCard(VisualElement body, AudioFrameData audio)
         {
+            body.Add(new HelpBox("Slow Motion Aware changes that clip's playback speed and pitch while it plays. Trigger frames still follow the action. Leave it off for normal-speed sound.", HelpBoxMessageType.Info));
             if (audio.entries == null) audio.entries = new List<AudioEntry>();
 
             VisualElement itemList = new VisualElement();
@@ -1536,6 +1542,10 @@ namespace CombatEditor.UI
                         RecordUndo("Edit Audio Pitch");
                         entry.pitchVariation = value;
                         MarkDirty();
+                    });
+                    AddToggleField(inner, "Slow Motion Aware", entry.slowMotionAware, value =>
+                    {
+                        RecordUndo("Edit Audio Slow Motion Awareness"); entry.slowMotionAware = value; MarkDirty();
                     });
                     AddColorField(inner, "Track Color", entry.trackColor, value =>
                     {

@@ -353,7 +353,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                     
                     if (currentMotion != null)
                     {
-                        movement?.ApplyAttackMovement(currentMotion);
+                        movement?.ApplyAttackMovement(currentMotion, currentStepData.motionData.followSlowMotion);
                     }
                 }
             }
@@ -1334,7 +1334,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         {
             if (frame == keyframe.startFrame)
             {
-                movement?.ApplyAttackMovement(keyframe);
+                movement?.ApplyAttackMovement(keyframe, currentStepData.motionData.followSlowMotion);
             }
         }
     }

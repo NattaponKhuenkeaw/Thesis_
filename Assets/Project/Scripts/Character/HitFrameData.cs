@@ -113,7 +113,7 @@ public class NormalHitbox : HitboxBase
     public bool breaksGrab = false;
 
     [Header("Armor Interaction")]
-    [Tooltip("If true, this hit breaks trash Super Armor (orange armored state).")]
+    [Tooltip("If true, this hit breaks trash Super Armor (orange armored state) and permanently breaks enemy shield guard.")]
     public bool breaksArmor = false;
 }
 

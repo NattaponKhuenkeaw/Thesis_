@@ -844,6 +844,9 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive || !IsGameplayActive) return 0f;
 
+        if (reactionData.breaksArmor && !IsSecondaryDamage(reactionData.damageDelivery))
+            ShieldGuard?.BreakGuard();
+
         // Grabs counter directional blocking; explicit reaction/armor immunity still applies below.
         if (reactionData.reactionKind != EnemyReactionKind.Grab
             && ShieldGuard != null && ShieldGuard.BlocksHit(attackerPosition, reactionData.damageDelivery))

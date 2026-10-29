@@ -167,6 +167,7 @@ public partial class PlayerMovement : MonoBehaviour
         return true;
     }
     private bool useUnscaledAttackMotion;
+    private bool attackMotionIgnoresSlowMotion;
 
     // Drop-down
     private Coroutine dropDownCoroutine;
@@ -297,6 +298,7 @@ public partial class PlayerMovement : MonoBehaviour
         if (dashCooldownFramesRemaining > 0) dashCooldownFramesRemaining--;
 
         UpdateFacing();
+        TickIndependentCapturedMotion();
         CheckGround();
 
         if (!GroundState.IsEffectivelyGrounded
@@ -657,12 +659,13 @@ public partial class PlayerMovement : MonoBehaviour
             : 0;
     }
 
-    public void ApplyAttackMovement(MotionKeyframe keyframe)
+    public void ApplyAttackMovement(MotionKeyframe keyframe, bool followSlowMotion = true)
     {
         // Captured paths are sampled before hit processing by the owning action state.
         if (keyframe != null && keyframe.taskType == MotionTaskType.CapturedWorldPoint) return;
         StopAttackMotionVelocityOnly();
-        if (keyframe != null) attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(keyframe));
+        attackMotionIgnoresSlowMotion = keyframe != null && !followSlowMotion;
+        if (keyframe != null) attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(keyframe, followSlowMotion));
     }
 
     public void SetUseUnscaledAttackMotion(bool useUnscaled) => useUnscaledAttackMotion = useUnscaled;
@@ -917,6 +920,7 @@ public partial class PlayerMovement : MonoBehaviour
         attackMotionVelocityX = 0f;
         attackMotionVelocityY = 0f;
         useUnscaledAttackMotion = false;
+        attackMotionIgnoresSlowMotion = false;
     }
 
     private void StopAttackMotion()
@@ -1010,7 +1014,7 @@ public partial class PlayerMovement : MonoBehaviour
 
     private Vector2 ClipTargetMotionVelocity(Vector2 velocity)
     {
-        float step = Mathf.Max(Time.fixedDeltaTime, 0.001f);
+        float step = Mathf.Max(Time.fixedDeltaTime, attackMotionIgnoresSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
         Vector2 travel = velocity * step;
         float distance = travel.magnitude;
         if (distance < 0.000001f) return velocity;
@@ -1047,7 +1051,7 @@ public partial class PlayerMovement : MonoBehaviour
 
     private float ClipHorizontalVelocity(float velocity)
     {
-        float step = Mathf.Max(Time.fixedDeltaTime, 0.001f);
+        float step = Mathf.Max(Time.fixedDeltaTime, attackMotionIgnoresSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
         return ClipHorizontalTravel(velocity * step) / step;
     }
 
@@ -1287,7 +1291,7 @@ public partial class PlayerMovement : MonoBehaviour
         if (g != null) Destroy(g);
     }
 
-    private IEnumerator AttackMovementCoroutine(MotionKeyframe k)
+    private IEnumerator AttackMovementCoroutine(MotionKeyframe k, bool followSlowMotion)
     {
         isAttackMotionActive = true;
         usesWorldTargetMotion = k.taskType == MotionTaskType.DashThroughTarget;
@@ -1354,7 +1358,7 @@ public partial class PlayerMovement : MonoBehaviour
         {
             if (totalDelta.sqrMagnitude > 0.000001f)
             {
-                attackMotionVelocityX = totalDelta.x / Mathf.Max(Time.fixedDeltaTime, 0.001f);
+                attackMotionVelocityX = totalDelta.x / Mathf.Max(Time.fixedDeltaTime, followSlowMotion ? 0.001f : 0.000001f);
                 if (!usesWorldTargetMotion && ShouldUseVisualOffset())
                 {
                     visualOffsetY += totalDelta.y;
@@ -1362,7 +1366,7 @@ public partial class PlayerMovement : MonoBehaviour
                 }
                 else
                 {
-                    attackMotionVelocityY = totalDelta.y / Mathf.Max(Time.fixedDeltaTime, 0.001f);
+                    attackMotionVelocityY = totalDelta.y / Mathf.Max(Time.fixedDeltaTime, followSlowMotion ? 0.001f : 0.000001f);
                 }
                 yield return new WaitForFixedUpdate();
             }
@@ -1381,7 +1385,12 @@ public partial class PlayerMovement : MonoBehaviour
                     yield return new WaitForFixedUpdate();
                     continue;
                 }
-                float delta = useUnscaledAttackMotion ? Time.unscaledDeltaTime : Time.fixedDeltaTime;
+                float delta = useUnscaledAttackMotion ? Time.unscaledDeltaTime
+                    : AnimationTimePolicy.Delta(followSlowMotion, Time.fixedDeltaTime, Time.fixedUnscaledDeltaTime,
+                        Time.timeScale <= 0f || (GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld));
+                // The motor still integrates over scaled physics time even if the authored path ignores slow motion.
+                float integrationDelta = !followSlowMotion && !useUnscaledAttackMotion ? Time.fixedDeltaTime : delta;
+                float velocityDivisor = Mathf.Max(integrationDelta, !followSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
                 elapsed += delta;
                 float t = Mathf.Clamp01(elapsed / dur);
                 float easedT = TweenEase(0, 1, t, k.easing);
@@ -1389,7 +1398,7 @@ public partial class PlayerMovement : MonoBehaviour
 
                 float frameDeltaX = totalDelta.x * (easedT - easedPrev);
                 float frameDeltaY = totalDelta.y * (easedT - easedPrev);
-                attackMotionVelocityX = frameDeltaX / Mathf.Max(delta, 0.001f);
+                attackMotionVelocityX = frameDeltaX / velocityDivisor;
                 if (!usesWorldTargetMotion && ShouldUseVisualOffset())
                 {
                     visualOffsetY += frameDeltaY;
@@ -1397,7 +1406,7 @@ public partial class PlayerMovement : MonoBehaviour
                 }
                 else
                 {
-                    attackMotionVelocityY = frameDeltaY / Mathf.Max(delta, 0.001f);
+                    attackMotionVelocityY = frameDeltaY / velocityDivisor;
                 }
 
                 prevT = t;
