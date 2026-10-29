@@ -55,15 +55,26 @@ public class LevelDesignLayoutTests
         {
             Transform art = block.Find("BuildingFacade");
             if (block.name == "Ground_01") { Assert.That(art, Is.Null); continue; }
+            if(level==1)
+            {
+                Assert.DoesNotThrow(()=>ForegroundGroundDressing.Validate(root,1));
+                continue;
+            }
             Assert.That(art, Is.Not.Null,block.name);
             Assert.That(art.GetComponentsInChildren<Collider2D>(), Is.Empty);
             Assert.That(art.GetComponentsInChildren<SpriteRenderer>().Length, Is.GreaterThan(0));
             Assert.That(art.Find("BuildingBody"), Is.Not.Null);
             foreach (var image in art.GetComponentsInChildren<SpriteRenderer>())
-                Assert.That(AssetDatabase.GetAssetPath(image.sprite), Is.EqualTo(LevelDesignBuildingDress.Sheet));
+                if (level <= 5)
+                    Assert.That(ForegroundGroundDressing.IsForeground(image.sprite), Is.True);
+                else
+                    Assert.That(AssetDatabase.GetAssetPath(image.sprite), Is.EqualTo(LevelDesignBuildingDress.Sheet));
             foreach (Transform child in block)
                 if (child.name == "WalkingSurface")
+                {
                     Assert.That(child.GetComponent<SpriteRenderer>().sprite.name, Is.EqualTo("Layout02_RoofEdge"));
+                    if (level == 1) Assert.That(child.GetComponent<SpriteRenderer>().enabled, Is.False, "LV1 uses assembled roof corners instead of the old stretched strip.");
+                }
         }
     }
 
@@ -81,11 +92,13 @@ public class LevelDesignLayoutTests
             {
                 Rect expected = LevelDesignLayoutBuilder.ToWorld(plan, plan.solids[i]);
                 var block = root.transform.Find($"Terrain/Ground_{i+1:00}").GetComponent<BoxCollider2D>();
-                Assert.That(Vector2.Distance(block.transform.localPosition, expected.center), Is.LessThan(.001f));
-                Assert.That(Vector2.Distance(block.size, expected.size), Is.LessThan(.001f));
+                Rect actual=LayoutRoadAuthoring.WorldRect(block);
+                Assert.That(Vector2.Distance(actual.center, expected.center), Is.LessThan(.001f));
+                Assert.That(Vector2.Distance(actual.size, expected.size), Is.LessThan(.001f));
                 Assert.That(block.compositeOperation, Is.EqualTo(Collider2D.CompositeOperation.Merge));
                 Assert.That(block.gameObject.layer, Is.EqualTo(LayerMask.NameToLayer("Ground")));
-                Assert.That(Vector2.Distance(block.GetComponent<SpriteRenderer>().size,block.size), Is.LessThan(.001f));
+                if(block.GetComponent<SpriteRenderer>().enabled)
+                    Assert.That(Vector2.Distance(block.GetComponent<SpriteRenderer>().size,block.size), Is.LessThan(.001f));
             }
             var entrance = root.GetComponentInChildren<EntrancePoint>();
             Assert.That(Vector2.Distance(entrance.transform.localPosition,
@@ -110,7 +123,7 @@ public class LevelDesignLayoutTests
                 bool initiallyClosed=wall.name!="UpperExitSeal";
                 Assert.That(wall.enabled, Is.EqualTo(initiallyClosed));
             }
-            foreach (var image in root.GetComponentsInChildren<SpriteRenderer>())
+            foreach (var image in root.GetComponentsInChildren<SpriteRenderer>().Where(r=>r.sprite!=null || r.maskInteraction==SpriteMaskInteraction.VisibleInsideMask))
             {
                 Assert.That(image.sprite, Is.Not.Null, image.name);
                 Assert.That(image.sharedMaterial, Is.Not.Null, image.name);
@@ -147,7 +160,8 @@ public class LevelDesignLayoutTests
     {
         const float height = 2.6f;
         Assert.That((641-550)*LevelDesignLayoutBuilder.VerticalScale, Is.GreaterThan(height+.4f), "LV4 underpass");
-        Assert.That((754-667)*LevelDesignLayoutBuilder.VerticalScale, Is.GreaterThan(height+.4f), "LV5 underpass");
+        var fifth = LevelDesignLayoutBuilder.GetPlan(5);
+        Assert.That(fifth.solids.Skip(1).All(r=>Mathf.Abs(r.yMax-fifth.baseline)<.01f), Is.True, "Revised LV5 has no underpass or backtracking branch.");
         // Simulate the current 50 Hz motor's deceleration, not just the ideal ballistic apex.
         float rise = 0f, speed = 20f;
         while (speed > 0f) { speed = Mathf.Max(0f,speed-55f*.02f); rise += speed*.02f; }

@@ -101,8 +101,12 @@ public static class LevelDesignTraversalRepair
             image.enabled=!duplicate; layer.enabled=!duplicate;
             if (!duplicate)
             {
-                image.drawMode=SpriteDrawMode.Tiled;
-                image.size=new Vector2((width*2f+80f)/Mathf.Abs(layer.transform.lossyScale.x),image.sprite.bounds.size.y);
+                if (SkyBackgroundRepair.IsSky(layer)) SkyBackgroundRepair.Configure(layer,width*2f+80f);
+                else
+                {
+                    image.drawMode=SpriteDrawMode.Tiled;
+                    image.size=new Vector2((width*2f+80f)/Mathf.Abs(layer.transform.lossyScale.x),image.sprite.bounds.size.y);
+                }
             }
             PrefabUtility.RecordPrefabInstancePropertyModifications(image);
             PrefabUtility.RecordPrefabInstancePropertyModifications(layer);

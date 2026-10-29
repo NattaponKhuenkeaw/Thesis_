@@ -63,7 +63,7 @@ namespace Project.Core.ZoneState
             return null;
         }
 
-        public void CollectOfferCandidates(RoomKind? kind, string excludeRoomId, List<RoomData> results)
+        public void CollectOfferCandidates(RoomKind? kind, string excludeRoomId, List<RoomData> results, int biomeIndex = -1)
         {
             results?.Clear();
             if (rooms == null || results == null)
@@ -72,6 +72,7 @@ namespace Project.Core.ZoneState
             }
 
             RoomData excludedRoom = ResolveRoom(excludeRoomId);
+            int availableBiome = biomeIndex >= 0 ? ResolveAuthoredBiomeIndex(biomeIndex) : -1;
 
             for (int i = 0; i < rooms.Count; i++)
             {
@@ -86,6 +87,9 @@ namespace Project.Core.ZoneState
                     continue;
                 }
 
+                if (biomeIndex >= 0 && room.BiomeIndex >= 0 && room.BiomeIndex != availableBiome)
+                    continue;
+
                 if (IsExcludedRoom(room, excludeRoomId, excludedRoom))
                 {
                     continue;
@@ -93,6 +97,27 @@ namespace Project.Core.ZoneState
 
                 results.Add(room);
             }
+        }
+
+        public int ResolveAuthoredBiomeIndex(int progressionBiomeIndex)
+        {
+            // Lobby artwork and room offers share the same cycle; difficulty keeps its original index.
+            var authoredBiomes = new SortedSet<int>();
+            if (rooms != null)
+                foreach (RoomData room in rooms)
+                    if (room != null && room.IncludeInRandomOffers && room.OfferWeight > 0f
+                        && room.BiomeIndex >= 0)
+                        authoredBiomes.Add(room.BiomeIndex);
+
+            if (authoredBiomes.Count == 0)
+                return 0;
+
+            int themeSlot = Mathf.Max(0, progressionBiomeIndex) % authoredBiomes.Count;
+            foreach (int authoredBiome in authoredBiomes)
+                if (themeSlot-- == 0)
+                    return authoredBiome;
+
+            return 0;
         }
 
         private static bool IsExcludedRoom(RoomData room, string excludeKey, RoomData excludedRoom)

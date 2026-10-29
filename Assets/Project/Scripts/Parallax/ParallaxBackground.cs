@@ -16,6 +16,9 @@ namespace Project.Parallax
         public bool infiniteHorizontal = true;
         public bool infiniteVertical = false;
 
+        [Tooltip("Keep a sky row at camera height without enlarging its artwork to cover tall terrain.")]
+        public bool centerVerticallyOnCamera = false;
+
         [Header("References")]
         public Transform targetCamera;
 
@@ -100,6 +103,7 @@ namespace Project.Parallax
             if (targetCamera != null)
             {
                 _startCameraPosition = targetCamera.position;
+                CenterSkyOnCamera();
             }
         }
 
@@ -124,8 +128,16 @@ namespace Project.Parallax
 
             _startCameraPosition = targetCamera.position;
             _startPosition = transform.position;
+            CenterSkyOnCamera();
             _warnedMissingCamera = false;
             return true;
+        }
+
+        private void CenterSkyOnCamera()
+        {
+            if (!centerVerticallyOnCamera) return;
+            _startPosition.y = targetCamera.position.y;
+            transform.position = _startPosition;
         }
     }
 }

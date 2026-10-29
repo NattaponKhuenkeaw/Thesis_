@@ -65,11 +65,14 @@ public class LevelDesignSpawnTests
             Assert.That(stage.Chambers.Last().exitWall,Is.SameAs(wall));
 
             // A player's body stopped by the wall still overlaps the exit, on supported floor.
-            var body=new Rect(wall.bounds.min.x-1.55f-.02f,edge.y+.01f,1.55f,2.6f);
+            float bodyLeft=wall.bounds.min.x-1.55f-.02f;
+            var support=root.transform.Find("Terrain").GetComponentsInChildren<BoxCollider2D>().Select(LayoutRoadAuthoring.WorldRect)
+                .Where(r=>bodyLeft>=r.xMin && bodyLeft+1.55f<=r.xMax && r.yMax<=edge.y+.12f).OrderByDescending(r=>r.yMax).First();
+            var body=new Rect(bodyLeft,support.yMax+.01f,1.55f,2.6f);
             var zone=new Rect(exit.bounds.min,exit.bounds.size);
             Assert.That(zone.Overlaps(body),Is.True);
-            Assert.That(plan.solids.Select(r=>LevelDesignLayoutBuilder.ToWorld(plan,r)).Any(r=>
-                Mathf.Abs(r.yMax-edge.y)<.001f && body.xMin>=r.xMin && body.xMax<=r.xMax),Is.True);
+            Assert.That(support.xMin,Is.LessThanOrEqualTo(body.xMin));
+            Assert.That(support.xMax,Is.GreaterThanOrEqualTo(body.xMax));
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
@@ -105,7 +108,7 @@ public class LevelDesignSpawnTests
         const BindingFlags flags=BindingFlags.Instance|BindingFlags.NonPublic;
         var current=typeof(CombatStageController).GetField("currentIndex",flags);
         var waiting=typeof(CombatStageController).GetField("waitingForIndex",flags);
-        for (int level=1;level<=5;level++)
+        for (int level=1;level<=10;level++)
         {
             GameObject root=Object.Instantiate(Resources.Load<GameObject>($"RoomLayouts/LV/RoomLayout_LV_{level:00}"));
             var player=new GameObject("LV Trigger Test Player");
@@ -193,7 +196,7 @@ public class LevelDesignSpawnTests
                     Assert.That(slot.name,Is.EqualTo($"Spawn_{n}"));
                     Assert.That(slot.IsChildOf(room.spawnRoot),Is.True);
                     Vector2 feet=slot.position;
-                    Assert.That(Vector2.Distance(feet,LevelDesignLayoutBuilder.ToWorld(plan,expected[i].slots[n])+Vector2.up*.05f),Is.LessThan(.001f));
+                    Assert.That(Vector2.Distance(feet,LevelDesignSpawnBuilder.SpawnPosition(level,i,n)),Is.LessThan(.001f));
                     Rect body=new Rect(feet+new Vector2(-.9f,.01f),new Vector2(1.8f,2.7f));
                     bool supported=false;
                     foreach (Rect solid in plan.solids.Select(r=>LevelDesignLayoutBuilder.ToWorld(plan,r)))

@@ -362,6 +362,9 @@ namespace Project.Core.ZoneState
                     }
                 }
 
+                RoomBiomeEnvironment.ApplyInScene(SceneManager.GetActiveScene(), mapData,
+                    RunProgressionManager.EnsureInstance().CurrentBiomeIndex);
+
                 if (zoneStateProvider != null)
                 {
                     zoneStateProvider.SetCurrentRoom(targetRoom);
