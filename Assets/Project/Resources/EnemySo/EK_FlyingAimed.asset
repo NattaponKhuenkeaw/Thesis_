@@ -18,11 +18,11 @@ MonoBehaviour:
   walkingSpeedMultiplier: 1
   warningDuration: 0.7
   hitWindowDuration: 0.15
-  attackCooldown: 1.3
+  attackCooldown: 1.17
   lungeDistance: 0
   bodyCharge: 0
   commitTelegraphFraction: 0
-  recoveryPlantDuration: 1.3
+  recoveryPlantDuration: 1.17
   interruptCooldown: 0.5
   attackWarningSfx: {fileID: 8300000, guid: c57d4365dfd4464d8ebca3382e672da6, type: 3}
   attackWarningSfxVolume: 0.21
