@@ -361,6 +361,47 @@ public class MainDimensionSlashTests
         finally { Object.DestroyImmediate(host); }
     }
 
+    [Test]
+    public void LivePlayerTrackingFreezesAtHoldBoundaryAndReplacementClearsCapturedPoints()
+    {
+        var cameraHost = new GameObject("Player Tracking Output");
+        var managerHost = new GameObject("Player Tracking Manager");
+        try
+        {
+            var output = cameraHost.AddComponent<Camera>(); output.orthographic = true; output.orthographicSize = 10f;
+            var brain = cameraHost.AddComponent<CinemachineBrain>();
+            var manager = managerHost.AddComponent<CameraManager>();
+            typeof(CameraManager).GetField("_ultimateCam", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(manager, null);
+            typeof(CameraManager).GetField("_brain", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(manager, brain);
+            _combat.ExecuteStep(Slash.comboTree.rootNode.stepData, 1, false, AttackCategory.Skill, "Tracking", MainDimensionSlashAuthoring.ActionId);
+            _player.transform.position = new Vector3(10f, 20f, 0f);
+            var data = new CameraAnimationFrameData();
+            data.segments.Add(new CameraAnimationSegment { task = CameraAnimationTask.ZoomAndMove,
+                zoomMultiplier = 0.5f, positionSpace = CameraAnimationPositionSpace.Player, position = new Vector2(2f, 1f) });
+            data.segments.Add(new CameraAnimationSegment { task = CameraAnimationTask.Hold, channels = CameraAnimationChannels.Zoom, endFrame = 100 });
+            data.segments.Add(new CameraAnimationSegment { task = CameraAnimationTask.Hold, channels = CameraAnimationChannels.Position, startFrame = 10, endFrame = 100 });
+            var normal = new CameraAnimationPose(Vector2.zero, 10f);
+            var token = manager.BeginCameraAnimation(_combat.CurrentExecution, data, 0, 1);
+            Assert.That(token.Generation, Is.Not.Zero);
+            manager.TrySampleCameraAnimation(normal, out var pose);
+            Assert.That(pose.Position, Is.EqualTo(new Vector2(12f, 21f)));
+            _player.transform.position = new Vector3(20f, 30f, 0f);
+            manager.AdvanceTimedCamera(10f / CombatCore.FrameDataConstants.LOGIC_FPS);
+            _player.transform.position = new Vector3(100f, 200f, 0f);
+            manager.AdvanceTimedCamera(10f / CombatCore.FrameDataConstants.LOGIC_FPS);
+            manager.TrySampleCameraAnimation(normal, out pose);
+            Assert.That(pose.Position.x, Is.EqualTo(22f).Within(0.001f));
+            Assert.That(pose.Position.y, Is.EqualTo(31f).Within(0.001f));
+            manager.BeginCameraAnimation(_combat.CurrentExecution, data, 0, 1);
+            _player.transform.position = new Vector3(120f, 220f, 0f);
+            manager.AdvanceTimedCamera(10f / CombatCore.FrameDataConstants.LOGIC_FPS);
+            manager.TrySampleCameraAnimation(normal, out pose);
+            Assert.That(pose.Position.x, Is.EqualTo(122f).Within(0.001f));
+            Assert.That(pose.Position.y, Is.EqualTo(221f).Within(0.001f));
+        }
+        finally { Object.DestroyImmediate(managerHost); Object.DestroyImmediate(cameraHost); }
+    }
+
     private static ActionCameraMotionSettings CameraEnvelope() => new ActionCameraMotionSettings
     {
         keys = new System.Collections.Generic.List<ActionCameraMotionSettings.Key>

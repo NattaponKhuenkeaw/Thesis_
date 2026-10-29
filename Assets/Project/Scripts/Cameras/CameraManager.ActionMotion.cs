@@ -24,6 +24,11 @@ public partial class CameraManager
     private CameraAnimationSampler _cameraAnimation;
     private CameraAnimationPose _normalCameraPose;
     private int _normalCameraPoseFrame = -1;
+    private Dictionary<int, Vector2> _cameraPlayerBoundaries = new Dictionary<int, Vector2>();
+    private int _cameraNextPlayerBoundary;
+    private Vector2 _cameraLastPlayerPosition;
+    private float _cameraLastPlayerFrame;
+    private System.Func<int, Vector2> _cameraPlayerBoundarySampler;
     private bool HasTimedCamera => _screenImpulseCameraSettings != null || _cameraAnimation != null;
 
     public bool HasActionCamera => _actionMotionExecution != null && _actionMotionExecution.IsOnField
@@ -95,6 +100,7 @@ public partial class CameraManager
         if (!HasTimedCamera) return;
         if (!HasActionCamera) { ClearActionCamera(); return; }
         _actionMotionFrame += Mathf.Max(0f, deltaSeconds) * FrameDataConstants.LOGIC_FPS;
+        if (_cameraAnimation != null) CaptureCameraPlayerBoundaries(_actionMotionFrame - _actionMotionStartFrame);
         int duration = _cameraAnimation != null ? _cameraAnimation.DurationFrames : _screenImpulseCameraSettings.DurationFrames;
         if (_actionMotionFrame - _actionMotionStartFrame >= duration)
             ClearActionCamera();
@@ -118,6 +124,12 @@ public partial class CameraManager
         var token = BeginActionCamera(execution, new ActionCameraMotionSettings(), eventStartFrame, facing);
         if (token.Generation == 0) return default;
         _cameraAnimation = new CameraAnimationSampler(data, baseline, output.aspect, facing);
+        _cameraPlayerBoundaries = new Dictionary<int, Vector2>(_cameraAnimation.PositionBoundaryFrames.Count);
+        _cameraLastPlayerPosition = execution.owner.playerCharacter.transform.position;
+        _cameraLastPlayerFrame = 0f;
+        _cameraNextPlayerBoundary = 0;
+        _cameraPlayerBoundarySampler ??= CameraPlayerAtBoundary;
+        CaptureCameraPlayerBoundaries(0f);
         _timedCameraStartUnityFrame = Time.frameCount;
         return token;
     }
@@ -133,8 +145,26 @@ public partial class CameraManager
     {
         pose = normal;
         if (!HasActionCamera || _cameraAnimation == null) return false;
-        pose = _cameraAnimation.Sample(_actionMotionFrame - _actionMotionStartFrame, normal);
+        pose = _cameraAnimation.Sample(_actionMotionFrame - _actionMotionStartFrame, normal,
+            _actionMotionExecution.owner.playerCharacter.transform.position, _cameraPlayerBoundarySampler);
         return true;
+    }
+
+    private Vector2 CameraPlayerAtBoundary(int frame)
+        => _cameraPlayerBoundaries.TryGetValue(frame, out var position) ? position : _cameraLastPlayerPosition;
+
+    private void CaptureCameraPlayerBoundaries(float frame)
+    {
+        Vector2 player = _actionMotionExecution.owner.playerCharacter.transform.position;
+        var boundaries = _cameraAnimation.PositionBoundaryFrames;
+        while (_cameraNextPlayerBoundary < boundaries.Count && boundaries[_cameraNextPlayerBoundary] <= frame)
+        {
+            int boundary = boundaries[_cameraNextPlayerBoundary++];
+            float t = frame > _cameraLastPlayerFrame ? Mathf.InverseLerp(_cameraLastPlayerFrame, frame, boundary) : 1f;
+            _cameraPlayerBoundaries[boundary] = Vector2.Lerp(_cameraLastPlayerPosition, player, t);
+        }
+        _cameraLastPlayerPosition = player;
+        _cameraLastPlayerFrame = frame;
     }
 
     public bool TrySampleScreenImpulseCamera(out float zoomMultiplier, out Vector3 lockedPosition, out float lockWeight)
@@ -181,6 +211,7 @@ public partial class CameraManager
         _actionMotionSettings = null;
         _screenImpulseCameraSettings = null;
         _cameraAnimation = null;
+        _cameraPlayerBoundaries.Clear();
         _normalCameraPoseFrame = -1;
         unchecked { _actionMotionGeneration++; }
         if (_actionMotionGeneration == 0) _actionMotionGeneration = 1;

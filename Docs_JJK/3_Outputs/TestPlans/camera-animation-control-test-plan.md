@@ -43,3 +43,17 @@ The native lifecycle tests compile but have not run. Unity MCP is unavailable; t
 10. Check visual framing after conversion, particularly moving-camera offsets, which become anchored to captured start. Ambiguous overlapping camera events and duplicate legacy key frames must block conversion until resolved.
 
 Human feel review: the action and nearby threats remain readable; player input remains responsive; camera movement and cuts match the intended action. Do not interpret passing sampler tests as a native playback or feel approval.
+
+## Player tracking and combined task
+
+Completed: runtime/editor compilation and 31 engine-independent tests passed, including four new tracking tests. Native test `MainDimensionSlashTests.LivePlayerTrackingFreezesAtHoldBoundaryAndReplacementClearsCapturedPoints` compiles but has not run.
+
+Pending in Unity:
+
+1. Add Zoom + Move with Player + Offset (Live), choose a zoom multiplier and world-unit XY offset. Move/jump the player during and after the transition; verify the camera continues to frame the player while that sequence is active.
+2. Add Hold Zoom after the transition. Peak lens stays fixed and the player continues to be tracked. Add Hold Position/Both instead and verify the camera freezes at the reached framing when that hold begins.
+3. Add Return Both. Move the player during return; the transition must start from the captured boundary point and reach current normal framing without the tracking origin drifting.
+4. Check separate concurrent Zoom and player-targeted Move, different channel timings, and rejection of another position segment overlapping Zoom + Move.
+5. Test negative/positive offsets, vertical movement, captured-facing X mirroring, room-edge confinement and unchanged camera depth.
+6. Check both slow-motion modes, pause/hitstop, skipped-frame boundaries, natural action completion, swap/death/room-change cleanup and replacement. A replacement sequence must not reuse the old sequence's captured target points.
+7. Scrub the schematic using a preview actor or scene-player reference. It must remain read-only and clearly identify that the reference is static rather than a historical motion simulation.

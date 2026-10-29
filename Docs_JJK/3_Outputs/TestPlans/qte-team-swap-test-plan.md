@@ -19,6 +19,17 @@ Tuning test: try both swaps and ten quick exchanges with a target behind and ahe
 
 # QTE Team Swap — validation plan
 
+## Unavailable portrait fallback regression — 2026-10-29
+
+- Trigger readiness, then kill the struck target with no replacement enemy in range. In grounded Idle/Running or allowed recovery, the portrait must allow an ordinary swap once ordinary cooldown is ready.
+- Repeat after moving the target outside the incoming action's range and with blocked/unsupported QTE placement. No unsafe QTE entry should execute; legal ordinary swapping remains available.
+- While ordinary cooldown is active and QTE preparation fails, input and the unavailable cover must agree that swapping is blocked. Readiness and its original deadline remain intact.
+- Restore a valid target/entry before readiness expires. Prepared QTE still runs, including its existing cooldown bypass.
+- Repeat via portrait click and keyboard; successful fallback switches once and clears readiness. Hitstun, pause, air states and input locks still block both paths.
+
+Runtime and Editor compilation passed, including the new `QteTeamSwapTests` cases.
+Unity test execution and live playtest remain pending.
+
 ## Latest window / shared-policy regression — 2026-10-28
 
 - Land CameraGirl Skill and EX separately. Each accepted primary hit should open/refresh Main's five-second readiness; missing must not open it.

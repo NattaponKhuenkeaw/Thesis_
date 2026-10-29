@@ -884,10 +884,15 @@ public class AnimationEditorWindow : EditorWindow
         float aspect = hasCamera ? output.aspect : 16f / 9f;
         int frame = scrubberFrame - chosen.triggerFrame;
         var sampler = new CameraAnimationSampler(chosen.cameraAnimation, baseline, aspect);
-        var pose = frame >= sampler.DurationFrames ? baseline : sampler.Sample(frame, baseline);
+        var scenePlayer = previewInstance == null ? Object.FindFirstObjectByType<PlayerCharacter>() : null;
+        Vector2 playerReference = previewInstance != null ? (Vector2)previewInstance.transform.position
+            : scenePlayer != null ? (Vector2)scenePlayer.transform.position : baseline.Position;
+        var pose = frame >= sampler.DurationFrames ? baseline : sampler.Sample(frame, baseline, playerReference, _ => playerReference);
         cameraAnimationPreview.SetPose(baseline, pose, aspect);
         cameraAnimationPreview.style.display = DisplayStyle.Flex;
         cameraAnimationPreviewLabel.text = $"Camera schematic — local frame {frame}, size {pose.Size:0.###}, XY {pose.Position}";
+        if (chosen.cameraAnimation.segments.Exists(s => s != null && s.positionSpace == CameraAnimationPositionSpace.Player))
+            cameraAnimationPreviewLabel.text += " (static player reference; live tracking runs in gameplay)";
     }
 
     private AttackStepData GetCurrentStep()

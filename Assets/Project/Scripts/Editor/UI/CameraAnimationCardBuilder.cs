@@ -71,13 +71,19 @@ namespace CombatEditor.UI
                                 AddEnumField(inner, "Channels", segment.channels, value => edit("Edit Camera Channels", () => segment.channels = (CameraAnimationChannels)value));
                             if (segment.task != CameraAnimationTask.Hold)
                                 AddEnumField(inner, "Easing", segment.easing, value => edit("Edit Camera Easing", () => segment.easing = (CameraAnimationEasing)value));
-                            if (segment.task == CameraAnimationTask.Zoom)
+                            if (segment.task == CameraAnimationTask.ZoomAndMove)
+                                inner.Add(new HelpBox("Zoom + Move controls both channels together over this frame range. Use separate Zoom and Move segments when their timings differ.", HelpBoxMessageType.Info));
+                            if (segment.task == CameraAnimationTask.Zoom || segment.task == CameraAnimationTask.ZoomAndMove)
                                 AddFloatField(inner, "Zoom Multiplier (<1 In / >1 Out)", segment.zoomMultiplier, value => edit("Edit Camera Zoom", () => segment.zoomMultiplier = Mathf.Max(0.01f, value)));
-                            if (segment.task == CameraAnimationTask.Move)
+                            if (segment.task == CameraAnimationTask.Move || segment.task == CameraAnimationTask.ZoomAndMove)
                             {
                                 AddEnumField(inner, "Position Space", segment.positionSpace, value => { RecordUndo("Edit Camera Position Space"); segment.positionSpace = (CameraAnimationPositionSpace)value; MarkDirtyAndRebuild(); });
-                                AddVector2Field(inner, segment.positionSpace == CameraAnimationPositionSpace.ScreenOffsetFromStart ? "Target Offset (Screens)" : "Target XY (World Units)",
+                                string targetLabel = segment.positionSpace == CameraAnimationPositionSpace.Player ? "Offset From Player (World Units)"
+                                    : segment.positionSpace == CameraAnimationPositionSpace.ScreenOffsetFromStart ? "Target Offset (Screens)" : "Target XY (World Units)";
+                                AddVector2Field(inner, targetLabel,
                                     segment.position, value => edit("Edit Camera Position", () => segment.position = value));
+                                if (segment.positionSpace == CameraAnimationPositionSpace.Player)
+                                    inner.Add(new HelpBox("Tracks the current player root plus this offset, including after the segment ends while the sequence is active. Hold Zoom keeps tracking; Hold Position/Both locks the reached framing. Return blends back to normal. Room bounds may limit tracking and offsets.", HelpBoxMessageType.Info));
                                 if (segment.positionSpace != CameraAnimationPositionSpace.WorldPoint)
                                     AddToggleField(inner, "X Follows Captured Facing", segment.facingRelativeX, value => edit("Edit Camera Facing", () => segment.facingRelativeX = value));
                             }

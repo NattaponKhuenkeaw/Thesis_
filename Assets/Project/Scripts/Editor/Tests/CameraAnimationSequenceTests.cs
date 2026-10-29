@@ -183,6 +183,74 @@ public class CameraAnimationSequenceTests
     }
 
     [Test]
+    public void CombinedZoomAndMoveTracksLivePlayerPlusOffsetDuringZoomHold()
+    {
+        var data = new CameraAnimationFrameData();
+        var segment = Segment(CameraAnimationTask.ZoomAndMove, 0, 10);
+        segment.positionSpace = CameraAnimationPositionSpace.Player;
+        segment.position = new Vector2(-3f, 2f); segment.zoomMultiplier = 0.5f;
+        data.segments.Add(segment);
+        data.segments.Add(Segment(CameraAnimationTask.Hold, 10, 100, CameraAnimationChannels.Zoom));
+        Assert.That(data.GetValidationError(), Is.Null);
+        var sampler = new CameraAnimationSampler(data, Baseline, 2f);
+        var midway = sampler.Sample(5, Baseline, new Vector2(20f, 4f));
+        Assert.That(midway.Position, Is.EqualTo(new Vector2(9.5f, 4.5f)));
+        Assert.That(midway.Size, Is.EqualTo(7.5f));
+        var tracked = sampler.Sample(50, Baseline, new Vector2(30f, 8f));
+        Assert.That(tracked.Position, Is.EqualTo(new Vector2(27f, 10f)));
+        Assert.That(tracked.Size, Is.EqualTo(5f));
+        data.segments.Add(Segment(CameraAnimationTask.Move, 5, 10));
+        Assert.That(data.GetValidationError(), Does.Contain("overlap"), "Combined tasks own both channels.");
+    }
+
+    [Test]
+    public void PositionHoldFreezesPlayerAtBoundaryAndDoesNotFollowCurrentPlayer()
+    {
+        var data = new CameraAnimationFrameData();
+        var track = Segment(CameraAnimationTask.Move, 0, 0); track.positionSpace = CameraAnimationPositionSpace.Player;
+        track.position = new Vector2(2f, 1f); data.segments.Add(track);
+        data.segments.Add(Segment(CameraAnimationTask.Hold, 10, 30, CameraAnimationChannels.Position));
+        data.segments.Add(Segment(CameraAnimationTask.Return, 40, 50, CameraAnimationChannels.Position));
+        var sampler = new CameraAnimationSampler(data, Baseline, 2f);
+        Vector2 TargetAt(int frame) => new Vector2(frame, frame * 2f);
+        var held = sampler.Sample(20, Baseline, new Vector2(500f, 500f), TargetAt);
+        Assert.That(held.Position, Is.EqualTo(new Vector2(12f, 21f)));
+        Assert.That(sampler.Sample(30, Baseline, Vector2.zero, TargetAt).Position, Is.EqualTo(held.Position));
+        var normal = new CameraAnimationPose(new Vector2(50f, 60f), 10f);
+        Assert.That(sampler.Sample(45, normal, new Vector2(999f, 999f), TargetAt).Position,
+            Is.EqualTo(new Vector2(31f, 40.5f)));
+        sampler.Sample(0, Baseline, Vector2.zero, TargetAt);
+        Assert.That(sampler.Sample(20, Baseline, new Vector2(-100f, -100f), TargetAt).Position, Is.EqualTo(held.Position));
+    }
+
+    [Test]
+    public void ReturnFromPlayerTrackingCapturesItsStartAndRestoresLiveNormalFraming()
+    {
+        var data = new CameraAnimationFrameData();
+        var track = Segment(CameraAnimationTask.Move, 0, 0); track.positionSpace = CameraAnimationPositionSpace.Player;
+        track.position = new Vector2(2f, 1f); data.segments.Add(track);
+        data.segments.Add(Segment(CameraAnimationTask.Return, 20, 30, CameraAnimationChannels.Position));
+        var sampler = new CameraAnimationSampler(data, Baseline, 2f);
+        Vector2 TargetAt(int frame) => new Vector2(frame, frame * 2f);
+        var normal = new CameraAnimationPose(new Vector2(50f, 60f), 10f);
+        Assert.That(sampler.Sample(25, normal, new Vector2(999f, 999f), TargetAt).Position,
+            Is.EqualTo(new Vector2(36f, 50.5f)));
+        Assert.That(sampler.Sample(30, normal, Vector2.zero, TargetAt).Position, Is.EqualTo(normal.Position));
+    }
+
+    [Test]
+    public void PlayerTrackingOffsetCanUseCapturedFacingAndExistingEnumValuesRemainStable()
+    {
+        var data = new CameraAnimationFrameData();
+        var track = Segment(CameraAnimationTask.Move, 0, 0); track.positionSpace = CameraAnimationPositionSpace.Player;
+        track.position = new Vector2(3f, 2f); track.facingRelativeX = true; data.segments.Add(track);
+        var sampler = new CameraAnimationSampler(data, Baseline, 2f, -1);
+        Assert.That(sampler.Sample(0, Baseline, new Vector2(10f, 20f)).Position, Is.EqualTo(new Vector2(7f, 22f)));
+        Assert.That((int)CameraAnimationTask.Return, Is.EqualTo(3));
+        Assert.That((int)CameraAnimationPositionSpace.ScreenOffsetFromStart, Is.EqualTo(2));
+    }
+
+    [Test]
     public void ExplicitImpulseConversionSplitsCameraAndPreservesImpulsePayload()
     {
         var source = new ActionEventEntry { eventType = ActionEventType.ScreenImpulse, triggerFrame = 12, label = "Impact" };

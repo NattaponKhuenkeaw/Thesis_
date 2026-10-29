@@ -1008,8 +1008,9 @@ public class PlayerStateMachine : MonoBehaviour
     public bool CanSwitchCharacterTo(int index)
     {
         if (teamLoader == null || !teamLoader.CanSwitchToIndex(index, ignoreCooldown: true)) return false;
-        if (teamLoader.QteSwaps?.TryGetWindow(teamLoader.GetCharacterAtIndex(index), out _, out _) == true)
-            return teamLoader.QteSwaps.CanHandoffTo(index);
+        if (teamLoader.QteSwaps?.TryGetWindow(teamLoader.GetCharacterAtIndex(index), out _, out _) == true
+            && teamLoader.QteSwaps.CanHandoffTo(index)) return true;
+        // An unusable intro must not remove an otherwise legal ordinary swap.
         return CanSwitchCharacter();
     }
 

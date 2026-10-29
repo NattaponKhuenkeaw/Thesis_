@@ -2,9 +2,13 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CameraAnimationTask { Zoom, Move, Hold, Return }
+public enum CameraAnimationTask { Zoom, Move, Hold, Return, [InspectorName("Zoom + Move")] ZoomAndMove }
 [Flags] public enum CameraAnimationChannels { Zoom = 1, Position = 2, Both = 3 }
-public enum CameraAnimationPositionSpace { OffsetFromStart, WorldPoint, ScreenOffsetFromStart }
+public enum CameraAnimationPositionSpace
+{
+    OffsetFromStart, WorldPoint, ScreenOffsetFromStart,
+    [InspectorName("Player + Offset (Live)")] Player
+}
 public enum CameraAnimationEasing { Linear, SmoothStep, EaseIn, EaseOut }
 
 [Serializable]
@@ -21,8 +25,8 @@ public sealed class CameraAnimationSegment
     public Vector2 position;
     public bool facingRelativeX;
 
-    public CameraAnimationChannels AffectedChannels => task == CameraAnimationTask.Zoom
-        ? CameraAnimationChannels.Zoom : task == CameraAnimationTask.Move ? CameraAnimationChannels.Position : channels;
+    public CameraAnimationChannels AffectedChannels => task == CameraAnimationTask.ZoomAndMove ? CameraAnimationChannels.Both
+        : task == CameraAnimationTask.Zoom ? CameraAnimationChannels.Zoom : task == CameraAnimationTask.Move ? CameraAnimationChannels.Position : channels;
 
     public CameraAnimationSegment Copy() => (CameraAnimationSegment)MemberwiseClone();
 
@@ -113,6 +117,8 @@ public sealed class CameraAnimationSampler
     private readonly CameraAnimationPose _baseline;
     private readonly float _aspect;
     private readonly int _facing;
+    private readonly List<int> _positionBoundaryFrames = new List<int>();
+    public IReadOnlyList<int> PositionBoundaryFrames => _positionBoundaryFrames;
     public int DurationFrames { get; }
     public bool FollowSlowMotion { get; }
 
@@ -130,13 +136,22 @@ public sealed class CameraAnimationSampler
         // Cuts at a shared boundary apply before a transition starting at that boundary.
         _segments.Sort((a, b) => a.startFrame != b.startFrame
             ? a.startFrame.CompareTo(b.startFrame) : a.endFrame.CompareTo(b.endFrame));
+        foreach (var segment in _segments)
+            if ((segment.AffectedChannels & CameraAnimationChannels.Position) != 0
+                && (_positionBoundaryFrames.Count == 0 || _positionBoundaryFrames[_positionBoundaryFrames.Count - 1] != segment.startFrame))
+                _positionBoundaryFrames.Add(segment.startFrame);
     }
 
     public CameraAnimationPose Sample(float frame, CameraAnimationPose normal)
+        => Sample(frame, normal, _baseline.Position);
+
+    public CameraAnimationPose Sample(float frame, CameraAnimationPose normal, Vector2 playerPosition,
+        Func<int, Vector2> playerAtBoundary = null)
     {
         float zoomConstant = 0f, zoomNormalWeight = 1f;
         Vector2 positionConstant = Vector2.zero;
         float positionNormalWeight = 1f;
+        float positionPlayerWeight = 0f;
         foreach (var segment in _segments)
         {
             if (frame < segment.startFrame) break;
@@ -162,6 +177,14 @@ public sealed class CameraAnimationSampler
             }
             if ((channels & CameraAnimationChannels.Position) != 0)
             {
+                // Freeze a completed tracking segment's origin at the next position command's start.
+                // Keeping this input explicit makes out-of-order sampling deterministic for a given target history.
+                if (positionPlayerWeight != 0f)
+                {
+                    Vector2 captured = playerAtBoundary != null ? playerAtBoundary(segment.startFrame) : playerPosition;
+                    positionConstant += captured * positionPlayerWeight;
+                    positionPlayerWeight = 0f;
+                }
                 if (segment.task == CameraAnimationTask.Hold)
                 {
                     positionConstant += _baseline.Position * positionNormalWeight;
@@ -178,13 +201,15 @@ public sealed class CameraAnimationSampler
                     if (segment.facingRelativeX) target.x *= _facing;
                     if (segment.positionSpace == CameraAnimationPositionSpace.ScreenOffsetFromStart)
                         target = Vector2.Scale(target, new Vector2(_baseline.Size * _aspect * 2f, _baseline.Size * 2f));
-                    if (segment.positionSpace != CameraAnimationPositionSpace.WorldPoint) target += _baseline.Position;
+                    bool tracksPlayer = segment.positionSpace == CameraAnimationPositionSpace.Player;
+                    if (!tracksPlayer && segment.positionSpace != CameraAnimationPositionSpace.WorldPoint) target += _baseline.Position;
                     positionConstant = Vector2.Lerp(positionConstant, target, t);
                     positionNormalWeight *= 1f - t;
+                    positionPlayerWeight = tracksPlayer ? t : 0f;
                 }
             }
         }
-        return new CameraAnimationPose(positionConstant + normal.Position * positionNormalWeight,
+        return new CameraAnimationPose(positionConstant + normal.Position * positionNormalWeight + playerPosition * positionPlayerWeight,
             zoomConstant + normal.Size * zoomNormalWeight);
     }
 }

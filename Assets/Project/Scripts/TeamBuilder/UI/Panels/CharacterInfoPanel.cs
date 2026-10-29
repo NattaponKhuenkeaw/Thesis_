@@ -17,6 +17,9 @@ namespace Project.TeamBuilder.UI.Panels
         [Header("Character Progression")]
         [SerializeField] private TMP_Text levelText;
         [SerializeField] private TMP_Text potentialText;
+        [SerializeField] private Image[] potentialSegments;
+        [SerializeField] private Sprite potentialFilledSprite;
+        [SerializeField] private Sprite potentialEmptySprite;
         [SerializeField] private Button levelPanelButton;
         [SerializeField] private Button potentialPanelButton;
         [SerializeField] private GameObject characterLevelPanel;
@@ -101,6 +104,15 @@ namespace Project.TeamBuilder.UI.Panels
                 int currentPotential = GetTotalPotentialLevel(data);
                 int maxPotential = CharacterKitDefinition.MaxPotentialLevel * 3;
                 potentialText.text = $"Potential {currentPotential}/{maxPotential}";
+                if (potentialSegments != null)
+                    for (int i = 0; i < potentialSegments.Length; i++)
+                        if (potentialSegments[i] != null)
+                        {
+                            var sprite = i < currentPotential ? potentialFilledSprite : potentialEmptySprite;
+                            potentialSegments[i].sprite = sprite;
+                            potentialSegments[i].color = sprite != null ? Color.white
+                                : i < currentPotential ? new Color(1f, .88f, .12f) : new Color(.22f, .25f, .33f);
+                        }
             }
 
             PopulateEquippedArtifactSlots(equippedArtifacts);

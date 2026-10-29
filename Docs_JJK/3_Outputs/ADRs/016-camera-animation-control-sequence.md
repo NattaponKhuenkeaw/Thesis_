@@ -11,6 +11,10 @@ blocked_by: []
 
 # ADR-016: Camera Animation Control Sequence
 
+## Player-target option — 2026-10-29
+
+At the user's request, the existing sequence sampler accepts live player-root position as an explicit input. Move can target Player + Offset (Live), and the appended Zoom + Move task drives both existing channels together. Hold Zoom leaves player tracking active; Hold Position/Both captures its origin at that boundary. Return captures the tracking origin and blends to normal framing. The manager captures boundary target samples per run, including interpolation for crossed boundaries; no new follower/controller or camera authority is introduced. The schematic preview labels its static target-reference limitation. Existing enum values, clocks, room bounds and lifecycle rules are preserved. See `../Specs/camera-player-tracking-task-card.md` for implementation and verification.
+
 ## Selectable slow-motion clock — 2026-10-29
 
 User approved `../Specs/animation-slow-motion-options-task-card.md` with “lgtm”. CameraAnimationFrameData exposes Follow Slow Motion, default on. A per-run sampler snapshots this option. When off, the manager advances the active sequence using unscaled elapsed time, gated by full freeze/pause. Event triggering remains action-frame synchronized; lifetime, replacement, bounds and interruption rules remain unchanged. Existing legacy camera adapters continue to follow slow motion.

@@ -426,12 +426,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return false;
 
         PlayerStateMachine fsm = playerCharacter.StateMachine;
-        bool readyQte = QteSwaps != null && QteSwaps.TryGetWindow(GetCharacterAtIndex(index), out _, out _);
-        if (!fsm.CanSwitchCharacter(ignoreCooldown: readyQte)) return false;
+        if (!fsm.CanSwitchCharacter(ignoreCooldown: true)) return false;
         QtePreparedEntry preparedEntry = default;
         bool useQte = QteSwaps != null && QteSwaps.TryPrepareEntry(index, out preparedEntry);
-        // A ready entry must succeed before committing the switch or spending its opportunity.
-        if (readyQte && !useQte) return false;
+        // Failed QTE preparation falls back to the ordinary swap, including its cooldown.
         if (!useQte && IsSwitchOnCooldown) return false;
 
         if (fsm.CurrentState is CombatPlayerState)

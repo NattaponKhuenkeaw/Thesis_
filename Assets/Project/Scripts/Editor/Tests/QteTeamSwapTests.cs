@@ -286,6 +286,72 @@ public class QteTeamSwapTests
         Assert.That(_team.CurrentCharacter, Is.SameAs(_main));
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void LostQteTargetFallsBackToLegalOrdinarySwap(bool outOfRange)
+    {
+        Publish(Execute());
+        if (outOfRange) _enemy.transform.position += Vector3.right * 100f;
+        else Set(_enemy, "isAlive", false);
+        Physics2D.SyncTransforms();
+
+        Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.True);
+        Assert.That(Qte.CanHandoffTo(1), Is.False);
+        Assert.That(_fsm.CanSwitchCharacter(), Is.True);
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.True);
+        Assert.That(_team.SwitchToIndex(1), Is.True);
+        Assert.That(_team.CurrentCharacter, Is.SameAs(_cg));
+        Assert.That(_fsm.CurrentStateId, Is.Not.EqualTo(PlayerStateId.QteIntro));
+        Assert.That(Qte.TryGetWindow(_main, out _, out _), Is.False);
+    }
+
+    [Test]
+    public void BlockedEntryPreservesReadinessDuringCooldownThenAllowsOrdinarySwap()
+    {
+        Publish(Execute());
+        foreach (Object candidate in _objects)
+            if (candidate is GameObject go && go.name == "QTE Test Floor") go.SetActive(false);
+        Physics2D.SyncTransforms();
+        _team.switchCooldownDuration = 1f;
+        Set(_team, "lastSwitchTime", Time.time);
+        float expiry = (float)typeof(QteTeamSwapController).GetField("_expiresAt", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Qte);
+
+        Assert.That(Qte.CanHandoffTo(1), Is.False);
+        Assert.That(_fsm.CanSwitchCharacter(ignoreCooldown: true), Is.True);
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.False);
+        Assert.That(_team.SwitchToIndex(1), Is.False);
+        Assert.That(_team.CurrentCharacter, Is.SameAs(_main));
+        Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.True);
+        Assert.That((float)typeof(QteTeamSwapController).GetField("_expiresAt", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Qte), Is.EqualTo(expiry));
+
+        _team.switchCooldownDuration = 0f;
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.True);
+        Assert.That(_team.SwitchToIndex(1), Is.True);
+        Assert.That(_fsm.CurrentStateId, Is.Not.EqualTo(PlayerStateId.QteIntro));
+    }
+
+    [Test]
+    public void ReadyPortraitRemainsAvailableWhenOnlyTheOrdinarySwapCanRun()
+    {
+        Publish(Execute());
+        Set(_enemy, "isAlive", false);
+        var hudGo = Keep(new GameObject("QTE Fallback HUD", typeof(TeamSwitchHUD)));
+        var hud = hudGo.GetComponent<TeamSwitchHUD>();
+        hud.teamLoader = _team;
+        hud.stateMachine = _fsm;
+        var slotGo = Keep(Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/Hero_TeamSwitchPanel.prefab"), hudGo.transform));
+        foreach (Animator animator in slotGo.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
+        var slot = slotGo.GetComponent<CharacterSwitchSlot>();
+        slot.Setup(_cg, 1, hud);
+        Call(slot, "Update");
+
+        Assert.That(slot.qteReadyOverlay.gameObject.activeSelf, Is.True);
+        Assert.That(slot.unavailableOverlay.activeSelf, Is.False);
+        hud.OnSlotClicked(1);
+        Assert.That(_team.CurrentCharacter, Is.SameAs(_cg));
+        Assert.That(_fsm.CurrentStateId, Is.Not.EqualTo(PlayerStateId.QteIntro));
+    }
+
     [Test]
     public void MainIntroDoesNotRequireCachedCutAndHasOriginalDamageBudget()
     {
@@ -340,6 +406,8 @@ public class QteTeamSwapTests
         Time.timeScale = 1f;
         _fsm.ChangeState(_fsm.HitstunState);
         Assert.That(Qte.CanHandoffTo(1), Is.False);
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.False);
+        Assert.That(_team.SwitchToIndex(1), Is.False);
         Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.True);
     }
 
