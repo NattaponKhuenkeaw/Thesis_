@@ -1125,26 +1125,62 @@ public class EnemyFlightGuardTests
         Assert.That(enemy.attackHitbox.enabled, Is.True);
     }
 
-    [Test]
-    public void LeavingDuringWindupCancelsAndReturnStartsAFullNewWarning()
+    [TestCase(20f, 0f)]
+    [TestCase(-20f, 0f)]
+    [TestCase(5f, 8f)]
+    [TestCase(2f, 3f)]
+    public void WindupCommitsToTheOriginalFacingWhenTargetLeaves(float targetX, float targetY)
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("WindupExitTarget", enemy.transform.position + Vector3.right * 5f);
         guard.BeginGuard(target.transform);
         guard.TickGuard(4.5f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
-        target.transform.position = enemy.transform.position + Vector3.right * 20f;
-        guard.TickGuard(.6f);
-        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
-        Assert.That(enemy.attackHitbox.enabled, Is.False);
-        target.transform.position = enemy.transform.position + Vector3.right * 5f;
-        guard.TickGuard(0f);
-        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
-        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        target.transform.position = enemy.transform.position + new Vector3(targetX, targetY, 0f);
         guard.TickGuard(.59f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
         guard.TickGuard(.02f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        Assert.That(enemy.attackHitbox.enabled, Is.True);
+        Assert.That(enemy.FacingLocked, Is.True);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+    }
+
+    [Test]
+    public void ShieldRushMovesAfterTargetLeavesDuringWarning()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        var target = Host("CommittedRushTarget", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        target.transform.position = enemy.transform.position + Vector3.left * 20f;
+        guard.TickGuard(1.01f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+
+        var action = new EnemyAttackAction();
+        action.Agent.Value = enemy.gameObject;
+        action.Target.Value = target;
+        typeof(EnemyAttackAction).GetField("m_Controller", Private).SetValue(action, enemy);
+        typeof(EnemyAttackAction).GetField("m_ShieldGuard", Private).SetValue(action, guard);
+        typeof(EnemyAttackAction).GetField("m_Body", Private).SetValue(action, enemy.rb);
+        typeof(EnemyAttackAction).GetField("m_HitboxDisabled", Private).SetValue(action, true);
+        try
+        {
+            typeof(EnemyAttackAction).GetMethod("OnUpdate", Private).Invoke(action, null);
+            Assert.That(enemy.rb.linearVelocity.x, Is.GreaterThan(0f));
+            Assert.That(enemy.attackHitbox.enabled, Is.True);
+            guard.TickGuard(enemy.Kit.HitWindowDuration + .01f);
+            Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Recovery));
+            Assert.That(enemy.attackHitbox.enabled, Is.False);
+            Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
+        }
+        finally
+        {
+            typeof(EnemyAttackAction).GetMethod("OnEnd", Private).Invoke(action, null);
+        }
     }
 
     [Test]
@@ -1191,12 +1227,19 @@ public class EnemyFlightGuardTests
         Assert.That(EnemyCombatRange.IsInAttackRange(enemy.gameObject, target, 1f), Is.False);
     }
 
-    [Test]
-    public void GuardDoesNotShieldExistingDotAndDeathClearsGuard()
+    [TestCase(EnemyShieldGuard.GuardPhase.Guarding)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Windup)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Striking)]
+    public void GuardDoesNotShieldExistingDotAndDeathClearsGuard(EnemyShieldGuard.GuardPhase phase)
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("DotTarget", enemy.transform.position + Vector3.right * 5f);
         guard.BeginGuard(target.transform);
+        if (phase != EnemyShieldGuard.GuardPhase.Guarding)
+            guard.TickGuard(5f);
+        if (phase == EnemyShieldGuard.GuardPhase.Striking)
+            guard.TickGuard(.61f);
+        Assert.That(guard.Phase, Is.EqualTo(phase));
         HitReactionData tick = HitReactionData.Default(5f, Vector2.zero, 0f);
         tick.damageDelivery = DamageDelivery.Dot;
         Assert.That(enemy.TakeResolvedHit(tick, target.transform.position), Is.EqualTo(5f));

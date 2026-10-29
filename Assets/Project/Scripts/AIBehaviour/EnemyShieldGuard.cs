@@ -133,12 +133,8 @@ public sealed class EnemyShieldGuard : MonoBehaviour
                 }
                 break;
             case GuardPhase.Windup:
-                if (!CanAttackTarget(side))
-                {
-                    enemy.HideAttackWarning();
-                    ChangePhase(GuardPhase.Guarding);
-                }
-                else if (phaseElapsed >= windupDuration)
+                // The warning commits this rush; movement out of range must not cancel it.
+                if (phaseElapsed >= windupDuration)
                     StartStrike();
                 break;
             case GuardPhase.Striking:
