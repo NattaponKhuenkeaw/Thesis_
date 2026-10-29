@@ -726,7 +726,7 @@ MonoBehaviour:
   startOnlyOnce: 1
   spawnSlots:
   - {fileID: 8094037502590189038}
-  minSpawnSeparation: 1.8
+  minSpawnSeparation: 2.4
   maxSpawnNudge: 2.5
   unlockSceneExitOnClear: 0
   portalsRoot: {fileID: 4289945556266579237}

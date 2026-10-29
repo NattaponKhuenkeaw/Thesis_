@@ -6622,7 +6622,7 @@ MonoBehaviour:
   - {fileID: 6880061638163654509}
   - {fileID: 4561272421967093650}
   - {fileID: 6844407109297316482}
-  minSpawnSeparation: 1.8
+  minSpawnSeparation: 2.4
   maxSpawnNudge: 2.5
   unlockSceneExitOnClear: 1
   portalsRoot: {fileID: 0}

@@ -21,6 +21,9 @@ public static class LevelDesignSpawnBuilder
     {
         var plan=LevelDesignLayoutBuilder.GetPlan(level);
         Vector3 position=LevelDesignLayoutBuilder.ToWorld(plan,Rooms(level)[room].slots[slot])+Vector2.up*.05f;
+        // Keep the larger 101 body clear of the two forward gates and the two first ladder steps.
+        if(slot==4 && (level==1 && room==1 || (level==2 || level==5 || level==10) && room==0))
+            position.x-=.5f;
         return position;
     }
 

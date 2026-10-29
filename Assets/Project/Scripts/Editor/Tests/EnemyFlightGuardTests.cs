@@ -234,6 +234,51 @@ public class EnemyFlightGuardTests
         Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.max.y, Is.LessThan(2.3f));
     }
 
+    [TestCase(false)] [TestCase(true)]
+    public void HighFlightSpawnDoesNotTeleportThroughCeilings(bool oneWay)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        var flight = GroundRoamer(new Vector3(1000f, 0f, 0f), null);
+        using (var settings = new SerializedObject(flight))
+        {
+            settings.FindProperty("flightHeight").floatValue = 6.8f;
+            settings.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var ceiling = Ground(new Vector2(1000f, 4f), new Vector2(20f, 1f));
+        if (oneWay)
+        {
+            ceiling.gameObject.layer = LayerMask.NameToLayer("OneWayPlatform");
+            ceiling.usedByEffector = true;
+            ceiling.gameObject.AddComponent<PlatformEffector2D>().useOneWay = true;
+        }
+        Physics2D.SyncTransforms();
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Physics2D.SyncTransforms();
+        var body = flight.GetComponent<EnemyController>().bodyCollider;
+        Assert.That(body.bounds.max.y, Is.LessThan(ceiling.bounds.min.y), "A clear destination above the ceiling is not reachable from the authored floor.");
+        Assert.That(body.bounds.min.y, Is.GreaterThan(0f));
+        Assert.That(flight.transform.position.x, Is.EqualTo(1000f).Within(.001f));
+    }
+
+    [Test]
+    public void HighFlightSpawnSlidesBesideBuildingsInsteadOfAppearingOnTheirRoof()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        var flight = GroundRoamer(new Vector3(1000f, 0f, 0f), null);
+        using (var settings = new SerializedObject(flight))
+        {
+            settings.FindProperty("flightHeight").floatValue = 6.8f;
+            settings.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var wall = Ground(new Vector2(1000f, 2f), new Vector2(2f, 4f));
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Physics2D.SyncTransforms();
+        var body = flight.GetComponent<EnemyController>().bodyCollider;
+        Assert.That(Mathf.Abs(flight.transform.position.x - 1000f), Is.InRange(1.5f, 3f));
+        Assert.That(body.Distance(wall).isOverlapped, Is.False);
+        Assert.That(body.bounds.min.y, Is.EqualTo(6.8f).Within(.001f), "Keep normal altitude when there is a clear route from the ground.");
+    }
+
     [Test]
     public void GroundAnchoredSpawnIgnoresEncounterTriggers()
     {
@@ -434,7 +479,7 @@ public class EnemyFlightGuardTests
         Assert.That(clip.length, Is.EqualTo(.2f).Within(.001f));
         Assert.That(clip.isLooping, Is.False);
         Assert.That(kit.HitWindowDuration, Is.EqualTo(.15f));
-        Assert.That(kit.AttackCooldown, Is.EqualTo(1.3f));
+        Assert.That(kit.AttackCooldown, Is.EqualTo(1.17f));
     }
 
     [TestCase("EnemyCore/EnemyCore")]

@@ -11403,7 +11403,7 @@ MonoBehaviour:
   - {fileID: 5592540414896927133}
   - {fileID: 2893619816251310565}
   - {fileID: 1005466437311231447}
-  minSpawnSeparation: 1.8
+  minSpawnSeparation: 2.4
   maxSpawnNudge: 2.5
   unlockSceneExitOnClear: 1
   portalsRoot: {fileID: 0}

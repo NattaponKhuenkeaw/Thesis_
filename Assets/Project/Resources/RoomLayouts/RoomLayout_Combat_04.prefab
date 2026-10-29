@@ -715,7 +715,7 @@ MonoBehaviour:
   playerTag: Player
   startOnlyOnce: 1
   spawnSlots: []
-  minSpawnSeparation: 1.8
+  minSpawnSeparation: 2.4
   maxSpawnNudge: 2.5
   unlockSceneExitOnClear: 1
   portalsRoot: {fileID: 0}

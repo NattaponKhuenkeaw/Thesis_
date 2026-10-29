@@ -485,7 +485,7 @@ MonoBehaviour:
   - {fileID: 7791431310481833247}
   - {fileID: 8016142704188002156}
   - {fileID: 3210077139136645812}
-  minSpawnSeparation: 1.8
+  minSpawnSeparation: 2.4
   maxSpawnNudge: 2.5
   unlockSceneExitOnClear: 1
   portalsRoot: {fileID: 0}
@@ -3033,7 +3033,7 @@ Transform:
   m_GameObject: {fileID: 2958185210116982118}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 47.5, y: 0.05, z: 0}
+  m_LocalPosition: {x: 47, y: 0.05, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
