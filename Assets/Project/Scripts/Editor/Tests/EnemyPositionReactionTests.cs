@@ -343,6 +343,173 @@ public class EnemyPositionReactionTests
         }
     }
 
+    [TestCase(1f)] [TestCase(-1f)]
+    public void GrabBindingCannotPullAnEnemyThroughATerrainWall(float direction)
+    {
+        obstacle = new GameObject("Grab terrain wall");
+        obstacle.transform.position = actor.transform.position + Vector3.right * direction * .8f;
+        var wall = obstacle.AddComponent<BoxCollider2D>(); wall.size = new Vector2(.05f, 10f);
+        var socket = new GameObject("Grab socket behind wall");
+        socket.transform.position = actor.transform.position + Vector3.right * direction * 4f;
+        try
+        {
+            var controller = actor.AddComponent<EnemyController>();
+            controller.bodyCollider = actor.GetComponent<BoxCollider2D>();
+            var handler = actor.AddComponent<EnemyHitReactionHandler>();
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            typeof(EnemyHitReactionHandler).GetMethod("Awake", flags).Invoke(handler, null);
+            typeof(EnemyHitReactionHandler).GetField("currentReaction", flags).SetValue(handler,
+                new HitReactionData { reactionKind = EnemyReactionKind.Grab, grabSocket = socket.transform });
+            Physics2D.SyncTransforms();
+            var update = typeof(EnemyHitReactionHandler).GetMethod("UpdateGrabbedBinding", flags);
+            for (int i = 0; i < 20; i++)
+            {
+                update.Invoke(handler, null);
+                Physics2D.Simulate(.02f);
+                var bounds = controller.bodyCollider.bounds;
+                float edge = direction > 0f ? bounds.max.x : -bounds.min.x;
+                float limit = direction > 0f ? wall.bounds.min.x : -wall.bounds.max.x;
+                Assert.That(edge, Is.LessThanOrEqualTo(limit + .005f), "Grab binding bypassed the terrain sweep");
+            }
+        }
+        finally { UnityEngine.Object.DestroyImmediate(socket); }
+    }
+
+    [Test]
+    public void GrabBindingCannotDragAnEnemyBelowATerrainFloor()
+    {
+        obstacle = new GameObject("Grab terrain floor");
+        obstacle.transform.position = actor.transform.position + Vector3.down;
+        var floor = obstacle.AddComponent<BoxCollider2D>(); floor.size = new Vector2(10f, .05f);
+        var socket = new GameObject("Grab socket below floor");
+        socket.transform.position = actor.transform.position + Vector3.down * 4f;
+        try
+        {
+            var controller = actor.AddComponent<EnemyController>(); controller.bodyCollider = actor.GetComponent<BoxCollider2D>();
+            var handler = actor.AddComponent<EnemyHitReactionHandler>();
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            typeof(EnemyHitReactionHandler).GetMethod("Awake", flags).Invoke(handler, null);
+            typeof(EnemyHitReactionHandler).GetField("currentReaction", flags).SetValue(handler,
+                new HitReactionData { reactionKind = EnemyReactionKind.Grab, grabSocket = socket.transform });
+            Physics2D.SyncTransforms();
+            var update = typeof(EnemyHitReactionHandler).GetMethod("UpdateGrabbedBinding", flags);
+            for (int i = 0; i < 20; i++)
+            {
+                update.Invoke(handler, null); Physics2D.Simulate(.02f);
+                Assert.That(controller.bodyCollider.bounds.min.y, Is.GreaterThanOrEqualTo(floor.bounds.max.y - .005f));
+            }
+        }
+        finally { UnityEngine.Object.DestroyImmediate(socket); }
+    }
+
+    [Test]
+    public void GrabImpactFreezeNeverShakesThePhysicalBodyIntoTheWall()
+    {
+        var controller = actor.AddComponent<EnemyController>(); controller.bodyCollider = actor.GetComponent<BoxCollider2D>();
+        var handler = actor.AddComponent<EnemyHitReactionHandler>();
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        typeof(EnemyHitReactionHandler).GetMethod("Awake", flags).Invoke(handler, null);
+        typeof(EnemyHitReactionHandler).GetField("currentReaction", flags).SetValue(handler,
+            new HitReactionData { reactionKind = EnemyReactionKind.Grab });
+        Vector3 start = actor.transform.position;
+        typeof(EnemyHitReactionHandler).GetField("impactFreezeAnchorPosition", flags).SetValue(handler, start);
+        for (int frame = 0; frame < 4; frame++)
+        {
+            typeof(EnemyHitReactionHandler).GetField("currentReactionFrame", flags).SetValue(handler, frame);
+            typeof(EnemyHitReactionHandler).GetMethod("UpdateImpactFreezeShake", flags).Invoke(handler, null);
+            Assert.That(actor.transform.position, Is.EqualTo(start), "Only the displayed sprite may shake during a grab impact");
+        }
+    }
+
+    [TestCase(1f, .05f)] [TestCase(-1f, .05f)]
+    [TestCase(1f, 6f)] [TestCase(-1f, 6f)]
+    public void MainUltimateCannotBindTheActualShieldBodyInsideThinOrThickWalls(float direction, float thickness)
+    {
+        VerifyMainUltimateGrab(direction, thickness, true);
+    }
+
+    [TestCase(1f)] [TestCase(-1f)]
+    public void MainUltimateStillCentersTheShieldVisualCoreInOpenSpace(float direction)
+    {
+        VerifyMainUltimateGrab(direction, 0f, false);
+    }
+
+    private void VerifyMainUltimateGrab(float direction, float thickness, bool blocked)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        ((IDisposable)motor).Dispose(); motor = null;
+        body.bodyType = RigidbodyType2D.Kinematic; body.gravityScale = 0f;
+        var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm103/Enemy103.prefab");
+        var source = prefab.GetComponent<EnemyController>();
+        var sourceCollider = (BoxCollider2D)source.bodyCollider;
+        actor.transform.localScale = prefab.transform.localScale;
+        actor.transform.rotation = Quaternion.Euler(0f, direction > 0f ? 180f : 0f, 0f);
+        var collider = actor.GetComponent<BoxCollider2D>(); collider.size = sourceCollider.size; collider.offset = sourceCollider.offset;
+        var controller = actor.AddComponent<EnemyController>(); controller.bodyCollider = collider;
+        var handler = actor.AddComponent<EnemyHitReactionHandler>();
+        var authoredHandler = prefab.GetComponent<EnemyHitReactionHandler>();
+        typeof(EnemyHitReactionHandler).GetField("grabCenterAdjustment", flags).SetValue(handler,
+            typeof(EnemyHitReactionHandler).GetField("grabCenterAdjustment", flags).GetValue(authoredHandler));
+        typeof(EnemyHitReactionHandler).GetField("usePositionReactions", flags).SetValue(handler, true);
+        handler.groundLayers = authoredHandler.groundLayers;
+        typeof(EnemyHitReactionHandler).GetMethod("Awake", flags).Invoke(handler, null);
+        var ultimate = UnityEditor.AssetDatabase.LoadAssetAtPath<ProjectileData>("Assets/Project/Character/Hero/test_0_Main/ProjectileData_main_ult.asset");
+        var hitbox = ultimate.routineHitbox.hitbox as NormalHitbox;
+        Assert.That(hitbox, Is.Not.Null);
+        Assert.That(hitbox.reactionKind, Is.EqualTo(EnemyReactionKind.Grab));
+        Assert.That(ultimate.centerGrabbedTargets, Is.True);
+        var socket = new GameObject("Actual Main ultimate chain socket");
+        socket.transform.rotation = Quaternion.Euler(0f, direction > 0f ? 0f : 180f, 0f);
+        try
+        {
+            Physics2D.SyncTransforms();
+            var startBounds = collider.bounds;
+            var data = new HitReactionData
+            {
+                reactionKind = hitbox.reactionKind,
+                grabSocket = socket.transform,
+                grabOffset = ultimate.grabCenterOffset,
+                alignGrabToBodyCenter = ultimate.centerGrabbedTargets
+            };
+            typeof(EnemyHitReactionHandler).GetField("currentReaction", flags).SetValue(handler, data);
+            socket.transform.position = body.position;
+            Vector2 rootForZeroSocket = (Vector2)typeof(EnemyHitReactionHandler).GetMethod("ResolveGrabbedPosition", flags)
+                .Invoke(handler, new object[] { socket.transform });
+            socket.transform.position += (Vector3)(Vector2.right * direction * 2f + body.position - rootForZeroSocket);
+            if (blocked)
+            {
+                obstacle = new GameObject("Main ultimate terrain boundary");
+                obstacle.layer = LayerMask.NameToLayer("Ground");
+                float edge = direction > 0f ? startBounds.max.x : startBounds.min.x;
+                obstacle.transform.position = new Vector3(edge + direction * (.04f + thickness * .5f), body.position.y + 1f, 0f);
+                obstacle.AddComponent<BoxCollider2D>().size = new Vector2(thickness, 20f);
+            }
+            Physics2D.SyncTransforms();
+            var update = typeof(EnemyHitReactionHandler).GetMethod("UpdateGrabbedBinding", flags);
+            for (int i = 0; i < 30; i++)
+            {
+                update.Invoke(handler, null); Physics2D.Simulate(.02f);
+                if (blocked)
+                {
+                    var wall = obstacle.GetComponent<BoxCollider2D>();
+                    Assert.That(collider.Distance(wall).distance, Is.GreaterThanOrEqualTo(-.005f),
+                        $"Step {i}: body={body.position}, actor={actor.transform.position}, bounds={collider.bounds}, wall={wall.bounds}");
+                    float edge = direction > 0f ? collider.bounds.max.x : -collider.bounds.min.x;
+                    float limit = direction > 0f ? wall.bounds.min.x : -wall.bounds.max.x;
+                    Assert.That(edge, Is.LessThanOrEqualTo(limit + .005f), "Repeated chain binding crossed the wall");
+                }
+            }
+            if (!blocked)
+            {
+                Vector2 adjustment = (Vector2)typeof(EnemyHitReactionHandler).GetField("grabCenterAdjustment", flags).GetValue(handler);
+                Vector2 core = actor.transform.TransformPoint(collider.offset + adjustment);
+                Vector2 chain = socket.transform.TransformPoint(ultimate.grabCenterOffset);
+                Assert.That(Vector2.Distance(core, chain), Is.LessThan(.005f), "Open-space grab alignment must remain unchanged");
+            }
+        }
+        finally { UnityEngine.Object.DestroyImmediate(socket); }
+    }
+
     [TestCase(1f)]
     [TestCase(-1f)]
     public void CameragirlAttack5SnapCannotPushShieldEnemyIntoLayout02PolygonStep(float direction)
