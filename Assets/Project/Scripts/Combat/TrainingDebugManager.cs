@@ -29,6 +29,25 @@ namespace CombatCore
         public bool showDebugVisualization = false;
 
         public static bool IsActive => Instance != null && Instance.showDebugVisualization;
+        private bool trainingPresentation;
+        private bool trainingStatsVisible;
+        public static bool IsTrainingPresentation => Instance != null && Instance.trainingPresentation;
+        public static bool CollectStats => Instance != null && (Instance.trainingPresentation || Instance.showDebugVisualization);
+        public static bool ShowStatsHud => Instance != null && (Instance.trainingPresentation
+            ? Instance.trainingStatsVisible : Instance.showDebugVisualization);
+        public static bool DrawColliders => Instance != null && !Instance.trainingPresentation && Instance.showDebugVisualization;
+
+        public void SetTrainingPresentation(bool active)
+        {
+            trainingPresentation = active;
+            trainingStatsVisible = false;
+            if (active) ResolveTeamLoader();
+        }
+
+        public void ToggleTrainingStats()
+        {
+            if (trainingPresentation) trainingStatsVisible = !trainingStatsVisible;
+        }
         public event Action TeamRosterChanged;
 
         private TeamLoader _teamLoader;

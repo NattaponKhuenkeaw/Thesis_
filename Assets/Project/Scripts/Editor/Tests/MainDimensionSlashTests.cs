@@ -16,11 +16,6 @@ public class MainDimensionSlashTests
         public AttackProbe(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
         public void Recovery() => currentPhase = ActionPhase.Recovery;
     }
-    private sealed class UltimateProbe : PlayerUltimateState
-    {
-        public UltimateProbe(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
-        public void Phase(ActionPhase phase) => currentPhase = phase;
-    }
     private CharacterObject _character;
     private ActionResolverTable _table;
     private PlayerMetaProgression _progression;
@@ -28,7 +23,7 @@ public class MainDimensionSlashTests
     private PlayerCharacter _player;
     private PlayerCombat _combat;
     private CharacterPassiveController _passive;
-    private UltimateAction Slash => _table.ultimateActions.Single(a => a.actionId == MainDimensionSlashAuthoring.ActionId);
+    private SkillAction Slash => _table.skillActions.Single(a => a.actionId == MainDimensionSlashAuthoring.ActionId);
 
     [SetUp]
     public void Setup()
@@ -60,12 +55,12 @@ public class MainDimensionSlashTests
         _passive.NotifyActionStarted(AttackCategory.Normal, action, "Dimension Cut", new AttackStepData { stepName = step }, execution);
     }
 
-    private string Resolve(bool held = false)
+    private string Resolve(bool held = false, AttackCategory category = AttackCategory.Skill)
     {
         var resolver = new ActionResolver();
         resolver.ResolveInitial(new InputContext { isGrounded = true, passiveController = _passive,
             runtimeState = _passive.RuntimeState, actionAvailabilityProvider = _player,
-            ultimateInputHeld = held }, _table, AttackCategory.Ultimate);
+            ultimateInputHeld = held }, _table, category);
         return resolver.ActiveCombatAction?.actionId;
     }
 
@@ -75,7 +70,7 @@ public class MainDimensionSlashTests
         Level(level); for (int i = 0; i < 8; i++) Cut();
         Assert.That(_passive.RuntimeState.GetCounter(MainDimensionSlashAuthoring.CountId), Is.Zero);
         _passive.RuntimeState.SetTag(MainDimensionSlashAuthoring.ReadyTag, 5f);
-        Assert.That(Resolve(), Is.EqualTo("main.ultimate.jailbreak_punisher"));
+        Assert.That(Resolve(), Is.EqualTo("main.skill.dark_chain"));
     }
 
     [Test]
@@ -85,11 +80,11 @@ public class MainDimensionSlashTests
         for (int i = 1; i < 5; i++)
         {
             Cut(); Assert.That(_passive.RuntimeState.GetCounter(MainDimensionSlashAuthoring.CountId), Is.EqualTo(i));
-            Assert.That(Resolve(), Is.EqualTo("main.ultimate.jailbreak_punisher"));
+            Assert.That(Resolve(), Is.EqualTo("main.skill.dark_chain"));
         }
         Cut(); Assert.That(_passive.RuntimeState.GetCounter(MainDimensionSlashAuthoring.CountId), Is.Zero);
         Assert.That(Resolve(), Is.EqualTo(MainDimensionSlashAuthoring.ActionId));
-        Assert.That(_passive.TryGetActionAvailabilityWindow(AttackCategory.Ultimate, MainDimensionSlashAuthoring.ActionId,
+        Assert.That(_passive.TryGetActionAvailabilityWindow(AttackCategory.Skill, MainDimensionSlashAuthoring.ActionId,
             "Dimension Slash", out float remaining, out float duration), Is.True);
         Assert.That(duration, Is.EqualTo(5f).Within(0.01f)); Assert.That(remaining, Is.GreaterThan(0f));
     }
@@ -102,7 +97,7 @@ public class MainDimensionSlashTests
     {
         Level(4); for (int i = 0; i < 5; i++) Cut(qte, action, step, provenance);
         Assert.That(_passive.RuntimeState.GetCounter(MainDimensionSlashAuthoring.CountId), Is.Zero);
-        Assert.That(Resolve(), Is.EqualTo("main.ultimate.jailbreak_punisher"));
+        Assert.That(Resolve(), Is.EqualTo("main.skill.dark_chain"));
     }
 
     [Test]
@@ -125,15 +120,15 @@ public class MainDimensionSlashTests
         for (int i = 0; i < 10; i++) Cut();
         Assert.That(_passive.RuntimeState.GetCounter(MainDimensionSlashAuthoring.CountId), Is.Zero);
         for (int i = 0; i < 10; i++) Assert.That(Resolve(), Is.EqualTo(MainDimensionSlashAuthoring.ActionId));
-        _passive.NotifyActionStarted(AttackCategory.Ultimate, MainDimensionSlashAuthoring.ActionId, "Dimension Slash", Slash.comboTree.rootNode.stepData);
-        Assert.That(Resolve(), Is.EqualTo("main.ultimate.jailbreak_punisher"));
+        _passive.NotifyActionStarted(AttackCategory.Skill, MainDimensionSlashAuthoring.ActionId, "Dimension Slash", Slash.comboTree.rootNode.stepData);
+        Assert.That(Resolve(), Is.EqualTo("main.skill.dark_chain"));
         for (int i = 0; i < 4; i++) Cut();
-        Assert.That(Resolve(), Is.EqualTo("main.ultimate.jailbreak_punisher"));
+        Assert.That(Resolve(), Is.EqualTo("main.skill.dark_chain"));
         Cut(); Assert.That(Resolve(), Is.EqualTo(MainDimensionSlashAuthoring.ActionId));
     }
 
     [Test]
-    public void RealFsmSpendsFiveCachedCutsThenUltimateConsumesOneOpportunity()
+    public void RealFsmSpendsFiveCachedCutsThenSkillConsumesOneOpportunity()
     {
         Level(4);
         var fsm = _owner.AddComponent<PlayerStateMachine>();
@@ -157,7 +152,7 @@ public class MainDimensionSlashTests
         }
         Assert.That(_passive.RuntimeState.HasTag(MainDimensionSlashAuthoring.ReadyTag), Is.True);
         attack.Recovery();
-        fsm.RouteUltimateInput();
+        fsm.RouteSkillInput();
         Assert.That(_combat.CurrentActionId, Is.EqualTo(MainDimensionSlashAuthoring.ActionId));
         Assert.That(_passive.RuntimeState.HasTag(MainDimensionSlashAuthoring.ReadyTag), Is.False);
         Assert.That(_passive.RuntimeState.GetCounter("main.shadow.cached_cuts"), Is.Zero);
@@ -173,7 +168,7 @@ public class MainDimensionSlashTests
         Assert.That(Resolve(), Is.EqualTo(MainDimensionSlashAuthoring.ActionId));
         Assert.That(_player.IsActionAvailable(Slash), Is.True);
         Assert.That(Slash.resourceCost, Is.Zero); Assert.That(Slash.cooldown, Is.Zero);
-        _passive.NotifyActionStarted(AttackCategory.Ultimate, MainDimensionSlashAuthoring.ActionId, "Dimension Slash", Slash.comboTree.rootNode.stepData);
+        _passive.NotifyActionStarted(AttackCategory.Skill, MainDimensionSlashAuthoring.ActionId, "Dimension Slash", Slash.comboTree.rootNode.stepData);
         Assert.That(_player.IsActionAvailable(normal), Is.False);
     }
 
@@ -240,7 +235,7 @@ public class MainDimensionSlashTests
         try
         {
             var manager = host.AddComponent<CameraManager>();
-            _combat.ExecuteStep(Slash.comboTree.rootNode.stepData, 1, false, AttackCategory.Ultimate, "Dimension Slash", MainDimensionSlashAuthoring.ActionId);
+            _combat.ExecuteStep(Slash.comboTree.rootNode.stepData, 1, false, AttackCategory.Skill, "Dimension Slash", MainDimensionSlashAuthoring.ActionId);
             var settings = CameraEnvelope();
             var first = manager.BeginActionCamera(_combat.CurrentExecution, settings, 0, 1);
             var second = manager.BeginActionCamera(_combat.CurrentExecution, settings, 0, -1);
@@ -352,7 +347,7 @@ public class MainDimensionSlashTests
                 "Dimension Slash", MainDimensionSlashAuthoring.ActionId, false, true);
             var qte = manager.BeginActionCamera(_combat.CurrentExecution, settings, 0, 1);
             Assert.That(qte.Generation, Is.Zero);
-            _combat.ExecuteStep(Slash.comboTree.rootNode.stepData, 1, false, AttackCategory.Ultimate, "Dimension Slash", MainDimensionSlashAuthoring.ActionId);
+            _combat.ExecuteStep(Slash.comboTree.rootNode.stepData, 1, false, AttackCategory.Skill, "Dimension Slash", MainDimensionSlashAuthoring.ActionId);
             var token = manager.BeginActionCamera(_combat.CurrentExecution, settings, 0, 1);
             Assert.That(manager.HasActionCamera, Is.True);
             _combat.InvalidateFieldExecutions(); manager.SampleActionCamera(token, 54);
@@ -543,13 +538,16 @@ public class MainDimensionSlashTests
         Assert.That(mask.slashFieldSettings.fullScreenSlash, Is.True);
         Assert.That(mask.slashFieldSettings.foregroundFraction, Is.EqualTo(1f));
         Assert.That(step.animationClip.name, Is.EqualTo("main_dimension_slash_actor"));
-        Assert.That(Resolve(held: true), Is.EqualTo(execution.actionId));
+        // This fixture has no energy-owning team; test held selection independently of AE.
+        execution.energyCost = 0f;
+        Assert.That(Resolve(held: true, category: AttackCategory.Ultimate), Is.EqualTo(execution.actionId));
     }
 
     [Test]
     public void HeldUltimateFromAttackPreservesGestureAndDoesNotSpendCachedCuts()
     {
         Level(4);
+        _table.ultimateActions.Single(a => a.actionId == ExecutionBreakdownAuthoring.ActionId).energyCost = 0f;
         var fsm = _owner.AddComponent<PlayerStateMachine>(); fsm.playerCharacter = _player; _player.StateMachine = fsm;
         fsm.showCombatLogs = fsm.showFsmLogs = fsm.showFrameDataLogs = false;
         typeof(PlayerStateMachine).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(fsm, null);
@@ -566,25 +564,17 @@ public class MainDimensionSlashTests
         Assert.That(_passive.RuntimeState.GetCounter(MainDimensionSlashAuthoring.CountId), Is.Zero);
     }
 
-    [TestCase(ActionPhase.Startup)]
-    [TestCase(ActionPhase.Active)]
-    [TestCase(ActionPhase.Recovery)]
-    [TestCase(ActionPhase.Cancel)]
-    public void JudgmentCutRejectsUltimateInputInEveryPhase(ActionPhase phase)
+    [TestCase(ActionPhase.Startup, false)]
+    [TestCase(ActionPhase.Active, false)]
+    [TestCase(ActionPhase.Recovery, true)]
+    [TestCase(ActionPhase.Cancel, true)]
+    public void JudgmentCutUsesUltimatePolicyWhileRemainingOnSkillInput(ActionPhase phase, bool allowed)
     {
-        Level(4); for (int i = 0; i < 5; i++) Cut();
-        var fsm = _owner.AddComponent<PlayerStateMachine>(); fsm.playerCharacter = _player; _player.StateMachine = fsm;
-        typeof(PlayerStateMachine).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(fsm, null);
-        _combat.passiveController = _passive; _owner.SetActive(true); _player.InitializeHP();
-        var ultimate = new UltimateProbe(_player, fsm);
-        fsm.ChangeState(ultimate); ultimate.OnUltimateInput(); ultimate.Phase(phase);
-        var execution = _combat.CurrentExecution;
-        // Even a newly opened ready window must respect this action's gate.
-        _passive.RuntimeState.SetTag(MainDimensionSlashAuthoring.ReadyTag, 5f);
-        fsm.RouteUltimateInput(held: true);
-        fsm.RouteUltimateInput();
-        Assert.That(_combat.CurrentExecution, Is.SameAs(execution));
-        Assert.That(_combat.CurrentActionId, Is.EqualTo(MainDimensionSlashAuthoring.ActionId));
+        Assert.That((Slash.GetTypeInterruptPolicy().GetAllowedFor(phase) & ActionCategory.Ultimate) != 0, Is.EqualTo(allowed));
+        Assert.That(_table.ultimateActions.Any(a => a.actionId == MainDimensionSlashAuthoring.ActionId), Is.False);
+        Assert.That(Slash.Category, Is.EqualTo(AttackCategory.Skill));
+        Assert.That(Slash.EffectiveActionType, Is.EqualTo(CombatActionType.Ultimate));
+        Assert.That(Slash, Is.Not.InstanceOf<UltimateAction>());
     }
 
     [Test]

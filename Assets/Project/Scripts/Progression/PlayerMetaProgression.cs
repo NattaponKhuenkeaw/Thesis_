@@ -79,7 +79,7 @@ namespace Project.Progression
     }
 
     [CreateAssetMenu(fileName = "New Player Meta Progression", menuName = "Progression/Player Meta Progression", order = 20)]
-    public class PlayerMetaProgression : ScriptableObject
+    public partial class PlayerMetaProgression : ScriptableObject
     {
         private sealed class UnlockedPotentialCacheEntry
         {
@@ -411,6 +411,9 @@ namespace Project.Progression
 
         public int GetPotentialLevel(string characterId, PotentialTrack track)
         {
+            if (trainingPotentials != null && characterId != null
+                && trainingPotentials.TryGetValue(characterId, out var training))
+                return training.GetLevel(track);
             CharacterPotentialProgress progress = FindPotentialProgress(characterId, createIfMissing: false);
             return progress != null ? progress.GetLevel(track) : 0;
         }
@@ -1034,6 +1037,7 @@ namespace Project.Progression
 
         private bool ShouldUsePersistentStorage()
         {
+            if (SuppressTrainingPersistence) return false;
             if (!Application.isPlaying)
             {
                 return false;

@@ -95,11 +95,14 @@ public class ShadowMeterTests
     [TestCase(AttackCategory.Normal, "Attack3", 4)]
     [TestCase(AttackCategory.Normal, "Attack6", 6)]
     [TestCase(AttackCategory.Skill, "Skill", 8)]
-    [TestCase(AttackCategory.Ultimate, "Ult", 10)]
-    [TestCase(AttackCategory.Normal, "DimensionCut", 0)]
+    [TestCase(AttackCategory.Ultimate, "Ult", 0)]
+    [TestCase(AttackCategory.Normal, "DimensionCut", 1)]
     public void HitGainComesFromAuthoredRules(AttackCategory category, string step, int expected)
     {
-        passive.NotifyHitDealt(category, step == "DimensionCut" ? "Dimension Cut" : "Ground", new AttackStepData { stepName = step }, null);
+        string actionId = step == "DimensionCut" ? "main.dash.dimension_cut"
+            : category == AttackCategory.Skill ? "main.skill.dark_chain"
+            : category == AttackCategory.Ultimate ? "test.unknown_ultimate" : null;
+        passive.NotifyHitDealt(category, actionId, "Ground", new AttackStepData { stepName = step }, null, ElementType.None, false, 1f, false);
         Assert.That(passive.RuntimeState.GetCounter("main.shadow"), Is.EqualTo(expected));
     }
 
@@ -107,7 +110,7 @@ public class ShadowMeterTests
     public void MeterCapsWithoutBankingOverflowAndSpendsWholeBox()
     {
         for (int i = 0; i < 20; i++)
-            passive.NotifyHitDealt(AttackCategory.Normal, "Ground", new AttackStepData { stepName = "Attack3" }, null);
+            passive.NotifyHitDealt(AttackCategory.Normal, null, "Ground", new AttackStepData { stepName = "Attack3" }, null, ElementType.None, false, 1f, false);
         Assert.That(passive.RuntimeState.GetCounter("main.shadow"), Is.EqualTo(40));
         Assert.That(passive.RuntimeState.ConsumeCounter("main.shadow", 20), Is.True);
         Assert.That(passive.RuntimeState.GetCounter("main.shadow"), Is.EqualTo(20));
@@ -192,17 +195,17 @@ public class ShadowMeterTests
             "Assets/Project/Character/Hero/test_0_Main/" + asset + ".asset");
         RuntimeAreaEffectApplication application = area.areaEffects.Single();
         Assert.That(application.requiredNodeId, Is.EqualTo("main.passive.lv4"));
-        passive.NotifyHitDealt(AttackCategory.Normal, "Ground", new AttackStepData { stepName = "Attack3" }, null);
+        passive.NotifyHitDealt(AttackCategory.Normal, null, "Ground", new AttackStepData { stepName = "Attack3" }, null, ElementType.None, false, 1f, false);
         Assert.That(passive.RuntimeState.GetCounter("main.shadow"), Is.EqualTo(4));
         inventory.ApplyRuntimeEffect(character, application.recipe, character, character.stats);
-        passive.NotifyHitDealt(AttackCategory.Normal, "Ground", new AttackStepData { stepName = "Attack3" }, null);
+        passive.NotifyHitDealt(AttackCategory.Normal, null, "Ground", new AttackStepData { stepName = "Attack3" }, null, ElementType.None, false, 1f, false);
         Assert.That(passive.RuntimeState.GetCounter("main.shadow"), Is.EqualTo(12));
         passive.RuntimeState.SetCounter("main.shadow", 20);
         passive.NotifyAfterDash();
         Assert.That(passive.RuntimeState.GetCounter("main.shadow"), Is.Zero);
         Assert.That(passive.RuntimeState.GetCounter("main.shadow.cached_cuts"), Is.EqualTo(1));
         inventory.TickRuntimeEffects(0.31f);
-        passive.NotifyHitDealt(AttackCategory.Normal, "Ground", new AttackStepData { stepName = "Attack3" }, null);
+        passive.NotifyHitDealt(AttackCategory.Normal, null, "Ground", new AttackStepData { stepName = "Attack3" }, null, ElementType.None, false, 1f, false);
         Assert.That(passive.RuntimeState.GetCounter("main.shadow"), Is.EqualTo(4));
     }
 

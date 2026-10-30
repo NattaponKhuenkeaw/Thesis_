@@ -23,6 +23,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
     private string sourceActionName;
     private GameObject visualClone;
     private AttackCategory attackCategory;
+    private CombatActionType presentationActionType;
 
     private HitBoxDamage cloneHitboxDamage;
     private Collider2D cloneCollider;
@@ -196,6 +197,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
         additionalDamageEffects = resolvedAdditionalDamageEffects
             ?? System.Array.Empty<AdditionalDamageEffectDefinition>();
         sourceCombat = resolvedSourceCombat;
+        presentationActionType = resolvedSourceCombat?.CurrentExecution?.actionType ?? CombatActionType.FromInput;
         sourceCharacter = resolvedSourceCharacter;
         sourceActionId = resolvedSourceActionId;
         sourceActionName = resolvedSourceActionName;
@@ -685,7 +687,8 @@ public class PlayerTeamSwitchState : MonoBehaviour
             additionalDamageEffects,
             sourceCombat,
             sourceCharacter,
-            auraEnergyRewardClaim);
+            auraEnergyRewardClaim,
+            presentationType: presentationActionType);
     }
 
     private static void IgnoreCollisionsWithPlayer(GameObject playerGo, List<Collider2D> cloneCols)

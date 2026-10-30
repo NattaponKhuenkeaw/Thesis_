@@ -169,9 +169,16 @@ public sealed class QteTeamSwapController : MonoBehaviour
         CharacterObject incoming = _team.GetCharacterAtIndex(index);
         if (!incoming.qteSwap.TryResolveIntro(incoming.actionResolverTable, out CombatAction action, out AttackStepData step)) return false;
         PlayerCharacter player = _team.playerCharacter;
-        EnemyController target = ResolveTarget(action);
-        if (target == null || player.Movement == null) return false;
-        QteEntryPlacement placement;
+        if (player.Movement == null
+            || !TryResolvePreparedTarget(incoming, action, out EnemyController target, out QteEntryPlacement placement)) return false;
+        entry = new QtePreparedEntry(action, step, target, incoming.qteSwap.entryMode, placement);
+        return true;
+    }
+
+    private bool TryPlaceForTarget(CharacterObject incoming, EnemyController target, out QteEntryPlacement placement)
+    {
+        placement = default;
+        PlayerCharacter player = _team.playerCharacter;
         if (incoming.qteSwap.entryMode == QteEntryMode.LightningPlunge)
         {
             QtePlungeSettings plunge = incoming.qteSwap.plunge;
@@ -186,7 +193,6 @@ public sealed class QteTeamSwapController : MonoBehaviour
             placement = new QteEntryPlacement(position, position, position, Vector2.up,
                 target.transform.position, null, player.Movement.FacingDirection, facing);
         }
-        entry = new QtePreparedEntry(action, step, target, incoming.qteSwap.entryMode, placement);
         return true;
     }
 
@@ -201,17 +207,24 @@ public sealed class QteTeamSwapController : MonoBehaviour
             GameFreezeManager.Instance?.PlaySlowMotion(introTimeScale, introSlowMotionSeconds);
     }
 
-    private EnemyController ResolveTarget(CombatAction action)
+    private bool TryResolvePreparedTarget(CharacterObject incoming, CombatAction action,
+        out EnemyController target, out QteEntryPlacement placement)
     {
+        target = null;
+        placement = default;
         PlayerCharacter player = _team.playerCharacter;
         float radius = action.GetTargetSearchRadius();
-        if (IsValidTarget(_target, player.transform.position, radius)) return _target;
+        if (IsValidTarget(_target, player.transform.position, radius)
+            && TryPlaceForTarget(incoming, _target, out placement))
+        {
+            target = _target;
+            return true;
+        }
         // This query also drives portrait feedback, so avoid the allocating combat convenience query.
         var filter = new ContactFilter2D();
         filter.SetLayerMask(player.Combat.enemyLayerMask);
         filter.useTriggers = true;
         int count = Physics2D.OverlapCircle(player.transform.position, radius, filter, _targetHits);
-        EnemyController nearest = null;
         float bestScore = float.PositiveInfinity;
         for (int i = 0; i < count; i++)
         {
@@ -221,10 +234,13 @@ public sealed class QteTeamSwapController : MonoBehaviour
             float score = delta.sqrMagnitude;
             if (delta.x * player.Movement.FacingDirection < 0f) score += radius * radius;
             if (score >= bestScore) continue;
+            // A nearer enemy with no safe entry must not hide another usable QTE target.
+            if (!TryPlaceForTarget(incoming, candidate, out QteEntryPlacement candidatePlacement)) continue;
             bestScore = score;
-            nearest = candidate;
+            target = candidate;
+            placement = candidatePlacement;
         }
-        return nearest;
+        return target != null;
     }
 
     private bool TryPlace(CharacterObject incoming, out Vector2 position)

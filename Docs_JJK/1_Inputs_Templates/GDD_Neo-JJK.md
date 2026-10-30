@@ -72,6 +72,8 @@ This Design aim for Casual Game with Low Floor. Low Ceiling. High Impact in Flas
 
 Neo-JJK should prioritize readable silhouettes, large hit VFX, strong attack shapes, and simple enemy tells. Character animation can be short and economical as long as the VFX sells the hit.
 
+MAX CANCEL uses the GNF TTF pixel font: ease-out slide/fade from the left, an expanding white text aura, continuous slow rightward drift, then an ease-out slide/fade to the right. Already spawned action VFX retain their authored visual lifetimes through action/step interruption and team/QTE swaps. Actor hiding and action controls release at the transition; visual tails do not extend damage or execute cancelled action events. An interrupted QTE fall fades existing visuals without inventing ground contact.
+
 Avoid animation requirements that demand precise martial-arts readability, frame-perfect cancel points, or long hand-authored combo strings.
 
 ### Combat Presentation Rules
@@ -114,7 +116,7 @@ Sound should make combat easy to read:
 
 ### Input Rules
 
-1. **Action Buffer**: Attack, Skill, Ultimate, Dash, and Jump inputs each use a short **0.15-second** buffer. A buffered action is consumed only when the current state authorizes it; consuming an action clears the other pending buffered actions.
+1. **Action Buffer**: Attack, Skill, Ultimate, Dash, and Jump inputs each use a short **0.15-second** buffer. A charged hold Ultimate stays queued while its button remains down, so it can execute at the next legal cancel boundary. Releasing it starts the normal short buffer; input invalidation clears it. Each physical press is consumed once. A buffered action is consumed only when the current state authorizes it; consuming an action clears the other pending buffered actions.
 2. **Jump Priority**: If Jump and an attack/Skill are pressed together while grounded, Jump resolves first so the following action can use its air context. There is no global type-priority list beyond this safeguard and the state/action cancel rules.
 3. **Team Swap**: Team slots 1–3 use a separate **0.35-second** buffer. A swap is valid only from grounded idle/move, during recovery, or within the final two authored frames before recovery begins. Switching clears pending inputs and starts the team cooldown; the current `Player.prefab` is tuned to **0.7 seconds**.
 
@@ -883,7 +885,7 @@ Assets/Project/Scripts/
 
 | Scene / Role | Status | Purpose |
 |-------|--------|---------|
-| `Test_Playground` | **Implemented prototype** | Combat/training room with entrance sealing, locked exit, unlock cue, team combat, and damage-contribution HUD. |
+| `Test_Playground` | **Implemented prototype** | Training room accessible from MainMenu, with passive dummy, dedicated wider camera, temporary level/potential configuration and optional damage-contribution HUD. |
 | `Test_Shop` | **Implemented prototype** | Walkable Soul Shop/Team Builder scene with a locked exit exposed through the shared transition contract. |
 | `MainMenu` | **Target** | Title screen, settings, save slot. |
 | `Lobby` | **Target** | Walkable hub for run preparation and long-term progression. |
@@ -892,6 +894,15 @@ Assets/Project/Scripts/
 | `Level` | **Target; admin trigger prototype implemented** | Safe room that presents a +1/+2/+3 Run Global Level event through a fixed-camera background-screen sequence. |
 | `BossRoom` | **Target** | Pattern-based boss fight. |
 | `Result` | **Target** | Run win/fail summary and return to Lobby. |
+
+### Training Room
+
+- MainMenu's Training button loads `Test_Playground` without choosing or overwriting a save slot.
+- Training Configuration changes the shared Team Level and each deployed character's Skill, Ultimate and Passive potential tiers for this practice session only. Apply refreshes runtime stats/effects and resets the damage sample; Cancel discards edits.
+- The passive dummy retains damage, physics, hit reactions and combat feedback while its Behavior Graph AI stays disabled across spawn/recovery.
+- `CinemachineCamera_Training` supplies the wider authored base view and resumes after temporary action/ultimate cameras.
+- Stats windows start hidden. The Stats button shows/hides enemy status, team damage contribution and DPS together; damage recording continues while hidden. Collider drawings remain off. Reset Damage clears the current sample.
+- Returning through Pause -> MainMenu, or interrupting the scene, discards Training overrides without writing practice progression to saved data.
 
 ### Implemented Room Boundary Contract
 

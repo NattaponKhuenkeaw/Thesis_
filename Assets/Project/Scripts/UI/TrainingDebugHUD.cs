@@ -15,6 +15,21 @@ namespace CombatCore
     /// </summary>
     public class TrainingDebugHUD : MonoBehaviour
     {
+        private static TrainingDebugHUD instance;
+        private void Awake() => instance = this;
+
+        public static bool IsPointerOverHud(Vector2 screenPosition)
+        {
+            if (instance == null || !TrainingDebugManager.ShowStatsHud) return false;
+            if (Project.UI.Training.TrainingConfigurationPanel.Instance != null
+                && Project.UI.Training.TrainingConfigurationPanel.Instance.IsOpen) return false;
+            Vector2 point = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
+            var toolbar = new Rect((Screen.width - 380f) * .5f - 8f, 4f, 396f, 28f);
+            return toolbar.Contains(point) || (instance.rectsInitialized
+                && ((instance.showEnemyStatus && instance.rectEnemyStatus.Contains(point))
+                    || (instance.showTeamDamage && instance.rectTeamDamage.Contains(point))
+                    || (instance.showDPSShowcase && instance.rectDPSShowcase.Contains(point))));
+        }
         // =====================================================================
         // Window IDs (must be unique across the application)
         // =====================================================================
@@ -79,6 +94,7 @@ namespace CombatCore
 
         private void OnDestroy()
         {
+            if (instance == this) instance = null;
             DestroyTextures();
         }
 
@@ -88,7 +104,10 @@ namespace CombatCore
 
         private void OnGUI()
         {
-            if (!TrainingDebugManager.IsActive) return;
+            if (!TrainingDebugManager.ShowStatsHud) return;
+            if (Project.UI.Training.TrainingConfigurationPanel.Instance != null
+                && Project.UI.Training.TrainingConfigurationPanel.Instance.IsOpen) return;
+            if (Project.UI.PauseMenuController.IsOpen) return;
 
             if (!stylesInitialized) InitializeStyles();
             if (!rectsInitialized) InitializeRects();
@@ -432,6 +451,18 @@ namespace CombatCore
         {
             float sw = Screen.width;
             float margin = 40f; // below toolbar
+
+            if (TrainingDebugManager.IsTrainingPresentation)
+            {
+                // Leave the currency, configuration controls and team portraits unobstructed.
+                float width = Mathf.Min(300f, (sw - 80f) / 3.2f);
+                float top = Mathf.Max(100f, Screen.height * .13f);
+                rectEnemyStatus = new Rect(20f, top, width, 200f);
+                rectTeamDamage = new Rect(40f + width, top, width * 1.2f, 180f);
+                rectDPSShowcase = new Rect(60f + width * 2.2f, top, width, 200f);
+                rectsInitialized = true;
+                return;
+            }
 
             // Default layout: 3 panels arranged in the top-right area
             rectEnemyStatus = new Rect(sw - 320f, margin, 300f, 200f);

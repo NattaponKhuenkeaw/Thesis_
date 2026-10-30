@@ -1,0 +1,43 @@
+{
+  "run": "held-ultimate-buffer",
+  "timeUtc": "2026-10-29 16:02:31Z",
+  "result": "Passed",
+  "total": 140,
+  "passed": 140,
+  "failed": 0,
+  "holdCases": [
+    {
+      "name": "MainMeterMaxCancelTests.ConsumingAnotherInputClearsHoldWithoutRecreatingItWhileButtonRemainsDown",
+      "result": "Passed"
+    },
+    {
+      "name": "MainMeterMaxCancelTests.InvalidGestureClearsSustainedHold(\"focus\")",
+      "result": "Passed"
+    },
+    {
+      "name": "MainMeterMaxCancelTests.InvalidGestureClearsSustainedHold(\"disable\")",
+      "result": "Passed"
+    },
+    {
+      "name": "MainMeterMaxCancelTests.InvalidGestureClearsSustainedHold(\"character\")",
+      "result": "Passed"
+    },
+    {
+      "name": "MainMeterMaxCancelTests.InvalidGestureClearsSustainedHold(\"actionMap\")",
+      "result": "Passed"
+    },
+    {
+      "name": "MainMeterMaxCancelTests.PhysicalHoldChargedDuringActiveSurvivesBufferExpiryAndMaxCancelsOnceInRecovery",
+      "result": "Passed"
+    },
+    {
+      "name": "MainMeterMaxCancelTests.ReleasedChargedHoldKeepsGestureOnlyForNormalBufferDuration",
+      "result": "Passed"
+    },
+    {
+      "name": "MainMeterMaxCancelTests.ShortReleaseBuffersTapWithoutSustainingIt",
+      "result": "Passed"
+    }
+  ],
+  "broaderSuite": "Not rerun for this scoped follow-up. Previous broader run has 7 unresolved failures documented in the main validation report."
+}

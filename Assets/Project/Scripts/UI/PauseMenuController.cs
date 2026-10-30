@@ -218,6 +218,11 @@ namespace Project.UI
             returnFocus = null;
         }
 
+        public void ReturnFromTraining()
+        {
+            if (Project.Training.TrainingSession.IsTrainingContext) ReturnToTitle();
+        }
+
         private void ReturnToTitle()
         {
             if (isLeaving)
@@ -229,6 +234,15 @@ namespace Project.UI
             isPaused = false;
             HideAll();
             ForceGameplayResume();
+
+            if (Project.Training.TrainingSession.IsTrainingContext)
+            {
+                Project.Training.TrainingSession.Instance?.EndSession();
+                GameSettings.Save();
+                TeardownRunSession();
+                SceneManager.LoadScene(mainMenuSceneName);
+                return;
+            }
 
             PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaResourcePath);
             PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
@@ -256,7 +270,8 @@ namespace Project.UI
 
         private bool CanPause()
         {
-            if (isPaused || isLeaving)
+            if (isPaused || isLeaving || (Project.UI.Training.TrainingConfigurationPanel.Instance != null
+                && Project.UI.Training.TrainingConfigurationPanel.Instance.IsOpen))
             {
                 return false;
             }

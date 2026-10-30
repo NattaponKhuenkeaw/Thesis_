@@ -977,6 +977,11 @@ public class CharacterPassiveController : MonoBehaviour
     {
         PassiveEventContext context = BuildContext(category, actionId, actionName, stepData, null);
         context.actionStartExecution = execution;
+        QteSwapDefinition entry = playerCharacter?.characterObject?.qteSwap;
+        if (execution != null && execution.IsOnField && !execution.isQteIntro
+            && !string.IsNullOrEmpty(entry?.entryGrantConsumeActionId)
+            && string.Equals(entry.entryGrantConsumeActionId, actionId, StringComparison.Ordinal))
+            runtimeState.RemoveTag(entry.entryGrantTag);
         ApplyTriggeredEffects(PassiveTriggerType.OnActionStarted, context);
 
         for (int i = 0; i < activeHooks.Count; i++)
@@ -1040,6 +1045,17 @@ public class CharacterPassiveController : MonoBehaviour
         context.damageDealt = damageDealt;
         context.killedEnemy = killedEnemy;
         context.enemyMaxHp = enemy != null ? enemy.maxHP : 0f;
+
+        CombatMeterDefinition meter = CombatMeter;
+        if (damageDealt > 0f && meter != null && meter.IsConfigured)
+        {
+            int gain = playerCharacter?.characterObject?.combatRules?.GetMeterGain(category, actionId, actionName, stepData) ?? 0;
+            if (gain > 0)
+            {
+                runtimeState.AddCounter(meter.counterId, ModifyCounterGain(meter.counterId, gain));
+                ClampCombatMeter();
+            }
+        }
 
         ApplyTriggeredEffects(PassiveTriggerType.OnHitDealt, context);
         if (isCriticalHit)

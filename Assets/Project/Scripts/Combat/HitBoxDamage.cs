@@ -32,6 +32,10 @@ public class HitBoxDamage : MonoBehaviour
     private CharacterObject rewardCharacter;
     private AuraEnergyRewardClaim auraEnergyRewardClaim;
     private CombatExecutionContext execution;
+    private CombatActionType presentationActionType;
+    public bool UsesUltimateHitFlash => presentationActionType != CombatActionType.FromInput
+        ? presentationActionType == CombatActionType.Ultimate
+        : execution?.UsesUltimateHitFlash(sourceCategory) ?? sourceCategory == AttackCategory.Ultimate;
     private DamageRequest currentDamageRequest;
     private DamageResult currentDamageResult;
 
@@ -135,7 +139,8 @@ public class HitBoxDamage : MonoBehaviour
         PlayerCombat sourceCombat,
         CharacterObject sourceCharacter,
         AuraEnergyRewardClaim actionRewardClaim,
-        CombatExecutionContext sourceExecution = null)
+        CombatExecutionContext sourceExecution = null,
+        CombatActionType presentationType = CombatActionType.FromInput)
     {
         currentAttackerStats = attackerStats;
         currentSourceAttack = Mathf.Max(0f, sourceAttack);
@@ -146,6 +151,7 @@ public class HitBoxDamage : MonoBehaviour
         rewardCharacter = sourceCharacter;
         auraEnergyRewardClaim = actionRewardClaim;
         execution = sourceExecution;
+        presentationActionType = presentationType;
         currentIsCrit = false;
         currentResolvedDamage = currentDamage;
     }
@@ -160,6 +166,7 @@ public class HitBoxDamage : MonoBehaviour
         rewardCharacter = null;
         auraEnergyRewardClaim = null;
         execution = null;
+        presentationActionType = CombatActionType.FromInput;
     }
 
     public bool IsConfiguredFor(NormalHitbox hitbox) => ReferenceEquals(currentNormalHitbox, hitbox);
@@ -290,7 +297,7 @@ public class HitBoxDamage : MonoBehaviour
         }
 
         // KOF-style: flash the background white on every Ultimate hit
-        if (sourceCategory == AttackCategory.Ultimate && UltimateFlashOverlay.Instance != null)
+        if (UsesUltimateHitFlash && UltimateFlashOverlay.Instance != null)
         {
             UltimateFlashOverlay.Instance.PlayHitFlash();
         }

@@ -689,6 +689,19 @@ namespace CombatEditor.UI
                     MarkDirtyAndRebuild();
                 });
 
+                AddObjectField(body, "Action Icon", action.icon, value => {
+                    RecordUndo("Edit Action Icon");
+                    action.icon = value as Sprite;
+                    MarkDirty();
+                });
+
+                AddEnumField(body, "Action Type", action.actionType, value => {
+                    RecordUndo("Edit Action Type");
+                    action.actionType = (CombatActionType)value;
+                    MarkDirtyAndRebuild();
+                });
+                body.Add(new HelpBox("Action Type controls interrupt policy and Ultimate hit flashes. Input, AE cost, cooldown and damage/passive category keep their existing setup.", HelpBoxMessageType.Info));
+
                 AddTextField(body, "Resource Counter", action.resourceCounterId, value => {
                     RecordUndo("Edit Action Resource"); action.resourceCounterId = value; MarkDirty();
                 });

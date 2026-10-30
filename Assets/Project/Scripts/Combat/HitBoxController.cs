@@ -125,7 +125,7 @@ public class HitBoxController : MonoBehaviour
 
     void Update()
     {
-        bool isActive = CombatCore.TrainingDebugManager.IsActive;
+        bool isActive = CombatCore.TrainingDebugManager.DrawColliders;
         bool hasCollider = hitboxCollider != null && hitboxCollider.enabled;
         bool showFill = isActive && hasCollider && anchorMode == HitboxAnchorMode.PlayerAttached;
 

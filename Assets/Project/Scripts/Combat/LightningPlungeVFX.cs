@@ -98,6 +98,12 @@ public sealed class LightningPlungeVFX : MonoBehaviour
             }
             renderer.enabled = _count > 0;
         }
+
+        public void Fade(float ratio)
+        {
+            for (int i = 0; i < _count; i++) _colors[i].a *= ratio;
+            Upload();
+        }
     }
 
     private GeometryLayer _core, _envelope, _shards, _cracks, _wind;
@@ -119,6 +125,8 @@ public sealed class LightningPlungeVFX : MonoBehaviour
     private bool _finishingTail;
     private int _tailImpactFrame;
     private PlayerCombat _tailClockOwner;
+    private bool _tailBeforeContact, _disposeAfterTail;
+    private float _tailElapsed, _tailAlpha;
     private readonly float[] _noise = new float[256];
     private static int _seedSequence;
     public bool IsPlaying { get; private set; }
@@ -209,19 +217,43 @@ public sealed class LightningPlungeVFX : MonoBehaviour
             _settings.impactHoldFrames + _settings.exitDelayFrames + _settings.exitFrames);
     }
 
-    public void FinishTail(int impactFrame, PlayerCombat clockOwner)
+    public void FinishTail(int impactFrame, PlayerCombat clockOwner, bool hasContact = true)
     {
         if (!IsPlaying) return;
         _tailImpactFrame = impactFrame;
         _tailClockOwner = clockOwner;
         _finishingTail = true;
+        _tailBeforeContact = !hasContact;
+        _tailElapsed = 0f; _tailAlpha = 1f; _disposeAfterTail = true;
+        transform.SetParent(null, true);
+        _cutImpact?.ReleaseToLifetime();
     }
 
     private void LateUpdate()
     {
-        if (!_finishingTail || !IsPlaying || Time.timeScale <= 0f || _tailClockOwner?.HasActiveHitstop == true) return;
-        Sample(SampledFrame + Time.deltaTime * FrameDataConstants.LOGIC_FPS,
-            _tailImpactFrame, PresentationEndFrame(_tailImpactFrame));
+        if (Time.timeScale > 0f) AdvanceTail(Time.deltaTime);
+    }
+
+    public void AdvanceTail(float deltaTime)
+    {
+        if (!_finishingTail || !IsPlaying || _tailClockOwner?.HasActiveHitstop == true) return;
+        float frames = Mathf.Max(0f, deltaTime) * FrameDataConstants.LOGIC_FPS;
+        if (_tailBeforeContact)
+        {
+            // Preserve only visuals already emitted; cancelling a fall must not invent an impact.
+            _tailElapsed += frames;
+            float alpha = 1f - Mathf.Clamp01(_tailElapsed / Mathf.Max(1, _settings.exitFrames));
+            float ratio = _tailAlpha > 0f ? alpha / _tailAlpha : 0f;
+            foreach (var layer in _layers) layer.Fade(ratio);
+            _tailAlpha = alpha;
+            AdvanceParticles(SampledFrame, SampledFrame + frames);
+            SampledFrame += frames;
+            bool particlesRemain = false;
+            foreach (var particles in _particles) particlesRemain |= particles.particleCount > 0;
+            if (alpha <= 0f && !particlesRemain) Stop();
+        }
+        else Sample(SampledFrame + frames, _tailImpactFrame, PresentationEndFrame(_tailImpactFrame));
+        if (!IsPlaying && _disposeAfterTail && Application.isPlaying) Destroy(gameObject);
     }
 
     private void Anchor()

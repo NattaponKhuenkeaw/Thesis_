@@ -433,6 +433,9 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     }
 
     public bool IsActionAvailable(CombatAction action)
+        => IsActionAvailable(action, null);
+
+    internal bool IsActionAvailable(CombatAction action, CombatAction sourceCooldownException)
     {
         if (action == null)
         {
@@ -449,7 +452,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
         if (action is SkillAction skillAction
             && skillAction.cooldown > 0f
-            && IsAbilitySlotOnCooldown(action.Category))
+            && IsAbilitySlotOnCooldown(action.Category, sourceCooldownException))
         {
             return false;
         }
@@ -470,13 +473,13 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         return true;
     }
 
-    public bool TryCommitActionCounterCost(CombatAction action)
+    public bool TryCommitActionCounterCost(CombatAction action, ICombatActionAvailabilityProvider availability = null)
     {
-        if (action == null || !IsActionAvailable(action)) return false;
+        if (action == null || !(availability ?? this).IsActionAvailable(action)) return false;
         return action.resourceCost <= 0 || PassiveController.RuntimeState.ConsumeCounter(action.resourceCounterId, action.resourceCost);
     }
 
-    private bool IsAbilitySlotOnCooldown(AttackCategory category)
+    private bool IsAbilitySlotOnCooldown(AttackCategory category, CombatAction sourceCooldownException = null)
     {
         if (Combat == null || characterObject == null || characterObject.actionResolverTable == null)
         {
@@ -499,6 +502,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         for (int i = 0; i < actions.Count; i++)
         {
             SkillAction slotAction = actions[i];
+            if (slotAction == sourceCooldownException) continue;
             if (slotAction == null || slotAction.cooldown <= 0f)
             {
                 continue;

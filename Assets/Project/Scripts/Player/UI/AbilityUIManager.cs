@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Drives Skill, Ultimate, Dash cooldowns and committed normal-attack feedback.
+/// Displays resolver action icons/windows, cooldowns and committed normal-attack feedback.
 ///
 /// Per-slot elements (Skill and Ultimate each have their own set):
 ///   CooldownOverlay  — fillAmount 1→0 while cooling down;
 ///                      on expiry: rushes 0→1 then deactivates ("ready rush").
 ///   Icon             — alpha 1.0 when ready, 0.39 (≈100/255) when not ready.
 ///   FollowUpOverlay  — fillAmount 1→0 during an active follow-up window.
-///                      Shown whenever a window is active, no ground-condition gate.
+///                      Uses the selected action's context and availability.
 ///   CountdownText    — counts down remaining cooldown seconds.
 ///
 /// Ultimate only:
@@ -52,6 +52,19 @@ public class AbilityUIManager : MonoBehaviour
 
     [Header("Normal Attack Slot")]
     [SerializeField] private RectTransform normalAttackFeedbackRoot;
+    [SerializeField] private Image normalAttackIcon;
+    [SerializeField] private Image normalAttackFollowUpOverlay;
+
+    private readonly Dictionary<Image, Sprite> _defaultIcons = new();
+    private struct ActionDisplayState
+    {
+        public CombatAction action;
+        public bool available;
+    }
+    private ActionDisplayState _normalDisplay;
+    private ActionDisplayState _skillDisplay;
+    private ActionDisplayState _ultimateDisplay;
+    private bool _normalFollowUpWasActive;
 
     // ─── Ready Rush ──────────────────────────────────────────────────────────
     [Header("Ready Rush")]
@@ -143,10 +156,12 @@ public class AbilityUIManager : MonoBehaviour
         if (Instance == null) Instance = this;
         CacheReferences();
         feedbackDriver = UIFeedbackDriver.GetOrAdd(gameObject);
+        CacheDefaultIcons();
         ResetSlot(skillCooldownOverlay, skillCountdownText, skillFollowUpOverlay, skillIcon);
         ResetSlot(ultCooldownOverlay, ultCountdownText, ultFollowUpOverlay, ultIcon);
         SetOverlayFill(ultAEOverlay, 0f, active: false);
         ResetSlot(dashCooldownOverlay, dashCountdownText, null, dashIcon);
+        SetOverlayFill(normalAttackFollowUpOverlay, 0f, false);
     }
 
     private void Start()
@@ -321,9 +336,26 @@ public class AbilityUIManager : MonoBehaviour
         string characterKey = GetCurrentCharacterKey();
         displayedCharacterKey = characterKey;
 
+        CacheDefaultIcons();
+        _normalDisplay = ResolveActionDisplay(AttackCategory.Normal);
+        _skillDisplay = ResolveActionDisplay(AttackCategory.Skill);
+        _ultimateDisplay = ResolveActionDisplay(AttackCategory.Ultimate);
+        UpdateActionIcon(normalAttackIcon, _normalDisplay.action);
+        UpdateActionIcon(skillIcon, _skillDisplay.action);
+        UpdateActionIcon(ultIcon, _ultimateDisplay.action);
+        // Match the window fill to the picture so a full window cannot obscure it.
+        UpdateActionIcon(normalAttackFollowUpOverlay, _normalDisplay.action);
+        UpdateActionIcon(skillFollowUpOverlay, _skillDisplay.action);
+        UpdateActionIcon(ultFollowUpOverlay, _ultimateDisplay.action);
+        SetIconAlpha(normalAttackIcon, _normalDisplay.available ? AlphaReady : AlphaDimmed);
+        UpdateFollowUpOverlay(AttackCategory.Normal, normalAttackFollowUpOverlay,
+            ref _normalFollowUpWasActive, AbilityType.NormalAttack);
         UpdateSkillUI(characterKey);
         UpdateUltimateUI(characterKey);
         UpdateDashUI();
+        // Cooldown and AE feedback cannot make an unavailable contextual action look ready.
+        if (!_skillDisplay.available) SetIconAlpha(skillIcon, AlphaDimmed);
+        if (!_ultimateDisplay.available) SetIconAlpha(ultIcon, AlphaDimmed);
     }
 
     private void RefreshWithoutReadyFeedback()
@@ -388,7 +420,8 @@ public class AbilityUIManager : MonoBehaviour
         }
 
         // ── Cooldown ────────────────────────────────────────────────────────
-        SkillAction resolvedAction = ResolveDisplayedActionContextFree(AttackCategory.Skill) as SkillAction;
+        SkillAction resolvedAction = (_skillDisplay.action
+            ?? ResolveDisplayedActionContextFree(AttackCategory.Skill)) as SkillAction;
         float remainingCooldown = resolvedAction != null
             && playerCharacter != null
             && playerCharacter.Combat != null
@@ -464,7 +497,8 @@ public class AbilityUIManager : MonoBehaviour
         // ── Resolve ultimate action data ─────────────────────────────────────
         // Use context-free resolution so cooldown display works regardless of
         // whether the player is grounded or airborne.
-        UltimateAction resolvedAction = ResolveDisplayedActionContextFree(AttackCategory.Ultimate) as UltimateAction;
+        UltimateAction resolvedAction = (_ultimateDisplay.action
+            ?? ResolveDisplayedActionContextFree(AttackCategory.Ultimate)) as UltimateAction;
 
         float currentAE        = teamLoader.GetCharacterCurrentAE(currentCharacter);
         float maxAE            = teamLoader.GetCharacterMaxAE(currentCharacter);
@@ -537,8 +571,7 @@ public class AbilityUIManager : MonoBehaviour
     // ─────────────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Shows the follow-up overlay (fill 1→0) whenever a passive availability
-    /// window is active, regardless of ground/air state.
+    /// Shows the follow-up overlay (fill 1→0) for the selected available action.
     /// Fires the ready feedback on the transition into the window.
     /// </summary>
     private void UpdateFollowUpOverlay(
@@ -570,12 +603,42 @@ public class AbilityUIManager : MonoBehaviour
     // Data Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    private CombatAction ResolveDisplayedAction(AttackCategory category)
+    private void CacheDefaultIcons()
     {
-        if (playerCharacter == null
-            || !playerCharacter.TryResolveActionForContext(category, out CombatAction action, out _))
-            return null;
-        return action;
+        CacheDefaultIcon(normalAttackIcon);
+        CacheDefaultIcon(skillIcon);
+        CacheDefaultIcon(ultIcon);
+        CacheDefaultIcon(normalAttackFollowUpOverlay);
+        CacheDefaultIcon(skillFollowUpOverlay);
+        CacheDefaultIcon(ultFollowUpOverlay);
+    }
+
+    private void CacheDefaultIcon(Image icon)
+    {
+        if (icon != null && !_defaultIcons.ContainsKey(icon))
+            _defaultIcons.Add(icon, icon.sprite);
+    }
+
+    private void UpdateActionIcon(Image image, CombatAction action)
+    {
+        if (image == null) return;
+        CacheDefaultIcon(image);
+        image.sprite = action?.icon != null ? action.icon : _defaultIcons[image];
+    }
+
+    private ActionDisplayState ResolveActionDisplay(AttackCategory category)
+    {
+        if (playerCharacter == null) return default;
+        if (playerCharacter.TryResolveActionForContext(category, out CombatAction action, out _,
+                requireAvailability: true))
+            return new ActionDisplayState { action = action, available = true };
+
+        // Keep the contextual picture during a resource/cooldown gate; the resolver
+        // still evaluates conditions and passive windows when availability is omitted.
+        if (playerCharacter.TryResolveActionForContext(category, out action, out _))
+            return new ActionDisplayState { action = action };
+
+        return default;
     }
 
     /// <summary>
@@ -627,13 +690,12 @@ public class AbilityUIManager : MonoBehaviour
     private FollowUpWindowState GetFollowUpWindowState(AttackCategory category)
     {
         FollowUpWindowState state = default;
+        ActionDisplayState display = category == AttackCategory.Normal ? _normalDisplay
+            : category == AttackCategory.Skill ? _skillDisplay : _ultimateDisplay;
+        CombatAction action = display.action;
         if (playerCharacter == null
             || playerCharacter.PassiveController == null
-            || !playerCharacter.TryResolveActionForContext(
-                category,
-                out CombatAction action,
-                out _,
-                requireAvailability: true)
+            || !display.available
             || action == null)
             return state;
 
@@ -815,6 +877,7 @@ public class AbilityUIManager : MonoBehaviour
         skillWasReadyLastFrame             = false;
         skillFollowUpWasActiveLastFrame    = false;
         ultimateFollowUpWasActiveLastFrame = false;
+        _normalFollowUpWasActive           = false;
         skillRush                          = default;
         ultRush                            = default;
         lastObservedUltimateAE             = GetCurrentAuraEnergy();

@@ -25,6 +25,7 @@ public class ShadowActionExecutor : MonoBehaviour
     private LayerMask enemyLayerMask;
     private bool isHitboxActive;
     private bool hasRewardedAura;
+    private CombatActionType presentationActionType;
 
     private readonly Collider2D[] overlapResults = new Collider2D[20];
     private float logicTimeCounter;
@@ -65,7 +66,15 @@ public class ShadowActionExecutor : MonoBehaviour
         out float damageMultiplier,
         out string resolvedActionName,
         out string resolvedActionId)
+        => TryResolveAction(character, desiredActionId, out stepData, out damageMultiplier,
+            out resolvedActionName, out resolvedActionId, out _);
+
+    private static bool TryResolveAction(
+        CharacterObject character, string desiredActionId, out AttackStepData stepData,
+        out float damageMultiplier, out string resolvedActionName, out string resolvedActionId,
+        out CombatActionType presentationType)
     {
+        presentationType = CombatActionType.FromInput;
         stepData = null;
         damageMultiplier = 1f;
         resolvedActionName = desiredActionId;
@@ -104,6 +113,7 @@ public class ShadowActionExecutor : MonoBehaviour
                     damageMultiplier = item.actionDamageMultiplier > 0f ? item.actionDamageMultiplier : 1f;
                     resolvedActionName = item.actionName;
                     resolvedActionId = item.actionId;
+                    presentationType = item.EffectiveActionType;
                     return true;
                 }
             }
@@ -120,6 +130,7 @@ public class ShadowActionExecutor : MonoBehaviour
                 damageMultiplier = fallback.actionDamageMultiplier > 0f ? fallback.actionDamageMultiplier : 1f;
                 resolvedActionName = fallback.actionName;
                 resolvedActionId = fallback.actionId;
+                presentationType = fallback.EffectiveActionType;
                 return true;
             }
         }
@@ -133,6 +144,7 @@ public class ShadowActionExecutor : MonoBehaviour
                 damageMultiplier = fallback.actionDamageMultiplier > 0f ? fallback.actionDamageMultiplier : 1f;
                 resolvedActionName = fallback.actionName;
                 resolvedActionId = fallback.actionId;
+                presentationType = fallback.EffectiveActionType;
                 return true;
             }
         }
@@ -162,7 +174,8 @@ public class ShadowActionExecutor : MonoBehaviour
             out AttackStepData step,
             out float damageMult,
             out string actName,
-            out string actId))
+            out string actId,
+            out CombatActionType presentationType))
         {
             return null;
         }
@@ -179,6 +192,7 @@ public class ShadowActionExecutor : MonoBehaviour
         executorGo.transform.rotation = Quaternion.Euler(0f, shadowFacing == -1 ? 180f : 0f, 0f);
 
         ShadowActionExecutor executor = executorGo.AddComponent<ShadowActionExecutor>();
+        executor.presentationActionType = presentationType;
         IncrementCount(character);
 
         executor.Initialize(
@@ -463,7 +477,8 @@ public class ShadowActionExecutor : MonoBehaviour
                     null,
                     sourceCombat,
                     sourceCharacter,
-                    null);
+                    null,
+                    presentationType: presentationActionType);
 
                 cloneHitboxDamage.ResetActivationState();
                 cloneHitboxDamage.gameObject.SetActive(true);

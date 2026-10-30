@@ -478,6 +478,7 @@ public partial class CameraManager : MonoBehaviour
 
     private void RefreshCombatCameraMode(bool wantsFraming)
     {
+        if (_trainingMode) wantsFraming = true;
         if (!CanSwitchRoomCameras())
         {
             return;
@@ -1281,6 +1282,7 @@ public partial class CameraManager : MonoBehaviour
     // =========================================================
     private bool IsStaticCameraRoom()
     {
+        if (_trainingMode) return false;
         return _zoneStateProvider != null
             && _zoneStateProvider.CurrentRoom != null
             && _zoneStateProvider.CurrentRoom.UseStaticCamera;
@@ -1288,6 +1290,7 @@ public partial class CameraManager : MonoBehaviour
 
     private void SetExploreMode()
     {
+        if (_trainingMode) { _isInCombat = true; SetCombatMode(); return; }
         if (IsStaticCameraRoom())
         {
             SetStaticMode();
@@ -1309,6 +1312,7 @@ public partial class CameraManager : MonoBehaviour
 
     private void SetCombatMode()
     {
+        if (_normalCombatCam != null) _normalCombatCam.Priority = _inactivePriority;
         if (IsStaticCameraRoom())
         {
             SetStaticMode();
@@ -1363,6 +1367,7 @@ public partial class CameraManager : MonoBehaviour
 
     private void UpdateCameraForRoom(RoomData room)
     {
+        if (_trainingMode) { _isInCombat = true; SetCombatMode(); return; }
         if (room != null && room.UseStaticCamera)
         {
             if (_staticCam != null)

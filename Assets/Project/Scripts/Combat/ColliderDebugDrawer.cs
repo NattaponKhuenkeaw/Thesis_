@@ -47,7 +47,7 @@ public class ColliderDebugDrawer : MonoBehaviour
         if (lr == null)
             return;
 
-        bool active = TrainingDebugManager.IsActive && targetCollider != null && targetCollider.enabled;
+        bool active = TrainingDebugManager.DrawColliders && targetCollider != null && targetCollider.enabled;
         lr.enabled = active;
 
         if (active)

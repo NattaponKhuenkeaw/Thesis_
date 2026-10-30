@@ -22,6 +22,9 @@ MonoBehaviour:
   includeInRandomOffers: 0
   zoneMode: 1
   defaultEntranceId: Default
-  useStaticCamera: 0
+  useStaticCamera: 1
+  encounter: {fileID: 0}
+  backgroundMusic: {fileID: 0}
+  musicVolume: 1
   ambience: {fileID: 8300000, guid: 953ebadc922942e59550d761a3656c21, type: 3}
   ambienceVolume: 0.35

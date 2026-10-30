@@ -58,8 +58,13 @@ Filenames for ADR-006/007/011/012 still use older numbers from the pre-merge bra
 | [014](014-prepared-qte-plunge-motion-and-presentation.md) | Prepared QTE Plunge Motion and Presentation | **Accepted** | Combat presentation | User approved Main's prepared physical plunge, reusable VFX and scoped camera architecture |
 | [015](015-action-owned-cut-refraction.md) | Action-Owned Cut Refraction | **Implemented; feel review pending** | Combat presentation | Gated URP distortion band follows the rendered cut with chromatic separation and edge blur |
 | [016](016-camera-animation-control-sequence.md) | Camera Animation Control Sequence | **Accepted; implemented, native verification pending** | Camera authoring | User-approved frame-range Zoom/Move/Hold/Return event, explicit legacy conversion and read-only preview |
+| [018](018-training-session-progression-overrides.md) | Temporary Training Level and Potential Overrides | **Accepted; implemented, feel review pending** | Training | Owner-scoped runtime overrides preserve existing progression/stat authorities; 72 focused checks passed |
 
 ## Phase Mapping
+
+Withdrawn proposal:
+
+- [017: Unified action catalog/input binding](017-action-type-and-input-binding.md) — withdrawn by user; replaced by the scoped Action Type policy/white-flash change.
 
 | GDD Phase | ADRs | Current Status |
 |-----------|------|----------------|

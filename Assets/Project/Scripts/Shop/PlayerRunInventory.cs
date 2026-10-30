@@ -230,7 +230,7 @@ namespace Project.ShopSystem
     }
 
     [CreateAssetMenu(fileName = "New Player Run Inventory", menuName = "Inventory/Player Run Inventory", order = 12)]
-    public class PlayerRunInventory : ScriptableObject
+    public partial class PlayerRunInventory : ScriptableObject
     {
         public readonly struct RuntimeEffectMutationBatch : IDisposable
         {
@@ -376,7 +376,7 @@ namespace Project.ShopSystem
             get
             {
                 EnsureRunData();
-                return _globalLevel;
+                return trainingLevelOverride ?? _globalLevel;
             }
         }
 
@@ -2645,6 +2645,7 @@ namespace Project.ShopSystem
         /// </summary>
         public void SaveBossLobbyCheckpoint()
         {
+            if (SuppressTrainingPersistence) return;
             if (!Application.isPlaying || isApplyingPersistentState)
             {
                 return;
@@ -2719,6 +2720,7 @@ namespace Project.ShopSystem
 
         public void RestoreBossLobbyMeta()
         {
+            if (SuppressTrainingPersistence) return;
             string json = PlayerPrefs.GetString(BossLobbyMetaSaveKey, string.Empty);
             if (string.IsNullOrWhiteSpace(json))
             {
@@ -2738,6 +2740,7 @@ namespace Project.ShopSystem
 
         public void PublishActiveSaveHeader()
         {
+            if (SuppressTrainingPersistence) return;
             if (!Application.isPlaying)
             {
                 return;
@@ -2859,6 +2862,7 @@ namespace Project.ShopSystem
 
         public void ClearBossLobbyCheckpoint()
         {
+            if (SuppressTrainingPersistence) return;
             SaveSlotStore.EnsureMigrated();
             bool changed = false;
             if (PlayerPrefs.HasKey(BossLobbySaveKey))
@@ -4575,6 +4579,7 @@ namespace Project.ShopSystem
 
         private bool ShouldUsePersistentStorage()
         {
+            if (SuppressTrainingPersistence) return false;
             if (!Application.isPlaying)
             {
                 return false;

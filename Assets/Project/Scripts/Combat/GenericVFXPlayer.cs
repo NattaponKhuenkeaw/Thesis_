@@ -16,6 +16,11 @@ namespace Project.Combat
         private Vector3 spawnOrigin; // Absolute world or local origin
         private bool isFlipped;
         private bool flipTrajectoryX;
+        private bool released;
+        private Matrix4x4 releasedSpace;
+        private Quaternion releasedRotation;
+        private Vector3 releasedScale;
+        public uint PlaybackVersion { get; private set; }
 
         private struct RendererSortingInfo
         {
@@ -78,6 +83,8 @@ namespace Project.Combat
 
         public void Play(VFXDefinition def, bool flipX, List<VFXTransformKey> keys = null, float lifespan = -1f, bool fitScreenSize = false, bool adjustLayer = false)
         {
+            unchecked { PlaybackVersion++; }
+            released = false;
             if (def == null || def.clip == null)
             {
                 OnAnimationComplete();
@@ -300,13 +307,8 @@ namespace Project.Combat
             else
             {
                 // Position is an OFFSET relative to spawn origin
-                transform.localPosition = spawnOrigin + posOffset;
-                
-                // Apply flip-aware rotation
                 Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
-                transform.localRotation = flipRot * Quaternion.Euler(key.rotation);
-                
-                transform.localScale = Vector3.Scale(spawnScale, key.scale);
+                ApplyPose(spawnOrigin + posOffset, flipRot * Quaternion.Euler(key.rotation), Vector3.Scale(spawnScale, key.scale));
             }
         }
 
@@ -333,15 +335,36 @@ namespace Project.Combat
             else
             {
                 // Position is an OFFSET relative to spawn origin
-                transform.localPosition = spawnOrigin + Vector3.Lerp(posA, posB, t);
-                
-                // Combine flipping with local rotation key
                 Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
                 Quaternion keyRot = Quaternion.Euler(Vector3.Lerp(a.rotation, b.rotation, t));
-                transform.localRotation = flipRot * keyRot;
-                
-                transform.localScale = Vector3.Scale(spawnScale, Vector3.Lerp(a.scale, b.scale, t));
+                ApplyPose(spawnOrigin + Vector3.Lerp(posA, posB, t), flipRot * keyRot,
+                    Vector3.Scale(spawnScale, Vector3.Lerp(a.scale, b.scale, t)));
             }
+        }
+
+        private void ApplyPose(Vector3 position, Quaternion rotation, Vector3 scale)
+        {
+            if (released)
+            {
+                transform.SetPositionAndRotation(releasedSpace.MultiplyPoint3x4(position), releasedRotation * rotation);
+                transform.localScale = Vector3.Scale(releasedScale, scale);
+            }
+            else
+            {
+                transform.localPosition = position; transform.localRotation = rotation; transform.localScale = scale;
+            }
+        }
+
+        public void ReleaseToLifetime()
+        {
+            if (!gameObject.activeSelf || released) return;
+            Transform parent = transform.parent;
+            releasedSpace = parent != null ? parent.localToWorldMatrix : Matrix4x4.identity;
+            releasedRotation = parent != null ? parent.rotation : Quaternion.identity;
+            releasedScale = parent != null ? parent.lossyScale : Vector3.one;
+            released = true;
+            transform.SetParent(null, true);
+            GetComponent<CutImpactVfxSource>()?.ReleaseToLifetime();
         }
 
         public void Stop()

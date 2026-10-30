@@ -151,6 +151,7 @@ namespace Project.Core.ZoneState
         /// </summary>
         public bool TryBeginTransition(RoomData room, string fallbackKey, string entranceId)
         {
+            if (Project.Training.TrainingSession.IsTrainingContext) return false;
             if (isTransitioning)
             {
                 Debug.LogWarning("[SceneTransitionManager] Transition already in progress. Ignoring request.");

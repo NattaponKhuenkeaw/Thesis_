@@ -27,6 +27,8 @@ public class EnemyBehaviorBrain : MonoBehaviour
     [SerializeField] private bool enableAgentWhenNoBossDriver = true;
 
     public BehaviorGraphAgent Agent => agent;
+    public bool AllowsGameplayAI => isActiveAndEnabled && enableAgentWhenNoBossDriver
+        && GetComponent<Project.AIBehaviour.Boss.BossPatternController>() == null;
     public EnemyLocomotion Locomotion => locomotion;
     public EnemyMoveMode MoveMode => locomotion != null ? locomotion.MoveMode : EnemyMoveMode.Ground;
 
@@ -38,19 +40,21 @@ public class EnemyBehaviorBrain : MonoBehaviour
     private void Awake()
     {
         Cache();
-        BindBlackboardSelf();
+        if (enableAgentWhenNoBossDriver) BindBlackboardSelf();
 
         // Spawn lifecycle owns the first setup frame. The graph is enabled only after the
         // EnemyController enters Active, preventing a node from targeting or moving a fresh spawn.
         SetAgentActive(false);
     }
 
+    private void OnDisable() => SetAgentActive(false);
+
     public void SetAgentActive(bool active)
     {
         Cache();
         if (agent != null)
         {
-            agent.enabled = active;
+            agent.enabled = active && AllowsGameplayAI;
         }
     }
 

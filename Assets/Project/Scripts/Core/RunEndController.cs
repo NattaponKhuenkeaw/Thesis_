@@ -81,6 +81,7 @@ namespace Project.Core.RunEnd
 
         public void NotifyRoomCleared()
         {
+            if (Project.Training.TrainingSession.IsTrainingContext) return;
             roomsCleared = Mathf.Max(0, roomsCleared + 1);
             AwardRoomClearCurrency();
         }
@@ -123,6 +124,11 @@ namespace Project.Core.RunEnd
 
         private void HandlePlayerDied()
         {
+            if (Project.Training.TrainingSession.IsTrainingContext)
+            {
+                PauseMenuController.Instance?.ReturnFromTraining();
+                return;
+            }
             if (isHandlingDeath)
             {
                 return;
