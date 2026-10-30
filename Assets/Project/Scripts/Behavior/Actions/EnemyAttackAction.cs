@@ -144,7 +144,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             StopChargeMotion();
             m_AnimHandler.PlayBodyChargePose(false);
         }
-        else if (m_Controller.UsesRangedAttack && m_AnimHandler.useRangedAttackPoses)
+        else if (m_AnimHandler.useMeleeAttackPoses || (m_Controller.UsesRangedAttack && m_AnimHandler.useRangedAttackPoses))
         {
             m_AnimHandler.PlayBodyChargePose(false);
         }
@@ -430,7 +430,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
         m_Controller?.FinishAttackWarning();
         m_Controller?.CommitRangedAim();
-        bool usesAttackPoses = IsBodyCharge || (m_Controller != null && m_Controller.UsesRangedAttack
+        bool usesAttackPoses = IsBodyCharge || (m_AnimHandler != null && m_AnimHandler.useMeleeAttackPoses) || (m_Controller != null && m_Controller.UsesRangedAttack
             && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses);
         if (!usesAttackPoses || m_AnimHandler == null || !m_AnimHandler.PlayBodyChargePose(true))
             m_AnimHandler?.TriggerAttack();

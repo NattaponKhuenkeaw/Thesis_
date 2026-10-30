@@ -411,6 +411,30 @@ public class DeathResetOwnershipTests
         Assert.That(Contains(fresh.GetTeamSnapshot(), unowned), Is.False);
     }
 
+    [TestCase(0)]
+    [TestCase(9876)]
+    public void MenuNewRunResetsCurrencyToOneThousand(int previousCurrency)
+    {
+        inventory.currency = previousCurrency;
+        int notifiedCurrency = -1;
+        inventory.OnCurrencyChanged += value => notifiedCurrency = value;
+
+        inventory.ResetRunStateForMenuStart();
+
+        Assert.That(inventory.currency, Is.EqualTo(1000));
+        Assert.That(notifiedCurrency, Is.EqualTo(1000));
+    }
+
+    [Test]
+    public void MenuContinueFallbackPreservesCurrency()
+    {
+        inventory.currency = 4321;
+
+        inventory.ResetRunStateForMenuStart(resetCurrency: false);
+
+        Assert.That(inventory.currency, Is.EqualTo(4321));
+    }
+
     private TeamLoader CreateLoader(CharacterObject character, out PlayerCharacter player)
     {
         GameObject host = new GameObject("DeathOwnershipTestHost");

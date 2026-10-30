@@ -244,7 +244,7 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: 84611a306d5f45ff95bc0b16cf0a6c32, type: 2}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
-      value: 255
+      value: 127.5
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: defense
@@ -252,7 +252,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: currentHP
-      value: 255
+      value: 127.5
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: damageRes
@@ -268,7 +268,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: rangedMuzzle
-      value:
+      value: 
       objectReference: {fileID: 8110202000000002}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: startArmored
@@ -440,7 +440,7 @@ PrefabInstance:
     - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 81102001, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
+      objectReference: {fileID: 1492757350, guid: 0be029b3341d0cf48841256463d3350d, type: 3}
     - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Color.b
       value: 1
@@ -479,8 +479,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Controller
-      value:
-      objectReference: {fileID: 22100000, guid: c1020000000000aaa0b1c2d34e5f8091, type: 2}
+      value: 
+      objectReference: {fileID: 22100000, guid: 66514281426123c43834afc8fb269eea, type: 2}
     - target: {fileID: 5618151998514689905, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 66
@@ -591,7 +591,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.getUp
-      value: Base Layer.Hurt
+      value: Base Layer.GetUp
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.launch
@@ -603,7 +603,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: reactionAnimations.knockdown
-      value: Base Layer.Hurt
+      value: Base Layer.Knockdown
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.finishGetUpAnimation
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.x
@@ -615,7 +619,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Offset.y
-      value: 0.8
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_EdgeRadius
@@ -623,11 +627,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.pivot.x
-      value: 0.43359375
+      value: 0.48828125
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.pivot.y
-      value: 0.1921875
+      value: 0.35625
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.newSize.x
@@ -742,18 +746,6 @@ PrefabInstance:
       value: 6.8
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightHeightMultiplier
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightHeightRelativeToPlayer
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightPlayerRiseDelay
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: groundLayers
       value: 520
       objectReference: {fileID: 0}
@@ -774,8 +766,24 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightPostAttackRest
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightHeightVariation
       value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightPlayerRiseDelay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightGroundSettleTime
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightHeightMultiplier
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightTargetDistance.x
@@ -786,16 +794,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightPostAttackRest
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightGroundSettleTime
-      value: 0.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightSpawnSearchRadius
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightHeightRelativeToPlayer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Name
@@ -818,21 +822,79 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6947661304475291214}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5821379244419993506}
   m_SourcePrefab: {fileID: 100100000, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+--- !u!212 &330550517057683680 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &3682925780710360539 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
   m_PrefabInstance: {fileID: 4180762667386644137}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 4739200647295624271}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+--- !u!1 &4739200647295624271 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5821379244419993506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4739200647295624271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed71bfb2e4c35964787e8d54557cb6d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyColorVariants
+  targetAnimator: {fileID: 8322916016626319731}
+  targetRenderer: {fileID: 330550517057683680}
+  variants:
+  - name: Color A
+    controller: {fileID: 22100000, guid: 66514281426123c43834afc8fb269eea, type: 2}
+    spawnSprite: {fileID: 1492757350, guid: 0be029b3341d0cf48841256463d3350d, type: 3}
+    projectileFrames:
+    - {fileID: 1323580106, guid: 0be029b3341d0cf48841256463d3350d, type: 3}
+    - {fileID: 419333067, guid: 0be029b3341d0cf48841256463d3350d, type: 3}
+    - {fileID: 412705275, guid: 0be029b3341d0cf48841256463d3350d, type: 3}
+  - name: Color B
+    controller: {fileID: 22100000, guid: 3f58f251dacdad243b05caf9297b3e00, type: 2}
+    spawnSprite: {fileID: -317190667, guid: 2af6029443c4683468da5e22f11b2bff, type: 3}
+    projectileFrames:
+    - {fileID: 243942655, guid: 2af6029443c4683468da5e22f11b2bff, type: 3}
+    - {fileID: -1645588448, guid: 2af6029443c4683468da5e22f11b2bff, type: 3}
+    - {fileID: -1114991206, guid: 2af6029443c4683468da5e22f11b2bff, type: 3}
+  - name: Color C
+    controller: {fileID: 22100000, guid: ac476701951da3e42bf59ea3e768a266, type: 2}
+    spawnSprite: {fileID: 647981600, guid: dcb20bf6606c3d946bd15ed02740f73b, type: 3}
+    projectileFrames:
+    - {fileID: 624552502, guid: dcb20bf6606c3d946bd15ed02740f73b, type: 3}
+    - {fileID: 1100870359, guid: dcb20bf6606c3d946bd15ed02740f73b, type: 3}
+    - {fileID: 463683264, guid: dcb20bf6606c3d946bd15ed02740f73b, type: 3}
+  originalProjectileFrames:
+  - {fileID: 81102012, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
+  - {fileID: 81102013, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
+  - {fileID: 81102014, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
 --- !u!4 &7519174093949083380 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &8322916016626319731 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
   m_PrefabInstance: {fileID: 4180762667386644137}
   m_PrefabAsset: {fileID: 0}

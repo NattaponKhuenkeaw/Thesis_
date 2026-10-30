@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 655e6a934d8c18c4b89f022743aeb960, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.SceneTransitionManager
-  fadeDuration: 0.5
+  fadeDuration: 0.15
   zoneStateProvider: {fileID: 11400000, guid: becbee9470c028f4a8e6ee3f1b3c6383, type: 2}
   mapData: {fileID: 11400000, guid: 286c2d1c11083884ea1cacac57e88f23, type: 2}
   transitionOutSFX: {fileID: 0}

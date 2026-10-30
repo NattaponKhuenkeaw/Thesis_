@@ -735,7 +735,7 @@ namespace Project.Core.ZoneState
 
         private bool TryAddOfferOfKind(RoomKind kind, string excludeRoomId)
         {
-            mapData.CollectOfferCandidates(kind, excludeRoomId, candidateBuffer);
+            mapData.CollectOfferCandidates(kind, excludeRoomId, candidateBuffer, ActiveBiomeIndex);
             RemoveAlreadyUsed(candidateBuffer);
             RoomData picked = PickWeighted(candidateBuffer);
             if (picked == null)
@@ -764,7 +764,7 @@ namespace Project.Core.ZoneState
 
         private bool TryAddAnyOffer(string excludeRoomId)
         {
-            mapData.CollectOfferCandidates(null, excludeRoomId, candidateBuffer);
+            mapData.CollectOfferCandidates(null, excludeRoomId, candidateBuffer, ActiveBiomeIndex);
             RemoveAlreadyUsed(candidateBuffer);
 
             for (int i = candidateBuffer.Count - 1; i >= 0; i--)
@@ -798,10 +798,10 @@ namespace Project.Core.ZoneState
 
         private bool TryAddDuplicateCombatOffer(string excludeRoomId)
         {
-            mapData.CollectOfferCandidates(RoomKind.Combat, excludeRoomId, candidateBuffer);
+            mapData.CollectOfferCandidates(RoomKind.Combat, excludeRoomId, candidateBuffer, ActiveBiomeIndex);
             if (candidateBuffer.Count == 0)
             {
-                mapData.CollectOfferCandidates(RoomKind.Elite, excludeRoomId, candidateBuffer);
+                mapData.CollectOfferCandidates(RoomKind.Elite, excludeRoomId, candidateBuffer, ActiveBiomeIndex);
             }
 
             for (int i = candidateBuffer.Count - 1; i >= 0; i--)
@@ -821,6 +821,9 @@ namespace Project.Core.ZoneState
             offerBuffer.Add(BuildRolledOffer(picked));
             return true;
         }
+
+        private static int ActiveBiomeIndex => RunProgressionManager.Instance != null
+            ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
 
         private void RemoveAlreadyUsed(List<RoomData> list)
         {

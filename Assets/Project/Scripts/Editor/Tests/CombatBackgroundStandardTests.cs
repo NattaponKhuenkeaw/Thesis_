@@ -9,12 +9,13 @@ public class CombatBackgroundStandardTests
     private const string BackgroundPath = "Assets/Project/Prefab/Environment/CombatBackground_B1.prefab";
 
     [Test]
-    public void SharedBackgroundContainsOnlyTheFiveVisualLayersFromLayout02()
+    public void SharedBackgroundContainsOriginalLayersAndVeryFarWithoutGameplayComponents()
     {
         GameObject background = AssetDatabase.LoadAssetAtPath<GameObject>(BackgroundPath);
         Assert.That(background, Is.Not.Null);
-        Assert.That(background.GetComponentsInChildren<ParallaxBackground>(true).Length, Is.EqualTo(5));
-        Assert.That(background.GetComponentsInChildren<SpriteRenderer>(true).Length, Is.EqualTo(5));
+        Assert.That(background.GetComponentsInChildren<ParallaxBackground>(true).Length, Is.EqualTo(6));
+        var sky = System.Linq.Enumerable.Single(background.GetComponentsInChildren<ParallaxBackground>(true), SkyBackgroundRepair.IsSky);
+        Assert.That(background.GetComponentsInChildren<SpriteRenderer>(true).Length, Is.EqualTo(5 + SkyBackgroundRepair.RowImages(sky).Length));
         Assert.That(background.GetComponentsInChildren<Collider2D>(true), Is.Empty);
         Assert.That(background.GetComponentsInChildren<Rigidbody2D>(true), Is.Empty);
         AssertVector(background.transform.localPosition, new Vector3(0f, 5.2f, 0f));
@@ -56,7 +57,7 @@ public class CombatBackgroundStandardTests
         GameObject inheritedSource = PrefabUtility.GetCorrespondingObjectFromSource(background.gameObject);
         Assert.That(AssetDatabase.GetAssetPath(inheritedSource), Is.EqualTo(BackgroundPath),
             "Use the shared nested prefab, not a disconnected copy.");
-        Assert.That(layout.GetComponentsInChildren<ParallaxBackground>(true).Length, Is.EqualTo(5),
+        Assert.That(layout.GetComponentsInChildren<ParallaxBackground>(true).Length, Is.EqualTo(6),
             "Legacy layers must not run alongside the shared background.");
         Assert.That(layout.transform.Find("LobbyNeonStreetBackground"), Is.Null);
 

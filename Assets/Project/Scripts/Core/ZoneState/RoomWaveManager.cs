@@ -38,8 +38,8 @@ namespace Project.Core.ZoneState
         [SerializeField] private Transform[] spawnSlots;
 
         [Header("Spawn Separation")]
-        [Tooltip("Minimum distance a new spawn must keep from every living enemy. Enemy body colliders are roughly 1.28 wide.")]
-        [SerializeField, Min(0f)] private float minSpawnSeparation = 1.8f;
+        [Tooltip("Minimum center clearance from living enemies. 2.4 includes the 101 body's width, rounded collider edges and a small gap.")]
+        [SerializeField, Min(0f)] private float minSpawnSeparation = 2.4f;
         [Tooltip("How far a spawn may slide sideways to find clear ground before giving up. Stays inside the span of the authored slots.")]
         [SerializeField, Min(0f)] private float maxSpawnNudge = 2.5f;
 

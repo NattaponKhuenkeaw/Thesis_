@@ -17,7 +17,7 @@ MonoBehaviour:
   holdRange: -1
   warningDuration: -1
   hitWindowDuration: -1
-  attackCooldown: 3
+  attackCooldown: 2.7
   lungeDistance: -1
   commitTelegraphFraction: -1
   recoveryPlantDuration: 0.8

@@ -1675,6 +1675,9 @@ public class EnemyController : MonoBehaviour
 
         SpriteRenderer sprite = shot.AddComponent<SpriteRenderer>();
         sprite.sprite = hasCustomSprite ? customSprite : GetRangedShotSprite();
+        EnemyColorVariants appearance = GetComponent<EnemyColorVariants>();
+        if (appearance != null)
+            sprite.sprite = appearance.ResolveProjectileSprite(sprite.sprite);
         sprite.color = hasCustomSprite ? ShotTint : new Color(0.35f, 0.85f, 1f, 1f);
         sprite.sortingOrder = 520;
 
@@ -1697,7 +1700,8 @@ public class EnemyController : MonoBehaviour
         projectile.Launch(this, direction, speed, lifetime);
         if (kit != null && kit.ShotAnimation != null && kit.ShotAnimation.Length > 0)
         {
-            projectile.ConfigureAnimation(kit.ShotAnimation, kit.ShotAnimationFPS);
+            Sprite[] frames = appearance != null ? appearance.ResolveProjectileAnimation(kit.ShotAnimation) : kit.ShotAnimation;
+            projectile.ConfigureAnimation(frames, kit.ShotAnimationFPS);
             col.radius = radius / Mathf.Max(0.0001f, Mathf.Abs(shot.transform.localScale.x));
         }
     }

@@ -849,15 +849,20 @@ namespace Project.ShopSystem
 
         /// <summary>
         /// Menu Continue / New Game always start in Lobby with authored run state.
+        /// New Game resets currency; Continue can preserve it when no checkpoint exists.
         /// Meta progression is owned separately and is not cleared here.
         /// </summary>
-        public void ResetRunStateForMenuStart()
+        public void ResetRunStateForMenuStart(bool resetCurrency = true)
         {
             hasLoadedPersistentState = true;
             isDeathTeardown = false;
             isDeathLobby = false;
             pendingLobbyMainReset = false;
             suppressAutoBootstrap = false;
+            if (resetCurrency)
+            {
+                SetCurrency(DefaultCurrency);
+            }
             ClearInventory();
             EnsurePlayableState();
         }

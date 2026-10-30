@@ -261,7 +261,7 @@ namespace Project.UI
                 meta?.ReloadPersistentState();
                 if (runInventory == null || !runInventory.TryRestoreBossLobbyCheckpoint())
                 {
-                    runInventory?.ResetRunStateForMenuStart();
+                    runInventory?.ResetRunStateForMenuStart(resetCurrency: false);
                 }
             }
             runInventory?.PublishActiveSaveHeader();

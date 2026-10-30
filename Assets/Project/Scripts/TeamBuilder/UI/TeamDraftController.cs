@@ -31,6 +31,12 @@ namespace Project.TeamBuilder.UI
             teamSlots = slots;
         }
 
+        public void BindRuntimeSources(PlayerRunInventory inventory, TeamLoader loader)
+        {
+            playerInventory = inventory;
+            teamLoader = loader;
+        }
+
         public void LoadRuntimeDraft()
         {
             if (playerInventory == null) return;

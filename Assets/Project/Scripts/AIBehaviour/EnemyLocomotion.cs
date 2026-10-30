@@ -263,13 +263,39 @@ public class EnemyLocomotion : MonoBehaviour
             for (float clearance = Mathf.Max(.1f, flightHeight); clearance >= .1f; clearance -= .25f)
             {
                 Vector2 candidate = new Vector2(x, floor + clearance - footOffset);
-                if (!IsFlightPositionClear(candidate)) continue;
+                if (!IsFlightPositionClear(candidate) || !IsFlightSpawnLiftClear(candidate, floor)) continue;
                 placement = candidate;
                 groundY = floor;
                 return true;
             }
         }
         return false;
+    }
+
+    private bool IsFlightSpawnLiftClear(Vector2 destination, float floor)
+    {
+        Collider2D collider = ResolveBodyCollider();
+        if (collider == null) return false;
+        Bounds bounds = collider.bounds;
+        Vector2 current = BodyPosition();
+        float footOffset = bounds.min.y - current.y;
+        Vector2 start = new Vector2(destination.x, floor + .04f - footOffset);
+        float distance = destination.y - start.y;
+        if (distance <= 0f) return true;
+        var filter = new ContactFilter2D();
+        filter.SetLayerMask(Physics2D.GetLayerCollisionMask(collider.gameObject.layer));
+        filter.useTriggers = false;
+        // A free endpoint above a roof is not connected to the authored ground below it.
+        int count = Physics2D.BoxCast(start + (Vector2)bounds.center - current,
+            (Vector2)bounds.size + Vector2.one * .04f, 0f, Vector2.up, filter, flightWallHits, distance + .02f);
+        if (count == flightWallHits.Length) return false;
+        for (int i = 0; i < count; i++)
+        {
+            var hit = flightWallHits[i];
+            if (IsActorCollider(hit.collider, collider) || Physics2D.GetIgnoreCollision(collider, hit.collider)) continue;
+            if (hit.normal.y <= .1f) return false;
+        }
+        return true;
     }
 
     private bool IsFlightPositionClear(Vector2 position)

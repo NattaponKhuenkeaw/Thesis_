@@ -15,6 +15,7 @@ namespace Project.Core.ZoneState
         private static readonly string[] DefaultBakedObjectNames =
         {
             "EnvironmentDependency",
+            "RoomBiomeScenery",
             "RoomWaveManager"
         };
 
@@ -130,6 +131,8 @@ namespace Project.Core.ZoneState
             activeRoom = room;
             activeLayoutInstance = Instantiate(room.LayoutPrefab, layoutRoot);
             activeLayoutInstance.name = $"{room.LayoutPrefab.name}_Runtime";
+            foreach (RoomBiomeEnvironment environment in activeLayoutInstance.GetComponentsInChildren<RoomBiomeEnvironment>())
+                environment.ApplyCurrentBiome();
 
             Debug.Log($"[RoomLayoutHost] Mounted room '{room.RoomId}' from prefab '{room.LayoutPrefab.name}'.", this);
             return true;

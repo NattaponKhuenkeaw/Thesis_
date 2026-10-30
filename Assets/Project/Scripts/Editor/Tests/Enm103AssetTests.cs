@@ -103,11 +103,11 @@ public class Enm103AssetTests
         Assert.That(prefab.GetComponent<EnemyShieldGuard>(), Is.Not.Null);
         var controller = prefab.GetComponent<Animator>().runtimeAnimatorController as AnimatorOverrideController;
         Assert.That(controller, Is.Not.Null);
-        Assert.That(controller["Enemy2_Crouch"].name, Is.EqualTo("Enm103_Windup"));
-        Assert.That(controller["Enemy2_Kick"].name, Is.EqualTo("Enm103_Rush"));
+        Assert.That(controller["Enemy2_Crouch"].name, Is.EqualTo("Gif_Enemy2_Crouch_ColorA"));
+        Assert.That(controller["Enemy2_Kick"].name, Is.EqualTo("Gif_Enemy2_Kick_ColorA"));
         foreach (var clip in controller.animationClips)
         {
-            Assert.That(clip.name, Does.StartWith("Enm103_"));
+            Assert.That(clip.name, Does.StartWith("Gif_Enemy"));
             foreach (var binding in AnimationUtility.GetObjectReferenceCurveBindings(clip))
                 foreach (var key in AnimationUtility.GetObjectReferenceCurve(clip, binding))
                     Assert.That(key.value, Is.InstanceOf<Sprite>(), clip.name);

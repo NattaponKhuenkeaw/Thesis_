@@ -479,14 +479,14 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3588089275938747}
   - {fileID: 4329270391386500204}
-  - {fileID: 232054896905700179}
+  - {fileID: 3588089275938747}
   - {fileID: 4089000541196928381}
   - {fileID: 137959151427705944}
   - {fileID: 1705276984423778730}
-  - {fileID: 1152124933753635666}
+  - {fileID: 232054896905700179}
   - {fileID: 3157972192947293169}
+  - {fileID: 1152124933753635666}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &418089103846649978
@@ -645,7 +645,7 @@ MonoBehaviour:
   playerTag: Player
   startOnlyOnce: 1
   spawnSlots: []
-  minSpawnSeparation: 1.8
+  minSpawnSeparation: 2.4
   maxSpawnNudge: 2.5
   unlockSceneExitOnClear: 1
   portalsRoot: {fileID: 0}
@@ -2047,8 +2047,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 5.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 2294717369067596446}
+  m_Children: []
   m_Father: {fileID: 7548224310527413937}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3709588722830401033
@@ -2659,37 +2658,6 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!1 &5635598365027256275
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2294717369067596446}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2294717369067596446
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5635598365027256275}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -18.1, y: -0.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
-  m_Children: []
-  m_Father: {fileID: 232054896905700179}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6168200265495849541
 GameObject:
   m_ObjectHideFlags: 0

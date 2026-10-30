@@ -41,7 +41,7 @@ public static class LevelDesignLayoutBuilder
         {
             case 1: return new Plan {
                 level = 1, baseline = 848, start = new Vector2(155, 848), exit = new Vector2(1812, 706),
-                solids = new[] { R(108,848,1812,972), R(432,706,545,848), R(790,640,889,848), R(1192,706,1812,848) },
+                solids = new[] { R(108,848,1812,972), R(432,688.75f,545,848), R(790,635.125f,889,848), R(1192,707.5f,1812,848) },
                 platforms = new[] { P(762,769.25f,72), P(762,690.5f,72) },
                 gates = new[] { G(428), G(791), G(1188), G(1526) }
             };
@@ -65,16 +65,14 @@ public static class LevelDesignLayoutBuilder
                 gates = new[] { G(407), G(714), G(1049), G(1386,484), G(1556,917,816) }
             };
             case 5: return new Plan {
-                level = 5, baseline = 877, start = new Vector2(155,877), exit = new Vector2(1812,877),
-                solids = new[] { R(108,877,1812,972), R(390,673,663,877), R(663,606,871,679), R(806,371,871,606),
-                    R(871,371,1162,436), R(1054,436,1093,600), R(1093,436,1237,488), R(1198,488,1328,541),
-                    R(1263,541,1328,776), R(1156,711,1263,776), R(963,600,1201,667), R(871,754,1054,877),
-                    R(1402,613,1587,679), R(1587,442,1651,679), R(1468,756,1651,877) },
-                platforms = new[] { P(369,798.25f,90), P(369,719.5f,90),
-                    P(785,527.25f,72), P(785,448.5f,72), P(891,675.25f,78) },
-                gates = new[] { G(388), G(664), G(1162,436), G(1054,877,667), G(1468,877,679) }
+                level = 5, baseline = 865.4f, start = new Vector2(155,865.4f), exit = new Vector2(1812,865.4f),
+                solids = new[] { R(108,865.4f,1812,961.4f), R(390.7f,662.9f,661.1f,865.4f),
+                    R(661.1f,596.5f,805.9f,865.4f), R(805.9f,359.4f,1161.1f,865.4f), R(1161.1f,425.2f,1486.8f,865.4f) },
+                platforms = new[] { P(369,827.9f,90), P(369,749.15f,90), P(369,670.4f,90),
+                    P(784.25f,529f,90), P(784.25f,450.25f,90), P(784.25f,371.5f,90) },
+                gates = new[] { G(388), G(664), G(1162), G(1487) }
             };
-            default: throw new ArgumentOutOfRangeException(nameof(level));
+            default: return Biome2LevelPlans.GetPlan(level);
         }
     }
 
@@ -91,8 +89,8 @@ public static class LevelDesignLayoutBuilder
             case 2: return new[] { new Vector2(200,320),new Vector2(480,620),new Vector2(800,950),new Vector2(1140,1290),new Vector2(1550,1760) };
             case 3: return new[] { new Vector2(200,330),new Vector2(490,640),new Vector2(800,920),new Vector2(1100,1290),new Vector2(1520,1760) };
             case 4: return new[] { new Vector2(200,330),new Vector2(480,630),new Vector2(800,950),new Vector2(1160,1300),new Vector2(1460,1530),new Vector2(1640,1770) };
-            case 5: return new[] { new Vector2(200,300),new Vector2(470,580),new Vector2(700,750),new Vector2(1005,1040),new Vector2(1440,1550),new Vector2(1670,1770) };
-            default: throw new ArgumentOutOfRangeException(nameof(level));
+            case 5: return new[] { new Vector2(200,300),new Vector2(470,580),new Vector2(900,1080),new Vector2(1250,1390),new Vector2(1570,1750) };
+            default: return Biome2LevelPlans.ExpansionSpans(level);
         }
     }
 
@@ -101,15 +99,15 @@ public static class LevelDesignLayoutBuilder
         float x=(pixelX-960f)*HorizontalScale;
         Vector2[] spans=CombatExpansionSpans(plan.level);
         for (int i=0;i<spans.Length;i++)
-            x+=(plan.level==4 && i==4 ? 35f : 30f)*Mathf.Clamp01((pixelX-spans[i].x)/(spans[i].y-spans[i].x));
+            x+=((plan.level==4 || plan.level==9) && i==4 ? 35f : 30f)*Mathf.Clamp01((pixelX-spans[i].x)/(spans[i].y-spans[i].x));
         return x;
     }
 
-    public static Vector2 ToWorld(Plan plan, Vector2 pixel) => new Vector2(WorldX(plan,pixel.x), (plan.baseline-pixel.y)*VerticalScale);
+    public static Vector2 ToWorld(Plan plan, Vector2 pixel) => new Vector2(WorldX(plan,pixel.x), (plan.baseline-pixel.y)*(plan.level == 10 ? .035f : VerticalScale));
     public static Rect ToWorld(Plan plan, Rect pixel)
     {
         Vector2 lower = ToWorld(plan, new Vector2(pixel.xMin, pixel.yMax));
-        return new Rect(lower, new Vector2(WorldX(plan,pixel.xMax)-WorldX(plan,pixel.xMin), pixel.height*VerticalScale));
+        return new Rect(lower, new Vector2(WorldX(plan,pixel.xMax)-WorldX(plan,pixel.xMin), pixel.height*(plan.level == 10 ? .035f : VerticalScale)));
     }
 
     [MenuItem("Tools/Project/Level Design/Create Missing LV1-LV5 Layouts")]
@@ -134,7 +132,7 @@ public static class LevelDesignLayoutBuilder
         Debug.Log("[LV Layouts] Created LV1-LV5 drafts. No enemy spawns, route changes or Build Settings changes.");
     }
 
-    private static GameObject BuildLayout(Plan plan, string path, Sprite fill, Sprite cap, Sprite platform, Material material)
+    public static GameObject BuildLayout(Plan plan, string path, Sprite fill, Sprite cap, Sprite platform, Material material)
     {
         Scene preview = EditorSceneManager.NewPreviewScene();
         GameObject root = new GameObject($"RoomLayout_LV_{plan.level:00}");
@@ -213,7 +211,8 @@ public static class LevelDesignLayoutBuilder
             GameObject background = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(BackgroundPath), root.transform);
             background.name = "CombatBackground_B1";
             Transform sky = background.transform.Find("GameObject/background");
-            if (sky != null) { sky.localScale *= 3f; PrefabUtility.RecordPrefabInstancePropertyModifications(sky); }
+            if (sky != null) SkyBackgroundRepair.Configure(sky.GetComponent<Project.Parallax.ParallaxBackground>());
+            B1VeryFarBackground.FitDraft(root, plan);
             composite.GenerateGeometry();
             ValidateGeometry(root, plan);
             return PrefabUtility.SaveAsPrefabAsset(root,path);
@@ -283,7 +282,7 @@ public static class LevelDesignLayoutBuilder
             }
     }
 
-    private static RoomData BuildRoomData(int level, GameObject prefab)
+    public static RoomData BuildRoomData(int level, GameObject prefab)
     {
         string path = $"{RoomFolder}/RoomData_LV_{level:00}.asset";
         RoomData room = AssetDatabase.LoadAssetAtPath<RoomData>(path);
@@ -305,7 +304,7 @@ public static class LevelDesignLayoutBuilder
         AssetDatabase.CreateAsset(room,path); return room;
     }
 
-    private static void BuildTestScene(int level, RoomData room)
+    public static void BuildTestScene(int level, RoomData room)
     {
         string path = $"{SceneFolder}/Test_LV_{level:00}.unity";
         if (File.Exists(path)) return;

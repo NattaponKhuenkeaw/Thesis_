@@ -57,6 +57,7 @@ namespace Project.Core
         [NonSerialized] private bool isStartingRun;
         [NonSerialized] private bool isBoundaryLoading;
         [NonSerialized] private int lobbyBannerSceneHandle = int.MinValue;
+        [NonSerialized] private int lobbyPreparedSceneHandle = int.MinValue;
         [NonSerialized] private GameRunPhase currentPhase = GameRunPhase.Lobby;
 
         private Canvas boundaryCanvas;
@@ -132,6 +133,7 @@ namespace Project.Core
             string activeScene = SceneManager.GetActiveScene().name;
             if (string.Equals(activeScene, lobbySceneName, StringComparison.Ordinal))
             {
+                PrepareLobbyBiome(activeScene);
                 ConfigureSafeZoneExitForScene(activeScene);
                 TryPlayLobbyLevelBanner(activeScene);
             }
@@ -178,8 +180,24 @@ namespace Project.Core
             }
 
             lobbyBannerSceneHandle = handle;
-            RestoreBossLobbyBiome();
+            PrepareLobbyBiome(sceneName);
             LobbyLevelBanner.Play();
+        }
+
+        private void PrepareLobbyBiome(string sceneName)
+        {
+            if (!string.Equals(sceneName, lobbySceneName, StringComparison.Ordinal))
+                return;
+
+            Scene scene = SceneManager.GetActiveScene();
+            if (scene.handle == lobbyPreparedSceneHandle)
+                return;
+
+            lobbyPreparedSceneHandle = scene.handle;
+            RestoreBossLobbyBiome();
+            ResolveDependencies();
+            int progressionIndex = RunProgressionManager.EnsureInstance().CurrentBiomeIndex;
+            RoomBiomeEnvironment.ApplyInScene(scene, mapData, progressionIndex);
         }
 
         private static void RestoreBossLobbyBiome()
@@ -353,6 +371,8 @@ namespace Project.Core
                 DisableAllSceneCanvases();
 
                 ApplyZoneStateForScene(sceneName);
+                // Restore the saved round and switch authored scenery while the screen is still black.
+                PrepareLobbyBiome(sceneName);
                 // Death/abandon return skips SceneTransitionManager, so SafeZone exits
                 // (Lobby) would stay physically/logically locked without this.
                 ConfigureSafeZoneExitForScene(sceneName);

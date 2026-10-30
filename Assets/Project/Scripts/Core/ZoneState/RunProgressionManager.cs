@@ -237,7 +237,7 @@ namespace Project.Core.ZoneState
             if (mapData != null)
             {
                 List<RoomData> candidates = new List<RoomData>(8);
-                mapData.CollectOfferCandidates(RoomKind.Combat, ResolveCurrentRoomId(), candidates);
+                mapData.CollectOfferCandidates(RoomKind.Combat, ResolveCurrentRoomId(), candidates, CurrentBiomeIndex);
                 if (candidates.Count > 0)
                 {
                     return candidates[Random.Range(0, candidates.Count)].RoomId;

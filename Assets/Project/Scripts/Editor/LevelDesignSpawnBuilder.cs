@@ -17,14 +17,24 @@ public static class LevelDesignSpawnBuilder
         new RoomPlan { entry=new Vector2(entryX,entryY),slots=xs.Select(x=>new Vector2(x,floorY)).ToArray() };
     private static Vector2 S(float x,float y) => new Vector2(x,y);
 
+    public static Vector3 SpawnPosition(int level,int room,int slot)
+    {
+        var plan=LevelDesignLayoutBuilder.GetPlan(level);
+        Vector3 position=LevelDesignLayoutBuilder.ToWorld(plan,Rooms(level)[room].slots[slot])+Vector2.up*.05f;
+        // Keep the larger 101 body clear of the two forward gates and the two first ladder steps.
+        if(slot==4 && (level==1 && room==1 || (level==2 || level==5 || level==10) && room==0))
+            position.x-=.5f;
+        return position;
+    }
+
     public static RoomPlan[] Rooms(int level)
     {
         switch (level)
         {
             case 1: return new[] {
                 Row(166,848,848,208,242,276,310,344), Row(500,706,848,574,608,642,676,710),
-                Row(860,640,848,930,970,1010,1050,1090), Row(1266,706,706,1270,1310,1350,1390,1430),
-                Row(1600,706,706,1610,1650,1690,1730,1770) };
+                Row(860,640,848,930,970,1010,1050,1090), Row(1266,706,707.5f,1270,1310,1350,1390,1430),
+                Row(1600,706,707.5f,1610,1650,1690,1730,1770) };
             case 2: return new[] {
                 Row(166,747,747,220,245,270,295,320), Row(475,867,867,480,515,550,585,620),
                 Row(780,695,695,790,830,870,910,950), Row(1128,867,867,1140,1180,1220,1260,1300),
@@ -39,12 +49,10 @@ public static class LevelDesignSpawnBuilder
                 new RoomPlan { entry=S(1468,484),slots=new[] { S(1490,484),S(1540,484),S(1360,641),S(1230,917),S(1430,917) } },
                 Row(1634,917,917,1640,1675,1710,1745,1780) };
             case 5: return new[] {
-                Row(166,877,877,210,234,258,282,306), Row(464,673,673,470,498,526,554,582),
-                Row(740,606,371,895,940,985,1030,1075),
-                Row(1240,488,613,1430,1462,1494,1526,1558),
-                new RoomPlan { entry=S(980,754),slots=new[] { S(710,877),S(760,877),S(810,877),S(894,754),S(932,754) } },
-                Row(1545,756,877,1670,1698,1726,1754,1782) };
-            default: throw new ArgumentOutOfRangeException(nameof(level));
+                Row(166,865.4f,865.4f,210,234,258,282,306), Row(440,662.9f,662.9f,470,498,526,554,582),
+                Row(715,596.5f,359.4f,900,945,990,1035,1080),Row(1220,425.2f,425.2f,1250,1285,1320,1355,1390),
+                Row(1530,865.4f,865.4f,1570,1615,1660,1705,1750) };
+            default: return Biome2LevelPlans.Rooms(level);
         }
     }
 
@@ -70,7 +78,7 @@ public static class LevelDesignSpawnBuilder
         Debug.Log("[LV Spawns] Configured 27 chambers, at least five spawn slots each, thick gates and difficulty-card palettes.");
     }
 
-    private static void Configure(GameObject root,int level,EncounterSO palette)
+    public static void Configure(GameObject root,int level,EncounterSO palette)
     {
         var plan=LevelDesignLayoutBuilder.GetPlan(level);
         var rooms=Rooms(level);
@@ -86,13 +94,6 @@ public static class LevelDesignSpawnBuilder
             else size.x=Mathf.Max(size.x,6f);
             wall.size=size;
         }
-        if (level==5)
-        {
-            // The upper divider must also seal the tunnel underneath the roof.
-            var left=boundaries.Find("StageLeftWall").GetComponent<BoxCollider2D>();
-            doors[2].transform.localPosition=new Vector3(doors[2].transform.localPosition.x,left.transform.localPosition.y,0);
-            doors[2].size=new Vector2(6f,left.size.y);
-        }
         foreach (var door in doors) { door.enabled=true; door.isTrigger=false; }
         var old=root.transform.Find("CombatChambers");
         if (old!=null) Object.DestroyImmediate(old.gameObject);
@@ -101,16 +102,16 @@ public static class LevelDesignSpawnBuilder
         if (stage==null) stage=boundaries.gameObject.AddComponent<CombatStageController>();
         var authored=new CombatStageController.Chamber[rooms.Length];
         Collider2D extra=null;
-        if (level==5)
+        if (level==9)
         {
             Transform seal=boundaries.Find("UpperExitSeal");
             if (seal==null) seal=Child(boundaries,"UpperExitSeal").transform;
             var wall=seal.GetComponent<BoxCollider2D>();
             if (wall==null) wall=seal.gameObject.AddComponent<BoxCollider2D>();
             seal.gameObject.layer=LayerMask.NameToLayer("Ground");
-            float min=LevelDesignLayoutBuilder.ToWorld(plan,S(0,679)).y;
+            float min=LevelDesignLayoutBuilder.ToWorld(plan,S(0,level==9 ? 762 : 679)).y;
             float max=boundaries.Find("Ceiling").GetComponent<BoxCollider2D>().bounds.min.y;
-            seal.localPosition=new Vector3(LevelDesignLayoutBuilder.ToWorld(plan,S(1651,0)).x,(min+max)*.5f,0);
+            seal.localPosition=new Vector3(LevelDesignLayoutBuilder.ToWorld(plan,S(level==9 ? 1595 : 1651,0)).x,(min+max)*.5f,0);
             wall.size=new Vector2(6f,max-min); wall.enabled=false; extra=wall;
         }
         RoomWaveManager waves=null;
@@ -120,7 +121,7 @@ public static class LevelDesignSpawnBuilder
             GameObject spawns=Child(room.transform,"SpawnPoints");
             Transform[] slots=rooms[i].slots.Select((p,n)=> {
                 var slot=Child(spawns.transform,$"Spawn_{n}").transform;
-                slot.localPosition=LevelDesignLayoutBuilder.ToWorld(plan,p)+Vector2.up*.05f;
+                slot.localPosition=SpawnPosition(level,i,n);
                 return slot;
             }).ToArray();
             var trigger=Child(room.transform,i==0 ? "EncounterStart" : "EnterTrigger");
@@ -132,8 +133,7 @@ public static class LevelDesignSpawnBuilder
                 entranceWall=i==0 ? boundaries.Find("StageLeftWall").GetComponent<Collider2D>() : doors[i-1],
                 exitWall=i==rooms.Length-1 ? boundaries.Find("StageRightWall").GetComponent<Collider2D>() : doors[i],
                 enterTrigger=i==0 ? null : sensor,spawnRoot=spawns.transform,spawnSlots=slots,
-                additionalExitWalls=level==5 && i==3 ? new[] { doors[4],extra } :
-                    level==5 && i==4 ? new[] { extra } : new Collider2D[0]
+                additionalExitWalls=level==9 && (i==3 || i==4) ? new[] { extra } : new Collider2D[0]
             };
         }
         using (var data=new SerializedObject(stage))

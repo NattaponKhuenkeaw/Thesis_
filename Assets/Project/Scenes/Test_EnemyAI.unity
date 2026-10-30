@@ -1069,7 +1069,7 @@ MonoBehaviour:
   popupTextPrefab: {fileID: 1051378219}
   displayDuration: 1.5
   floatSpeed: 60
-  fadeDuration: 0.5
+  fadeDuration: 0.15
 --- !u!1 &1365803840
 GameObject:
   m_ObjectHideFlags: 0

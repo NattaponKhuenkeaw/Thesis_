@@ -197,7 +197,7 @@ namespace Project.AIBehaviour.Boss
             EnsureNextRoomOffersPrepared();
 
             // 3) Free movement + prompt. No automatic team heal on biome change.
-            BossDeathPromptUI.EnsureInstance().Show(continuePrompt);
+            BossDeathPromptUI.EnsureInstance()?.Show(continuePrompt);
             waitingForClick = true;
             sequenceRoutine = null;
         }
@@ -301,7 +301,7 @@ namespace Project.AIBehaviour.Boss
                 Debug.LogError("[BossDeathSequence] SceneTransitionManager.Instance is missing.", this);
                 transitionRequested = false;
                 waitingForClick = true;
-                BossDeathPromptUI.EnsureInstance().Show(continuePrompt);
+                BossDeathPromptUI.EnsureInstance()?.Show(continuePrompt);
                 return;
             }
 

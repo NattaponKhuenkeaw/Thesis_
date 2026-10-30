@@ -37,6 +37,9 @@ namespace Project.Core.ZoneState
         [Tooltip("If false, this room is never rolled into post-clear choices.")]
         [SerializeField] private bool includeInRandomOffers = true;
 
+        [Tooltip("-1 shares this room across biomes. 0 is the first biome, 1 is the second.")]
+        [SerializeField, Min(-1)] private int biomeIndex = -1;
+
         [Header("Room Setup")]
         [Tooltip("The ZoneMode (SafeZone or CombatZone) associated with this room.")]
         [SerializeField] private ZoneMode zoneMode = ZoneMode.CombatZone;
@@ -69,6 +72,7 @@ namespace Project.Core.ZoneState
         public Sprite OfferIcon => offerIcon;
         public float OfferWeight => offerWeight;
         public bool IncludeInRandomOffers => includeInRandomOffers;
+        public int BiomeIndex => biomeIndex;
         public ZoneMode ZoneMode => zoneMode;
         public string DefaultEntranceId => defaultEntranceId;
         public bool UseStaticCamera => useStaticCamera;

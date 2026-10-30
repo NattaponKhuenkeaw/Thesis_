@@ -473,7 +473,7 @@ public partial class PlayerMovement : MonoBehaviour
         }
 
         Vector2 previousPosition = rb.position;
-        float travel = ClipHorizontalTravel(targetX - previousPosition.x);
+        float travel = ClipHorizontalTravel(targetX - previousPosition.x, true);
         Vector2 nextPosition = new Vector2(previousPosition.x + travel, previousPosition.y);
         Vector2 currentVelocity = rb.linearVelocity;
 
@@ -1052,10 +1052,10 @@ public partial class PlayerMovement : MonoBehaviour
     private float ClipHorizontalVelocity(float velocity)
     {
         float step = Mathf.Max(Time.fixedDeltaTime, attackMotionIgnoresSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
-        return ClipHorizontalTravel(velocity * step) / step;
+        return ClipHorizontalTravel(velocity * step, isAttackMotionActive || IsDashing) / step;
     }
 
-    private float ClipHorizontalTravel(float travel)
+    private float ClipHorizontalTravel(float travel, bool stopAtSlopes = false)
     {
         if (rb == null || Mathf.Abs(travel) < 0.000001f) return travel;
         if (solidColliders == null)
@@ -1085,9 +1085,14 @@ public partial class PlayerMovement : MonoBehaviour
                     || obstacle.GetComponentInParent<EnemyController>() != null
                     || Physics2D.GetIgnoreCollision(body, obstacle)
                     || (obstacle.usedByEffector && obstacle.GetComponent<PlatformEffector2D>() != null)) continue;
-                // Tangential floor contacts and walls behind the player must not stop travel.
-                if (Vector2.Dot(hit.normal, direction) > -0.5f) continue;
-                allowed = Mathf.Min(allowed, Mathf.Max(0f, hit.distance - MovementWallSkin));
+                // Ordinary walking lets the solver climb slopes. A teleport or committed
+                // lunge can cross the entire polygon before that solver step ever occurs.
+                float opposingNormalThreshold = stopAtSlopes ? -0.0001f : -0.5f;
+                float normalDot = Vector2.Dot(hit.normal, direction);
+                if (normalDot > opposingNormalThreshold) continue;
+                // Keep the clearance along the surface normal, including shallow faces.
+                float clearance = MovementWallSkin / Mathf.Max(-normalDot, 0.0001f);
+                allowed = Mathf.Min(allowed, Mathf.Max(0f, hit.distance - clearance));
             }
         }
         return Mathf.Sign(travel) * allowed;

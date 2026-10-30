@@ -16,15 +16,16 @@ MonoBehaviour:
   sceneName: combat_1
   layoutPrefab: {fileID: 745584937574976614, guid: 733adbe1b6d0e6b44945b90641bda404, type: 3}
   roomKind: 0
-  displayName: Combat 05
+  displayName: Biome 1 - Layout 5
   offerIcon: {fileID: 0}
   offerWeight: 1
   includeInRandomOffers: 1
+  biomeIndex: 0
   zoneMode: 1
+  defaultEntranceId: Default
+  useStaticCamera: 0
+  encounter: {fileID: 11400000, guid: 3d8a6c15e92f4b7a80c4d1e6f9a2b538, type: 2}
   backgroundMusic: {fileID: 8300000, guid: 2473e86c4ff645e0a8f7ade83475a910, type: 3}
   musicVolume: 1
   ambience: {fileID: 8300000, guid: 953ebadc922942e59550d761a3656c21, type: 3}
   ambienceVolume: 0.35
-  defaultEntranceId: Default
-  useStaticCamera: 0
-  encounter: {fileID: 11400000, guid: 3d8a6c15e92f4b7a80c4d1e6f9a2b538, type: 2}

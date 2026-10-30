@@ -63,6 +63,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
     private bool hasResolvedAirborneLanding;
 
     private readonly RaycastHit2D[] groundHits = new RaycastHit2D[4];
+    private readonly RaycastHit2D[] bindingHits = new RaycastHit2D[32];
 
     private const float ImpactFreezeShakeMagnitude = 0.035f;
 
@@ -160,7 +161,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         reactionSpriteSource.GetPropertyBlock(reactionSpriteProperties);
         reactionSpriteVisual.SetPropertyBlock(reactionSpriteProperties);
         float offset = 0f;
-        if (positionMotion != null && currentState == EnemyReactionState.ImpactFreeze)
+        if (currentState == EnemyReactionState.ImpactFreeze && (positionMotion != null || currentReaction.reactionKind == EnemyReactionKind.Grab))
         {
             float progress = currentReactionFrame / (float)Mathf.Max(1, currentReaction.ImpactFreezeFrames);
             offset = Mathf.Sin(progress * Mathf.PI * 3f) * (1f - progress) * ImpactFreezeShakeMagnitude;
@@ -600,6 +601,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         if (currentState == EnemyReactionState.Recovering && currentReactionFrame > totalEndFrame)
         {
+            if (animationHandler != null && animationHandler.IsFinishingGetUpAnimation) return;
             CompleteReaction();
             return;
         }
@@ -940,8 +942,17 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        if (currentReaction.alignGrabToBodyCenter)
+        if (currentReaction.alignGrabToBodyCenter && transform.rotation != bindTarget.rotation)
+        {
+            Vector3 bodyCenter = bodyCollider != null
+                ? bodyCollider.transform.TransformPoint(bodyCollider.offset)
+                : transform.position;
             transform.rotation = bindTarget.rotation;
+            // Flipping an offset collider must not teleport its center into adjacent terrain.
+            if (bodyCollider != null)
+                transform.position += bodyCenter - bodyCollider.transform.TransformPoint(bodyCollider.offset);
+            Physics2D.SyncTransforms();
+        }
 
         MoveToReactionPosition(ResolveGrabbedPosition(bindTarget));
 
@@ -986,6 +997,16 @@ public class EnemyHitReactionHandler : MonoBehaviour
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
+            if (currentReaction.reactionKind == EnemyReactionKind.Grab && bodyCollider != null)
+            {
+                var filter = new ContactFilter2D();
+                filter.SetLayerMask(groundLayers);
+                filter.useTriggers = false;
+                // Leave contact clearance for a freshly flipped collider before its next physics step.
+                targetPosition = rb.position + PositionReactionMotion.ClipTerrainMove(
+                    rb, bodyCollider, filter, bindingHits, targetPosition - rb.position,
+                    Physics2D.defaultContactOffset * 2f);
+            }
             rb.MovePosition(targetPosition);
         }
         else
@@ -1303,7 +1324,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        if (positionMotion == null) transform.position = impactFreezeAnchorPosition;
+        if (positionMotion == null && currentReaction.reactionKind != EnemyReactionKind.Grab)
+            transform.position = impactFreezeAnchorPosition;
 
         if (rb != null)
         {
@@ -1375,8 +1397,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void UpdateImpactFreezeShake()
     {
-        // Never shake the physical root while the position motor owns it.
-        if (positionMotion != null) return;
+        // Position reactions and grabs shake the visual, never the physical body.
+        if (positionMotion != null || currentReaction.reactionKind == EnemyReactionKind.Grab) return;
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
@@ -1571,21 +1593,32 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         private Vector2 MoveBy(Vector2 desired)
         {
-            Vector2 delta = new Vector2(Clip(Vector2.right, desired.x), Clip(Vector2.up, desired.y));
-            // Sweep the combined move as well to protect diagonal corners.
-            float distance = delta.magnitude;
-            if (distance > .00001f)
-                delta = delta.normalized * Clip(delta.normalized, distance);
+            Vector2 delta = ClipTerrainMove(body, collider, filter, hits, desired);
             body.MovePosition(body.position + delta);
             return delta;
         }
 
-        private float Clip(Vector2 axis, float distance)
+        public static Vector2 ClipTerrainMove(Rigidbody2D body, Collider2D collider, ContactFilter2D filter,
+            RaycastHit2D[] hits, Vector2 desired, float clearance = Skin)
+        {
+            clearance = Mathf.Max(Skin, clearance);
+            Vector2 delta = new Vector2(
+                Clip(body, collider, filter, hits, Vector2.right, desired.x, clearance),
+                Clip(body, collider, filter, hits, Vector2.up, desired.y, clearance));
+            // Sweep the combined move as well to protect diagonal corners.
+            float distance = delta.magnitude;
+            if (distance > .00001f)
+                delta = delta.normalized * Clip(body, collider, filter, hits, delta.normalized, distance, clearance);
+            return delta;
+        }
+
+        private static float Clip(Rigidbody2D body, Collider2D collider, ContactFilter2D filter,
+            RaycastHit2D[] hits, Vector2 axis, float distance, float clearance)
         {
             if (Mathf.Abs(distance) < .00001f) return 0f;
             Vector2 direction = axis * Mathf.Sign(distance);
             float allowed = Mathf.Abs(distance);
-            int count = collider.Cast(direction, filter, hits, allowed + Skin);
+            int count = collider.Cast(direction, filter, hits, allowed + clearance);
             if (count == hits.Length) return 0f;
             for (int i = 0; i < count; i++)
             {
@@ -1598,7 +1631,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 // One-way platforms only block descent from above.
                 if (hit.collider.usedByEffector && (direction.y >= 0f || collider.bounds.min.y < hit.collider.bounds.max.y - Skin))
                     continue;
-                allowed = Mathf.Min(allowed, Mathf.Max(0f, hit.distance - Skin));
+                allowed = Mathf.Min(allowed, Mathf.Max(0f, hit.distance - clearance));
             }
             return allowed * Mathf.Sign(distance);
         }

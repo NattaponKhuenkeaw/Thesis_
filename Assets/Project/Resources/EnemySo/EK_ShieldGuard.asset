@@ -30,4 +30,4 @@ MonoBehaviour:
   attackSfxOffset: 0
   blockSfx: {fileID: 0}
   blockSfxVolume: 1
-  recoveryPlantDuration: 0.8
+  recoveryPlantDuration: 0.72

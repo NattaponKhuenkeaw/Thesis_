@@ -15,12 +15,14 @@ MonoBehaviour:
   combatRole: 3
   attackRange: 12
   holdRange: 5
+  walkingSpeedMultiplier: 1
   warningDuration: 0.7
   hitWindowDuration: 0.15
-  attackCooldown: 1.3
+  attackCooldown: 1.17
   lungeDistance: 0
   bodyCharge: 0
   commitTelegraphFraction: 0
+  recoveryPlantDuration: 1.17
   interruptCooldown: 0.5
   attackWarningSfx: {fileID: 8300000, guid: c57d4365dfd4464d8ebca3382e672da6, type: 3}
   attackWarningSfxVolume: 0.21
@@ -29,7 +31,6 @@ MonoBehaviour:
   attackSfxOffset: 0
   blockSfx: {fileID: 0}
   blockSfxVolume: 0.04
-  recoveryPlantDuration: 1.3
   shotSpeed: 10
   shotLifetime: 2.5
   shotSprite: {fileID: 81102012, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
@@ -37,7 +38,7 @@ MonoBehaviour:
   - {fileID: 81102012, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
   - {fileID: 81102013, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
   - {fileID: 81102014, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
-  shotAnimationFPS: 10
+  shotAnimationFPS: 6.6666665
   shotTint: {r: 1, g: 1, b: 1, a: 1}
   shotRadius: 0.18
   muzzleOffset: {x: 0.6, y: 0.1}

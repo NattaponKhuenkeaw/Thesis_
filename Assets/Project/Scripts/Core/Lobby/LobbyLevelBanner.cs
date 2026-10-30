@@ -2,18 +2,24 @@ using System.Collections;
 using Project.Core.ZoneState;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Project.Core.Lobby
 {
     /// <summary>
-    /// Full-screen title that fades in with the current biome as "Level N", holds, then fades out.
+    /// Prefab-authored title for the current biome, shown briefly on lobby entry.
     /// </summary>
     public sealed class LobbyLevelBanner : MonoBehaviour
     {
-        private const float FadeInSeconds = 0.45f;
-        private const float HoldSeconds = 1.15f;
-        private const float FadeOutSeconds = 0.7f;
+        private const string PrefabResourcePath = "UI/LobbyLevelBanner";
+
+        [Header("Prefab References")]
+        [SerializeField] private CanvasGroup presentation;
+        [SerializeField] private TMP_Text levelLabel;
+
+        [Header("Timing")]
+        [SerializeField, Min(0f)] private float fadeInSeconds = .45f;
+        [SerializeField, Min(0f)] private float holdSeconds = 1.15f;
+        [SerializeField, Min(0f)] private float fadeOutSeconds = .7f;
 
         public static string FormatLevelLabel(int biomeIndex)
         {
@@ -26,63 +32,44 @@ namespace Project.Core.Lobby
                 ? RunProgressionManager.Instance.CurrentBiomeIndex
                 : 0;
 
-            GameObject host = new GameObject("LobbyLevelBanner");
-            LobbyLevelBanner banner = host.AddComponent<LobbyLevelBanner>();
+            var prefab = Resources.Load<LobbyLevelBanner>(PrefabResourcePath);
+            if (prefab == null)
+            {
+                Debug.LogError("[LobbyLevelBanner] Missing Resources/UI/LobbyLevelBanner.prefab. No runtime UI will be generated.");
+                return;
+            }
+
+            LobbyLevelBanner banner = Instantiate(prefab);
             banner.StartCoroutine(banner.PlayRoutine(FormatLevelLabel(biomeIndex)));
         }
 
         private IEnumerator PlayRoutine(string label)
         {
-            Canvas canvas = gameObject.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 8000;
-
-            CanvasScaler scaler = gameObject.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-
-            GameObject textObject = new GameObject("LevelLabel");
-            textObject.transform.SetParent(transform, false);
-            TextMeshProUGUI text = textObject.AddComponent<TextMeshProUGUI>();
-            text.text = label;
-            text.fontSize = 72f;
-            text.alignment = TextAlignmentOptions.Center;
-            text.color = Color.white;
-            text.raycastTarget = false;
-            if (TMP_Settings.defaultFontAsset != null)
+            if (presentation == null || levelLabel == null)
             {
-                text.font = TMP_Settings.defaultFontAsset;
+                Debug.LogError("[LobbyLevelBanner] The saved prefab has missing presentation references.", this);
+                Destroy(gameObject);
+                yield break;
             }
-
-            RectTransform rect = text.rectTransform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(900f, 160f);
-            rect.anchoredPosition = Vector2.zero;
-
-            yield return Fade(text, 0f, 1f, FadeInSeconds);
-            yield return new WaitForSecondsRealtime(HoldSeconds);
-            yield return Fade(text, 1f, 0f, FadeOutSeconds);
+            levelLabel.text = label.ToUpperInvariant();
+            yield return Fade(0f, 1f, fadeInSeconds);
+            yield return new WaitForSecondsRealtime(holdSeconds);
+            yield return Fade(1f, 0f, fadeOutSeconds);
             Destroy(gameObject);
         }
 
-        private static IEnumerator Fade(TextMeshProUGUI text, float from, float to, float duration)
+        private IEnumerator Fade(float from, float to, float duration)
         {
             float elapsed = 0f;
             float length = Mathf.Max(0.01f, duration);
             while (elapsed < length)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float alpha = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / length));
-                Color color = text.color;
-                color.a = alpha;
-                text.color = color;
+                presentation.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / length));
                 yield return null;
             }
 
-            Color finalColor = text.color;
-            finalColor.a = to;
-            text.color = finalColor;
+            presentation.alpha = to;
         }
     }
 }

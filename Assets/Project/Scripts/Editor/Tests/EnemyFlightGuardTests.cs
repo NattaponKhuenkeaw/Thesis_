@@ -234,6 +234,51 @@ public class EnemyFlightGuardTests
         Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.max.y, Is.LessThan(2.3f));
     }
 
+    [TestCase(false)] [TestCase(true)]
+    public void HighFlightSpawnDoesNotTeleportThroughCeilings(bool oneWay)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        var flight = GroundRoamer(new Vector3(1000f, 0f, 0f), null);
+        using (var settings = new SerializedObject(flight))
+        {
+            settings.FindProperty("flightHeight").floatValue = 6.8f;
+            settings.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var ceiling = Ground(new Vector2(1000f, 4f), new Vector2(20f, 1f));
+        if (oneWay)
+        {
+            ceiling.gameObject.layer = LayerMask.NameToLayer("OneWayPlatform");
+            ceiling.usedByEffector = true;
+            ceiling.gameObject.AddComponent<PlatformEffector2D>().useOneWay = true;
+        }
+        Physics2D.SyncTransforms();
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Physics2D.SyncTransforms();
+        var body = flight.GetComponent<EnemyController>().bodyCollider;
+        Assert.That(body.bounds.max.y, Is.LessThan(ceiling.bounds.min.y), "A clear destination above the ceiling is not reachable from the authored floor.");
+        Assert.That(body.bounds.min.y, Is.GreaterThan(0f));
+        Assert.That(flight.transform.position.x, Is.EqualTo(1000f).Within(.001f));
+    }
+
+    [Test]
+    public void HighFlightSpawnSlidesBesideBuildingsInsteadOfAppearingOnTheirRoof()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        var flight = GroundRoamer(new Vector3(1000f, 0f, 0f), null);
+        using (var settings = new SerializedObject(flight))
+        {
+            settings.FindProperty("flightHeight").floatValue = 6.8f;
+            settings.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var wall = Ground(new Vector2(1000f, 2f), new Vector2(2f, 4f));
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Physics2D.SyncTransforms();
+        var body = flight.GetComponent<EnemyController>().bodyCollider;
+        Assert.That(Mathf.Abs(flight.transform.position.x - 1000f), Is.InRange(1.5f, 3f));
+        Assert.That(body.Distance(wall).isOverlapped, Is.False);
+        Assert.That(body.bounds.min.y, Is.EqualTo(6.8f).Within(.001f), "Keep normal altitude when there is a clear route from the ground.");
+    }
+
     [Test]
     public void GroundAnchoredSpawnIgnoresEncounterTriggers()
     {
@@ -434,7 +479,7 @@ public class EnemyFlightGuardTests
         Assert.That(clip.length, Is.EqualTo(.2f).Within(.001f));
         Assert.That(clip.isLooping, Is.False);
         Assert.That(kit.HitWindowDuration, Is.EqualTo(.15f));
-        Assert.That(kit.AttackCooldown, Is.EqualTo(1.3f));
+        Assert.That(kit.AttackCooldown, Is.EqualTo(1.17f));
     }
 
     [TestCase("EnemyCore/EnemyCore")]
@@ -1130,26 +1175,62 @@ public class EnemyFlightGuardTests
         Assert.That(enemy.attackHitbox.enabled, Is.True);
     }
 
-    [Test]
-    public void LeavingDuringWindupCancelsAndReturnStartsAFullNewWarning()
+    [TestCase(20f, 0f)]
+    [TestCase(-20f, 0f)]
+    [TestCase(5f, 8f)]
+    [TestCase(2f, 3f)]
+    public void WindupCommitsToTheOriginalFacingWhenTargetLeaves(float targetX, float targetY)
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("WindupExitTarget", enemy.transform.position + Vector3.right * 5f);
         guard.BeginGuard(target.transform);
         guard.TickGuard(4.5f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
-        target.transform.position = enemy.transform.position + Vector3.right * 20f;
-        guard.TickGuard(.6f);
-        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
-        Assert.That(enemy.attackHitbox.enabled, Is.False);
-        target.transform.position = enemy.transform.position + Vector3.right * 5f;
-        guard.TickGuard(0f);
-        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
-        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        target.transform.position = enemy.transform.position + new Vector3(targetX, targetY, 0f);
         guard.TickGuard(.59f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
         guard.TickGuard(.02f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        Assert.That(enemy.attackHitbox.enabled, Is.True);
+        Assert.That(enemy.FacingLocked, Is.True);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+    }
+
+    [Test]
+    public void ShieldRushMovesAfterTargetLeavesDuringWarning()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        var target = Host("CommittedRushTarget", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        target.transform.position = enemy.transform.position + Vector3.left * 20f;
+        guard.TickGuard(1.01f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+
+        var action = new EnemyAttackAction();
+        action.Agent.Value = enemy.gameObject;
+        action.Target.Value = target;
+        typeof(EnemyAttackAction).GetField("m_Controller", Private).SetValue(action, enemy);
+        typeof(EnemyAttackAction).GetField("m_ShieldGuard", Private).SetValue(action, guard);
+        typeof(EnemyAttackAction).GetField("m_Body", Private).SetValue(action, enemy.rb);
+        typeof(EnemyAttackAction).GetField("m_HitboxDisabled", Private).SetValue(action, true);
+        try
+        {
+            typeof(EnemyAttackAction).GetMethod("OnUpdate", Private).Invoke(action, null);
+            Assert.That(enemy.rb.linearVelocity.x, Is.GreaterThan(0f));
+            Assert.That(enemy.attackHitbox.enabled, Is.True);
+            guard.TickGuard(enemy.Kit.HitWindowDuration + .01f);
+            Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Recovery));
+            Assert.That(enemy.attackHitbox.enabled, Is.False);
+            Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
+        }
+        finally
+        {
+            typeof(EnemyAttackAction).GetMethod("OnEnd", Private).Invoke(action, null);
+        }
     }
 
     [Test]
@@ -1196,12 +1277,19 @@ public class EnemyFlightGuardTests
         Assert.That(EnemyCombatRange.IsInAttackRange(enemy.gameObject, target, 1f), Is.False);
     }
 
-    [Test]
-    public void GuardDoesNotShieldExistingDotAndDeathClearsGuard()
+    [TestCase(EnemyShieldGuard.GuardPhase.Guarding)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Windup)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Striking)]
+    public void GuardDoesNotShieldExistingDotAndDeathClearsGuard(EnemyShieldGuard.GuardPhase phase)
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("DotTarget", enemy.transform.position + Vector3.right * 5f);
         guard.BeginGuard(target.transform);
+        if (phase != EnemyShieldGuard.GuardPhase.Guarding)
+            guard.TickGuard(5f);
+        if (phase == EnemyShieldGuard.GuardPhase.Striking)
+            guard.TickGuard(.61f);
+        Assert.That(guard.Phase, Is.EqualTo(phase));
         HitReactionData tick = HitReactionData.Default(5f, Vector2.zero, 0f);
         tick.damageDelivery = DamageDelivery.Dot;
         Assert.That(enemy.TakeResolvedHit(tick, target.transform.position), Is.EqualTo(5f));

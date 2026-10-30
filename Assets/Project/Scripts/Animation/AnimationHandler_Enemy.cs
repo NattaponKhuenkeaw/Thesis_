@@ -14,11 +14,17 @@ public class AnimationHandler_Enemy : MonoBehaviour
     public bool animateShieldGuard;
     [Tooltip("Use separate windup and firing clips for ranged attacks.")]
     public bool useRangedAttackPoses;
+    [Tooltip("Use separate preparation and strike clips for the supplied bite animation.")]
+    public bool useMeleeAttackPoses;
+    public bool gifShieldCharge;
+    private bool gifChargePreparing, gifChargeMoving, gifChargeStopping;
+    private float gifChargeClock;
 
     [System.Serializable]
     public class ReactionAnimationProfile
     {
         public bool enabled;
+        public bool finishGetUpAnimation;
         public string lightHurt = "Base Layer.Hurt";
         public string heavyHurt = "Base Layer.Hurt";
         public string launch = "Base Layer.Launch";
@@ -208,6 +214,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     void OnDisable()
     {
+        gifChargePreparing = gifChargeMoving = gifChargeStopping = false;
         FinishReactionPresentation(false);
         if (enemyController != null)
         {
@@ -219,6 +226,41 @@ public class AnimationHandler_Enemy : MonoBehaviour
     void LateUpdate()
     {
         TickReactionReturn(Time.time);
+        TickGifShieldCharge(Time.deltaTime);
+    }
+
+    private void TickGifShieldCharge(float deltaTime)
+    {
+        if (!gifShieldCharge || (!gifChargePreparing && !gifChargeMoving && !gifChargeStopping)) return;
+        if (lifecycleAnimationPlaying || (enemyController != null && (!enemyController.IsGameplayActive
+            || enemyController.CurrentReactionState != EnemyReactionState.None)))
+        {
+            gifChargePreparing = gifChargeMoving = gifChargeStopping = false;
+            return;
+        }
+        if (anim == null || !anim.isActiveAndEnabled || anim.speed <= 0f) return;
+        gifChargeClock += deltaTime * anim.speed;
+        if (gifChargeStopping && gifChargeClock >= .3f)
+        {
+            gifChargeStopping = false;
+            anim.Play(Animator.StringToHash(activeState), 0, 0f);
+            return;
+        }
+        float phase = gifChargePreparing ? 0f : gifChargeMoving
+            ? (1f + Mathf.Repeat(gifChargeClock, .6f) / .15f) / 7f
+            : (5f + gifChargeClock / .15f) / 7f;
+        anim.Play(Animator.StringToHash("Base Layer.BodyChargeRush"), 0, Mathf.Min(phase, .999f));
+    }
+
+    public void PlayShieldChargeAnticipation()
+    {
+        if (!gifShieldCharge || anim == null || !anim.isActiveAndEnabled) return;
+        EndShieldGuardPose();
+        gifChargePreparing = true;
+        gifChargeMoving = gifChargeStopping = false;
+        gifChargeClock = 0f;
+        bodyChargeAnimationPlaying = true;
+        anim.Play(Animator.StringToHash("Base Layer.BodyChargeRush"), 0, 0f);
     }
 
     private void TickReactionReturn(float now)
@@ -330,7 +372,10 @@ public class AnimationHandler_Enemy : MonoBehaviour
             return false;
         if (reactionReturnPending) FinishReactionPresentation(false);
         anim.ResetTrigger(attackHash);
-        anim.Play(state, 0, 0f);
+        gifChargePreparing = gifChargeStopping = false;
+        gifChargeMoving = gifShieldCharge && rushing;
+        gifChargeClock = 0f;
+        anim.Play(state, 0, gifChargeMoving ? 1f / 7f : 0f);
         bodyChargeAnimationPlaying = true;
         return true;
     }
@@ -343,6 +388,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
             ? activeState : "Base Layer.BodyChargeWindup");
         if (!anim.HasState(0, state))
             return;
+        gifChargePreparing = gifChargeMoving = gifChargeStopping = false;
         if (reactionReturnPending) FinishReactionPresentation(false);
         bool wasPlaying = shieldPosePlaying;
         if (!shieldPosePlaying)
@@ -385,12 +431,21 @@ public class AnimationHandler_Enemy : MonoBehaviour
     {
         if (!bodyChargeAnimationPlaying)
             return;
+        bool wasMoving = gifChargeMoving;
         bodyChargeAnimationPlaying = false;
+        gifChargePreparing = gifChargeMoving = gifChargeStopping = false;
         // Death/reaction animations own the pose when an attack is interrupted.
         if (enemyController == null || !enemyController.IsGameplayActive
             || enemyController.CurrentReactionState != EnemyReactionState.None
             || anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null)
             return;
+        if (gifShieldCharge && wasMoving)
+        {
+            gifChargeStopping = true;
+            gifChargeClock = 0f;
+            anim.Play(Animator.StringToHash("Base Layer.BodyChargeRush"), 0, 5f / 7f);
+            return;
+        }
         int idle = Animator.StringToHash(activeState);
         if (anim.HasState(0, idle))
         {
@@ -422,6 +477,19 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     public bool UsesReactionAnimationProfile => reactionAnimations != null && reactionAnimations.enabled
         && anim != null && animParamHashes != null && animParamHashes.Contains(manualReactionHash);
+
+    public bool IsFinishingGetUpAnimation
+    {
+        get
+        {
+            if (!UsesReactionAnimationProfile || !reactionAnimations.finishGetUpAnimation || !visualLandedKnockdown
+                || !anim.isActiveAndEnabled || reactionPoseHash != Animator.StringToHash(reactionAnimations.getUp)) return false;
+            var state = anim.GetCurrentAnimatorStateInfo(0);
+            if (anim.IsInTransition(0) && anim.GetNextAnimatorStateInfo(0).fullPathHash == reactionPoseHash) return true;
+            // The shared placeholder motion is looping; finish one authored override cycle regardless.
+            return state.fullPathHash == reactionPoseHash && state.normalizedTime < 1f;
+        }
+    }
 
     public void BeginReactionAnimation(HitReactionData data, bool airborneFollowup)
     {
@@ -529,8 +597,14 @@ public class AnimationHandler_Enemy : MonoBehaviour
                 if (enemyController != null && enemyController.hitReactionHandler != null
                     && !enemyController.hitReactionHandler.IsGroundedForCombat && visualAirFollowup)
                     pose = reactionAnimations.fall;
-                else if (visualLandedKnockdown)
+                else if (visualLandedKnockdown || (reactionAnimations.finishGetUpAnimation
+                    && reactionPoseHash == Animator.StringToHash(reactionAnimations.fall)
+                    && enemyController != null && enemyController.hitReactionHandler != null
+                    && enemyController.hitReactionHandler.IsGroundedForCombat))
+                {
+                    visualLandedKnockdown = true;
                     pose = reactionAnimations.getUp;
+                }
                 else
                     return; // Ground flinch recovery continues the current hurt clip.
                 duration = visualReaction.RecoveryFrames / (float)CombatCore.FrameDataConstants.LOGIC_FPS;

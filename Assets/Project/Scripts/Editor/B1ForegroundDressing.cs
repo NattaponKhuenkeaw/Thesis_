@@ -35,6 +35,9 @@ public static class B1ForegroundDressing
     private static bool UsesPowerlines(string path)
     {
         string name = Path.GetFileNameWithoutExtension(path);
+            if (name.StartsWith("RoomLayout_LV_", StringComparison.Ordinal)
+                && int.TryParse(name.Substring("RoomLayout_LV_".Length), out int level) && level > 5)
+                return false;
         return !name.StartsWith("RoomLayout_Rest_", StringComparison.Ordinal)
             && !name.StartsWith("RoomLayout_Level_", StringComparison.Ordinal)
             && !name.StartsWith("RoomLayout_Boss_", StringComparison.Ordinal);
@@ -250,6 +253,22 @@ public static class B1ForegroundDressing
     }
 
     public static void ApplyAndCapture() { Apply(); CaptureAll(); }
+
+    public static void RefreshLayout(GameObject root)
+    {
+        var group = root.transform.Find(GroupName);
+        if (group == null) { group = new GameObject(GroupName).transform; group.SetParent(root.transform,false); }
+        var sections = GetSections(root);
+        while (group.childCount > sections.Length) Object.DestroyImmediate(group.GetChild(group.childCount - 1).gameObject);
+        while (group.childCount < sections.Length)
+            PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath),group);
+        for (int i = 0; i < sections.Length; i++)
+        {
+            var part = group.GetChild(i);
+            part.name = $"Powerline_{i+1:00}";
+            Configure(part.gameObject,sections[i],i);
+        }
+    }
 
     public static void RefineAndCapture()
     {

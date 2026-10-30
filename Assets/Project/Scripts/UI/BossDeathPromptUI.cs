@@ -1,20 +1,20 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Project.UI
 {
     /// <summary>
-    /// Lightweight full-screen prompt shown after boss reward absorb.
+    /// Prefab-authored completion notice shown after the boss death presentation.
     /// Does not lock movement — only displays text until left-click continues.
     /// </summary>
     public sealed class BossDeathPromptUI : MonoBehaviour
     {
+        private const string PrefabResourcePath = "UI/BossDeathPromptUI";
         public static BossDeathPromptUI Instance { get; private set; }
 
         [SerializeField] private Canvas canvas;
         [SerializeField] private TextMeshProUGUI promptLabel;
-        [SerializeField] private string defaultPrompt = "กดคลิกซ้ายเพื่อไปด่านต่อไป";
+        [SerializeField] private string defaultPrompt = "Left-click to continue";
 
         private bool isShowing;
 
@@ -32,8 +32,14 @@ namespace Project.UI
                 return existing;
             }
 
-            GameObject go = new GameObject("BossDeathPromptUI");
-            return go.AddComponent<BossDeathPromptUI>();
+            var prefab = Resources.Load<BossDeathPromptUI>(PrefabResourcePath);
+            if (prefab == null)
+            {
+                Debug.LogError("[BossDeathPromptUI] Missing Resources/UI/BossDeathPromptUI.prefab. No runtime UI will be generated.");
+                return null;
+            }
+            Instance = Instantiate(prefab);
+            return Instance;
         }
 
         private void Awake()
@@ -45,7 +51,6 @@ namespace Project.UI
             }
 
             Instance = this;
-            EnsureUi();
             Hide();
         }
 
@@ -57,7 +62,11 @@ namespace Project.UI
 
         public void Show(string message = null)
         {
-            EnsureUi();
+            if (canvas == null || promptLabel == null)
+            {
+                Debug.LogError("[BossDeathPromptUI] The saved prefab has missing presentation references.", this);
+                return;
+            }
             if (promptLabel != null)
                 promptLabel.text = string.IsNullOrWhiteSpace(message) ? defaultPrompt : message;
 
@@ -75,37 +84,5 @@ namespace Project.UI
             isShowing = false;
         }
 
-        private void EnsureUi()
-        {
-            if (canvas != null && promptLabel != null)
-                return;
-
-            GameObject canvasGo = new GameObject("BossDeathPrompt_Canvas");
-            canvasGo.transform.SetParent(transform, false);
-            canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 520;
-
-            CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            canvasGo.AddComponent<GraphicRaycaster>();
-
-            GameObject labelGo = new GameObject("PromptLabel");
-            labelGo.transform.SetParent(canvasGo.transform, false);
-            RectTransform rect = labelGo.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.12f);
-            rect.anchorMax = new Vector2(0.5f, 0.12f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(900f, 80f);
-
-            promptLabel = labelGo.AddComponent<TextMeshProUGUI>();
-            promptLabel.text = defaultPrompt;
-            promptLabel.fontSize = 36f;
-            promptLabel.alignment = TextAlignmentOptions.Center;
-            promptLabel.fontStyle = FontStyles.Bold;
-            promptLabel.color = new Color(1f, 0.95f, 0.85f, 0.95f);
-            promptLabel.raycastTarget = false;
-        }
     }
 }
