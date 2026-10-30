@@ -11,6 +11,7 @@ public class PlayerIntroState : PlayerState
     private const float MaxIntroDurationSeconds = 10f;
 
     private float introStartedAt;
+    private bool waitingForReveal;
 
     public PlayerIntroState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -26,6 +27,31 @@ public class PlayerIntroState : PlayerState
 
     public EntrancePoint TargetEntrance { get; set; }
 
+    public float EstimatedRemainingWalkSeconds
+    {
+        get
+        {
+            if (player.Movement == null || TargetEntrance == null) return 0f;
+            var movement = player.Movement;
+            float speed = movement.moveSpeedOverride >= 0f ? movement.moveSpeedOverride
+                : movement.profile != null ? movement.profile.moveSpeed : 0f;
+            float travel = Mathf.Max(0f, Mathf.Abs(TargetEntrance.StopPosition.x - player.transform.position.x) - ArrivalTolerance);
+            return speed > .001f ? travel / speed : 0f;
+        }
+    }
+
+    public void PrepareForReveal(EntrancePoint entrance)
+    {
+        TargetEntrance = entrance;
+        waitingForReveal = true;
+    }
+
+    public void BeginVisibleWalk()
+    {
+        waitingForReveal = false;
+        introStartedAt = Time.unscaledTime;
+    }
+
     public override void Enter()
     {
         base.Enter();
@@ -35,6 +61,7 @@ public class PlayerIntroState : PlayerState
         {
             player.Movement.SetHorizontalInput(0f);
         }
+        if (!waitingForReveal) BeginVisibleWalk();
     }
 
     public override void Update()
@@ -42,6 +69,17 @@ public class PlayerIntroState : PlayerState
         if (player.Movement == null || TargetEntrance == null)
         {
             CompleteIntro(snapToStopX: false);
+            return;
+        }
+
+        if (waitingForReveal)
+        {
+            player.Movement.SetHorizontalInput(0f);
+            if (Time.unscaledTime - introStartedAt > MaxIntroDurationSeconds)
+            {
+                Debug.LogWarning("[PlayerIntroState] Reveal never completed. Releasing the cinematic lock.");
+                CompleteIntro(snapToStopX: false);
+            }
             return;
         }
 
@@ -71,6 +109,7 @@ public class PlayerIntroState : PlayerState
     public override void Exit()
     {
         base.Exit();
+        waitingForReveal = false;
         TargetEntrance = null;
         if (player.Movement != null)
         {

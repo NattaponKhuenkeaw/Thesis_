@@ -2262,7 +2262,7 @@ MonoBehaviour:
   popupTextPrefab: {fileID: 1051378219}
   displayDuration: 1.5
   floatSpeed: 60
-  fadeDuration: 0.5
+  fadeDuration: 0.15
 --- !u!1001 &1260121019
 PrefabInstance:
   m_ObjectHideFlags: 0

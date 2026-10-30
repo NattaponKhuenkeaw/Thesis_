@@ -25,7 +25,7 @@ namespace Project.Core.ZoneState
         [SerializeField] private TransitionTrigger _exitTrigger;
 
         [Header("Boundary Tuning")]
-        [Tooltip("Extra space beyond an outside entrance spawn during PlayerIntroState.")]
+        [Tooltip("Physical entrance-wall clearance beyond an outside spawn. Does not expand the camera frame.")]
         [Min(0f)] [SerializeField] private float _entrancePadding = 0.75f;
 
         [Header("Camera")]
@@ -240,13 +240,8 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            if (_cameraBounds == null)
-            {
-                ResolveCameraDependencies();
-            }
-
             float introLeft = Mathf.Min(CameraLeft(), entrance.SpawnPosition.x - _entrancePadding);
-            ApplyHorizontalBounds(introLeft, _currentRightWorld, force: true);
+            // Let the player enter from offscreen without moving the room's camera edge.
             AlignEntranceWall(introLeft);
         }
 
@@ -257,7 +252,6 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            ApplyHorizontalBounds(CameraLeft(), _currentRightWorld, force: true);
             AlignEntranceWall(_lockedLeftWorld);
         }
 

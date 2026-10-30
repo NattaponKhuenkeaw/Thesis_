@@ -27,7 +27,7 @@ namespace Project.Core.ZoneState
 
         [Header("Transition Settings")]
         [Tooltip("Duration of the fade-in and fade-out animations (in seconds).")]
-        [SerializeField] private float fadeDuration = 0.5f;
+        [SerializeField] private float fadeDuration = 0.15f;
 
         [Tooltip("The ZoneStateProvider that manages SafeZone and CombatZone state changes.")]
         [SerializeField] private ZoneStateProvider zoneStateProvider;
@@ -406,23 +406,7 @@ namespace Project.Core.ZoneState
                     GameAudioManager.Instance.PlayHitSFX(transitionInSFX);
                 }
 
-                // Start intro under black, then fade in so every room enter reveals with a fade.
-                if (player != null && targetEntrance != null && player.StateMachine != null && player.StateMachine.IntroState != null)
-                {
-                    player.StateMachine.IntroState.TargetEntrance = targetEntrance;
-                    player.StateMachine.ChangeState(player.StateMachine.IntroState);
-                    Debug.Log($"[SceneTransitionManager] Intro started under fade. CurrentState={player.StateMachine.CurrentStateId}, TargetStop={targetEntrance.StopPosition}.");
-                }
-                else if (player == null || targetEntrance == null)
-                {
-                    Debug.LogWarning("[SceneTransitionManager] Skipping intro because player or entrance lookup failed.");
-                }
-                else
-                {
-                    Debug.LogWarning("[SceneTransitionManager] Player StateMachine has no IntroState; skipping transition intro.");
-                }
-
-                yield return StartCoroutine(FadeOverlayRoutine(1f, 0f));
+                yield return StartCoroutine(RevealEntranceRoutine(player, targetEntrance));
                 reachedDestination = true;
 
                 if (player != null && player.StateMachine != null)
@@ -722,7 +706,39 @@ namespace Project.Core.ZoneState
             return Object.FindFirstObjectByType<SceneBoundaryController>();
         }
 
-        private IEnumerator FadeOverlayRoutine(float startAlpha, float targetAlpha)
+        private IEnumerator RevealEntranceRoutine(PlayerCharacter player, EntrancePoint entrance)
+        {
+            // Establish normal-speed movement under black before revealing the first frame.
+            SetFadeAlpha(1f);
+            float revealDuration = fadeDuration;
+            if (player != null && entrance != null && player.StateMachine != null && player.StateMachine.IntroState != null)
+            {
+                player.StateMachine.IntroState.PrepareForReveal(entrance);
+                player.StateMachine.ChangeState(player.StateMachine.IntroState);
+                if (player.StateMachine.CurrentStateId == PlayerStateId.Intro)
+                {
+                    player.StateMachine.IntroState.BeginVisibleWalk();
+                    player.StateMachine.IntroState.Update();
+                    // Give the motor a physics tick before revealing a stationary first frame.
+                    yield return new WaitForFixedUpdate();
+                    // Short entrances need a faster reveal, not slower movement.
+                    revealDuration = Mathf.Min(revealDuration, player.StateMachine.IntroState.EstimatedRemainingWalkSeconds * .5f);
+                }
+            }
+            else if (player == null || entrance == null)
+                Debug.LogWarning("[SceneTransitionManager] Skipping intro because player or entrance lookup failed.");
+            else
+                Debug.LogWarning("[SceneTransitionManager] Player StateMachine has no IntroState; skipping transition intro.");
+
+            yield return StartCoroutine(FadeOverlayRoutine(1f, 0f, revealDuration));
+
+            if (player != null && entrance != null && player.StateMachine != null && player.StateMachine.CurrentStateId == PlayerStateId.Intro)
+            {
+                Debug.Log($"[SceneTransitionManager] Intro walking through fade reveal. TargetStop={entrance.StopPosition}.");
+            }
+        }
+
+        private IEnumerator FadeOverlayRoutine(float startAlpha, float targetAlpha, float? durationOverride = null)
         {
             EnsureFadeOverlay();
             if (fadeImage == null)
@@ -730,7 +746,7 @@ namespace Project.Core.ZoneState
                 yield break;
             }
 
-            float duration = Mathf.Max(0f, fadeDuration);
+            float duration = Mathf.Max(0f, durationOverride ?? fadeDuration);
             Color color = fadeImage.color;
             color.a = startAlpha;
             fadeImage.color = color;
