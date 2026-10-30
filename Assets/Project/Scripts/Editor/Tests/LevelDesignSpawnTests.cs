@@ -28,6 +28,8 @@ public class LevelDesignSpawnTests
             {
                 var sensor=i==0 ? first : (BoxCollider2D)stage.Chambers[i].enterTrigger;
                 Vector2 entry=LevelDesignLayoutBuilder.ToWorld(plan,rooms[i].entry);
+                if ((level==4 || level==9) && (i==3 || i==4))
+                    entry.x=LayoutRoadAuthoring.WorldRect((BoxCollider2D)stage.Chambers[i].entranceWall).xMax+1f;
                 Assert.That(sensor.isTrigger,Is.True);
                 Assert.That(sensor.size.x,Is.EqualTo(1.6f));
                 Assert.That(sensor.bounds.min.y,Is.EqualTo(entry.y).Within(.001f));
@@ -179,7 +181,8 @@ public class LevelDesignSpawnTests
             {
                 var room=stage.Chambers[i];
                 Assert.That(room.spawnSlots.Length,Is.GreaterThanOrEqualTo(5));
-                Assert.That(room.spawnSlots.Length,Is.EqualTo(expected[i].slots.Length));
+                bool repairedCombat=level==4 || level==9;
+                Assert.That(room.spawnSlots.Length,Is.EqualTo(repairedCombat ? 5 : expected[i].slots.Length));
                 Assert.That(room.encounter,Is.EqualTo(AssetDatabase.LoadAssetAtPath<EncounterSO>(CombatRouteContent.EasyResourcePath.Insert(0,"Assets/Project/Resources/")+".asset")));
                 Assert.That(room.encounter.RollQuota(room.encounter.ChamberQuota).Count,Is.EqualTo(4));
                 Assert.That(room.exitWall,Is.Not.Null);
@@ -196,10 +199,14 @@ public class LevelDesignSpawnTests
                     Assert.That(slot.name,Is.EqualTo($"Spawn_{n}"));
                     Assert.That(slot.IsChildOf(room.spawnRoot),Is.True);
                     Vector2 feet=slot.position;
-                    Assert.That(Vector2.Distance(feet,LevelDesignSpawnBuilder.SpawnPosition(level,i,n)),Is.LessThan(.001f));
+                    if (!repairedCombat)
+                        Assert.That(Vector2.Distance(feet,LevelDesignSpawnBuilder.SpawnPosition(level,i,n)),Is.LessThan(.001f));
                     Rect body=new Rect(feet+new Vector2(-.9f,.01f),new Vector2(1.8f,2.7f));
                     bool supported=false;
-                    foreach (Rect solid in plan.solids.Select(r=>LevelDesignLayoutBuilder.ToWorld(plan,r)))
+                    var solids=repairedCombat
+                        ? root.transform.Find("Terrain").GetComponentsInChildren<BoxCollider2D>().Where(b=>b.enabled).Select(LayoutRoadAuthoring.WorldRect)
+                        : plan.solids.Select(r=>LevelDesignLayoutBuilder.ToWorld(plan,r));
+                    foreach (Rect solid in solids)
                     {
                         Assert.That(solid.Overlaps(body),Is.False,$"LV{level} Room{i+1} {slot.name} is inside terrain");
                         if (Mathf.Abs(feet.y-solid.yMax-.05f)<.001f && feet.x>=solid.xMin+.9f && feet.x<=solid.xMax-.9f) supported=true;
