@@ -105,6 +105,11 @@ namespace Project.TeamBuilder.UI
 
         private void OnDisable()
         {
+            if (isPanelSessionActive)
+            {
+                OnPanelClosed();
+            }
+
             if (activeInstance == this)
             {
                 activeInstance = null;
@@ -160,9 +165,6 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         private void EnsureInitialized()
         {
-            if (isInitialized) return;
-            isInitialized = true;
-
             if (!HasConfiguredTeamSlots())
             {
                 return;
@@ -176,7 +178,7 @@ namespace Project.TeamBuilder.UI
 
             if (teamLoader == null)
             {
-                teamLoader = FindFirstObjectByType<TeamLoader>();
+                teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
             }
 
 
@@ -190,6 +192,13 @@ namespace Project.TeamBuilder.UI
                 playerInventory = teamLoader != null && teamLoader.RunInventory != null
                     ? teamLoader.RunInventory
                     : Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+            }
+
+            // Scene UI can start before the persistent team loader has been created.
+            if (isInitialized)
+            {
+                draftController.BindRuntimeSources(playerInventory, teamLoader);
+                return;
             }
 
             // Instantiate extracted sub-controllers
@@ -230,6 +239,7 @@ namespace Project.TeamBuilder.UI
                 if (teamSlots[i] != null)
                     teamSlots[i].Init(this, i);
             }
+            isInitialized = true;
         }
 
         // =========================================================
@@ -238,19 +248,14 @@ namespace Project.TeamBuilder.UI
 
         public void OnPanelOpened()
         {
+            if (isPanelSessionActive) return;
             EnsureInitialized();
+            if (!isInitialized) return;
             ResetInventorySelection();
             ClearArtifactSwitchSelection();
             selectedCharacterSwitchSlotIndex = -1;
-            if (isPanelSessionActive)
-            {
-                draftController.RestoreCachedDraft();
-            }
-            else
-            {
-                isPanelSessionActive = true;
-                draftController.LoadRuntimeDraft();
-            }
+            isPanelSessionActive = true;
+            draftController.LoadRuntimeDraft();
 
             if (currentMode == ZoneMode.SafeZone && openGridPanelOnSafeZoneOpen)
             {
@@ -283,6 +288,7 @@ namespace Project.TeamBuilder.UI
 
         public void OnPanelClosed()
         {
+            bool wasOpen = isPanelSessionActive;
             pendingCloseAfterDeploy = null;
             ClearArtifactSwitchSelection();
             selectedCharacterSwitchSlotIndex = -1;
@@ -293,10 +299,13 @@ namespace Project.TeamBuilder.UI
             }
             isInventoryPanelOpen = false;
             isPanelSessionActive = false;
-            draftController.ClearDraftCache();
-            deployController.Hide();
-            Time.timeScale = previousTimeScale > 0f ? previousTimeScale : 1f;
-            audioController.RestorePauseAudioState();
+            draftController?.ClearDraftCache();
+            deployController?.Hide();
+            if (wasOpen)
+            {
+                Time.timeScale = previousTimeScale;
+                audioController?.RestorePauseAudioState();
+            }
 
             if (inspectScreenUI != null && inspectScreenUI.gameObject.activeSelf)
             {
@@ -308,7 +317,7 @@ namespace Project.TeamBuilder.UI
                 artifactPreviewPanel.Close();
             }
 
-            if (teamLoader != null)
+            if (wasOpen && teamLoader != null)
             {
                 teamLoader.RefreshRuntimeStatsAndResources();
             }
@@ -325,8 +334,14 @@ namespace Project.TeamBuilder.UI
 
         public void OpenPanel()
         {
+            if (isPanelSessionActive) return;
             gameObject.SetActive(true);
             EnsureInitialized();
+            if (!isInitialized)
+            {
+                gameObject.SetActive(false);
+                return;
+            }
             owningTeamUI?.RegisterActivePanel(this);
             OnPanelOpened();
         }
@@ -1142,7 +1157,7 @@ namespace Project.TeamBuilder.UI
 
         private void SaveDraftOnExit()
         {
-            if (currentMode != ZoneMode.SafeZone || draftController == null)
+            if (!isPanelSessionActive || currentMode != ZoneMode.SafeZone || draftController == null)
             {
                 return;
             }

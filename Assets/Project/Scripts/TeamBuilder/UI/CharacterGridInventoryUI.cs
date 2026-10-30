@@ -112,7 +112,8 @@ namespace Project.TeamBuilder.UI
                 if (item != null)
                 {
                     item.gameObject.SetActive(false);
-                    Destroy(item.gameObject);
+                    if (Application.isPlaying) Destroy(item.gameObject);
+                    else DestroyImmediate(item.gameObject);
                 }
             }
             spawnedItems.Clear();
