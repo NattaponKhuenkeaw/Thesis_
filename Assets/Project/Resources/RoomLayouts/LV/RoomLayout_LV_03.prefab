@@ -1472,7 +1472,7 @@ Transform:
   m_GameObject: {fileID: 1265767999661084664}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 169.4, y: 0.54, z: 0}
+  m_LocalPosition: {x: 170.6456, y: 0.54, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1532,7 +1532,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 2
-  m_Size: {x: 46.40001, y: 2.84}
+  m_Size: {x: 48.89116, y: 2.84}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -1695,7 +1695,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 1
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 2.030014, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -1705,7 +1705,7 @@ BoxCollider2D:
     drawMode: 2
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 235.20001, y: 4.44}
+  m_Size: {x: 239.26004, y: 4.44}
   m_EdgeRadius: 0
 --- !u!212 &3110612785243371971
 SpriteRenderer:
@@ -7201,13 +7201,13 @@ CompositeCollider2D:
   m_ColliderPaths:
   - m_Collider: {fileID: 8444650249109473303}
     m_ColliderPaths:
-    - - X: 1911059968
+    - - X: 1951660288
         Y: 0
       - X: -440940096
         Y: 0
       - X: -440940096
         Y: -44400000
-      - X: 1911059968
+      - X: 1951660288
         Y: -44400000
   - m_Collider: {fileID: 2111788896407835849}
     m_ColliderPaths:
@@ -7241,8 +7241,8 @@ CompositeCollider2D:
         Y: 76000000
   m_CompositePaths:
     m_Paths:
-    - - {x: 191.10483, y: -4.44}
-      - {x: 191.10483, y: 0}
+    - - {x: 195.16486, y: -4.44}
+      - {x: 195.16486, y: 0}
       - {x: 146.2, y: 0.0011715}
       - {x: 146.19882, y: 7.6}
       - {x: 141.65, y: 7.6011715}
@@ -8423,8 +8423,8 @@ Transform:
   m_GameObject: {fileID: 8182864848709493007}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 181.90909, y: -3.521135, z: 0}
-  m_LocalScale: {x: 0.5568182, y: 2.2007093, z: 1}
+  m_LocalPosition: {x: 183.1962, y: -3.521135, z: 0}
+  m_LocalScale: {x: 0.62385905, y: 2.2007093, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8888639312637672110}
