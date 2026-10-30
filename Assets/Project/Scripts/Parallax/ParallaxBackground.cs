@@ -6,7 +6,7 @@ namespace Project.Parallax
     /// Standalone parallax background script. 
     /// Handles movement relative to the camera and infinite tiling.
     /// </summary>
-    [DefaultExecutionOrder(10)] // Ensures this runs AFTER Camera movement in LateUpdate
+    [DefaultExecutionOrder(200)] // CinemachineBrain updates the output camera at order 100.
     public class ParallaxBackground : MonoBehaviour
     {
         [Header("Settings")]

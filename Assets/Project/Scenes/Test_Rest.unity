@@ -348,6 +348,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 707143094}
     m_Modifications:
+    - target: {fileID: 753286293910607211, guid: bf3dca694e927524c87f5156a4370520, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 19.6133
+      objectReference: {fileID: 0}
     - target: {fileID: 1113629579625030823, guid: bf3dca694e927524c87f5156a4370520, type: 3}
       propertyPath: m_Name
       value: RestEnvironment_B1
@@ -703,6 +707,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1068387717141365166, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
   m_PrefabInstance: {fileID: 495679380}
   m_PrefabAsset: {fileID: 0}
+--- !u!212 &519286182 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 299570318760428664, guid: bf3dca694e927524c87f5156a4370520, type: 3}
+  m_PrefabInstance: {fileID: 210763253}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &519286183 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 6332765652858982811, guid: bf3dca694e927524c87f5156a4370520, type: 3}
+  m_PrefabInstance: {fileID: 210763253}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &519286184 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 1348484398740762068, guid: bf3dca694e927524c87f5156a4370520, type: 3}
+  m_PrefabInstance: {fileID: 210763253}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &519286185 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3587961881226888926, guid: bf3dca694e927524c87f5156a4370520, type: 3}
+  m_PrefabInstance: {fileID: 210763253}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &606731727 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1566489620681877580, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
@@ -844,6 +868,10 @@ MonoBehaviour:
   - {fileID: 210763263}
   - {fileID: 210763262}
   - {fileID: 210763261}
+  - {fileID: 519286185}
+  - {fileID: 519286184}
+  - {fileID: 519286183}
+  - {fileID: 519286182}
   biomeOneParallax:
   - {fileID: 210763260}
   - {fileID: 210763259}

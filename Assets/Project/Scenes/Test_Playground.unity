@@ -178,6 +178,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &107556782
 SpriteRenderer:
@@ -596,6 +597,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.3, y: 0.3}
   infiniteHorizontal: 1
   infiniteVertical: 0
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &254490097
 SpriteRenderer:
@@ -865,6 +867,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &394462404
 SpriteRenderer:
@@ -1004,6 +1007,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.1, y: 0.1}
   infiniteHorizontal: 1
   infiniteVertical: 0
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &470605792
 SpriteRenderer:
@@ -1210,6 +1214,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &617337126
 SpriteRenderer:
@@ -1619,6 +1624,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &696222026
 SpriteRenderer:
@@ -1791,6 +1797,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &954584172
 SpriteRenderer:
@@ -2039,6 +2046,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!1 &1093933011
 GameObject:
@@ -2088,6 +2096,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.3, y: 0.3}
   infiniteHorizontal: 1
   infiniteVertical: 0
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &1093933014
 SpriteRenderer:
@@ -2196,6 +2205,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &1114444241
 SpriteRenderer:
@@ -2952,6 +2962,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.1, y: 0.1}
   infiniteHorizontal: 1
   infiniteVertical: 0
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &1461985245
 SpriteRenderer:
@@ -3220,6 +3231,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.3, y: 0.3}
   infiniteHorizontal: 1
   infiniteVertical: 0
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!1 &1579789324
 GameObject:
@@ -3269,6 +3281,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &1579789327
 SpriteRenderer:
@@ -3584,6 +3597,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
   infiniteVertical: 1
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!212 &1908685430
 SpriteRenderer:
@@ -4341,6 +4355,7 @@ MonoBehaviour:
   parallaxEffectMultiplier: {x: 0.1, y: 0.1}
   infiniteHorizontal: 1
   infiniteVertical: 0
+  centerVerticallyOnCamera: 0
   targetCamera: {fileID: 1263886178}
 --- !u!114 &729008943279367373 stripped
 MonoBehaviour:

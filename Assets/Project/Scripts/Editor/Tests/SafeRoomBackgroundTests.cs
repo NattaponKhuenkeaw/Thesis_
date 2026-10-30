@@ -76,8 +76,8 @@ public class SafeRoomBackgroundTests
                 camera.transform.position = new Vector3(point.x, point.y, -100);
                 typeof(ParallaxBackground).GetMethod("LateUpdate", Private).Invoke(sky, null);
                 var image = sky.GetComponent<SpriteRenderer>();
-                Assert.That(image.bounds.min.x, Is.LessThan(point.x - 16f));
-                Assert.That(image.bounds.max.x, Is.GreaterThan(point.x + 16f));
+                Assert.That(SkyBackgroundRepair.RowBounds(sky).min.x, Is.LessThan(point.x - 16f));
+                Assert.That(SkyBackgroundRepair.RowBounds(sky).max.x, Is.GreaterThan(point.x + 16f));
                 Assert.That(image.bounds.min.y, Is.LessThan(point.y - 9f));
                 Assert.That(image.bounds.max.y, Is.GreaterThan(point.y + 9f));
                 Assert.That(sky.transform.localScale, Is.EqualTo(Vector3.one * SkyBackgroundRepair.SkyScale));

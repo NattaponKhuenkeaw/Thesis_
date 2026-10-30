@@ -488,6 +488,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1068387717141365166, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
   m_PrefabInstance: {fileID: 495679380}
   m_PrefabAsset: {fileID: 0}
+--- !u!212 &598513259 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3080106704281997839, guid: b0f50bd3e74fe224180b30662bd60d85, type: 3}
+  m_PrefabInstance: {fileID: 1944975177}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &598513260 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 6887947658840464124, guid: b0f50bd3e74fe224180b30662bd60d85, type: 3}
+  m_PrefabInstance: {fileID: 1944975177}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &598513261 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 805280424171021372, guid: b0f50bd3e74fe224180b30662bd60d85, type: 3}
+  m_PrefabInstance: {fileID: 1944975177}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &598513262 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 1369003474033562956, guid: b0f50bd3e74fe224180b30662bd60d85, type: 3}
+  m_PrefabInstance: {fileID: 1944975177}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &681616279
 GameObject:
   m_ObjectHideFlags: 0
@@ -622,6 +642,10 @@ MonoBehaviour:
   - {fileID: 1944975189}
   - {fileID: 1944975188}
   - {fileID: 1944975187}
+  - {fileID: 598513262}
+  - {fileID: 598513261}
+  - {fileID: 598513260}
+  - {fileID: 598513259}
   biomeOneParallax:
   - {fileID: 1944975186}
   - {fileID: 1944975185}

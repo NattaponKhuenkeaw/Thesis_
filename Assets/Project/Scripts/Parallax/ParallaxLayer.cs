@@ -7,6 +7,7 @@ namespace Project.Parallax
     /// Supports infinite looping for tiled backgrounds.
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
+    [DefaultExecutionOrder(200)]
     public class ParallaxLayer : MonoBehaviour
     {
         [Header("Movement Weights")]

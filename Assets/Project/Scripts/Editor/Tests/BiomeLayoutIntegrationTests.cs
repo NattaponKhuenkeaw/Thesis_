@@ -194,7 +194,7 @@ public class BiomeLayoutIntegrationTests
                 foreach (var layer in layers)
                 {
                     typeof(ParallaxBackground).GetMethod("LateUpdate",flags).Invoke(layer,null);
-                    var bounds=layer.GetComponent<SpriteRenderer>().bounds;
+                    var bounds=SkyBackgroundRepair.IsSky(layer) ? SkyBackgroundRepair.RowBounds(layer) : layer.GetComponent<SpriteRenderer>().bounds;
                     Assert.That(bounds.min.x,Is.LessThan(point.x-18f),layer.name+" left edge");
                     Assert.That(bounds.max.x,Is.GreaterThan(point.x+18f),layer.name+" right edge");
                 }

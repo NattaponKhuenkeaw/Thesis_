@@ -14,7 +14,8 @@ public class CombatBackgroundStandardTests
         GameObject background = AssetDatabase.LoadAssetAtPath<GameObject>(BackgroundPath);
         Assert.That(background, Is.Not.Null);
         Assert.That(background.GetComponentsInChildren<ParallaxBackground>(true).Length, Is.EqualTo(6));
-        Assert.That(background.GetComponentsInChildren<SpriteRenderer>(true).Length, Is.EqualTo(6));
+        var sky = System.Linq.Enumerable.Single(background.GetComponentsInChildren<ParallaxBackground>(true), SkyBackgroundRepair.IsSky);
+        Assert.That(background.GetComponentsInChildren<SpriteRenderer>(true).Length, Is.EqualTo(5 + SkyBackgroundRepair.RowImages(sky).Length));
         Assert.That(background.GetComponentsInChildren<Collider2D>(true), Is.Empty);
         Assert.That(background.GetComponentsInChildren<Rigidbody2D>(true), Is.Empty);
         AssertVector(background.transform.localPosition, new Vector3(0f, 5.2f, 0f));

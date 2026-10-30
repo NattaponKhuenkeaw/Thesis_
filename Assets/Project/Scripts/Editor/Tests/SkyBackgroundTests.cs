@@ -16,19 +16,30 @@ public class SkyBackgroundTests
 {
     private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
+    private static ParallaxBackground MainSky(GameObject root)
+        => root.GetComponentsInChildren<ParallaxBackground>(true)
+            .Single(p => SkyBackgroundRepair.IsSky(p) && (p.name == "background" || p.name == "Sky"));
+
     [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)]
     [TestCase(6)] [TestCase(7)] [TestCase(8)] [TestCase(9)] [TestCase(10)]
-    public void AllLayoutsRepeatSkyHorizontallyWithoutEnlargingArtwork(int level)
+    public void AllLayoutsJoinSimpleSkyImagesWithoutEnlargingArtwork(int level)
     {
         var root = AssetDatabase.LoadAssetAtPath<GameObject>(BiomeLayoutAuthoring.LayoutPath(level));
-        var sky = root.GetComponentsInChildren<ParallaxBackground>(true).Single(SkyBackgroundRepair.IsSky);
+        var sky = MainSky(root);
         var image = sky.GetComponent<SpriteRenderer>();
         Assert.That(sky.transform.localScale, Is.EqualTo(Vector3.one * SkyBackgroundRepair.SkyScale));
         Assert.That(sky.centerVerticallyOnCamera, Is.True);
         Assert.That(sky.parallaxEffectMultiplier, Is.EqualTo(Vector2.one));
-        Assert.That(image.drawMode, Is.EqualTo(SpriteDrawMode.Tiled));
-        Assert.That(image.tileMode, Is.EqualTo(SpriteTileMode.Continuous));
-        Assert.That(image.size.x, Is.GreaterThan(image.sprite.bounds.size.x));
+        Assert.That(image.drawMode, Is.EqualTo(SpriteDrawMode.Simple));
+        var row = SkyBackgroundRepair.RowImages(sky);
+        Assert.That(row.Length, Is.GreaterThanOrEqualTo(3));
+        Assert.That(SkyBackgroundRepair.RowBounds(sky).size.x, Is.GreaterThan(image.bounds.size.x));
+        foreach (var tile in row)
+        {
+            Assert.That(tile.drawMode, Is.EqualTo(SpriteDrawMode.Simple));
+            Assert.That(tile.sprite, Is.EqualTo(image.sprite));
+            Assert.That(tile.sharedMaterial, Is.EqualTo(image.sharedMaterial));
+        }
         Assert.That(image.size.y, Is.EqualTo(image.sprite.bounds.size.y).Within(.001f));
         Assert.That(image.bounds.size.y, Is.GreaterThan(24f), "Cover the boss camera's maximum zoom without stretching the sky.");
         Assert.That(sky.infiniteHorizontal || sky.infiniteVertical, Is.False);
@@ -43,7 +54,7 @@ public class SkyBackgroundTests
         try
         {
             string physics = BiomeLayoutAuthoring.PhysicsSnapshot(root);
-            var sky = root.GetComponentsInChildren<ParallaxBackground>(true).Single(SkyBackgroundRepair.IsSky);
+            var sky = MainSky(root);
             var image = sky.GetComponent<SpriteRenderer>();
             var scale = sky.transform.localScale;
             var size = image.size;
@@ -59,8 +70,8 @@ public class SkyBackgroundTests
             {
                 camera.transform.position = new Vector3(point.x, point.y, -100f);
                 typeof(ParallaxBackground).GetMethod("LateUpdate", Flags).Invoke(sky, null);
-                Assert.That(image.bounds.min.x, Is.LessThan(point.x - 28f));
-                Assert.That(image.bounds.max.x, Is.GreaterThan(point.x + 28f));
+                Assert.That(SkyBackgroundRepair.RowBounds(sky).min.x, Is.LessThan(point.x - 28f));
+                Assert.That(SkyBackgroundRepair.RowBounds(sky).max.x, Is.GreaterThan(point.x + 28f));
                 Assert.That(image.bounds.min.y, Is.LessThan(point.y - 12f));
                 Assert.That(image.bounds.max.y, Is.GreaterThan(point.y + 12f));
                 Assert.That(image.bounds.center.y, Is.EqualTo(point.y).Within(.001f));
@@ -98,22 +109,29 @@ public class SkyBackgroundTests
                 layer.targetCamera = host.transform;
                 typeof(ParallaxBackground).GetMethod("Start", Flags).Invoke(layer, null);
             }
-            var sky = layers.Single(SkyBackgroundRepair.IsSky);
-            int originalLayer = sky.gameObject.layer;
+            var sky = MainSky(root);
+            var rowImages = SkyBackgroundRepair.RowImages(sky);
+            var originalLayers = rowImages.Select(r => r.gameObject.layer).ToArray();
             Directory.CreateDirectory("Logs/SkyRepair");
             for (int view = 0; view < 2; view++)
             {
                 host.transform.position = view == 0 ? new Vector3(left + 12f, 6f, -100f) : new Vector3(right - 12f, roof + 12f, -100f);
                 camera.orthographicSize = view == 0 ? 8f : 12f;
                 foreach (var layer in layers) typeof(ParallaxBackground).GetMethod("LateUpdate", Flags).Invoke(layer, null);
-                sky.gameObject.layer = 31; camera.cullingMask = 1 << 31;
+                foreach (var tile in rowImages) tile.gameObject.layer = 31;
+                camera.cullingMask = 1 << 31;
                 var isolated = Capture(camera, target);
                 try
                 {
                     int gaps = isolated.GetPixels32().Count(p => p.r > 245 && p.g < 10 && p.b > 245);
                     Assert.That(gaps, Is.Zero, "The sky must cover the viewport even when other layers do not.");
                 }
-                finally { Object.DestroyImmediate(isolated); sky.gameObject.layer = originalLayer; camera.cullingMask = -1; }
+                finally
+                {
+                    Object.DestroyImmediate(isolated);
+                    for (int i = 0; i < rowImages.Length; i++) rowImages[i].gameObject.layer = originalLayers[i];
+                    camera.cullingMask = -1;
+                }
                 var screenshot = Capture(camera, target);
                 try { File.WriteAllBytes($"Logs/SkyRepair/LV_{level:00}_{(view == 0 ? "Street" : "Roof")}.png", screenshot.EncodeToPNG()); }
                 finally { Object.DestroyImmediate(screenshot); }
@@ -129,7 +147,7 @@ public class SkyBackgroundTests
         try
         {
             string physics = BiomeLayoutAuthoring.PhysicsSnapshot(root);
-            var sky = root.GetComponentsInChildren<ParallaxBackground>(true).Single(SkyBackgroundRepair.IsSky);
+            var sky = MainSky(root);
             SkyBackgroundRepair.Configure(sky);
             var scale = sky.transform.localScale;
             var size = sky.GetComponent<SpriteRenderer>().size;
@@ -139,6 +157,45 @@ public class SkyBackgroundTests
             Assert.That(BiomeLayoutAuthoring.PhysicsSnapshot(root), Is.EqualTo(physics));
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [TestCase("Assets/Project/Prefab/Environment/CombatBackground_B1.prefab")]
+    [TestCase("Assets/Project/Prefab/Environment/CombatBackground_B2.prefab")]
+    public void RenderedSimpleCloudJoinsDoNotHaveAHardVerticalCut(string path)
+    {
+        var scene = EditorSceneManager.NewPreviewScene();
+        var target = new RenderTexture(960, 540, 24); target.Create();
+        try
+        {
+            var root = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(path), scene);
+            var sky = MainSky(root);
+            var row = SkyBackgroundRepair.RowImages(sky).OrderBy(r => r.bounds.min.x).ToArray();
+            foreach (var image in root.GetComponentsInChildren<SpriteRenderer>()) image.enabled = row.Contains(image);
+            var host = new GameObject("Sky seam camera"); SceneManager.MoveGameObjectToScene(host, scene);
+            var camera = host.AddComponent<Camera>(); camera.enabled = false; camera.scene = scene;
+            camera.orthographic = true; camera.orthographicSize = row[0].bounds.size.y * .5f;
+            camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = Color.magenta;
+            camera.GetUniversalAdditionalCameraData();
+            float seam = sky.GetComponent<SpriteRenderer>().bounds.max.x;
+            host.transform.position = new Vector3(seam, row[0].bounds.center.y, -100f);
+            var screenshot = Capture(camera, target);
+            try
+            {
+                int cuts = 0;
+                for (int y = 0; y < screenshot.height; y++)
+                {
+                    Color left = screenshot.GetPixel(screenshot.width / 2 - 1, y);
+                    Color right = screenshot.GetPixel(screenshot.width / 2, y);
+                    if (Vector3.Distance((Vector4)left, (Vector4)right) > .08f) cuts++;
+                }
+                Assert.That(cuts, Is.LessThanOrEqualTo(2), "Mirrored cloud edges must agree in the rendered image, not merely touch in world space");
+                Directory.CreateDirectory("Logs/SkyRepair");
+                string theme = path.EndsWith("B1.prefab") ? "B1" : "B2";
+                File.WriteAllBytes($"Logs/SkyRepair/{theme}_SimpleSeam.png", screenshot.EncodeToPNG());
+            }
+            finally { Object.DestroyImmediate(screenshot); }
+        }
+        finally { Object.DestroyImmediate(target); EditorSceneManager.ClosePreviewScene(scene); }
     }
 
     private static Texture2D Capture(Camera camera, RenderTexture target)
