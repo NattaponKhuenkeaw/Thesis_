@@ -25,6 +25,7 @@ namespace Project.Core.ZoneState
         [SerializeField] private int selectedIndex;
 
         private readonly List<RoomData> rooms = new List<RoomData>(16);
+        private readonly List<RoomKind> availableKinds = new List<RoomKind>();
         private Vector2 scroll;
         private bool filterEnabled;
         private RoomKind filterKindValue = RoomKind.Combat;
@@ -69,7 +70,12 @@ namespace Project.Core.ZoneState
                 RefreshRoomList();
             }
 
-            filterEnabled = GUILayout.Toggle(filterEnabled, "Filter Kind", GUILayout.Width(100f));
+            bool nextFilterEnabled = GUILayout.Toggle(filterEnabled, "Filter Kind", GUILayout.Width(100f));
+            if (nextFilterEnabled != filterEnabled)
+            {
+                filterEnabled = nextFilterEnabled;
+                RefreshRoomList();
+            }
             if (filterEnabled)
             {
                 if (GUILayout.Button("<", GUILayout.Width(28f)))
@@ -110,7 +116,7 @@ namespace Project.Core.ZoneState
                 string label = $"{room.DisplayName}  [{room.RoomKind}]  id={room.RoomId}";
                 if (room.UsesLayoutSwap)
                 {
-                    label += "  (layout)";
+                    label += $"  ({room.LayoutPrefab.name})";
                 }
 
                 bool selected = GUILayout.Toggle(selectedIndex == i, label, "Button");
@@ -145,32 +151,21 @@ namespace Project.Core.ZoneState
         public void RefreshRoomList()
         {
             rooms.Clear();
+            availableKinds.Clear();
 
             if (mapData == null)
             {
                 mapData = Resources.Load<MapSO>(DefaultMapResourcePath);
             }
 
-            if (mapData == null || mapData.Rooms == null)
+            var seen = new HashSet<string>(System.StringComparer.Ordinal);
+            if (mapData != null && mapData.Rooms != null)
             {
-                return;
+                foreach (RoomData room in mapData.Rooms)
+                    AddRoom(room, seen);
             }
 
-            for (int i = 0; i < mapData.Rooms.Count; i++)
-            {
-                RoomData room = mapData.Rooms[i];
-                if (room == null)
-                {
-                    continue;
-                }
-
-                if (filterEnabled && room.RoomKind != filterKindValue)
-                {
-                    continue;
-                }
-
-                rooms.Add(room);
-            }
+            availableKinds.Sort();
 
             if (rooms.Count > 0)
             {
@@ -180,6 +175,20 @@ namespace Project.Core.ZoneState
             {
                 selectedIndex = 0;
             }
+        }
+
+        private void AddRoom(RoomData room, HashSet<string> seen)
+        {
+            if (room == null || string.IsNullOrWhiteSpace(room.RoomId)
+                || !seen.Add(room.RoomId))
+                return;
+
+            if (!availableKinds.Contains(room.RoomKind))
+                availableKinds.Add(room.RoomKind);
+            if (filterEnabled && room.RoomKind != filterKindValue)
+                return;
+
+            rooms.Add(room);
         }
 
         [ContextMenu("Go To Selected Room")]
@@ -207,6 +216,17 @@ namespace Project.Core.ZoneState
             }
 
             RoomData room = mapData != null ? mapData.ResolveRoom(roomId) : null;
+            if (room == null)
+            {
+                foreach (RoomData candidate in Resources.LoadAll<RoomData>("MapSO"))
+                {
+                    if (candidate != null && string.Equals(candidate.RoomId, roomId, System.StringComparison.Ordinal))
+                    {
+                        room = candidate;
+                        break;
+                    }
+                }
+            }
             GoToRoom(room);
         }
 
@@ -226,19 +246,21 @@ namespace Project.Core.ZoneState
 
             string entrance = string.IsNullOrWhiteSpace(entranceId) ? room.DefaultEntranceId : entranceId;
             Debug.Log($"[RoomTravelDebug] Travel -> '{room.RoomId}' entrance='{entrance}' layout={room.UsesLayoutSwap}", this);
-            SceneTransitionManager.Instance.TransitionToRoom(room.RoomId, entrance);
+            SceneTransitionManager.Instance.TryBeginTransition(room, room.RoomId, entrance);
         }
 
-        private static RoomKind NextKind(RoomKind kind)
+        private RoomKind NextKind(RoomKind kind)
         {
-            int next = ((int)kind + 1) % 5;
-            return (RoomKind)next;
+            if (availableKinds.Count == 0) return kind;
+            int index = availableKinds.IndexOf(kind);
+            return availableKinds[(index + 1) % availableKinds.Count];
         }
 
-        private static RoomKind PreviousKind(RoomKind kind)
+        private RoomKind PreviousKind(RoomKind kind)
         {
-            int prev = ((int)kind - 1 + 5) % 5;
-            return (RoomKind)prev;
+            if (availableKinds.Count == 0) return kind;
+            int index = availableKinds.IndexOf(kind);
+            return availableKinds[(index - 1 + availableKinds.Count) % availableKinds.Count];
         }
     }
 }
