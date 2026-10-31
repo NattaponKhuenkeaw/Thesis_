@@ -15,7 +15,7 @@ MonoBehaviour:
   comboActions:
   - actionId: 
     actionName: Ground
-    icon: {fileID: 7233341647970129877, guid: 5a4c40ea0e904e44abf0f388ba51be84, type: 3}
+    icon: {fileID: 21300000, guid: 5a4c40ea0e904e44abf0f388ba51be84, type: 3}
     actionType: 0
     resourceCounterId: 
     resourceCost: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
         rid: 1588256136747024573
   - actionId: 
     actionName: Air
-    icon: {fileID: 7233341647970129877, guid: 5a4c40ea0e904e44abf0f388ba51be84, type: 3}
+    icon: {fileID: 21300000, guid: 5a4c40ea0e904e44abf0f388ba51be84, type: 3}
     actionType: 0
     resourceCounterId: 
     resourceCost: 0
@@ -60,7 +60,7 @@ MonoBehaviour:
   skillActions:
   - actionId: cg.skill
     actionName: Capture Da Soul
-    icon: {fileID: -8106061018650876297, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
+    icon: {fileID: 21300000, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
     actionType: 0
     resourceCounterId: 
     resourceCost: 0
@@ -83,7 +83,7 @@ MonoBehaviour:
     cooldown: 7
   - actionId: cg.skill.ex
     actionName: Shadow Attack
-    icon: {fileID: -8106061018650876297, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
+    icon: {fileID: 21300000, guid: 1707dc988f293a640a67328439f06cda, type: 3}
     actionType: 0
     resourceCounterId: 
     resourceCost: 0
@@ -108,7 +108,7 @@ MonoBehaviour:
   ultimateActions:
   - actionId: cg.ult
     actionName: Send Da Btch
-    icon: {fileID: 8054154319732370559, guid: f29a60c7b0bbd7a4ab8ce62ca53ad960, type: 3}
+    icon: {fileID: 21300000, guid: f29a60c7b0bbd7a4ab8ce62ca53ad960, type: 3}
     actionType: 0
     resourceCounterId: 
     resourceCost: 0

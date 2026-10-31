@@ -41,6 +41,10 @@ Run `Tools/Project/UI/Run Timed Opportunity Tests` in Unity EditMode.
    each eligible input; art remains fully visible without the old time-window fill.
 2. Execute each opportunity and separately let it expire. Normal art and ordinary
    cooldown/AE presentation return; no stale outline appears on the next character.
+   With Main, use Dash to cache a Dimension Cut. When the resolver selects that
+   resource-backed Normal action, confirm the NA ring appears; after spending the
+   cached cut, confirm the ring clears. Resolver context/target restrictions still
+   determine whether it is offered.
 3. Swap normally and through QTE. One standby slot remains. Old portrait exits left;
    the swapped-out teammate enters from the right. HP/AE/hotkey belong to the new
    standby destination immediately; animation never gates input.

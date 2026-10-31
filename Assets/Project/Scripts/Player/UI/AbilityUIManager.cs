@@ -743,7 +743,17 @@ public class AbilityUIManager : MonoBehaviour
                 action.actionName,
                 out float remainingSeconds,
                 out float durationSeconds))
+        {
+            // Resource-backed standalone actions can be selected by the Normal
+            // resolver without a timed tag window (for example Main's cached
+            // Dimension Cut). Keep the opportunity ring visible while that
+            // action is actually available; resolver availability already
+            // checks its counter, context, target and other action conditions.
+            if (category == AttackCategory.Normal && display.available
+                && action is StandaloneAction && action.resourceCost > 0)
+                state.active = true;
             return state;
+        }
 
         if (remainingSeconds <= 0.01f || durationSeconds <= 0.01f)
             return state;

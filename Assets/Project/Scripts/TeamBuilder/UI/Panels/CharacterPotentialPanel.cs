@@ -366,6 +366,12 @@ namespace Project.TeamBuilder.UI.Panels
 
         private Sprite ResolvePotentialIcon(PotentialTrack track)
         {
+            CharacterPotentialArtwork characterArt = _currentCharacter != null
+                ? _currentCharacter.potentialArtwork : null;
+            Sprite characterIcon = track == PotentialTrack.Skill ? characterArt?.skill
+                : track == PotentialTrack.Ultimate ? characterArt?.ultimate : characterArt?.passive;
+            if (characterIcon != null) return characterIcon;
+
             if (potentialArtwork != null)
             {
                 for (int i = 0; i < potentialArtwork.Length; i++)

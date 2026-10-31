@@ -24,6 +24,14 @@ public enum CharacterType
     NPC
 }
 
+[System.Serializable]
+public class CharacterPotentialArtwork
+{
+    public Sprite skill;
+    public Sprite ultimate;
+    public Sprite passive;
+}
+
 [CreateAssetMenu(fileName = "CharacterObject_", menuName = "Game/Character/Character Object")]
 public class CharacterObject : ScriptableObject
 {
@@ -44,6 +52,8 @@ public class CharacterObject : ScriptableObject
     [Header("Data Blocks")]
     public CharacterStats stats = new CharacterStats();
     public CharacterMetaData metaData = new CharacterMetaData();
+    [Header("Potential Artwork")]
+    public CharacterPotentialArtwork potentialArtwork = new CharacterPotentialArtwork();
     [Tooltip("Aura Energy gain rate tier. Low = 5% chance, Med = 10%, High = 15%.")]
     public AuraEnergyRate auraEnergyRate = AuraEnergyRate.Med;
     [Tooltip("Character audio profile used by PlayerAudio.")]
