@@ -20,7 +20,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         new Dictionary<GameObject, FieldEffectVisual>();
     private SpriteRenderer _visualReferenceSprite;
     private TeamLoader _presentationTeam;
-    private PlayerRunInventory _presentationInventory;
+    private CharacterInventoryState _presentationInventory;
     private bool _changingTickEnabled;
     private bool _presentationSuppressed;
     private bool _presentationEventsBound;
@@ -962,7 +962,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 _presentationTeam.OnCurrentCharacterChanged += RefreshPresentation;
             }
         }
-        PlayerRunInventory inventory = _presentationTeam != null ? _presentationTeam.RunInventory : null;
+        CharacterInventoryState inventory = _presentationTeam != null ? _presentationTeam.RunInventory : null;
         if (_presentationInventory != inventory)
         {
             if (_presentationInventory != null)

@@ -973,7 +973,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         RuntimeEffectDamageContext context,
         float currentDamage)
     {
-        PlayerRunInventory inventory = ResolveRunInventory();
+        CharacterInventoryState inventory = ResolveRunInventory();
         float result = inventory != null
             ? inventory.ModifyOutgoingDamage(character, context, currentDamage)
             : currentDamage;
@@ -990,7 +990,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void NotifyRuntimeHitDealt(CharacterObject character, RuntimeEffectDamageContext context)
     {
-        PlayerRunInventory inventory = ResolveRunInventory();
+        CharacterInventoryState inventory = ResolveRunInventory();
         inventory?.NotifyRuntimeHitDealt(character, context);
         if (playerCharacter != null
             && playerCharacter.characterObject == character
@@ -1000,12 +1000,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
-    public PlayerRunInventory ResolveRunInventoryForEffects()
+    public CharacterInventoryState ResolveRunInventoryForEffects()
     {
         return ResolveRunInventory();
     }
 
-    private PlayerRunInventory ResolveRunInventory()
+    private CharacterInventoryState ResolveRunInventory()
     {
         if (teamLoader == null)
         {
@@ -1606,7 +1606,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 defenderDefense = enemy.defense,
                 defenderDamageResistance = enemy.damageRes
             };
-            PlayerRunInventory inventory = ResolveRunInventory();
+            CharacterInventoryState inventory = ResolveRunInventory();
             inventory?.ModifyDamageInput(character, damageInput);
             if (playerCharacter != null && playerCharacter.RuntimeEffects != null)
             {

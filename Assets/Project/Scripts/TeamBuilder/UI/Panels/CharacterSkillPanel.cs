@@ -37,7 +37,7 @@ namespace Project.TeamBuilder.UI.Panels
                 return entries;
             }
 
-            PlayerMetaProgression metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+            CharacterProgressionState metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
             AddActionEntry(entries, data, PotentialTrack.Skill, metaProgression);
             AddActionEntry(entries, data, PotentialTrack.Ultimate, metaProgression);
             AddPassiveEntry(entries, data, metaProgression);
@@ -48,7 +48,7 @@ namespace Project.TeamBuilder.UI.Panels
             List<SkillDisplayEntry> entries,
             CharacterObject data,
             PotentialTrack track,
-            PlayerMetaProgression metaProgression)
+            CharacterProgressionState metaProgression)
         {
             CombatAction action = ResolvePrimaryAction(data, track);
             if (action == null)
@@ -82,7 +82,7 @@ namespace Project.TeamBuilder.UI.Panels
         private static void AddPassiveEntry(
             List<SkillDisplayEntry> entries,
             CharacterObject data,
-            PlayerMetaProgression metaProgression)
+            CharacterProgressionState metaProgression)
         {
             CharacterKitDefinition kit = data != null ? data.kitDefinition : null;
             if (kit == null)
@@ -289,7 +289,7 @@ namespace Project.TeamBuilder.UI.Panels
             }
         }
 
-        private static int ResolvePotentialLevel(CharacterObject data, PotentialTrack track, PlayerMetaProgression metaProgression)
+        private static int ResolvePotentialLevel(CharacterObject data, PotentialTrack track, CharacterProgressionState metaProgression)
         {
             int level = metaProgression != null ? metaProgression.GetPotentialLevel(data, track) : 0;
             CharacterKitDefinition kit = data != null ? data.kitDefinition : null;

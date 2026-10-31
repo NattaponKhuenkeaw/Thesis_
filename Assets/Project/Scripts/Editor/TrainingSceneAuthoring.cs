@@ -36,6 +36,17 @@ public static class TrainingSceneAuthoring
         Debug.Log("[Training Authoring] MainMenu, passive dummy and Training scene authored. Build settings unchanged.");
     }
 
+    [MenuItem("Tools/Project/Training/Refresh Training UI Layers")]
+    public static void AuthorTrainingLoadout()
+    {
+        if (EditorApplication.isPlaying) return;
+        EditorSceneManager.SaveOpenScenes();
+        string previous = SceneManager.GetActiveScene().path;
+        AuthorPlayground();
+        if (!string.IsNullOrEmpty(previous) && previous != Playground) EditorSceneManager.OpenScene(previous);
+        Debug.Log("[Training Authoring] Training loadout buttons wired.");
+    }
+
     private static void AuthorDummy()
     {
         GameObject root = PrefabUtility.LoadPrefabContents(Dummy);
@@ -133,10 +144,9 @@ public static class TrainingSceneAuthoring
         if (manager == null) manager = new GameObject("TrainingStatistics").AddComponent<TrainingDebugManager>();
         if (Object.FindFirstObjectByType<TrainingDebugStats>() == null) manager.gameObject.AddComponent<TrainingDebugStats>();
         if (Object.FindFirstObjectByType<TrainingDebugHUD>() == null) manager.gameObject.AddComponent<TrainingDebugHUD>();
-        Bind(session, "runInventory", Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory"));
-        Bind(session, "metaProgression", Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression"));
         Bind(session, "trainingCamera", camera);
         Bind(session, "debugManager", manager);
+        Bind(session, "trainingDebugFont", Font);
         var framing = camera.GetComponent<CinemachineGroupFraming>();
         float size = camera.Lens.OrthographicSize;
         if (framing != null) framing.OrthoSizeRange = new Vector2(size, size);
@@ -156,7 +166,7 @@ public static class TrainingSceneAuthoring
         var root = new GameObject("TrainingCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         var canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 200;
+        canvas.sortingOrder = 6000;
         root.AddComponent<UIBlockPlayerClick>();
         var scaler = root.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -255,7 +265,7 @@ public static class TrainingSceneAuthoring
 
     private static void LayoutPanel(TrainingConfigurationPanel panel)
     {
-        panel.GetComponent<Canvas>().sortingOrder = 200;
+        panel.GetComponent<Canvas>().sortingOrder = 6000;
         if (panel.GetComponent<UIBlockPlayerClick>() == null) panel.gameObject.AddComponent<UIBlockPlayerClick>();
         var so = new SerializedObject(panel);
         var stats = (Button)so.FindProperty("statsButton").objectReferenceValue;
@@ -267,15 +277,104 @@ public static class TrainingSceneAuthoring
         }
         var statsRect = (RectTransform)stats.transform;
         statsRect.anchorMin = statsRect.anchorMax = new Vector2(0, 1);
-        statsRect.anchoredPosition = new Vector2(1040, -87);
-        string[] fields = { "openButton", "resetDamageButton" };
+        statsRect.anchoredPosition = new Vector2(970, -87);
+        statsRect.sizeDelta = new Vector2(160, 48);
+        stats.GetComponentInChildren<TMP_Text>(true).rectTransform.sizeDelta = statsRect.sizeDelta;
+        // Only remove the redundant controls created on TrainingCanvas. Player_UI owns loadout navigation.
+        foreach (var button in panel.GetComponentsInChildren<Button>(true))
+            if (button.transform.parent == panel.transform
+                && (button.name == "TeamBuilder Button" || button.name == "Inspector Button"))
+                Object.DestroyImmediate(button.gameObject);
+
+        var drawer = panel.GetComponent<TrainingToolsDrawer>();
+        if (drawer == null) drawer = panel.gameObject.AddComponent<TrainingToolsDrawer>();
+        var toggle = panel.transform.Find("Config Button")?.GetComponent<Button>();
+        if (toggle == null) toggle = Button(panel.transform, "Config", Vector2.zero, new Vector2(160, 48));
+        var toggleRect = (RectTransform)toggle.transform;
+        toggleRect.anchorMin = toggleRect.anchorMax = toggleRect.pivot = new Vector2(0, 1);
+        toggleRect.anchoredPosition = new Vector2(24, -120);
+        toggleRect.sizeDelta = new Vector2(160, 48);
+        toggle.GetComponentInChildren<TMP_Text>(true).rectTransform.sizeDelta = toggleRect.sizeDelta;
+        var panelTransform = panel.transform.Find("Training Tools");
+        var tools = panelTransform != null ? panelTransform.GetComponent<Image>()
+            : Image(panel.transform, "Training Tools", new Color(.055f, .065f, .09f, .98f), Vector2.zero, new Vector2(300, 216));
+        var toolsRect = (RectTransform)tools.transform;
+        toolsRect.anchorMin = toolsRect.anchorMax = toolsRect.pivot = new Vector2(0, 1);
+        toolsRect.anchoredPosition = new Vector2(24, -182);
+        toolsRect.sizeDelta = new Vector2(300, 216);
+        var group = tools.GetComponent<CanvasGroup>();
+        if (group == null) group = tools.gameObject.AddComponent<CanvasGroup>();
+        group.alpha = 0;
+        group.interactable = group.blocksRaycasts = false;
+        string[] fields = { "openButton", "resetDamageButton", "statsButton" };
+        string[] labels = { "Training Config", "Reset DMG", "Stats" };
+        var children = new Button[3];
         for (int i = 0; i < fields.Length; i++)
         {
-            var button = (Button)so.FindProperty(fields[i]).objectReferenceValue;
+            var button = (Button)new SerializedObject(panel).FindProperty(fields[i]).objectReferenceValue;
+            children[i] = button;
+            button.transform.SetParent(tools.transform, false);
             var rect = (RectTransform)button.transform;
-            rect.anchorMin = rect.anchorMax = new Vector2(0, 1);
-            rect.anchoredPosition = new Vector2(440 + i * 330, -87);
+            rect.anchorMin = rect.anchorMax = new Vector2(.5f, 1);
+            rect.pivot = new Vector2(.5f, .5f);
+            rect.anchoredPosition = new Vector2(0, -40 - i * 68);
+            rect.sizeDelta = new Vector2(268, 48);
+            var label = button.GetComponentInChildren<TMP_Text>(true);
+            label.text = labels[i];
+            label.rectTransform.sizeDelta = rect.sizeDelta - new Vector2(10, 0);
         }
+        for (int i = 0; i < children.Length; i++)
+        {
+            var navigation = children[i].navigation;
+            navigation.mode = Navigation.Mode.Explicit;
+            navigation.selectOnUp = i == 0 ? toggle : children[i - 1];
+            navigation.selectOnDown = i == children.Length - 1 ? toggle : children[i + 1];
+            navigation.selectOnLeft = toggle;
+            children[i].navigation = navigation;
+        }
+        var toggleNavigation = toggle.navigation;
+        toggleNavigation.mode = Navigation.Mode.Automatic;
+        toggle.navigation = toggleNavigation;
+        Bind(drawer, "configButton", toggle);
+        Bind(drawer, "toolsPanel", toolsRect);
+        Bind(drawer, "toolsGroup", group);
+        Bind(drawer, "configuration", panel);
+        Bind(drawer, "firstButton", children[0]);
+        Bind(panel, "toolsDrawer", drawer);
+        // Modal must remain above both the drawer and its persistent Config button.
+        var modal = (GameObject)new SerializedObject(panel).FindProperty("content").objectReferenceValue;
+        if (modal != null)
+        {
+            modal.transform.SetAsLastSibling();
+            var modalCanvasRoot = panel.gameObject.scene.GetRootGameObjects()
+                .FirstOrDefault(root => root.name == "Training Modal Canvas");
+            if (modalCanvasRoot == null)
+                modalCanvasRoot = new GameObject("Training Modal Canvas", typeof(RectTransform), typeof(Canvas),
+                    typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = modalCanvasRoot.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 6100;
+            var canvasRect = (RectTransform)modalCanvasRoot.transform;
+            canvasRect.anchorMin = Vector2.zero;
+            canvasRect.anchorMax = Vector2.one;
+            canvasRect.sizeDelta = Vector2.zero;
+            canvasRect.localScale = Vector3.one;
+            var scaler = modalCanvasRoot.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = .5f;
+            modalCanvasRoot.SetActive(true);
+            var nestedCanvas = modal.GetComponent<Canvas>();
+            if (nestedCanvas != null) Object.DestroyImmediate(nestedCanvas);
+            var nestedRaycaster = modal.GetComponent<GraphicRaycaster>();
+            if (nestedRaycaster != null) Object.DestroyImmediate(nestedRaycaster);
+            modal.transform.SetParent(modalCanvasRoot.transform, false);
+            var modalRect = (RectTransform)modal.transform;
+            modalRect.anchorMin = Vector2.zero;
+            modalRect.anchorMax = Vector2.one;
+            modalRect.sizeDelta = Vector2.zero;
+        }
+        tools.gameObject.SetActive(false);
         foreach (var slider in panel.GetComponentsInChildren<Slider>(true))
             if (slider.handleRect != null) slider.handleRect.sizeDelta = new Vector2(18, -8);
     }

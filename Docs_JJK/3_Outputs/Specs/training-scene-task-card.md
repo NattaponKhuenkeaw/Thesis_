@@ -16,6 +16,10 @@ blocked_by: []
 
 # Task Card: Training Scene Access, Camera, and Passive Dummy
 
+## Current Architecture — 2026-10-31
+
+The user replaced the save-backed override design with independent practice state. `training-independent-state-task-card.md` and its implementation supersede the snapshot/restore authority wording below. TrainingSession has no saved inventory links.
+
 ## Player-Facing Goal
 
 Access character practice from MainMenu, configure level and character potentials through an in-game Training panel, see the wider authored Training camera, and hit a passive dummy while viewing combat statistics without collider drawings.
@@ -99,7 +103,7 @@ Access character practice from MainMenu, configure level and character potential
 - [x] Entering/exiting training does not overwrite save-slot progression or award run rewards.
 - [x] Existing unrelated local edits remain intact.
 - [x] In-game Training panel configures shared level and selected-character potential tracks within existing bounds, allowing increases and decreases.
-- [x] Apply refreshes deployed stats and passive/potential effects and begins a clean damage sample; Cancel leaves the active configuration unchanged.
+- [x] Apply refreshes deployed stats and passive/potential effects while preserving the team-wide damage sample; Cancel leaves the active configuration unchanged.
 - [x] Stats collection is active while collider drawings are off; HUD starts hidden and Stats toggles the window group without resetting collection.
 - [x] Physical colliders and damage detection remain active.
 - [x] Existing developer debug mode can still show collider drawings independently.

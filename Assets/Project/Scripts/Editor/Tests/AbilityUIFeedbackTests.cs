@@ -122,7 +122,7 @@ public class AbilityUIFeedbackTests
         Assert.That(prefab, Is.Not.Null);
         var ui = prefab.GetComponentInChildren<AbilityUIManager>(true);
         foreach (string field in new[] { "skillCooldownOverlay", "skillIcon", "skillCountdownText",
-                     "ultCooldownOverlay", "ultIcon", "ultCountdownText", "ultFollowUpOverlay",
+                     "ultCooldownOverlay", "ultIcon", "ultCountdownText", "ultWindowEffect",
                      "dashCooldownOverlay", "dashIcon", "dashCountdownText", "dashFeedbackRoot",
                      "normalAttackFeedbackRoot" })
             Assert.That(Get(ui, field), Is.Not.Null, field);
@@ -131,6 +131,94 @@ public class AbilityUIFeedbackTests
         Assert.That(abilityRoot, Is.Not.Null);
         Assert.That(hud.transform.IsChildOf(abilityRoot.transform), Is.False);
         Assert.That(ui.transform.IsChildOf(abilityRoot.transform), Is.False);
+    }
+
+    [Test]
+    public void SharedOutlineReusesItsGraphicAndNeverBlocksInput()
+    {
+        var root = new GameObject("Opportunity test", typeof(RectTransform), typeof(Image));
+        try
+        {
+            var image = root.GetComponent<Image>();
+            var effect = TimedOpportunityGraphic.GetOrCreate(image);
+            Assert.That(TimedOpportunityGraphic.GetOrCreate(image), Is.SameAs(effect));
+            Assert.That(effect.raycastTarget, Is.False);
+            Assert.That(effect.maskable, Is.False);
+            effect.SetPresentation(true, false, false);
+            Assert.That(effect.IsVisible, Is.True);
+            effect.Clear();
+            Assert.That(effect.IsVisible, Is.False);
+            Assert.That(root.activeSelf, Is.True);
+        }
+        finally { Object.DestroyImmediate(root); }
+    }
+
+    [Test]
+    public void ReducedMotionKeepsOnlyTheCoreAndPauseDoesNotAdvancePulse()
+    {
+        var root = new GameObject("Opportunity mesh test", typeof(RectTransform), typeof(Image));
+        try
+        {
+            root.GetComponent<RectTransform>().sizeDelta = new Vector2(100f, 100f);
+            var effect = TimedOpportunityGraphic.GetOrCreate(root.GetComponent<Image>());
+            var populate = typeof(TimedOpportunityGraphic).GetMethod("OnPopulateMesh", BindingFlags.Instance | BindingFlags.NonPublic,
+                null, new[] { typeof(VertexHelper) }, null);
+            using var vertices = new VertexHelper();
+            effect.rectTransform.sizeDelta = new Vector2(100f, 100f);
+            effect.SetPresentation(true, false, true);
+            populate.Invoke(effect, new object[] { vertices });
+            int animatedVertices = vertices.currentVertCount;
+            Assert.That(animatedVertices, Is.GreaterThan(0));
+            var phase = typeof(TimedOpportunityGraphic).GetField("_phase", BindingFlags.Instance | BindingFlags.NonPublic);
+            phase.SetValue(effect, 0.4f);
+            typeof(TimedOpportunityGraphic).GetMethod("Update", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(effect, null);
+            Assert.That(phase.GetValue(effect), Is.EqualTo(0.4f));
+            effect.SetPresentation(true, true, false);
+            populate.Invoke(effect, new object[] { vertices });
+            Assert.That(vertices.currentVertCount, Is.GreaterThan(0).And.LessThan(animatedVertices));
+            effect.Clear();
+            populate.Invoke(effect, new object[] { vertices });
+            Assert.That(vertices.currentVertCount, Is.Zero);
+        }
+        finally { Object.DestroyImmediate(root); }
+    }
+
+    [TestCase(0f)]
+    [TestCase(0.35f)]
+    [TestCase(0.8f)]
+    public void EnlargedOpportunityGlowKeepsItsGeometryOutOfTheIconCenter(float phase)
+    {
+        var root = new GameObject("Opportunity edge spill test", typeof(RectTransform), typeof(Image));
+        try
+        {
+            root.GetComponent<RectTransform>().sizeDelta = new Vector2(100f, 80f);
+            var effect = TimedOpportunityGraphic.GetOrCreate(root.GetComponent<Image>());
+            effect.SetPresentation(true, false, true);
+            typeof(TimedOpportunityGraphic).GetField("_phase", PrivateInstance).SetValue(effect, phase);
+            var populate = typeof(TimedOpportunityGraphic).GetMethod("OnPopulateMesh", PrivateInstance,
+                null, new[] { typeof(VertexHelper) }, null);
+            using var vertices = new VertexHelper();
+            populate.Invoke(effect, new object[] { vertices });
+            var vertex = UIVertex.simpleVert;
+            Vector2 center = effect.rectTransform.rect.center;
+            float halfWidth = effect.rectTransform.rect.width * 0.5f;
+            float halfHeight = effect.rectTransform.rect.height * 0.5f;
+            float spill = effect.rectTransform.rect.height * 0.025f;
+            float farthestX = 0f;
+            bool softEdgeOverlap = false;
+            for (int i = 0; i < vertices.currentVertCount; i++)
+            {
+                vertices.PopulateUIVertex(ref vertex, i);
+                Vector2 point = (Vector2)vertex.position - center;
+                farthestX = Mathf.Max(farthestX, Mathf.Abs(point.x));
+                Assert.That(Mathf.Abs(point.x), Is.GreaterThanOrEqualTo(halfWidth - spill - 0.001f));
+                Assert.That(Mathf.Abs(point.y), Is.GreaterThanOrEqualTo(halfHeight - spill - 0.001f));
+                softEdgeOverlap |= Mathf.Abs(point.x) < halfWidth && Mathf.Abs(point.y) < halfHeight;
+            }
+            Assert.That(softEdgeOverlap, Is.True, "A narrow feather may overlap the art edge.");
+            Assert.That(farthestX, Is.GreaterThan(halfWidth * 1.5f), "Impact must extend visibly beyond the icon.");
+        }
+        finally { Object.DestroyImmediate(root); }
     }
 
     private GameObject Child(string name)

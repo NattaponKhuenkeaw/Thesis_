@@ -1,6 +1,6 @@
 ---
 slug: training-session-progression-overrides
-status: approved
+status: superseded
 source: manual
 gdd_tags:
   - architecture
@@ -15,7 +15,7 @@ blocked_by: []
 
 # ADR-018: Temporary Training Level and Potential Overrides
 
-Status: Accepted in chat on 2026-10-30; implementation in progress.
+Status: Superseded on 2026-10-31 by the user requirement for independent practice state. See `../Specs/training-independent-state-task-card.md`. Training no longer uses these save-backed overrides; the remaining text records the prior decision.
 
 Date: 2026-10-30.
 
@@ -28,6 +28,12 @@ The approved Training design exposes shared level and per-character potential co
 Add owner-scoped, nonserialized Training overrides to the existing level/potential authorities, coordinated by a TrainingSession lifetime. Resolve effective values through those authorities, invalidate their caches and notify the existing runtime consumers. Preserve underlying serialized progression, saved exports, active slot and authored CharacterObjects.
 
 Training UI submits a complete draft through the session. It does not invoke permanent upgrade/reset/save APIs. Training entry and exit bypass normal run save/reward/rollback operations, and cleanup removes session overrides on every scene-exit path. Normal gameplay keeps the existing authority and persistence behavior.
+
+## Training Loadout Follow-Up — 2026-10-30
+
+The user's subsequent request extends practice to TeamBuilder/Inspector and the complete catalog. Reuse the existing inventory session snapshot: populate valid catalog CharacterItems and missing ArtifactDefinition instances after capture, before team/UI initialization. Existing TeamBuilder draft/Deploy and Inspector consume that same inventory; cleanup restores the entry inventory and equipment without persisting grants.
+
+`TrainingAccessPolicy.LoadoutMode` grants editable UI permissions only while TrainingSession is active. It is applied at the existing TeamBuilder, Inspector and UIManager permission boundaries and the HUD navigation visibility. The actual ZoneStateProvider/RoomData mode remains CombatZone; ability HUD and combat/room logic keep their normal zone semantics. No global hybrid zone enum or schema change is needed.
 
 ## Alternatives
 

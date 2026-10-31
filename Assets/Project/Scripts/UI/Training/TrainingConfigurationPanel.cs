@@ -22,6 +22,7 @@ namespace Project.UI.Training
         [SerializeField] private Button cancelButton;
         [SerializeField] private Button resetDamageButton;
         [SerializeField] private Button statsButton;
+        [SerializeField] private TrainingToolsDrawer toolsDrawer;
         [SerializeField] private TMP_Text errorText;
         [Header("Character Selection")]
         [SerializeField] private Button previousCharacterButton;
@@ -44,12 +45,16 @@ namespace Project.UI.Training
         private GameFreezeManager _freeze;
         private float _previousTimeScale;
         private TMP_Text _statsLabel;
+        private TeamUI _teamUI;
         public bool IsOpen { get; private set; }
+        public bool IsLoadoutOpen => _teamUI != null && _teamUI.IsTeamBuilderOpen;
+        public bool AreToolsVisible => toolsDrawer != null && toolsDrawer.IsPresented;
         public static TrainingConfigurationPanel Instance { get; private set; }
 
         private void Awake()
         {
             Instance = this;
+            var toolsCanvas = GetComponent<Canvas>();
             openButton.onClick.AddListener(Open);
             applyButton.onClick.AddListener(Apply);
             cancelButton.onClick.AddListener(Close);
@@ -70,8 +75,9 @@ namespace Project.UI.Training
 
         private void Start()
         {
+            _teamUI = FindFirstObjectByType<TeamUI>();
             if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
-                EventSystem.current.SetSelectedGameObject(openButton.gameObject);
+                EventSystem.current.SetSelectedGameObject(toolsDrawer != null ? toolsDrawer.ConfigButton.gameObject : openButton.gameObject);
         }
 
         private void Update()
@@ -82,7 +88,7 @@ namespace Project.UI.Training
 
         public void Open()
         {
-            if (IsOpen || session == null || !session.IsActive || PauseMenuController.IsOpen || InputLockManager.IsLocked) return;
+            if (IsOpen || session == null || !session.IsActive) return;
             _draft = session.CaptureConfiguration();
             var list = new System.Collections.Generic.List<CharacterObject>();
             foreach (var entry in _draft.characters)
@@ -99,6 +105,7 @@ namespace Project.UI.Training
             _previousTimeScale = Time.timeScale;
             if (_freeze != null) _freeze.BeginPauseHold();
             else Time.timeScale = 0f;
+            EnsureModalCanvasAvailable();
             content.SetActive(true);
             errorText.text = "";
             teamLevel.minValue = 1;
@@ -169,6 +176,27 @@ namespace Project.UI.Training
 
         private void ResetDamage() { if (session != null) session.ResetDamageSample(); }
 
+        private void EnsureModalCanvasAvailable()
+        {
+            if (content == null) return;
+
+            // The modal is authored on a separate top-sorting root Canvas. Repair the
+            // root here as well so a stale inactive/zero-scale scene root cannot hide it.
+            Transform ancestor = content.transform;
+            Canvas modalCanvas = null;
+            while (ancestor != null && modalCanvas == null)
+            {
+                modalCanvas = ancestor.GetComponent<Canvas>();
+                ancestor = ancestor.parent;
+            }
+
+            if (modalCanvas == null) return;
+            modalCanvas.sortingOrder = 6100;
+            RectTransform canvasRect = modalCanvas.transform as RectTransform;
+            if (canvasRect != null) canvasRect.localScale = Vector3.one;
+            if (!modalCanvas.gameObject.activeSelf) modalCanvas.gameObject.SetActive(true);
+        }
+
         public void ToggleStats()
         {
             if (session == null) return;
@@ -188,8 +216,8 @@ namespace Project.UI.Training
                 else Time.timeScale = _previousTimeScale;
                 InputLockManager.Unlock();
             }
-            if (EventSystem.current != null && openButton != null && openButton.gameObject.activeInHierarchy)
-                EventSystem.current.SetSelectedGameObject(openButton.gameObject);
+            if (EventSystem.current != null && gameObject.activeInHierarchy && openButton != null)
+                EventSystem.current.SetSelectedGameObject(toolsDrawer != null ? toolsDrawer.ConfigButton.gameObject : openButton.gameObject);
         }
 
         private void OnDisable() => Close();

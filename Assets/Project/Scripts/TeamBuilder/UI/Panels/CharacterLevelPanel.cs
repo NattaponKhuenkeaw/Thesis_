@@ -42,7 +42,7 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private Button levelUpButton;
 
         [Header("References")]
-        [SerializeField] private PlayerRunInventory playerInventory;
+        [SerializeField] private CharacterInventoryState playerInventory;
 
         private CharacterObject _characterObject;
         private CharacterUpgrade _runUpgrade;
@@ -367,6 +367,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void ResolvePlayerInventory()
         {
+            playerInventory = Project.Training.CharacterStateContext.ResolveInventory(playerInventory);
             if (playerInventory != null)
             {
                 return;
@@ -386,7 +387,7 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (playerInventory == null)
             {
-                playerInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                playerInventory = Project.Training.CharacterStateContext.ResolveInventory();
             }
         }
     }

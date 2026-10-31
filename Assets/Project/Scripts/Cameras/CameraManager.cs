@@ -1112,8 +1112,14 @@ public partial class CameraManager : MonoBehaviour
     /// </summary>
     public void EmitImpulse(float strength)
     {
-        if (_impulseSource == null || strength <= 0f) return;
-        _impulseSource.GenerateImpulse(strength);
+        CreateImpulse(strength);
+    }
+
+    public CinemachineImpulseManager.ImpulseEvent CreateImpulse(float strength)
+    {
+        if (_impulseSource == null || strength <= 0f) return null;
+        return _impulseSource.ImpulseDefinition.CreateAndReturnEvent(
+            _impulseSource.transform.position, _impulseSource.DefaultVelocity * strength);
     }
 
     public void Shake(float strength)

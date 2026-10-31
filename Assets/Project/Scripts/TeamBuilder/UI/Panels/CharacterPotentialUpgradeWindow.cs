@@ -14,6 +14,7 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private TMP_Text nodeLevelText;
         [SerializeField] private TMP_Text descriptionText;
         [SerializeField] private TMP_Text stateText;
+        [SerializeField] private Image nodeIcon;
 
         [Header("Fragment Requirement (Optional)")]
         [Tooltip("Optional container for your Fragment cost UI.")]
@@ -26,13 +27,16 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private TMP_Text upgradeButtonText;
         [SerializeField] private GameObject upgradedStateObject;
         [SerializeField] private TMP_Text upgradedStateText;
+        [SerializeField] private Button closeButton;
+        [SerializeField] private Button cancelButton;
 
         private CharacterItem _characterItem;
         private CharacterObject _character;
         private PotentialNodeDefinition _node;
-        private PlayerMetaProgression _metaProgression;
+        private CharacterProgressionState _metaProgression;
         private Action<PotentialNodeDefinition> _upgradeRequested;
         private bool _upgradeQueued;
+        private Action _closeRequested;
 
         private void Awake()
         {
@@ -45,10 +49,15 @@ namespace Project.TeamBuilder.UI.Panels
             ResolveReferences();
             EnsureRuntimeLayout();
             BindButton();
+            if (closeButton != null) closeButton.onClick.AddListener(HandleClose);
+            if (cancelButton != null) cancelButton.onClick.AddListener(HandleClose);
         }
 
         private void OnDisable()
         {
+            _upgradeQueued = false;
+            if (closeButton != null) closeButton.onClick.RemoveListener(HandleClose);
+            if (cancelButton != null) cancelButton.onClick.RemoveListener(HandleClose);
             if (upgradeButton != null)
             {
                 upgradeButton.onClick.RemoveListener(HandleUpgradeClicked);
@@ -60,11 +69,22 @@ namespace Project.TeamBuilder.UI.Panels
             _upgradeRequested = upgradeRequested;
         }
 
+        public void BindCloseHandler(Action closeRequested) => _closeRequested = closeRequested;
+
+        private void HandleClose() => _closeRequested?.Invoke();
+
+        public void SetIcon(Sprite icon)
+        {
+            if (nodeIcon == null) return;
+            nodeIcon.sprite = icon;
+            nodeIcon.enabled = icon != null;
+        }
+
         public void Show(
             CharacterItem characterItem,
             CharacterObject character,
             PotentialNodeDefinition node,
-            PlayerMetaProgression metaProgression)
+            CharacterProgressionState metaProgression)
         {
             _characterItem = characterItem;
             _character = character;
@@ -107,7 +127,7 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (nodeLevelText != null)
             {
-                nodeLevelText.text = $"{_node.track} Lv.{_node.level}";
+                nodeLevelText.text = $"{_node.track.ToString().ToUpperInvariant()}  {_node.level} / {CharacterKitDefinition.MaxPotentialLevel}";
             }
 
             if (descriptionText != null)
@@ -197,7 +217,7 @@ namespace Project.TeamBuilder.UI.Panels
             {
                 CharacterPotentialNodeState.Upgraded => "Upgraded",
                 CharacterPotentialNodeState.Upgradeable => "Ready to upgrade",
-                CharacterPotentialNodeState.InsufficientFragments => "Locked",
+                CharacterPotentialNodeState.InsufficientFragments => "Upgrade unavailable",
                 _ => "Unlock previous potential first"
             };
         }

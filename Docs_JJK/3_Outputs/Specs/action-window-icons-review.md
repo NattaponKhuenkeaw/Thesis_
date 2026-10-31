@@ -23,6 +23,14 @@ implementation findings in the scoped diff.
 - Dash continues to read movement. Repeated wiggles stop their predecessor, retain
   the original position and restore it on completion or driver disable.
 - Existing NA images/window overlay were wired without changing hierarchy/layout.
+- Follow-up clarification restricts replacement pictures to an active timed window
+  and a resolver match in the current context. Added optional CharacterMetaData icon
+  data with portrait fallback for team swap slots.
+- Play-mode inspection found NA/Skill/Ult Images had null sprites because their
+  references used a removed Basic icon GUID. Repointed prefab and Main Ground/Air
+  references to the current sprite asset. Added a serialized fallback Sprite and
+  kept icon restoration null-safe. DashData.icon drives the existing Dash image;
+  absent Dash art falls back to its original slot sprite.
 - Main's clearly named existing Shin sprites were assigned to six existing actions.
   Unassigned art, including the hold Ultimate, uses the prefab fallback.
 - Pre-existing working-tree changes are retained. No new dependencies, build/CI

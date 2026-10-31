@@ -249,6 +249,70 @@ public class MainDimensionSlashTests
         finally { Object.DestroyImmediate(host); }
     }
 
+    [TestCase(false, false)]
+    [TestCase(false, true)]
+    [TestCase(true, false)]
+    [TestCase(true, true)]
+    public void CameraPositionControlPreservesImpulseNoise(bool legacyLock, bool rotationalNoise)
+    {
+        var outputHost = new GameObject("Impulse Test Output");
+        var managerHost = new GameObject("Impulse Test Manager");
+        try
+        {
+            outputHost.tag = "MainCamera";
+            var output = outputHost.AddComponent<Camera>();
+            output.orthographic = true; output.orthographicSize = 3f;
+            outputHost.transform.position = new Vector3(4f, 2f, -10f);
+            var manager = managerHost.AddComponent<CameraManager>();
+            var cameraHost = new GameObject("Impulse Test Vcam");
+            cameraHost.transform.SetParent(managerHost.transform);
+            var vcam = cameraHost.AddComponent<CinemachineCamera>();
+            var box = cameraHost.AddComponent<BoxCollider2D>(); box.size = new Vector2(100f, 100f);
+            var confiner = cameraHost.AddComponent<CinemachineConfiner2D>(); confiner.BoundingShape2D = box;
+            _combat.ExecuteStep(Slash.comboTree.rootNode.stepData, 1, false, AttackCategory.Ultimate,
+                "Dimension Slash", MainDimensionSlashAuthoring.ActionId);
+            ActionCameraToken token;
+            if (legacyLock)
+            {
+                token = manager.BeginScreenImpulseCamera(_combat.CurrentExecution,
+                    new ScreenImpulseCameraSettings { enabled = true, jumpCutLock = true, holdFrames = 10 }, 0);
+                typeof(CameraManager).GetField("_actionCameraLockedPosition", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(manager, new Vector3(4f, 2f, -10f));
+            }
+            else
+            {
+                var animation = new CameraAnimationFrameData();
+                animation.segments.Add(new CameraAnimationSegment { task = CameraAnimationTask.Move,
+                    positionSpace = CameraAnimationPositionSpace.WorldPoint, position = new Vector2(4f, 2f) });
+                animation.segments.Add(new CameraAnimationSegment { task = CameraAnimationTask.Hold, startFrame = 1, endFrame = 10 });
+                token = manager.BeginCameraAnimation(_combat.CurrentExecution, animation, 0, 1);
+            }
+            Assert.That(token.Generation, Is.Not.Zero);
+            var extension = vcam.GetComponent<ActionCameraMotionExtension>();
+            CameraState state = CameraState.Default;
+            state.Lens.ModeOverride = LensSettings.OverrideModes.Orthographic;
+            state.Lens.OrthographicSize = 3f;
+            state.RawPosition = new Vector3(0f, 0f, -10f);
+            state.PositionCorrection = new Vector3(0.5f, 0f, 0f);
+            extension.InvokePostPipelineStageCallback(vcam, CinemachineCore.Stage.Body, ref state, 0.016f);
+            extension.InvokePostPipelineStageCallback(vcam, CinemachineCore.Stage.Aim, ref state, 0.016f);
+            // PositionComposer can run Body a second time after Aim.
+            state.RawPosition += Vector3.right;
+            extension.InvokePostPipelineStageCallback(vcam, CinemachineCore.Stage.Body, ref state, 0.016f);
+            var noise = new Vector3(0.25f, -0.2f, 0f);
+            state.PositionCorrection += noise;
+            Quaternion rotation = rotationalNoise ? Quaternion.Euler(0f, 0f, 1f) : Quaternion.identity;
+            state.OrientationCorrection = rotation;
+            extension.InvokePostPipelineStageCallback(vcam, CinemachineCore.Stage.Noise, ref state, 0.016f);
+            extension.InvokePostPipelineStageCallback(vcam, CinemachineCore.Stage.Finalize, ref state, 0.016f);
+            Assert.That(state.GetCorrectedPosition().x, Is.EqualTo(4f + noise.x).Within(0.0001f));
+            Assert.That(state.GetCorrectedPosition().y, Is.EqualTo(2f + noise.y).Within(0.0001f));
+            Assert.That(state.GetCorrectedPosition().z, Is.EqualTo(-10f));
+            Assert.That(Quaternion.Angle(state.OrientationCorrection, rotation), Is.LessThan(0.001f));
+        }
+        finally { Object.DestroyImmediate(managerHost); Object.DestroyImmediate(outputHost); }
+    }
+
     [Test]
     public void TimedZoomSurvivesNormalActionEndAndReturnsAfterAuthoredHold()
     {

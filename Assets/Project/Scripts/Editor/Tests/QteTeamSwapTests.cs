@@ -108,6 +108,118 @@ public class QteTeamSwapTests
         Physics2D.SyncTransforms();
     }
 
+    private TeamSwitchHUD StandbyHud()
+    {
+        var host = Keep(new GameObject("Standby HUD", typeof(RectTransform), typeof(TeamSwitchHUD)));
+        var hud = host.GetComponent<TeamSwitchHUD>();
+        hud.teamLoader = _team;
+        hud.stateMachine = _fsm;
+        hud.slotContainer = host.transform;
+        hud.slotPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/Hero_TeamSwitchPanel.prefab");
+        hud.InitializeHUD();
+        return hud;
+    }
+
+    [Test]
+    public void TwoMemberHudReusesOneStandbySlotAndRebindsItsActualDestination()
+    {
+        var hud = StandbyHud();
+        var slots = hud.GetComponentsInChildren<CharacterSwitchSlot>(true);
+        Assert.That(slots.Length, Is.EqualTo(1));
+        var slot = slots[0];
+        Assert.That(slot.BoundCharacter, Is.SameAs(_cg));
+        Assert.That(slot.SlotIndex, Is.EqualTo(1));
+        Assert.That(slot.hotkeyText.text, Is.EqualTo("1"));
+        _team.RunInventory.SetActiveTeamSlotIndex(1);
+        _team.GetTeamSnapshot();
+        Call(hud, "HandleTeamChanged");
+        Assert.That(slot.BoundCharacter, Is.SameAs(_cg),
+            "An intermediate stat event must leave the portrait exchange for the committed swap event.");
+        Call(hud, "HandleCurrentCharacterChanged");
+        Assert.That(hud.GetComponentsInChildren<CharacterSwitchSlot>(true), Has.Length.EqualTo(1));
+        Assert.That(slot.BoundCharacter, Is.SameAs(_main));
+        Assert.That(slot.SlotIndex, Is.EqualTo(0));
+        Assert.That(slot.hotkeyText.text, Is.EqualTo("1"));
+        Call(hud, "HandleTeamChanged");
+        Assert.That(hud.GetComponentInChildren<CharacterSwitchSlot>(true), Is.SameAs(slot));
+        hud.InitializeHUD();
+        Assert.That(hud.GetComponentInChildren<CharacterSwitchSlot>(true), Is.SameAs(slot));
+    }
+
+    [Test]
+    public void StandbyHudPreservesRosterIndexGapsAndRemovesTheSlotForASoloTeam()
+    {
+        _team.RunInventory.DeployTeam(new[] { _main, null, _cg }, 0);
+        _team.GetTeamSnapshot();
+        var hud = StandbyHud();
+        var slot = hud.GetComponentInChildren<CharacterSwitchSlot>(true);
+        Assert.That(slot.SlotIndex, Is.EqualTo(2));
+        Assert.That(slot.hotkeyText.text, Is.EqualTo("1"));
+        _team.RunInventory.DeployTeam(new[] { _main }, 0);
+        _team.GetTeamSnapshot();
+        Call(hud, "HandleTeamChanged");
+        Assert.That(hud.GetComponentsInChildren<CharacterSwitchSlot>(true), Is.Empty);
+    }
+
+    [Test]
+    public void StandbyCooldownUsesAuthoredGroupAlphaAndNeverHidesItsContent()
+    {
+        var slot = StandbyHud().GetComponentInChildren<CharacterSwitchSlot>(true);
+        Assert.That(slot.inactiveCanvasGroup.alpha, Is.EqualTo(1f));
+        _team.switchCooldownDuration = 5f;
+        Set(_team, "lastSwitchTime", Time.time);
+        Call(slot, "Update");
+        Assert.That(slot.inactiveCanvasGroup.alpha, Is.EqualTo(slot.inactiveAlpha).Within(0.001f));
+        Assert.That(slot.inactiveCanvasGroup.gameObject.activeSelf, Is.True);
+        Assert.That(slot.characterIcon.gameObject.activeSelf, Is.True);
+        _team.switchCooldownDuration = 0f;
+        Call(slot, "Update");
+        Assert.That(slot.inactiveCanvasGroup.alpha, Is.EqualTo(1f));
+        slot.Setup(_cg, 1, slot.GetComponentInParent<TeamSwitchHUD>());
+        _team.switchCooldownDuration = 5f;
+        Call(slot, "Update");
+        Assert.That(slot.inactiveCanvasGroup.alpha, Is.EqualTo(slot.inactiveAlpha).Within(0.001f),
+            "Rebinding must not capture the ready alpha as the inactive alpha.");
+    }
+
+    [Test]
+    public void ReducedMotionPortraitExchangeHasNoSnapshotOrPositionDrift()
+    {
+        var hud = StandbyHud();
+        var slot = hud.GetComponentInChildren<CharacterSwitchSlot>(true);
+        Vector2 rest = slot.characterIcon.rectTransform.anchoredPosition;
+        Qte.reduceUiMotion = true;
+        _team.RunInventory.SetActiveTeamSlotIndex(1);
+        _team.GetTeamSnapshot();
+        Call(hud, "HandleCurrentCharacterChanged");
+        Assert.That(slot.characterIcon.rectTransform.anchoredPosition, Is.EqualTo(rest));
+        Assert.That(slot.characterIcon.color.a, Is.EqualTo(1f));
+        Assert.That(slot.transform.Find("Outgoing Portrait"), Is.Null);
+        Assert.That(slot.BoundCharacter, Is.SameAs(_main));
+    }
+
+    [Test]
+    public void RapidPortraitExchangesConvergeWithoutCloningInteractiveSlots()
+    {
+        var hud = StandbyHud();
+        var slot = hud.GetComponentInChildren<CharacterSwitchSlot>(true);
+        Vector2 rest = slot.characterIcon.rectTransform.anchoredPosition;
+        for (int i = 0; i < 6; i++)
+        {
+            _team.RunInventory.SetActiveTeamSlotIndex((i + 1) % 2);
+            _team.GetTeamSnapshot();
+            Call(hud, "HandleCurrentCharacterChanged");
+        }
+        typeof(CharacterSwitchSlot).GetMethod("TickPortraitExchange", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(slot, new object[] { 1f });
+        Assert.That(hud.GetComponentsInChildren<CharacterSwitchSlot>(true), Has.Length.EqualTo(1));
+        Assert.That(slot.BoundCharacter, Is.SameAs(_cg));
+        Assert.That(slot.characterIcon.rectTransform.anchoredPosition, Is.EqualTo(rest));
+        Assert.That(slot.characterIcon.color.a, Is.EqualTo(1f));
+        Assert.That(slot.GetComponentsInChildren<Image>(true), Has.Exactly(1).Matches<Image>(
+            image => image.name == "Outgoing Portrait" && !image.raycastTarget && !image.gameObject.activeSelf));
+    }
+
     [TearDown]
     public void Teardown()
     {
@@ -351,8 +463,8 @@ public class QteTeamSwapTests
         slot.Setup(_cg, 1, hud);
         Call(slot, "Update");
 
-        Assert.That(slot.qteReadyOverlay.gameObject.activeSelf, Is.True);
-        Assert.That(slot.unavailableOverlay.activeSelf, Is.False);
+        Assert.That(slot.qteWindowEffect.IsVisible, Is.True);
+        Assert.That(slot.inactiveCanvasGroup.gameObject.activeSelf, Is.True);
         hud.OnSlotClicked(1);
         Assert.That(_team.CurrentCharacter, Is.SameAs(_cg));
         Assert.That(_fsm.CurrentStateId, Is.Not.EqualTo(PlayerStateId.QteIntro));
@@ -647,15 +759,13 @@ public class QteTeamSwapTests
         rect.localScale = Vector3.one;
         slot.Setup(_cg, 1, hud);
         Call(slot, "Update");
-        Assert.That(slot.qteReadyOverlay.gameObject.activeSelf, Is.True);
-        Assert.That(slot.qteWindowFill.gameObject.activeSelf, Is.True);
-        Assert.That(slot.qteReadyOverlay.raycastTarget, Is.False);
+        Assert.That(slot.qteWindowEffect.IsVisible, Is.True);
+        Assert.That(slot.qteWindowEffect.raycastTarget, Is.False);
         _team.switchCooldownDuration = 1f;
         Set(_team, "lastSwitchTime", Time.time);
         Call(slot, "Update");
         Assert.That(_fsm.CanSwitchCharacterTo(1), Is.True);
-        Assert.That(slot.qteReadyOverlay.gameObject.activeSelf, Is.True);
-        Assert.That(slot.qteWindowFill.gameObject.activeSelf, Is.True);
+        Assert.That(slot.qteWindowEffect.IsVisible, Is.True);
         _team.switchCooldownDuration = 0f;
         var target = Keep(new RenderTexture(520, 220, 24));
         var capture = Keep(new Texture2D(520, 220, TextureFormat.RGB24, false));
@@ -677,8 +787,7 @@ public class QteTeamSwapTests
         }
         Assert.That(_team.SwitchToIndex(1), Is.True);
         Call(slot, "Update");
-        Assert.That(slot.qteReadyOverlay.gameObject.activeSelf, Is.False);
-        Assert.That(slot.qteWindowFill.gameObject.activeSelf, Is.False);
+        Assert.That(slot.qteWindowEffect.IsVisible, Is.False);
     }
 }
 #endif

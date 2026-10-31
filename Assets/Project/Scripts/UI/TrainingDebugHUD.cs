@@ -20,9 +20,9 @@ namespace CombatCore
 
         public static bool IsPointerOverHud(Vector2 screenPosition)
         {
+            if (Project.UI.Training.TrainingStatsCanvas.Instance != null && TrainingDebugManager.IsTrainingPresentation)
+                return Project.UI.Training.TrainingStatsCanvas.Instance.ContainsPointer(screenPosition);
             if (instance == null || !TrainingDebugManager.ShowStatsHud) return false;
-            if (Project.UI.Training.TrainingConfigurationPanel.Instance != null
-                && Project.UI.Training.TrainingConfigurationPanel.Instance.IsOpen) return false;
             Vector2 point = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
             var toolbar = new Rect((Screen.width - 380f) * .5f - 8f, 4f, 396f, 28f);
             return toolbar.Contains(point) || (instance.rectsInitialized
@@ -104,10 +104,8 @@ namespace CombatCore
 
         private void OnGUI()
         {
+            if (TrainingDebugManager.IsTrainingPresentation) return;
             if (!TrainingDebugManager.ShowStatsHud) return;
-            if (Project.UI.Training.TrainingConfigurationPanel.Instance != null
-                && Project.UI.Training.TrainingConfigurationPanel.Instance.IsOpen) return;
-            if (Project.UI.PauseMenuController.IsOpen) return;
 
             if (!stylesInitialized) InitializeStyles();
             if (!rectsInitialized) InitializeRects();
@@ -456,7 +454,7 @@ namespace CombatCore
             {
                 // Leave the currency, configuration controls and team portraits unobstructed.
                 float width = Mathf.Min(300f, (sw - 80f) / 3.2f);
-                float top = Mathf.Max(100f, Screen.height * .13f);
+                float top = Mathf.Max(200f, Screen.height * .19f);
                 rectEnemyStatus = new Rect(20f, top, width, 200f);
                 rectTeamDamage = new Rect(40f + width, top, width * 1.2f, 180f);
                 rectDPSShowcase = new Rect(60f + width * 2.2f, top, width, 200f);

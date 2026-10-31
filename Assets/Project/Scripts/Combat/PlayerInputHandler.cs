@@ -304,12 +304,38 @@ public class InputHandler_Player : MonoBehaviour
         if (Keyboard.current == null || stateMachine == null || stateMachine.InputBuffer == null)
             return;
 
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
-            stateMachine.InputBuffer.BufferSwitch(0);
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
-            stateMachine.InputBuffer.BufferSwitch(1);
+        if (Keyboard.current.digit1Key.wasPressedThisFrame
+            || Keyboard.current.numpad1Key.wasPressedThisFrame)
+        {
+            int targetIndex = FindNextLivingTeamSwitchTarget();
+            if (targetIndex >= 0)
+                stateMachine.InputBuffer.BufferSwitch(targetIndex);
+        }
 
         stateMachine.TryConsumeBufferedSwitch();
+    }
+
+    private int FindNextLivingTeamSwitchTarget()
+    {
+        if (teamLoader == null)
+            teamLoader = stateMachine != null ? stateMachine.teamLoader : null;
+        if (teamLoader == null)
+            return -1;
+
+        CharacterObject[] roster = teamLoader.GetTeamSnapshot();
+        if (roster == null || roster.Length == 0)
+            return -1;
+
+        int currentIndex = Mathf.Clamp(teamLoader.CurrentIndex, 0, roster.Length - 1);
+        for (int offset = 1; offset < roster.Length; offset++)
+        {
+            int candidateIndex = (currentIndex + offset) % roster.Length;
+            CharacterObject candidate = roster[candidateIndex];
+            if (candidate != null && teamLoader.IsCharacterAlive(candidate))
+                return candidateIndex;
+        }
+
+        return -1;
     }
 
     private Vector2 GetLatestMoveInput()

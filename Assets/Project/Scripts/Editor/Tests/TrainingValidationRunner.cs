@@ -26,7 +26,7 @@ public static class TrainingValidationRunner
         }
         if (EditorApplication.isPlayingOrWillChangePlaymode) return;
         File.Delete(request);
-        TrainingSceneAuthoring.Author();
+        TrainingSceneAuthoring.AuthorTrainingLoadout();
         EditorApplication.delayCall += Run;
     }
 
@@ -35,6 +35,18 @@ public static class TrainingValidationRunner
         if (_runner == null) _runner = ScriptableObject.CreateInstance<TestRunnerApi>();
         _runner.UnregisterCallbacks(Callback);
         _runner.RegisterCallbacks(Callback);
+    }
+
+    [MenuItem("Tools/Project/Training/Run State Isolation Regression Tests")]
+    public static void RunStateIsolationTests()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+        Register();
+        _runner.Execute(new ExecutionSettings(new Filter
+        {
+            testMode = TestMode.EditMode,
+            groupNames = new[] { "^TrainingSessionTests", "^TrainingFlowTests", "^RunGlobalLevelTests", "^ArtifactInstanceSystemTests" }
+        }));
     }
     [MenuItem("Tools/Project/Training/Run Focused Tests")]
     public static void Run()

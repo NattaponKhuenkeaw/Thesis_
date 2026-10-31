@@ -135,6 +135,14 @@ namespace Project.UI
             ShowSettings(true);
         }
 
+        public void OpenPauseMenu()
+        {
+            if (isLeaving) return;
+            if (!isPaused) TryPause();
+            if (!isPaused || isLeaving) return;
+            ShowSettings(true);
+        }
+
         public void OnReturnToTitleClicked()
         {
             if (!isPaused || isLeaving)
@@ -244,8 +252,8 @@ namespace Project.UI
                 return;
             }
 
-            PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaResourcePath);
-            PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+            CharacterProgressionState meta = Project.Training.CharacterStateContext.ResolveProgression();
+            CharacterInventoryState runInventory = Project.Training.CharacterStateContext.ResolveInventory();
             if (IsLobbyCheckpointScene())
             {
                 meta?.SavePersistentState();

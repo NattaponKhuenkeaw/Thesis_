@@ -13,11 +13,15 @@ blocked_by: []
 
 ## Player experience
 
-Each existing NA / Skill / Ult slot shows the authored action offered on that input.
-When a temporary action becomes available, its picture replaces the ordinary picture
-for that action's window. The existing window overlay drains on the gameplay timer.
-When consumed or expired, the ordinary picture returns. Dash retains its current icon
-and movement cooldown presentation.
+Each existing NA / Skill / Ult slot shows the icon for the action selected by the
+resolver in the current Ground/Air and input context. The general resolver icon stays
+visible outside temporary windows. A timed follow-up uses its action icon only while
+its availability window is active; the existing overlay drains on the gameplay timer.
+If no action matches the current context, the prefab fallback is shown. Dash uses its
+optional DashData icon and keeps its movement-owned cooldown display.
+
+Team swap slots use the compact icon in CharacterMetaData when assigned, then fall
+back to that metadata's portrait.
 
 ## Proposed mapping for approval
 
@@ -28,10 +32,11 @@ Dimension Slash appears on Skill because that is its input and availability wind
 Moving that icon to Ult would advertise a different input from the one that executes it.
 
 An optional action Sprite is authored alongside Action Name in the existing editor.
-The resolver's matching action and priority determine the picture; timed availability
-does not require a parallel UI countdown or a second action-selection policy.
-When no replacement is available, restore the matching ordinary action's authored
-picture, falling back to the prefab picture when no art is assigned.
+The resolver's matching action, priority, availability and current context determine
+the general slot picture. A temporary replacement also requires its matching timed
+availability window. Dash has no resolver category today, so its icon comes directly
+from DashData.
+When either gate closes, restore the prefab picture.
 Unavailable ordinary actions retain a dimmed picture and existing cooldown/AE cues.
 
 ## Interaction flow
@@ -58,7 +63,8 @@ introducing an unrelated dash action catalog in this task.
 - Rapid rejection must return to the same slot position (separate maintenance fix).
 - Window expiry/consumption: picture and overlay update together with no stale icon.
 - Competing windows: show the resolver's highest-priority matching action.
-- Ground/Air or target/counter changes: show the eligible replacement for that input.
+- Ground/Air or target/counter changes: show the replacement only if it still resolves
+  in the current context and its timed window remains active.
 - Cooldown/AE gate: a temporarily unusable replacement must not look ready.
 - Missing picture: original prefab art remains available; never retain the previous
   character's replacement picture.
@@ -85,5 +91,7 @@ each scenario, and slots return to their resting positions after feedback.
 
 Extends @tag:ui's cooldown/readiness/follow-up visibility on the primary PC input
 model in @tag:platform-input. Keeps @tag:combat context and resource rules intact.
-Apricha approved this design in chat on 2026-10-30: input-route mapping, temporary
-icon replacement, prefab fallback, NA window cue and retaining the existing Dash icon.
+Apricha approved the initial design in chat on 2026-10-30. On 2026-10-31 Apricha
+clarified that the ordinary context-matched ActionResolver icon must remain visible
+outside temporary windows; timed replacements still require their live window. The
+same follow-up requested DashData icon authoring for the existing Dash slot.

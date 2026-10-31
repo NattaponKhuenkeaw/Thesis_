@@ -53,9 +53,9 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     private GameObject shieldSliderRoot;
     private Coroutine healthLerpCoroutine;
     private PlayerCharacter subscribedPlayer;
-    private PlayerRunInventory subscribedEffectInventory;
-    private PlayerRunInventory subscribedCurrencyInventory;
-    private PlayerMetaProgression subscribedFragmentProgression;
+    private CharacterInventoryState subscribedEffectInventory;
+    private CharacterInventoryState subscribedCurrencyInventory;
+    private CharacterProgressionState subscribedFragmentProgression;
     private readonly List<RuntimeEffectIconUI> runtimeEffectIcons = new List<RuntimeEffectIconUI>();
     private readonly List<RuntimeEffectDisplayEntry> runtimeEffectDisplayEntries = new List<RuntimeEffectDisplayEntry>();
     private readonly Dictionary<string, int> runtimeEffectStackIndexes = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -413,7 +413,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private void RebindRuntimeEffectEvents()
     {
-        PlayerRunInventory inventory = ResolveEffectInventory();
+        CharacterInventoryState inventory = ResolveEffectInventory();
         if (inventory == subscribedEffectInventory)
         {
             return;
@@ -431,7 +431,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         }
     }
 
-    private PlayerRunInventory ResolveEffectInventory()
+    private CharacterInventoryState ResolveEffectInventory()
     {
         if (teamLoader == null)
         {
@@ -443,7 +443,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private void RebindCurrencyEvents()
     {
-        PlayerRunInventory inventory = ResolveEffectInventory();
+        CharacterInventoryState inventory = ResolveEffectInventory();
         if (inventory == subscribedCurrencyInventory)
         {
             return;
@@ -477,7 +477,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private void RefreshCurrencyDisplay()
     {
-        PlayerRunInventory inventory = subscribedCurrencyInventory != null
+        CharacterInventoryState inventory = subscribedCurrencyInventory != null
             ? subscribedCurrencyInventory
             : ResolveEffectInventory();
         RefreshCurrencyDisplay(inventory != null ? inventory.currency : 0);
@@ -580,7 +580,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private void RebindFragmentEvents()
     {
-        PlayerMetaProgression progression = fragmentText != null ? ResolveMetaProgression() : null;
+        CharacterProgressionState progression = fragmentText != null ? ResolveMetaProgression() : null;
         if (progression == subscribedFragmentProgression)
         {
             return;
@@ -605,7 +605,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         }
     }
 
-    private PlayerMetaProgression ResolveMetaProgression()
+    private CharacterProgressionState ResolveMetaProgression()
     {
         if (teamLoader == null)
         {
@@ -614,7 +614,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
         return teamLoader != null && teamLoader.MetaProgression != null
             ? teamLoader.MetaProgression
-            : Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+            : Project.Training.CharacterStateContext.ResolveProgression();
     }
 
     private void RefreshFragmentDisplay()
@@ -625,7 +625,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         }
 
         fragmentText.raycastTarget = false;
-        PlayerMetaProgression progression = subscribedFragmentProgression != null
+        CharacterProgressionState progression = subscribedFragmentProgression != null
             ? subscribedFragmentProgression
             : ResolveMetaProgression();
         string characterId = playerCharacter != null && playerCharacter.characterObject != null
@@ -1063,6 +1063,11 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         ApplyZoneVisibility(newMode == ZoneMode.SafeZone);
     }
 
+    public void OpenPauseMenu()
+    {
+        Project.UI.PauseMenuController.Instance?.OpenPauseMenu();
+    }
+
     public void UpdateNavigationVisibility()
     {
         ApplyZoneVisibility(IsSafeRoom());
@@ -1081,12 +1086,14 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         if (abilityRoot != null && abilityRoot != gameObject)
             abilityRoot.SetActive(!isSafe);
 
+        bool canEditLoadout = Project.Training.TrainingAccessPolicy.LoadoutMode(
+            isSafe ? ZoneMode.SafeZone : ZoneMode.CombatZone) == ZoneMode.SafeZone;
         GameObject navGo = FindNavigationRoot();
-        if (navGo != null && navGo.activeSelf != isSafe)
+        if (navGo != null && navGo.activeSelf != canEditLoadout)
         {
-            navGo.SetActive(isSafe);
+            navGo.SetActive(canEditLoadout);
 
-            if (!isSafe && Project.UI.UIManager.Instance != null)
+            if (!canEditLoadout && Project.UI.UIManager.Instance != null)
             {
                 Project.UI.UIManager.Instance.CloseAll();
             }

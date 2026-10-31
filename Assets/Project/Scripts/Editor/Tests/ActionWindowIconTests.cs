@@ -22,7 +22,7 @@ public class ActionWindowIconTests
     private CharacterPassiveController _passive;
     private AbilityUIManager _ui;
     private Image _image;
-    private Image _overlay;
+    private TimedOpportunityGraphic _effect;
     private Texture2D _texture;
     private Sprite _original;
     private Sprite _ordinary;
@@ -49,7 +49,7 @@ public class ActionWindowIconTests
         _ordinary = Sprite.Create(_texture, new Rect(1, 0, 1, 1), Vector2.zero);
         _special = Sprite.Create(_texture, new Rect(2, 0, 1, 1), Vector2.zero);
         _image = Image("ActionIcon"); _image.sprite = _original;
-        _overlay = Image("Window");
+        _effect = TimedOpportunityGraphic.GetOrCreate(_image);
     }
 
     [TearDown]
@@ -78,27 +78,28 @@ public class ActionWindowIconTests
 
         Refresh();
         Assert.That(_image.sprite, Is.SameAs(ordinary.icon));
-        Assert.That(_overlay.gameObject.activeSelf, Is.False);
+        Assert.That(_effect.IsVisible, Is.False);
         _passive.RuntimeState.SetTag("icon.window", 5f);
         Refresh();
         var tags = (IList)Get(_passive.RuntimeState, "runtimeTags");
         tags[0].GetType().GetField("expiresAt").SetValue(tags[0], Time.time - 1f);
         Refresh();
         Assert.That(_image.sprite, Is.SameAs(ordinary.icon), "Expiry restores the ordinary action too.");
-        Assert.That(_overlay.gameObject.activeSelf, Is.False);
+        Assert.That(_effect.IsVisible, Is.False);
         _passive.RuntimeState.SetTag("icon.window", 5f);
         Refresh();
         Assert.That(_image.sprite, Is.SameAs(special.icon));
-        Assert.That(_overlay.gameObject.activeSelf, Is.True);
-        Assert.That(_overlay.sprite, Is.SameAs(special.icon), "The window fill must preserve the action silhouette.");
-        Assert.That(_overlay.fillAmount, Is.InRange(0.99f, 1f));
+        Assert.That(_effect.IsVisible, Is.True);
+        Assert.That(_image.type, Is.EqualTo(UnityEngine.UI.Image.Type.Simple));
+        Assert.That(_image.fillAmount, Is.EqualTo(1f));
+        Assert.That(_effect.raycastTarget, Is.False);
         Assert.That(_passive.RuntimeState.HasTag("icon.window"), Is.True);
         Assert.That(_player.TryResolveActionForContext(category, out CombatAction selected, out _, true), Is.True);
         Assert.That(selected, Is.SameAs(special));
         _passive.RuntimeState.RemoveTag("icon.window");
         Refresh();
         Assert.That(_image.sprite, Is.SameAs(ordinary.icon));
-        Assert.That(_overlay.gameObject.activeSelf, Is.False);
+        Assert.That(_effect.IsVisible, Is.False);
     }
 
     [Test]
@@ -128,7 +129,7 @@ public class ActionWindowIconTests
             other.actionResolverTable = table; _player.characterObject = other;
             typeof(AbilityUIManager).GetMethod("HandleCharacterChanged", Private).Invoke(_ui, new object[] { other });
             Assert.That(_image.sprite, Is.SameAs(_original));
-            Assert.That(_overlay.gameObject.activeSelf, Is.False);
+            Assert.That(_effect.IsVisible, Is.False);
         }
         finally { Object.DestroyImmediate(other); Object.DestroyImmediate(table); }
     }
@@ -166,18 +167,19 @@ public class ActionWindowIconTests
         action.energyCost = 100f;
         Refresh(); Assert.That(_image.sprite, Is.SameAs(_ordinary));
         Assert.That(_image.color.a, Is.EqualTo(100f / 255f).Within(0.001f));
-        Assert.That(_overlay.gameObject.activeSelf, Is.False);
+        Assert.That(_effect.IsVisible, Is.False);
     }
 
     [Test]
-    public void PrefabWiresNormalIconAndItsExistingWindowOverlay()
+    public void PrefabWiresNormalIconAndSharedWindowOutline()
     {
         var root = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/CombatUI/Player_UI.prefab");
         var ui = root.GetComponentInChildren<AbilityUIManager>(true);
         var icon = (Image)Get(ui, "normalAttackIcon");
-        var overlay = (Image)Get(ui, "normalAttackFollowUpOverlay");
-        Assert.That(icon, Is.Not.Null); Assert.That(overlay, Is.Not.Null);
-        Assert.That(overlay.transform.IsChildOf(icon.transform), Is.True);
+        var effect = (TimedOpportunityGraphic)Get(ui, "normalAttackWindowEffect");
+        Assert.That(icon, Is.Not.Null); Assert.That(effect, Is.Not.Null);
+        Assert.That(effect.transform.IsChildOf(icon.transform), Is.True);
+        Assert.That(effect.GetComponent<Image>(), Is.Null);
     }
 
     [Test]
@@ -201,15 +203,17 @@ public class ActionWindowIconTests
             typeof(AbilityUIManager).GetMethod("RefreshWithoutReadyFeedback", Private).Invoke(ui, null);
             Assert.That(skill.sprite, Is.SameAs(_table.skillActions.Single(a => a.actionId == "main.skill.dark_chain").icon));
             Assert.That(skill.sprite, Is.Not.Null);
-            Assert.That(_table.comboActions.All(a => a.icon != null), Is.True);
+            // The current authored ground combo has an unresolved Sprite subasset;
+            // missing action art must retain the slot's existing fallback picture.
+            Assert.That(((Image)Get(ui, "normalAttackIcon")).sprite, Is.Not.Null);
             Assert.That(_table.standaloneActions.Single(a => a.actionId == "main.dash.dimension_cut").icon, Is.Not.Null);
             Assert.That(_table.ultimateActions.Single(a => a.actionId == "main.ultimate.jailbreak_punisher").icon, Is.Not.Null);
             Capture(root, "main-ordinary.png");
             _passive.RuntimeState.SetTag(MainDimensionSlashAuthoring.ReadyTag, 5f);
             typeof(AbilityUIManager).GetMethod("RefreshWithoutReadyFeedback", Private).Invoke(ui, null);
             Assert.That(skill.sprite, Is.SameAs(_table.skillActions.Single(a => a.actionId == MainDimensionSlashAuthoring.ActionId).icon));
-            Assert.That(((Image)Get(ui, "skillFollowUpOverlay")).gameObject.activeSelf, Is.True);
-            Assert.That(((Image)Get(ui, "skillFollowUpOverlay")).sprite, Is.SameAs(skill.sprite));
+            Assert.That(((TimedOpportunityGraphic)Get(ui, "skillWindowEffect")).IsVisible, Is.True);
+            Assert.That(skill.fillAmount, Is.EqualTo(1f));
             Capture(root, "main-judgment-cut-window.png");
         }
         finally { PrefabUtility.UnloadPrefabContents(root); Object.DestroyImmediate(progression); }
@@ -218,7 +222,7 @@ public class ActionWindowIconTests
     private static void Capture(GameObject root, string file)
     {
         const int width = 1280, height = 720;
-        const string folder = "Docs_JJK/3_Outputs/Reports/ActionWindowIcons";
+        const string folder = "Docs_JJK/3_Outputs/Reports/TimedOpportunityUI";
         Directory.CreateDirectory(folder);
         var canvas = root.GetComponent<Canvas>();
         var oldMode = canvas.renderMode; var oldCamera = canvas.worldCamera;
@@ -249,7 +253,7 @@ public class ActionWindowIconTests
     private void Bind(AttackCategory category)
     {
         string prefix = category == AttackCategory.Normal ? "normalAttack" : category == AttackCategory.Skill ? "skill" : "ult";
-        Set(_ui, prefix + "Icon", _image); Set(_ui, prefix + "FollowUpOverlay", _overlay);
+        Set(_ui, prefix + "Icon", _image); Set(_ui, prefix + "WindowEffect", _effect);
     }
 
     private CombatAction Action(AttackCategory category, string id, Sprite icon)

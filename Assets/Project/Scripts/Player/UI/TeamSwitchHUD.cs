@@ -12,6 +12,7 @@ public class TeamSwitchHUD : MonoBehaviour
     public GameObject slotPrefab;
 
     private List<CharacterSwitchSlot> activeSlots = new List<CharacterSwitchSlot>();
+    private CharacterObject[] _rosterSnapshot;
 
     void Start()
     {
@@ -23,6 +24,7 @@ public class TeamSwitchHUD : MonoBehaviour
     {
         CacheDependencies();
         BindTeamLoader();
+        if (activeSlots.Count > 0) ReconcileSlots(false);
     }
 
     void OnDisable()
@@ -79,30 +81,23 @@ public class TeamSwitchHUD : MonoBehaviour
 
     private void HandleTeamChanged()
     {
-        if (teamLoader != null && activeSlots.Count == teamLoader.CharacterCount)
+        if (teamLoader == null) return;
+        CharacterObject[] roster = teamLoader.GetTeamSnapshot();
+        bool sameRoster = _rosterSnapshot != null && roster.Length == _rosterSnapshot.Length;
+        if (sameRoster)
+            for (int i = 0; i < roster.Length; i++)
+                if (roster[i] != _rosterSnapshot[i]) { sameRoster = false; break; }
+        // Stat refreshes can arrive during SetCharacter, before the committed
+        // current-character event. They must not silently consume the exchange.
+        if (sameRoster)
         {
-            bool sameRoster = true;
-            foreach (CharacterSwitchSlot slot in activeSlots)
-                if (slot == null || teamLoader.GetCharacterAtIndex(slot.SlotIndex) != slot.BoundCharacter)
-                { sameRoster = false; break; }
-            if (sameRoster)
-            {
-                foreach (CharacterSwitchSlot slot in activeSlots) slot.RefreshFromHUD();
-                UpdateActiveIndicator(teamLoader.CurrentIndex);
-                return;
-            }
+            RefreshAllSlotHealth();
+            RefreshAllSlotCooldown();
         }
-        InitializeHUD();
+        else ReconcileSlots(false);
     }
 
-    private void HandleCurrentCharacterChanged()
-    {
-        if (teamLoader == null)
-            return;
-
-        RefreshAllSlotHealth();
-        UpdateActiveIndicator(teamLoader.CurrentIndex);
-    }
+    private void HandleCurrentCharacterChanged() => ReconcileSlots(true);
 
     private void HandleCharacterHealthUpdated(CharacterObject character, float currentHp, float maxHp)
     {
@@ -137,35 +132,50 @@ public class TeamSwitchHUD : MonoBehaviour
     }
 
     // เปลี่ยนให้เป็น public เผื่อในอนาคตอยากสั่ง Refresh จากสคริปต์อื่นโดยตรง
-    public void InitializeHUD()
+    public void InitializeHUD() => ReconcileSlots(false);
+
+    private void ReconcileSlots(bool animate)
     {
-        CharacterObject[] teamSnapshot = teamLoader != null ? teamLoader.GetTeamSnapshot() : null;
-        if (teamLoader == null || teamSnapshot == null || slotContainer == null || slotPrefab == null) return;
-
-        foreach (Transform child in slotContainer)
+        if (teamLoader == null || slotContainer == null || slotPrefab == null) return;
+        CharacterObject[] roster = teamLoader.GetTeamSnapshot();
+        if (roster == null) return;
+        _rosterSnapshot = roster;
+        int viewIndex = 0;
+        for (int rosterIndex = 0; rosterIndex < roster.Length; rosterIndex++)
         {
-            Destroy(child.gameObject);
-        }
-        activeSlots.Clear();
-
-        for (int i = 0; i < teamSnapshot.Length; i++)
-        {
-            CharacterObject character = teamSnapshot[i];
-
-            if (character == null) continue;
-
-            GameObject newSlotObj = Instantiate(slotPrefab, slotContainer);
-            CharacterSwitchSlot slotUI = newSlotObj.GetComponent<CharacterSwitchSlot>();
-
-            if (slotUI != null)
+            CharacterObject character = teamLoader.GetCharacterAtIndex(rosterIndex);
+            if (character == null || rosterIndex == teamLoader.CurrentIndex) continue;
+            CharacterSwitchSlot slot;
+            if (viewIndex < activeSlots.Count) slot = activeSlots[viewIndex];
+            else
             {
-                slotUI.Setup(character, i, this);
-                activeSlots.Add(slotUI);
+                GameObject host = Instantiate(slotPrefab, slotContainer);
+                slot = host.GetComponent<CharacterSwitchSlot>();
+                if (slot == null) { ReleaseSlot(host); continue; }
+                activeSlots.Add(slot);
+            }
+            if (slot.BoundCharacter != character || slot.SlotIndex != rosterIndex)
+                slot.Setup(character, rosterIndex, this, animate);
+            else slot.RefreshFromHUD();
+            viewIndex++;
+        }
+        for (int i = activeSlots.Count - 1; i >= viewIndex; i--)
+        {
+            CharacterSwitchSlot removed = activeSlots[i];
+            activeSlots.RemoveAt(i);
+            if (removed != null)
+            {
+                removed.gameObject.SetActive(false);
+                ReleaseSlot(removed.gameObject);
             }
         }
+        RefreshAllSlotCooldown();
+    }
 
-        RefreshAllSlotHealth();
-        UpdateActiveIndicator(teamLoader.CurrentIndex);
+    private void ReleaseSlot(GameObject host)
+    {
+        if (Application.isPlaying) Destroy(host);
+        else DestroyImmediate(host);
     }
 
     // รับคำสั่งเมื่อคลิก UI สลับตัว

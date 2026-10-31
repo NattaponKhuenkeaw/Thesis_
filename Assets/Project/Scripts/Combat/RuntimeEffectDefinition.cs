@@ -316,7 +316,7 @@ public class RuntimeEffectInstance
 
 public struct RuntimeEffectContext
 {
-    public PlayerRunInventory runInventory;
+    public CharacterInventoryState runInventory;
     public RuntimeEffectInstance instance;
     public CharacterObject sourceCharacter;
     public CharacterObject targetCharacter;

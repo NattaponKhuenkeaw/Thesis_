@@ -46,3 +46,10 @@ No changes to input routes, Action Type behavior, commitment/cost logic, gamepla
 timing, build/CI/dependencies/secrets, or other authored asset contents beyond the
 listed icon references and NA wiring. Existing local work remains in place.
 No commit, push, merge or official team status publishing was performed.
+
+Follow-up clarification from Apricha: replacement icons appear only while the exact
+action has an active timed availability window and resolves for the current context.
+Ordinary resolver selection by itself leaves the prefab icon visible. Added a
+dedicated optional CharacterMetaData icon beside the character portrait for team-switch
+slots; the portrait remains the fallback. The manual review scenarios are updated; these follow-up edits
+have not been re-run through Unity tests.

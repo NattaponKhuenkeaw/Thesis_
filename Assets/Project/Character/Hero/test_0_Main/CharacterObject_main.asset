@@ -31,6 +31,7 @@ MonoBehaviour:
   metaData:
     displayName: Asura Shin
     description: 
+    icon: {fileID: 21300000, guid: e8a37ea1cc028f34bb96aca6051eb76a, type: 3}
     portrait: {fileID: 21300000, guid: 011ac730786999640ad87686dae5ecf6, type: 3}
     animatorController: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
   auraEnergyRate: 1
@@ -48,6 +49,7 @@ MonoBehaviour:
     maxHpPerLevel: 81
   _dashData:
     animationClip: {fileID: 7400000, guid: a3c837dc24c5bff43b19dd4e52b327ab, type: 2}
+    icon: {fileID: 21300000, guid: 44824257e67aada4fb2f557399e27c1d, type: 3}
     startupFrames: 5
     activeFrames: 12
     recoveryFrames: 12
@@ -66,19 +68,19 @@ MonoBehaviour:
     skill:
       abilityId: main.skill.dark_chain
       abilityName: Dark Chain
-      icon: {fileID: 0}
+      icon: {fileID: 21300000, guid: 7ee4ee77719136f42b9aedb077eb0098, type: 3}
       description: Unleash a chain across the field.
     ultimate:
       abilityId: main.ultimate.jailbreak_punisher
       abilityName: Jailbreak Punisher
-      icon: {fileID: 0}
+      icon: {fileID: 21300000, guid: 9ef1f814da0fabf428383fc49cca0531, type: 3}
       description: Tap Ultimate for Jailbreak Punisher. Hold Ultimate for Execution
         Breakdown. Open a Void Area that deals periodic Void damage. Inflict <color=#8B3DFF>Void</color>
         DMG 700% of ATK
     passive:
       abilityId: main.passive
       abilityName: Shadow Dimension
-      icon: {fileID: 0}
+      icon: {fileID: 21300000, guid: fd398c780027bbc4f9774dad91c8dfc9, type: 3}
       description: Successful actions generate different amounts of Shadow Meter.
         Execution Breakdown grants 5 per hit. Each committed Dash spends one ready
         20-point box to cache a Dimension Cut. Normal Attack spends one cached cut
@@ -1649,9 +1651,9 @@ MonoBehaviour:
         windFrames: 108
         residualFrames: 118
         exitDelayFrames: 0
-        exitFrames: 78
-        exitScatter: 0.65
-        stormLift: 0.6
+        exitFrames: 15
+        exitScatter: 0.48
+        stormLift: 0.82
         groundShockwaveEnabled: 1
         fallingArcCount: 6
         impactArcCount: 9

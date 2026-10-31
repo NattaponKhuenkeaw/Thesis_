@@ -247,8 +247,8 @@ namespace Project.UI
             isLoading = true;
             ShowConfirm(false);
 
-            PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaResourcePath);
-            PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+            CharacterProgressionState meta = Project.Training.CharacterStateContext.ResolveProgression();
+            CharacterInventoryState runInventory = Project.Training.CharacterStateContext.ResolveInventory();
 
             if (clearMeta)
             {

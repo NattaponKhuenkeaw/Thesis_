@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,12 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private Image nodeImage;
         [SerializeField] private Graphic connectorGraphic;
         [SerializeField] private Button selectButton;
+        [SerializeField] private Image iconImage;
+        [SerializeField] private Image selectionFrame;
+        [SerializeField] private TMP_Text stateLabel;
+        [SerializeField] private Sprite lockedFrame;
+        [SerializeField] private Sprite availableFrame;
+        [SerializeField] private Sprite upgradedFrame;
 
         [Header("State Colors")]
         [SerializeField] private Color lockedColor = new Color(0.22f, 0.22f, 0.26f, 0.78f);
@@ -49,7 +56,8 @@ namespace Project.TeamBuilder.UI.Panels
             PotentialNodeDefinition node,
             CharacterPotentialNodeState state,
             bool selected,
-            Action<PotentialNodeDefinition> onSelected)
+            Action<PotentialNodeDefinition> onSelected,
+            Sprite icon = null)
         {
             _node = node;
             _onSelected = onSelected;
@@ -58,7 +66,34 @@ namespace Project.TeamBuilder.UI.Panels
             Color resolvedColor = selected ? selectedColor : ResolveStateColor(state);
             if (nodeImage != null)
             {
-                nodeImage.color = resolvedColor;
+                Sprite frame = state == CharacterPotentialNodeState.Upgraded ? upgradedFrame
+                    : state == CharacterPotentialNodeState.Upgradeable ? availableFrame : lockedFrame;
+                if (frame != null) nodeImage.sprite = frame;
+                nodeImage.color = frame != null
+                    ? state == CharacterPotentialNodeState.Upgraded ? new Color(0.72f, 0.4f, 1f) : Color.white
+                    : resolvedColor;
+            }
+
+            if (iconImage != null)
+            {
+                iconImage.sprite = icon;
+                iconImage.enabled = icon != null;
+                iconImage.color = state == CharacterPotentialNodeState.Locked
+                    ? new Color(0.42f, 0.42f, 0.48f, 1f) : Color.white;
+            }
+            if (selectionFrame != null) selectionFrame.enabled = selected;
+            if (stateLabel != null)
+            {
+                stateLabel.text = state switch
+                {
+                    CharacterPotentialNodeState.Upgraded => "UNLOCKED",
+                    CharacterPotentialNodeState.Upgradeable => "UPGRADE",
+                    CharacterPotentialNodeState.InsufficientFragments => "UNAVAILABLE",
+                    _ => "LOCKED"
+                };
+                stateLabel.color = state == CharacterPotentialNodeState.Upgraded ? new Color(0.78f, 0.52f, 1f)
+                    : state == CharacterPotentialNodeState.Upgradeable ? new Color(1f, 0.86f, 0.2f)
+                    : new Color(0.58f, 0.6f, 0.69f);
             }
 
             if (connectorGraphic != null)

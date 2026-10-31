@@ -79,7 +79,7 @@ namespace Project.TeamBuilder.UI
                     System.Action<CharacterItem> clickHandler = parentBuilder != null
                         ? (System.Action<CharacterItem>)PreviewCharacter
                         : null;
-                    PlayerRunInventory runInventory = parentBuilder != null
+                    CharacterInventoryState runInventory = parentBuilder != null
                         ? parentBuilder.RunInventory
                         : null;
                     cellUI.Init(character, rootCanvas, isInTeam, clickHandler, runInventory);

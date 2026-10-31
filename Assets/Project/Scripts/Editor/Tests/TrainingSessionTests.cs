@@ -2,114 +2,126 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 using CombatCore;
 using NUnit.Framework;
 using Project.Progression;
 using Project.ShopSystem;
 using Project.Training;
+using Project.InventorySystem.Items;
+using Project.InventorySystem.Artifacts;
+using Project.Save;
 using Unity.Behavior;
-using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 public sealed class TrainingSessionTests
 {
-    private PlayerRunInventory _inventory;
-    private PlayerMetaProgression _meta;
-    private readonly object _owner = new object();
+    private TrainingInventoryState _inventory;
+    private TrainingProgressionState _meta;
     private const BindingFlags Private = BindingFlags.NonPublic | BindingFlags.Instance;
 
     [SetUp]
     public void SetUp()
     {
-        _inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
-        _meta = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        _inventory = ScriptableObject.CreateInstance<TrainingInventoryState>();
+        _meta = ScriptableObject.CreateInstance<TrainingProgressionState>();
     }
 
     [TearDown]
     public void TearDown()
     {
-        _meta.EndTrainingSession(_owner);
-        _inventory.EndTrainingSession(_owner);
         Object.DestroyImmediate(_meta);
         Object.DestroyImmediate(_inventory);
     }
 
     [Test]
-    public void LevelOverrideCanDecreaseAndNeverChangesPersistentLevel()
+    public void PracticeStateDoesNotUseSaveAssetTypes()
     {
-        int original = _inventory.GlobalLevel;
-        _inventory.BeginTrainingSession(_owner);
-        _inventory.SetTrainingLevelOverride(_owner, _inventory.GlobalMaxLevel);
-        Assert.That(_inventory.GlobalLevel, Is.EqualTo(_inventory.GlobalMaxLevel));
-        Assert.That((int)typeof(PlayerRunInventory).GetField("_globalLevel", Private).GetValue(_inventory), Is.EqualTo(original));
-        _inventory.SetTrainingLevelOverride(_owner, 1);
+        Assert.That(typeof(PlayerRunInventory).IsAssignableFrom(_inventory.GetType()), Is.False);
+        Assert.That(typeof(PlayerMetaProgression).IsAssignableFrom(_meta.GetType()), Is.False);
+        Assert.That(typeof(TrainingSession).GetFields(Private).Any(f =>
+            f.FieldType == typeof(PlayerRunInventory) || f.FieldType == typeof(PlayerMetaProgression)), Is.False);
+    }
+
+    [Test]
+    public void PracticeLevelCanIncreaseDecreaseAndStartsFreshEachTime()
+    {
         Assert.That(_inventory.GlobalLevel, Is.EqualTo(1));
-        _inventory.EndTrainingSession(_owner);
-        Assert.That(_inventory.GlobalLevel, Is.EqualTo(original));
+        _inventory.SetLevel(_inventory.GlobalMaxLevel);
+        Assert.That(_inventory.GlobalLevel, Is.EqualTo(_inventory.GlobalMaxLevel));
+        _inventory.SetLevel(1);
+        Assert.That(_inventory.GlobalLevel, Is.EqualTo(1));
+        var next = ScriptableObject.CreateInstance<TrainingInventoryState>();
+        try { Assert.That(next.GlobalLevel, Is.EqualTo(1)); }
+        finally { Object.DestroyImmediate(next); }
     }
 
     [Test]
-    public void OnlyOwnerCanChangeOrEndAnOverride()
+    public void PracticePotentialsAreIndependentAndCopyConfigurationValues()
     {
-        _inventory.BeginTrainingSession(_owner);
-        _inventory.SetTrainingLevelOverride(_owner, 7);
-        Assert.Throws<InvalidOperationException>(() => _inventory.SetTrainingLevelOverride(new object(), 2));
-        _inventory.EndTrainingSession(new object());
-        Assert.That(_inventory.GlobalLevel, Is.EqualTo(7));
-        Assert.Throws<InvalidOperationException>(() => _meta.SetTrainingPotentialOverrides(new object(), null));
-    }
-
-    [Test]
-    public void PotentialOverridesDoNotChangeSaveExportsAndRestoreOnEnd()
-    {
-        _meta.SetPotentialLevel("training-test", PotentialTrack.Skill, 1);
-        string original = _meta.ExportJson();
-        _meta.BeginTrainingSession(_owner);
-        var values = new List<TrainingConfiguration.CharacterPotential>
+        var saved = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        try
         {
-            new TrainingConfiguration.CharacterPotential { characterId = "training-test", skill = 3, ultimate = 2 }
-        };
-        _meta.SetTrainingPotentialOverrides(_owner, values);
-        Assert.That(_meta.GetPotentialLevel("training-test", PotentialTrack.Skill), Is.EqualTo(3));
-        Assert.That(_meta.ExportJson(), Is.EqualTo(original));
-        values[0].skill = 0;
-        Assert.That(_meta.GetPotentialLevel("training-test", PotentialTrack.Skill), Is.EqualTo(3), "Caller cannot mutate staged values.");
-        _meta.SetTrainingPotentialOverrides(_owner, values);
-        Assert.That(_meta.GetPotentialLevel("training-test", PotentialTrack.Skill), Is.Zero);
-        _meta.EndTrainingSession(_owner);
-        Assert.That(_meta.GetPotentialLevel("training-test", PotentialTrack.Skill), Is.EqualTo(1));
-        Assert.That(_meta.ExportJson(), Is.EqualTo(original));
+            saved.SetPotentialLevel("training-test", PotentialTrack.Skill, 3);
+            string before = saved.ExportJson();
+            Assert.That(_meta.GetPotentialLevel("training-test", PotentialTrack.Skill), Is.Zero);
+            var values = new List<TrainingConfiguration.CharacterPotential>
+            {
+                new TrainingConfiguration.CharacterPotential { characterId = "training-test", skill = 2 }
+            };
+            _meta.SetPotentials(values);
+            values[0].skill = 0;
+            Assert.That(_meta.GetPotentialLevel("training-test", PotentialTrack.Skill), Is.EqualTo(2));
+            _meta.SetPotentials(values);
+            Assert.That(_meta.GetPotentialLevel("training-test", PotentialTrack.Skill), Is.Zero);
+            Assert.That(saved.ExportJson(), Is.EqualTo(before));
+        }
+        finally { Object.DestroyImmediate(saved); }
     }
 
     [Test]
-    public void ReducingPotentialInvalidatesUnlockedNodeCache()
+    public void PracticeCatalogIsCompleteIdempotentAndDoesNotChangeSavedInventory()
     {
-        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>("Assets/Project/Character/Hero/test_0_Main/CharacterObject_main.asset");
-        Assert.That(character, Is.Not.Null);
-        _meta.BeginTrainingSession(_owner);
-        _meta.SetTrainingPotentialOverrides(_owner, new[]
+        var saved = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        try
         {
-            new TrainingConfiguration.CharacterPotential { characterId = character.characterId, skill = CharacterKitDefinition.MaxPotentialLevel,
-                ultimate = CharacterKitDefinition.MaxPotentialLevel, passive = CharacterKitDefinition.MaxPotentialLevel }
-        });
-        var full = _meta.GetUnlockedPotentialNodes(character);
-        _meta.SetTrainingPotentialOverrides(_owner, new[] { new TrainingConfiguration.CharacterPotential { characterId = character.characterId } });
-        var reduced = _meta.GetUnlockedPotentialNodes(character);
-        Assert.That(reduced.Count, Is.LessThan(full.Count));
-        foreach (var node in reduced) Assert.That(node.unlockedByDefault || node.level <= 0, Is.True);
+            saved.AddGlobalLevels(7);
+            string before = JsonUtility.ToJson(saved);
+            var catalog = Resources.LoadAll<BaseItem>("ItemSO");
+            _inventory.PopulateCatalog(catalog);
+            foreach (var item in catalog)
+            {
+                if (item is CharacterItem character && character.characterObjectData != null)
+                    Assert.That(_inventory.ownedItems.OfType<CharacterItem>().Any(c =>
+                        c.characterObjectData.characterId == character.characterObjectData.characterId), Is.True);
+                if (item is ArtifactDefinition definition && !string.IsNullOrWhiteSpace(definition.id))
+                    Assert.That(_inventory.ArtifactInstances.Any(a => a.definitionId == definition.id), Is.True);
+            }
+            int characters = _inventory.ownedItems.OfType<CharacterItem>().Count();
+            int artifacts = _inventory.ArtifactInstances.Count;
+            Assert.That(artifacts, Is.GreaterThan(0));
+            _inventory.PopulateCatalog(catalog);
+            Assert.That(_inventory.ownedItems.OfType<CharacterItem>().Count(), Is.EqualTo(characters));
+            Assert.That(_inventory.ArtifactInstances.Count, Is.EqualTo(artifacts));
+            Assert.That(saved.GlobalLevel, Is.EqualTo(8));
+            Assert.That(JsonUtility.ToJson(saved), Is.EqualTo(before));
+        }
+        finally { Object.DestroyImmediate(saved); }
     }
 
     [Test]
-    public void SessionRestoresMetaDataOmittedFromTheSaveSchema()
+    public void PracticeStateCannotWriteSaveKeys()
     {
-        var items = (List<PermanentItemStack>)typeof(PlayerMetaProgression).GetField("permanentItems", Private).GetValue(_meta);
-        items.Add(new PermanentItemStack { itemId = "legacy-test", displayName = "Legacy item", quantity = 2 });
-        _meta.BeginTrainingSession(_owner);
-        items.Clear();
-        _meta.EndTrainingSession(_owner);
-        Assert.That(_meta.PermanentItems.Count, Is.EqualTo(1));
-        Assert.That(_meta.PermanentItems[0].quantity, Is.EqualTo(2));
+        string[] keys = { SaveSlotStore.ActiveMetaKey, SaveSlotStore.ActiveBossRunKey, SaveSlotStore.ActiveBossMetaKey,
+            "project.player_run_inventory.v3", "project.player_run_inventory.v2" };
+        var before = keys.ToDictionary(k => k, k => PlayerPrefs.GetString(k, "<absent>"));
+        _inventory.SetLevel(10);
+        _meta.SetPotentialLevel("training-test", PotentialTrack.Skill, 2);
+        _inventory.SavePersistentState();
+        _inventory.SaveBossLobbyCheckpoint();
+        _meta.SavePersistentState();
+        foreach (var key in keys) Assert.That(PlayerPrefs.GetString(key, "<absent>"), Is.EqualTo(before[key]), key);
     }
 
     [TestCase(false)]

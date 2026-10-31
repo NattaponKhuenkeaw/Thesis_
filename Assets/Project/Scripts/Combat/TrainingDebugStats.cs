@@ -207,13 +207,11 @@ namespace CombatCore
 
         private void HandleTeamRosterChanged()
         {
-            ClearSample();
             RebuildCharacterRecords();
         }
 
         private void RebuildCharacterRecords()
         {
-            characterDamageRecords.Clear();
             if (trainingManager == null)
             {
                 return;
@@ -222,10 +220,8 @@ namespace CombatCore
             IReadOnlyList<CharacterObject> activeTeam = trainingManager.ActiveTeam;
             for (int i = 0; i < activeTeam.Count; i++)
             {
-                characterDamageRecords.Add(new CharacterDamageRecord
-                {
-                    character = activeTeam[i]
-                });
+                if (activeTeam[i] == null || FindRecord(activeTeam[i]) != null) continue;
+                characterDamageRecords.Add(new CharacterDamageRecord { character = activeTeam[i] });
             }
         }
 

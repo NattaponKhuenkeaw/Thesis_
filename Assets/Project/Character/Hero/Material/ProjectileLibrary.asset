@@ -37,3 +37,7 @@ MonoBehaviour:
     entries:
     - type: 40
       data: {fileID: 11400000, guid: dcb01dfbce35c5c4ba7fec22f037496e, type: 2}
+  - categoryName: char-cg
+    entries:
+    - type: 40
+      data: {fileID: 11400000, guid: dcb01dfbce35c5c4ba7fec22f037496e, type: 2}

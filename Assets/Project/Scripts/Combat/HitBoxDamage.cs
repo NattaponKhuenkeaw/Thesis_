@@ -284,17 +284,7 @@ public class HitBoxDamage : MonoBehaviour
             //   - ThrowContext.ForceRelease() when the player is interrupted
         }
 
-        int finalHitstun = GetConfiguredHitstopFrames();
-        if (!hasTriggeredHitStopThisActivation && finalHitstun > 0)
-        {
-            TriggerHitStop(finalHitstun);
-            hasTriggeredHitStopThisActivation = true;
-        }
-
-        if (!hasTriggeredShakeThisActivation)
-        {
-            hasTriggeredShakeThisActivation = true;
-        }
+        TriggerConfiguredImpactFeedback();
 
         // KOF-style: flash the background white on every Ultimate hit
         if (UsesUltimateHitFlash && UltimateFlashOverlay.Instance != null)
@@ -690,7 +680,7 @@ public class HitBoxDamage : MonoBehaviour
             return;
         }
 
-        Project.ShopSystem.PlayerRunInventory inventory = rewardOwner.ResolveRunInventoryForEffects();
+        Project.ShopSystem.CharacterInventoryState inventory = rewardOwner.ResolveRunInventoryForEffects();
         inventory?.ModifyDamageInput(rewardCharacter, input);
         if (rewardOwner.PlayerCharacter != null
             && rewardOwner.PlayerCharacter.characterObject == rewardCharacter
@@ -755,10 +745,24 @@ public class HitBoxDamage : MonoBehaviour
         data.snapOffset = snapOffset;
     }
 
+    private void TriggerConfiguredImpactFeedback()
+    {
+        int frames = GetConfiguredHitstopFrames();
+        if (!hasTriggeredHitStopThisActivation && frames > 0)
+        {
+            TriggerHitStop(frames);
+            hasTriggeredHitStopThisActivation = true;
+        }
+        if (!hasTriggeredShakeThisActivation)
+        {
+            if (!SuppressesImpactFeedback) TriggerImpactShake();
+            hasTriggeredShakeThisActivation = true;
+        }
+    }
+
     private int GetConfiguredHitstopFrames()
     {
-        if (currentGrabHitbox != null && currentGrabHitbox.suppressImpactFeedback
-            || currentNormalHitbox != null && currentNormalHitbox.suppressImpactFeedback) return 0;
+        if (SuppressesImpactFeedback) return 0;
         if (currentGrabHitbox != null)
             return currentIsCrit ? Mathf.Max(2, currentGrabHitbox.impactFreezeFrames) : currentGrabHitbox.impactFreezeFrames;
 
@@ -806,7 +810,13 @@ public class HitBoxDamage : MonoBehaviour
         {
             GameFreezeManager.Instance.FreezeFrame(frames);
         }
+    }
 
+    private bool SuppressesImpactFeedback => currentGrabHitbox != null && currentGrabHitbox.suppressImpactFeedback
+        || currentNormalHitbox != null && currentNormalHitbox.suppressImpactFeedback;
+
+    private void TriggerImpactShake()
+    {
         DamageImpactTier tier = DamageImpactTier.Low;
         if (currentGrabHitbox != null) tier = currentGrabHitbox.impactTier;
         else if (currentNormalHitbox != null) tier = currentNormalHitbox.impactTier;

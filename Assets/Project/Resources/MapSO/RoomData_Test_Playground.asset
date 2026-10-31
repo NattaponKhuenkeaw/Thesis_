@@ -22,7 +22,7 @@ MonoBehaviour:
   includeInRandomOffers: 0
   zoneMode: 1
   defaultEntranceId: Default
-  useStaticCamera: 1
+  useStaticCamera: 0
   encounter: {fileID: 0}
   backgroundMusic: {fileID: 0}
   musicVolume: 1

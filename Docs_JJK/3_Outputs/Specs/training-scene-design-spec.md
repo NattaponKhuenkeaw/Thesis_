@@ -26,6 +26,10 @@ Design approval: user replied **LGTM** on 2026-10-30, then clarified **Hide visu
 
 Approved follow-up during implementation: user requested a **Stats** button to toggle the debug windows. The windows start hidden; damage collection continues while hidden. The button shows/hides the stats group, retaining the individual panel toggles when shown.
 
+Follow-up on 2026-10-30: user requested TeamBuilder/Inspector access, all catalog characters and artifacts, and simultaneous editing/combat access in Training. Training now grants the UI editing permission without changing its CombatZone room state. Practice catalog availability and loadouts remain session-only. This supersedes the earlier statement excluding a catalog/roster expansion; see `training-loadout-access-task-card.md`.
+
+Presentation correction on 2026-10-30: reuse Player_UI's existing TeamBuilder/Inspector buttons and remove the duplicate TrainingCanvas controls. Only Config stays on the left; it toggles a vertical Training Config / Reset DMG / Stats drawer. Open from a right offset and close to the right using cubic ease-out for movement and opacity. The drawer starts hidden and animates in unscaled time. See `training-tools-drawer-task-card.md`.
+
 Approved destination: **Test_Playground**. Evidence: the inspected active Unity scene is Test_Playground, its RoomData display name is Combat Training, and the scene contains Enemy_Dummy and CinemachineCamera_Training. A separately named Training scene has not been found.
 
 ## Interaction Flow
@@ -63,7 +67,7 @@ Combat Statistics
 - **Level follows the existing shared Run Global Level rule**, not the legacy individual Character Level panel. Label it Team Level so its scope is visible. Use the existing configured cap; do not invent a second training growth formula.
 - **Potential is per selected deployed character**, with the existing Skill, Ultimate and Passive tracks. Allow increasing and decreasing tiers, including zero, within the character's defined track bounds and existing maximum. No fragment/currency costs in Training.
 - Opening configuration suspends practice with scoped gameplay input/time ownership. UI navigation remains responsive. Inputs over the panel must not trigger attacks.
-- Changes remain a draft until Apply. Apply commits the selected Training settings together, refreshes live stats and potential/passive effects, clears the previous damage sample, and resumes practice. Cancel discards the draft and resumes practice.
+- Changes remain a draft until Apply. Apply commits the selected Training settings together, refreshes live stats and potential/passive effects, preserves team-wide damage history, and resumes practice. Cancel discards the draft and resumes practice. Reset DMG is the explicit sample reset action.
 - Configuration must start from the session's loaded setup and remain temporary. Exiting, reloading, or interrupting Training discards overrides. Do not edit CharacterObject assets or invoke permanent potential upgrade/reset/save actions.
 - A separate Reset Damage action clears the existing statistics sample without changing configuration, HP, cooldowns, or Aura Energy.
 - Existing team selection and loadout behavior stays as documented in the earlier proposal; this adds configuration for deployed characters, not a new unlock or roster system.
@@ -101,7 +105,7 @@ These are inspected facts, not completed changes. The implementation strategy re
 | Select Training | Existing menu selection/click feedback and loading flow | Existing menu feedback where available | Existing menu behavior |
 | Hit dummy | Existing hit reactions, hit VFX, and current combat HUD | Existing authored impact SFX | Existing combat timings |
 | Finish temporary camera effect | Wider Training view resumes | Existing action audio | Existing authored camera return |
-| Apply configuration | Selected levels/tiers and refreshed stats; clean damage sample | Reuse existing menu confirmation feedback | One application before gameplay resumes |
+| Apply configuration | Selected levels/tiers and refreshed stats; accumulated damage history stays visible after closing the overlay | Reuse existing menu confirmation feedback | One application before gameplay resumes |
 
 No new shake, particles, haptics, combat timings, or music are proposed. Training size **10** is the existing authored starting value, not a new balance recommendation. Test movement, jumps, knockback, and ultimates at the scene boundaries. Pass if the intended practice area remains readable and action cameras return to the wider view. If framing is too tight/wide, adjust the Training camera's authored lens/framing together during human playtest.
 
@@ -143,7 +147,7 @@ Design and destination approved in chat on 2026-10-30. Proceed to the architectu
 4. Abuse: enter/exit with and without an active save; compare committed progression and rewards before/after. Training must not change them.
 5. Readability: move to room boundaries, jump and knock the dummy away. Verify wider framing, temporary camera return, and no static-camera takeover.
 6. Regression: enter an ordinary combat room and boss room; verify existing AI, lifecycle recovery, and camera transitions.
-7. Configuration: change team level up/down and each selected character's potential tracks up/down; Apply and check effective stats/effects; Cancel and confirm no changes. A new damage sample must start on Apply.
+7. Configuration: enter with a save containing nonzero level/potential values and confirm Training begins at Team Level 1 / potential 0; change settings and check effective stats/effects. Existing damage history survives Apply and team swaps; Reset DMG clears it. Cancel discards edits.
 8. Statistics separation: Training HUD and damage recording work with no body/hitbox/hurtbox drawings. Switch the developer debug collider flag independently and verify physical hits work in every visualization state.
 9. Isolation: enter without a save slot, then with an existing save; change configuration and leave through normal and interrupted paths. Saved levels/potentials/resources and authored assets must remain unchanged.
 

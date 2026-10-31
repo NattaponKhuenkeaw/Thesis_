@@ -14,8 +14,8 @@ public class AdminConsole : MonoBehaviour
     [SerializeField] private GameObject enemy103Prefab;
 
     [Header("Reset Systems")]
-    [SerializeField] private Project.ShopSystem.PlayerRunInventory runInventory;
-    [SerializeField] private Project.Progression.PlayerMetaProgression progressionInventory;
+    [SerializeField] private Project.ShopSystem.CharacterInventoryState runInventory;
+    [SerializeField] private Project.Progression.CharacterProgressionState progressionInventory;
 
     private void Awake()
     {
@@ -189,27 +189,29 @@ public class AdminConsole : MonoBehaviour
         
     }
 
-    private Project.ShopSystem.PlayerRunInventory ResolveRunInventory()
+    private Project.ShopSystem.CharacterInventoryState ResolveRunInventory()
     {
+        runInventory = Project.Training.CharacterStateContext.ResolveInventory(runInventory);
         if (runInventory != null) return runInventory;
         if (TeamLoader.Instance != null && TeamLoader.Instance.RunInventory != null)
         {
             runInventory = TeamLoader.Instance.RunInventory;
             return runInventory;
         }
-        runInventory = Resources.Load<Project.ShopSystem.PlayerRunInventory>("InventorySO/PlayerRunInventory");
+        runInventory = Project.Training.CharacterStateContext.ResolveInventory();
         return runInventory;
     }
 
-    private Project.Progression.PlayerMetaProgression ResolveMetaProgression()
+    private Project.Progression.CharacterProgressionState ResolveMetaProgression()
     {
+        progressionInventory = Project.Training.CharacterStateContext.ResolveProgression(progressionInventory);
         if (progressionInventory != null) return progressionInventory;
         if (TeamLoader.Instance != null && TeamLoader.Instance.MetaProgression != null)
         {
             progressionInventory = TeamLoader.Instance.MetaProgression;
             return progressionInventory;
         }
-        progressionInventory = Resources.Load<Project.Progression.PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+        progressionInventory = Project.Training.CharacterStateContext.ResolveProgression();
         return progressionInventory;
     }
 
