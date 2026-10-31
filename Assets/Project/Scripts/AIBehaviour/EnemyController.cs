@@ -902,7 +902,7 @@ public class EnemyController : MonoBehaviour
         currentHP -= finalIncomingDamage;
         currentHP  = Mathf.Max(currentHP, 0f);
 
-        if (CombatCore.TrainingDebugStats.Instance != null && CombatCore.TrainingDebugManager.IsActive)
+        if (CombatCore.TrainingDebugStats.Instance != null && CombatCore.TrainingDebugManager.CollectStats)
         {
             CombatCore.TrainingDebugStats.Instance.RecordHit(this, reactionData.sourceCharacter, finalIncomingDamage);
         }
@@ -1331,7 +1331,7 @@ public class EnemyController : MonoBehaviour
         EnemyBehaviorBrain brain = GetComponent<EnemyBehaviorBrain>();
         if (brain != null)
         {
-            brain.SetAgentActiveForGameplay(active);
+            brain.SetAgentActiveForGameplay(active && brain.AllowsGameplayAI);
             return;
         }
 

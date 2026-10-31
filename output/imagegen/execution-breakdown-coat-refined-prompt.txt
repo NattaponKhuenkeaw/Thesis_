@@ -1,0 +1,11 @@
+Tool: built-in image_gen
+Purpose: refine coat silhouette and remove purple fringe from prior candidate.
+Packaging: nearest-neighbor resize to 512x384; 4 columns x 3 rows; 128x128 Unity slices; generated alpha preserved.
+Known limitation: generated result still shows some purple contour fringe and does not perfectly match the slim source anatomy.
+
+Prompt:
+Retouch the supplied game pixel-art sheet. Make two specific corrections: (1) remove the colored fuzzy outlines completely, (2) slim down the coat silhouette. Preserve the 12 poses and clean pixel style.
+OUTLINE CLEANUP: all exterior contour pixels must be a single crisp dark charcoal outline. Absolutely no purple halo, purple shadow, violet outline, magenta, blue, cyan fringe, soft edge, antialiasing or blur. Delete all extraneous colored pixels outside the intended silhouette. No glow or light effect. Background pure transparent alpha 0.
+SILHOUETTE: reduce the width of the coat, torso and trailing coat panels. Narrow sleeves and torso. Make coat tails thin separated strips behind the character, not a wide cape. Reveal the slim legs, knees, ankles and original foot silhouette. Keep narrow pixel-art hands, feet and sword. Do not thicken any character part.
+Keep original 4x3 grid with twelve separate 128x128 frames, 512x384 total. Keep small heads and long thin limbs. Keep original hair shapes, sword positions and fine sword edges. Use image 2 as the hard guide for these proportions and poses; image 3 only for the coat design. The appearance must be crisp nearest-neighbor pixel clusters at native 128x128 resolution with a limited palette. One-pixel dark outline. Purple is only an interior flat coat accent, not contour. Clothing is dark near-black charcoal coat with narrow purple tails, narrow pale shirt trim, purple pants.
+Keep exact transparent background. No checkerboard, no text or grid marks. Output image only.

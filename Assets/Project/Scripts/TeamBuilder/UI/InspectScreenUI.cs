@@ -52,7 +52,7 @@ namespace Project.TeamBuilder.UI
         private InspectPage presentedPage;
 
         [Header("Data Sources")]
-        [SerializeField] private PlayerRunInventory playerInventory;
+        [SerializeField] private CharacterInventoryState playerInventory;
         [SerializeField] private TeamLoader teamLoader;
         [SerializeField] private TeamUI owningTeamUI;
 
@@ -167,7 +167,7 @@ namespace Project.TeamBuilder.UI
 
         private void HandleZoneChanged(ZoneMode newMode)
         {
-            currentMode = newMode;
+            currentMode = Project.Training.TrainingAccessPolicy.LoadoutMode(newMode);
             if (currentMode == ZoneMode.CombatZone)
             {
                 Close();
@@ -180,7 +180,7 @@ namespace Project.TeamBuilder.UI
                 {
                     if (panel is IZoneStateListener listener)
                     {
-                        listener.OnZoneChanged(newMode);
+                        listener.OnZoneChanged(currentMode);
                     }
                 }
             }
@@ -269,7 +269,8 @@ namespace Project.TeamBuilder.UI
         {
             // When zoneStateProvider is null (e.g. playground scenes) default to SafeZone
             // so the inspector is not silently blocked.
-            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode liveMode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -293,7 +294,8 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void OpenInspectorOnPage(InspectPage page)
         {
-            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode liveMode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -312,7 +314,8 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void OpenInspectorWithCharacterOnPage(string name, InspectPage page)
         {
-            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode liveMode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -339,7 +342,8 @@ namespace Project.TeamBuilder.UI
 
         public void Open(CharacterItem character, ArtifactInstance[] equippedArtifacts = null)
         {
-            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode liveMode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -396,7 +400,7 @@ namespace Project.TeamBuilder.UI
             Open(character, (ArtifactInstance[])null);
         }
 
-        public void RefreshCurrentArtifactInstances(ArtifactInstance[] equippedArtifacts, PlayerRunInventory inventory)
+        public void RefreshCurrentArtifactInstances(ArtifactInstance[] equippedArtifacts, CharacterInventoryState inventory)
         {
             currentArtifactInstances = equippedArtifacts ?? Array.Empty<ArtifactInstance>();
             currentArtifacts = ResolveLegacyArtifacts(currentArtifactInstances);
@@ -1133,8 +1137,9 @@ namespace Project.TeamBuilder.UI
             }
         }
 
-        public PlayerRunInventory ResolveRunInventory()
+        public CharacterInventoryState ResolveRunInventory()
         {
+            playerInventory = Project.Training.CharacterStateContext.ResolveInventory(playerInventory);
             if (playerInventory == null)
             {
                 if (teamLoader == null)
@@ -1157,7 +1162,7 @@ namespace Project.TeamBuilder.UI
 
                 if (playerInventory == null)
                 {
-                    playerInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                    playerInventory = Project.Training.CharacterStateContext.ResolveInventory();
                 }
             }
             return playerInventory;
@@ -1165,13 +1170,13 @@ namespace Project.TeamBuilder.UI
 
         public int ResolveRunGlobalLevel()
         {
-            PlayerRunInventory inventory = ResolveRunInventory();
+            CharacterInventoryState inventory = ResolveRunInventory();
             return inventory != null ? inventory.GlobalLevel : 1;
         }
 
         public int ResolveRunGlobalMaxLevel()
         {
-            PlayerRunInventory inventory = ResolveRunInventory();
+            CharacterInventoryState inventory = ResolveRunInventory();
             return inventory != null ? inventory.GlobalMaxLevel : 30;
         }
 

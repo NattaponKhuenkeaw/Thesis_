@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="19" result="Passed" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-29 20:34:02Z" end-time="2026-10-29 20:34:03Z" duration="0.5489233">
+  <test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="975" result="Passed" start-time="2026-10-29 20:34:02Z" end-time="2026-10-29 20:34:03Z" duration="0.548923" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2166" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="975" result="Passed" start-time="2026-10-29 20:34:02Z" end-time="2026-10-29 20:34:03Z" duration="0.531915" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="25848" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestFixture" id="1001" name="AbilityUIFeedbackTests" fullname="AbilityUIFeedbackTests" classname="AbilityUIFeedbackTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-29 20:34:02Z" end-time="2026-10-29 20:34:03Z" duration="0.245832" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1009" name="AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" fullname="AbilityUIFeedbackTests.AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" methodname="AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1391409997" result="Passed" start-time="2026-10-29 20:34:02Z" end-time="2026-10-29 20:34:03Z" duration="0.202382" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1002" name="CharacterRefreshDoesNotStartSkillReadyRush" fullname="AbilityUIFeedbackTests.CharacterRefreshDoesNotStartSkillReadyRush" methodname="CharacterRefreshDoesNotStartSkillReadyRush" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1217323021" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.004607" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1004" name="DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" fullname="AbilityUIFeedbackTests.DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" methodname="DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="500025408" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.006220" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1005" name="RebindingAfterDashExpiryDoesNotQueueReadyFeedback" fullname="AbilityUIFeedbackTests.RebindingAfterDashExpiryDoesNotQueueReadyFeedback" methodname="RebindingAfterDashExpiryDoesNotQueueReadyFeedback" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1648567338" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.000754" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1003" name="ReenableEstablishesReadyStateWithoutBounce" fullname="AbilityUIFeedbackTests.ReenableEstablishesReadyStateWithoutBounce" methodname="ReenableEstablishesReadyStateWithoutBounce" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1695921051" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.000585" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1008" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.015353" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1006" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation(True)" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation(True)" methodname="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="2140702801" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.002759" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1007" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation(False)" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation(False)" methodname="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1932149285" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.000768" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1027" name="ActionWindowIconTests" fullname="ActionWindowIconTests" classname="ActionWindowIconTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.231228" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1035" name="CooldownKeepsTheSelectedPictureDimAndDoesNotConsumeTheTimer" fullname="ActionWindowIconTests.CooldownKeepsTheSelectedPictureDimAndDoesNotConsumeTheTimer" methodname="CooldownKeepsTheSelectedPictureDimAndDoesNotConsumeTheTimer" classname="ActionWindowIconTests" runstate="Runnable" seed="358862115" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.020375" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1034" name="GroundMismatchDoesNotAdvertiseAnAvailableReplacement" fullname="ActionWindowIconTests.GroundMismatchDoesNotAdvertiseAnAvailableReplacement" methodname="GroundMismatchDoesNotAdvertiseAnAvailableReplacement" classname="ActionWindowIconTests" runstate="Runnable" seed="615602951" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.002632" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1032" name="HigherPriorityWindowWinsAndUnavailableCounterActionFallsBack" fullname="ActionWindowIconTests.HigherPriorityWindowWinsAndUnavailableCounterActionFallsBack" methodname="HigherPriorityWindowWinsAndUnavailableCounterActionFallsBack" classname="ActionWindowIconTests" runstate="Runnable" seed="256513759" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.003440" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1036" name="InsufficientUltimateEnergyDimsTheAuthoredIcon" fullname="ActionWindowIconTests.InsufficientUltimateEnergyDimsTheAuthoredIcon" methodname="InsufficientUltimateEnergyDimsTheAuthoredIcon" classname="ActionWindowIconTests" runstate="Runnable" seed="948516723" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.002965" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1038" name="MainAuthoredPicturesRenderInThePrefabAndJudgmentCutStaysOnSkill" fullname="ActionWindowIconTests.MainAuthoredPicturesRenderInThePrefabAndJudgmentCutStaysOnSkill" methodname="MainAuthoredPicturesRenderInThePrefabAndJudgmentCutStaysOnSkill" classname="ActionWindowIconTests" runstate="Runnable" seed="919799115" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.140928" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1033" name="MissingArtAfterCharacterChangeRestoresOriginalPrefabSprite" fullname="ActionWindowIconTests.MissingArtAfterCharacterChangeRestoresOriginalPrefabSprite" methodname="MissingArtAfterCharacterChangeRestoresOriginalPrefabSprite" classname="ActionWindowIconTests" runstate="Runnable" seed="461304710" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.002520" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1037" name="PrefabWiresNormalIconAndItsExistingWindowOverlay" fullname="ActionWindowIconTests.PrefabWiresNormalIconAndItsExistingWindowOverlay" methodname="PrefabWiresNormalIconAndItsExistingWindowOverlay" classname="ActionWindowIconTests" runstate="Runnable" seed="286698383" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.001613" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1031" name="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" fullname="ActionWindowIconTests.SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" classname="ActionWindowIconTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.040026" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1028" name="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Normal)" fullname="ActionWindowIconTests.SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Normal)" methodname="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" classname="ActionWindowIconTests" runstate="Runnable" seed="327633675" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.024934" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1029" name="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Skill)" fullname="ActionWindowIconTests.SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Skill)" methodname="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" classname="ActionWindowIconTests" runstate="Runnable" seed="415744761" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.001669" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1030" name="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Ultimate)" fullname="ActionWindowIconTests.SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Ultimate)" methodname="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" classname="ActionWindowIconTests" runstate="Runnable" seed="538875976" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.001254" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="2163" name="UIFeedbackWiggleTests" fullname="UIFeedbackWiggleTests" classname="UIFeedbackWiggleTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.021885" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="2165" name="IndependentTargetsAndLayoutMovementUseTheirOwnRestingPositions" fullname="UIFeedbackWiggleTests.IndependentTargetsAndLayoutMovementUseTheirOwnRestingPositions" methodname="IndependentTargetsAndLayoutMovementUseTheirOwnRestingPositions" classname="UIFeedbackWiggleTests" runstate="Runnable" seed="1957948333" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.005298" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2164" name="RepeatedRequestsKeepOneOriginalOriginAndDisableRestoresIt" fullname="UIFeedbackWiggleTests.RepeatedRequestsKeepOneOriginalOriginAndDisableRestoresIt" methodname="RepeatedRequestsKeepOneOriginalOriginAndDisableRestoresIt" classname="UIFeedbackWiggleTests" runstate="Runnable" seed="1981854221" result="Passed" start-time="2026-10-29 20:34:03Z" end-time="2026-10-29 20:34:03Z" duration="0.001164" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/Apricha/AppData/LocalLow/DefaultCompany/Thesis\TestResults.xml
+]]></output>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

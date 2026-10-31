@@ -22,6 +22,9 @@ public sealed class ProceduralSlashField : MonoBehaviour
     private float _frame;
     private bool _playing;
     private bool _preview;
+    private bool _released;
+    private bool _disposeOnComplete;
+    private PlayerCombat _clockOwner;
     private Vector3 _origin;
     private Transform _visualRoot;
     private Camera _camera;
@@ -45,11 +48,12 @@ public sealed class ProceduralSlashField : MonoBehaviour
     public Transform VisualRoot => _visualRoot;
 
     public void Begin(CombatExecutionContext execution, ProceduralSlashFieldSettings settings,
-        Vector3 origin, int facing, SpriteRenderer actor, bool preview = false)
+        Vector3 origin, int facing, SpriteRenderer actor, bool preview = false, bool disposeOnComplete = false)
     {
         Stop();
         if (settings == null || settings.material == null) return;
         _settings = settings; _execution = execution; _preview = preview; _frame = 0f;
+        _released = false; _disposeOnComplete = disposeOnComplete; _clockOwner = execution?.owner;
         if (_renderer == null)
         {
             _visualRoot = new GameObject("World Anchored Slash Field").transform;
@@ -91,16 +95,34 @@ public sealed class ProceduralSlashField : MonoBehaviour
         if (settings.impactDistortion != null && settings.impactDistortion.enabled) ImpactFields.Add(this);
     }
 
-    public void SetLogicFrame(float frame) { _frame = frame; Sample(frame); }
+    public void SetLogicFrame(float frame) { if (!_released) { _frame = frame; Sample(frame); } }
+
+    public void ReleaseToLifetime()
+    {
+        if (!_playing || _released) return;
+        RestoreActor();
+        _frame = Mathf.Max(_frame, SampledFrame);
+        _released = true;
+        _execution = null;
+        transform.SetParent(null, true);
+    }
+
+    public void AdvanceLifetime(float deltaTime)
+    {
+        if (!_playing || !_released || Time.timeScale <= 0f || _clockOwner?.HasActiveHitstop == true) return;
+        _frame += Mathf.Max(0f, deltaTime) * 60f;
+        Sample(_frame);
+    }
 
     private void LateUpdate()
     {
         if (!_playing || _preview) return;
         if (_settings.fullScreenSlash && _camera != null)
             _visualRoot.position = new Vector3(_camera.transform.position.x, _camera.transform.position.y, _origin.z);
-        if (_execution == null || !_execution.IsOnField
-            || _execution.owner.CurrentExecution != _execution || !_execution.owner.IsAttacking())
-        { Stop(); return; }
+        if (!_released && (_execution == null || !_execution.IsOnField
+            || _execution.owner.CurrentExecution != _execution || !_execution.owner.IsAttacking()))
+            ReleaseToLifetime();
+        if (_released) { AdvanceLifetime(Time.deltaTime); return; }
         // Fractional render interpolation follows scaled combat time and freezes with pause/hitstop.
         float fraction = Time.timeScale > 0f ? Mathf.Clamp((Time.time - Time.fixedTime) * 60f, 0f, 1f) : 0f;
         Sample(_frame + fraction);
@@ -110,6 +132,12 @@ public sealed class ProceduralSlashField : MonoBehaviour
     {
         if (!_playing) return;
         SampledFrame = frame;
+        if (!_preview && frame >= _settings.endFrame)
+        {
+            Stop();
+            if (_disposeOnComplete && Application.isPlaying) Destroy(gameObject);
+            return;
+        }
         _properties.SetFloat(FrameId, frame); _properties.SetFloat(EndId, _settings.endFrame);
         _renderer.SetPropertyBlock(_properties);
         _foregroundRenderer.SetPropertyBlock(_properties);
@@ -124,12 +152,17 @@ public sealed class ProceduralSlashField : MonoBehaviour
     {
         ImpactFields.Remove(this);
         _cutRibbons.Clear();
-        for (int i = 0; _actorRenderers != null && i < _actorRenderers.Length; i++)
-            if (_actorRenderers[i] != null) _actorRenderers[i].forceRenderingOff = _originalHidden[i];
-        _actorRenderers = null; _originalHidden = null;
+        RestoreActor();
         if (_renderer != null) _renderer.enabled = false;
         if (_foregroundRenderer != null) _foregroundRenderer.enabled = false;
         _execution = null; _settings = null; _playing = false;
+    }
+
+    private void RestoreActor()
+    {
+        for (int i = 0; _actorRenderers != null && i < _actorRenderers.Length; i++)
+            if (_actorRenderers[i] != null) _actorRenderers[i].forceRenderingOff = _originalHidden[i];
+        _actorRenderers = null; _originalHidden = null;
     }
 
     private void OnDisable() => Stop();
@@ -156,7 +189,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
             if (field == null || !field._playing || !field.isActiveAndEnabled) continue;
             bool previewCamera = field._preview && camera.cameraType == CameraType.SceneView;
             if (camera != field._camera && !previewCamera) continue;
-            if (!field._preview && (field._execution == null || !field._execution.IsOnField
+            if (!field._preview && !field._released && (field._execution == null || !field._execution.IsOnField
                 || field._execution.owner.CurrentExecution != field._execution
                 || !field._execution.owner.IsAttacking())) continue;
             var settings = field._settings?.impactDistortion;

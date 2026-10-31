@@ -976,12 +976,12 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            PlayerRunInventory inventory = TeamLoader.Instance != null
+            CharacterInventoryState inventory = TeamLoader.Instance != null
                 ? TeamLoader.Instance.RunInventory
                 : null;
             if (inventory == null)
             {
-                inventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                inventory = Project.Training.CharacterStateContext.ResolveInventory();
             }
 
             if (inventory == null)

@@ -31,6 +31,7 @@ namespace Project.UI
 
         [Header("Main Buttons")]
         [SerializeField] private Button playButton;
+        [SerializeField] private Button trainingButton;
         [SerializeField] private SaveSelectPanel saveSelectPanel;
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button quitButton;
@@ -127,6 +128,19 @@ namespace Project.UI
             saveSelectPanel.Open();
         }
 
+        public void OnTrainingClicked()
+        {
+            if (isLoading) return;
+            if (!Application.CanStreamedLevelBeLoaded(Project.Training.TrainingSession.SceneName))
+            {
+                Debug.LogError("[MainMenu] Training scene is not available.", this);
+                return;
+            }
+            isLoading = true;
+            presentation?.CompleteIntro();
+            SceneManager.LoadScene(Project.Training.TrainingSession.SceneName);
+        }
+
         public void OnSettingsClicked()
         {
             if (isLoading)
@@ -172,6 +186,7 @@ namespace Project.UI
         private void BindUi()
         {
             BindButton(playButton, OnPlayClicked);
+            BindButton(trainingButton, OnTrainingClicked);
             BindButton(settingsButton, OnSettingsClicked);
             BindButton(quitButton, OnQuitClicked);
             BindButton(settingsBackButton, CloseSettings);
@@ -232,8 +247,8 @@ namespace Project.UI
             isLoading = true;
             ShowConfirm(false);
 
-            PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaResourcePath);
-            PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+            CharacterProgressionState meta = Project.Training.CharacterStateContext.ResolveProgression();
+            CharacterInventoryState runInventory = Project.Training.CharacterStateContext.ResolveInventory();
 
             if (clearMeta)
             {

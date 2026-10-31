@@ -16,7 +16,10 @@ public class CharacterSwitchSlot : MonoBehaviour
     [Header("Switch Cooldown UI")]
     public Image cooldownFill;
     public TMP_Text cooldownText;
-    public GameObject unavailableOverlay;
+    public CanvasGroup inactiveCanvasGroup;
+    [Tooltip("Swap cooldown opacity, preserved separately from the live ready alpha.")]
+    [Range(0f, 1f)] public float inactiveAlpha = 0.34f;
+    private bool _presentationCached;
 
     [Header("Extra Overlays")]
     public Image aeOverlay;
@@ -25,12 +28,22 @@ public class CharacterSwitchSlot : MonoBehaviour
     [SerializeField] private GameObject aeGaugeVisual;
 
     [Header("QTE Ready Prompt")]
-    public Image qteReadyOverlay;
-    public Image qteWindowFill;
-    private RectTransform qtePulseRect;
+    public TimedOpportunityGraphic qteWindowEffect;
+
+    [Header("Portrait Exchange (starting values)")]
+    [SerializeField, Min(0f)] private float exitSeconds = 0.12f;
+    [SerializeField, Min(0f)] private float entrySeconds = 0.18f;
+    [SerializeField, Min(0f)] private float slideWidth = 0.6f;
+    private Image _outgoingPortrait;
+    private RectTransform _portraitRect;
+    private Vector2 _portraitRest;
+    private Color _portraitColor;
+    private int _exchangePhase;
+    private float _exchangeElapsed;
 
     private string lastCooldownText = string.Empty;
     private bool isCooldownVisible;
+    private bool _cooldownVisibilityKnown;
 
     private int slotIndex;
     private TeamSwitchHUD hudManager;
@@ -39,30 +52,46 @@ public class CharacterSwitchSlot : MonoBehaviour
     public int SlotIndex => slotIndex;
     public CharacterObject BoundCharacter => boundCharacter;
 
-    public void Setup(CharacterObject character, int index, TeamSwitchHUD manager)
+    public void Setup(CharacterObject character, int index, TeamSwitchHUD manager, bool animate = false)
     {
+        CachePresentation();
+        bool exchange = animate && boundCharacter != null && boundCharacter != character
+            && isActiveAndEnabled;
+        Sprite outgoing = _exchangePhase == 1 && _outgoingPortrait != null
+            ? _outgoingPortrait.sprite : characterIcon != null ? characterIcon.sprite : null;
+        ResetPortraitMotion();
+        if (qteWindowEffect != null) qteWindowEffect.Clear();
         slotIndex = index;
         hudManager = manager;
         boundCharacter = character;
 
-        // เปลี่ยนตัวเลขปุ่มกดอัตโนมัติ (index 0 จะแสดงเลข 1, index 1 แสดงเลข 2...)
+        // The standby character is always reached with the shared swap key.
         if (hotkeyText != null)
         {
-            hotkeyText.text = (index + 1).ToString();
+            hotkeyText.text = "1";
         }
 
         // อัปเดตรูปไอคอนจาก MetaData
-        if (boundCharacter != null && boundCharacter.metaData != null)
+        if (characterIcon != null && boundCharacter != null)
         {
-             characterIcon.sprite = boundCharacter.metaData.portrait; 
+            characterIcon.sprite = boundCharacter.metaData != null
+                ? boundCharacter.metaData.icon != null
+                    ? boundCharacter.metaData.icon
+                    : boundCharacter.metaData.portrait
+                : null;
         }
 
         if (hpSlider == null)
             hpSlider = GetComponentInChildren<Slider>(true);
 
-        RefreshCooldown(0f, 0f);
-        EnsureQtePrompt();
+        if (activeIndicator != null) activeIndicator.SetActive(false);
         RefreshFromHUD();
+        TeamLoader loader = hudManager != null ? hudManager.teamLoader : null;
+        RefreshCooldown(loader != null ? loader.RemainingCooldown : 0f,
+            loader != null ? loader.switchCooldownDuration : 0f);
+        RefreshAvailability(loader);
+        if (exchange && !ReducedMotion && outgoing != null) BeginPortraitExchange(outgoing);
+        if (loader != null) RefreshQtePrompt(loader, loader.CurrentCharacter == boundCharacter);
     }
 
     public void SetActiveStatus(bool isActive)
@@ -151,8 +180,9 @@ public class CharacterSwitchSlot : MonoBehaviour
 
     private void SetCooldownVisible(bool visible)
     {
-        if (isCooldownVisible == visible)
+        if (_cooldownVisibilityKnown && isCooldownVisible == visible)
             return;
+        _cooldownVisibilityKnown = true;
 
         if (cooldownFill != null)
             cooldownFill.gameObject.SetActive(visible);
@@ -168,6 +198,7 @@ public class CharacterSwitchSlot : MonoBehaviour
 
     private void Update()
     {
+        TickPortraitExchange(Time.timeScale > 0f ? Time.unscaledDeltaTime : 0f);
         if (boundCharacter == null) return;
 
         TeamLoader teamLoader = hudManager != null ? hudManager.teamLoader : null;
@@ -250,90 +281,125 @@ public class CharacterSwitchSlot : MonoBehaviour
             }
         }
 
-        // 4. Switch Cooldown Visuals (unavailable panel & feedback)
-        PlayerStateMachine stateMachine = hudManager != null ? hudManager.stateMachine : null;
-        bool isDead = teamLoader != null && !teamLoader.IsCharacterAlive(boundCharacter);
-        bool isSwitchUnavailable = isDead;
-        if (!isDead)
-        {
-            if (stateMachine != null)
-            {
-                isSwitchUnavailable = !stateMachine.CanSwitchCharacterTo(slotIndex);
-            }
-            else
-            {
-                isSwitchUnavailable = teamLoader != null && teamLoader.IsSwitchOnCooldown;
-            }
-        }
-
-        if (unavailableOverlay != null)
-        {
-            unavailableOverlay.SetActive(!isCurrent && isSwitchUnavailable);
-        }
+        RefreshAvailability(teamLoader);
     }
 
-    private void EnsureQtePrompt()
+    private bool ReducedMotion => hudManager != null && hudManager.teamLoader != null
+        && hudManager.teamLoader.QteSwaps != null && hudManager.teamLoader.QteSwaps.reduceUiMotion;
+
+    private void CachePresentation()
     {
-        if (characterIcon == null) return;
-        if (qteReadyOverlay == null)
+        if (_presentationCached) return;
+        if (inactiveCanvasGroup == null)
         {
-            var overlay = new GameObject("QTE Ready Overlay", typeof(RectTransform), typeof(Image));
-            overlay.transform.SetParent(characterIcon.transform, false);
-            qteReadyOverlay = overlay.GetComponent<Image>();
-            qteReadyOverlay.raycastTarget = false;
-            RectTransform rect = qteReadyOverlay.rectTransform;
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
+            Transform group = transform.Find("InactiveCanvasGroup");
+            if (group != null) inactiveCanvasGroup = group.GetComponent<CanvasGroup>();
         }
-        qtePulseRect = qteReadyOverlay.rectTransform;
-        if (qteWindowFill == null)
+        if (inactiveCanvasGroup != null)
         {
-            var timer = new GameObject("QTE Window Remaining", typeof(RectTransform), typeof(Image));
-            timer.transform.SetParent(characterIcon.transform, false);
-            qteWindowFill = timer.GetComponent<Image>();
-            qteWindowFill.raycastTarget = false;
-            RectTransform rect = qteWindowFill.rectTransform;
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = new Vector2(1f, 0f);
-            rect.pivot = Vector2.zero;
-            rect.sizeDelta = new Vector2(0f, 3f);
-            rect.anchoredPosition = Vector2.zero;
-            qteWindowFill.color = Color.white;
+            inactiveCanvasGroup.gameObject.SetActive(true);
         }
-        qteReadyOverlay.gameObject.SetActive(false);
-        qteWindowFill.gameObject.SetActive(false);
+        if (characterIcon != null)
+        {
+            _portraitRect = characterIcon.rectTransform;
+            _portraitRest = _portraitRect.anchoredPosition;
+            _portraitColor = characterIcon.color;
+            qteWindowEffect = TimedOpportunityGraphic.GetOrCreate(characterIcon);
+        }
+        _presentationCached = true;
+    }
+
+    private void RefreshAvailability(TeamLoader loader)
+    {
+        if (inactiveCanvasGroup == null || loader == null) return;
+        // Keep the authored group alive: toggling it hides the portrait and its stats.
+        inactiveCanvasGroup.gameObject.SetActive(true);
+        // Opacity communicates only the shared swap cooldown. Other switch
+        // restrictions still block input, but do not dim the standby portrait.
+        inactiveCanvasGroup.alpha = loader.IsSwitchOnCooldown ? inactiveAlpha : 1f;
     }
 
     private void RefreshQtePrompt(TeamLoader loader, bool isCurrent)
     {
-        QteTeamSwapController qte = loader.QteSwaps;
-        float remaining = 0f;
-        float total = 0f;
-        bool ready = !isCurrent && qte != null && qte.TryGetWindow(boundCharacter, out remaining, out total);
-        if (qteReadyOverlay != null)
+        bool ready = !isCurrent && loader.QteSwaps != null
+            && loader.QteSwaps.TryGetWindow(boundCharacter, out _, out _);
+        if (qteWindowEffect != null)
+            qteWindowEffect.SetPresentation(ready, ReducedMotion, Time.timeScale <= 0f);
+    }
+
+    private void BeginPortraitExchange(Sprite outgoing)
+    {
+        if (_portraitRect == null) return;
+        if (_outgoingPortrait == null)
         {
-            qteReadyOverlay.gameObject.SetActive(ready);
-            if (ready)
-            {
-                float pulse = qte.reduceUiMotion ? 0.5f : (Mathf.Sin(Time.unscaledTime * (Mathf.PI * 2f / 0.8f)) + 1f) * 0.5f;
-                qteReadyOverlay.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.15f, 0.4f, pulse));
-                if (qtePulseRect != null) qtePulseRect.localScale = Vector3.one * Mathf.Lerp(1f, 1.1f, pulse);
-            }
+            var host = new GameObject("Outgoing Portrait", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+            host.layer = characterIcon.gameObject.layer;
+            host.transform.SetParent(characterIcon.transform.parent, false);
+            host.GetComponent<LayoutElement>().ignoreLayout = true;
+            _outgoingPortrait = host.GetComponent<Image>();
+            _outgoingPortrait.raycastTarget = false;
+            _outgoingPortrait.preserveAspect = characterIcon.preserveAspect;
+            _outgoingPortrait.material = characterIcon.material;
         }
-        if (qteWindowFill != null)
+        RectTransform rect = _outgoingPortrait.rectTransform;
+        rect.anchorMin = _portraitRect.anchorMin;
+        rect.anchorMax = _portraitRect.anchorMax;
+        rect.pivot = _portraitRect.pivot;
+        rect.sizeDelta = _portraitRect.sizeDelta;
+        rect.anchoredPosition = _portraitRest;
+        rect.localScale = _portraitRect.localScale;
+        rect.localRotation = _portraitRect.localRotation;
+        _outgoingPortrait.sprite = outgoing;
+        _outgoingPortrait.color = _portraitColor;
+        _outgoingPortrait.gameObject.SetActive(true);
+        SetPortraitAlpha(characterIcon, 0f);
+        _exchangePhase = 1;
+        _exchangeElapsed = 0f;
+    }
+
+    private void TickPortraitExchange(float delta)
+    {
+        if (_exchangePhase == 0 || _portraitRect == null) return;
+        if (ReducedMotion) { ResetPortraitMotion(); return; }
+        _exchangeElapsed += delta;
+        float width = _portraitRect.rect.width * slideWidth;
+        if (_exchangePhase == 1)
         {
-            qteWindowFill.gameObject.SetActive(ready);
-            if (ready) qteWindowFill.rectTransform.anchorMax = new Vector2(total > 0f ? Mathf.Clamp01(remaining / total) : 0f, 0f);
+            float t = exitSeconds > 0f ? Mathf.Clamp01(_exchangeElapsed / exitSeconds) : 1f;
+            _outgoingPortrait.rectTransform.anchoredPosition = _portraitRest + Vector2.left * (width * t * t);
+            SetPortraitAlpha(_outgoingPortrait, 1f - t);
+            if (t < 1f) return;
+            _outgoingPortrait.gameObject.SetActive(false);
+            _exchangePhase = 2;
+            _exchangeElapsed = Mathf.Max(0f, _exchangeElapsed - exitSeconds);
         }
+        float entry = entrySeconds > 0f ? Mathf.Clamp01(_exchangeElapsed / entrySeconds) : 1f;
+        float eased = 1f - (1f - entry) * (1f - entry);
+        _portraitRect.anchoredPosition = _portraitRest + Vector2.right * (width * (1f - eased));
+        SetPortraitAlpha(characterIcon, eased);
+        if (entry >= 1f) ResetPortraitMotion();
+    }
+
+    private void SetPortraitAlpha(Image image, float ratio)
+    {
+        Color tint = _portraitColor;
+        tint.a *= ratio;
+        image.color = tint;
+    }
+
+    private void ResetPortraitMotion()
+    {
+        _exchangePhase = 0;
+        _exchangeElapsed = 0f;
+        if (_portraitRect != null) _portraitRect.anchoredPosition = _portraitRest;
+        if (characterIcon != null && _presentationCached) characterIcon.color = _portraitColor;
+        if (_outgoingPortrait != null) _outgoingPortrait.gameObject.SetActive(false);
     }
 
     private void OnDisable()
     {
-        if (qteReadyOverlay != null) qteReadyOverlay.gameObject.SetActive(false);
-        if (qteWindowFill != null) qteWindowFill.gameObject.SetActive(false);
-        if (qtePulseRect != null) qtePulseRect.localScale = Vector3.one;
+        if (qteWindowEffect != null) qteWindowEffect.Clear();
+        ResetPortraitMotion();
     }
 
     private static string FormatCooldownText(float seconds)

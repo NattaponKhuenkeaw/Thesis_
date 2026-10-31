@@ -14,8 +14,8 @@ namespace Project.ShopSystem
     {
         [Header("References")]
         public CodexInventory codexInventory;
-        public PlayerRunInventory playerInventory;
-        public PlayerMetaProgression metaProgression;
+        public CharacterInventoryState playerInventory;
+        public CharacterProgressionState metaProgression;
 
         [Header("Floor Item Lists")]
         [Tooltip("World-space one-time-buy shop offers. If empty, active scene lists register themselves at runtime.")]

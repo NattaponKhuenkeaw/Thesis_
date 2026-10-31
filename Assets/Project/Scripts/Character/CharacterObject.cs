@@ -118,6 +118,9 @@ public class CharacterObject : ScriptableObject
     [Header("QTE Team Swap")]
     public QteSwapDefinition qteSwap = new QteSwapDefinition();
 
+    [Header("Character Combat Rules")]
+    public CharacterCombatRules combatRules = new CharacterCombatRules();
+
     [Header("Action Resolver")]
     [Tooltip("Data-driven combo tree table. If null, legacy combo data is used as fallback.")]
     public ActionResolverTable actionResolverTable;

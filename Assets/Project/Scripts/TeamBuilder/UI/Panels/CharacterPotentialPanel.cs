@@ -40,6 +40,19 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private Image elementIcon;
         [SerializeField] private CharacterElementRoleUI elementRoleUI;
 
+        [Serializable]
+        private struct PotentialArtwork
+        {
+            public CharacterObject character;
+            public Sprite skill;
+            public Sprite ultimate;
+            public Sprite passive;
+        }
+
+        [Header("Potential Artwork")]
+        [Tooltip("Optional character-specific Potential artwork. Other characters use their kit ability icons.")]
+        [SerializeField] private PotentialArtwork[] potentialArtwork;
+
         [Header("Content")]
         [SerializeField] private ScrollRect contentScrollRect;
         [SerializeField] private Transform nodeRoot;
@@ -50,7 +63,7 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private CharacterPotentialUpgradeWindow upgradeWindow;
 
         [Header("Data Sources")]
-        [SerializeField] private PlayerMetaProgression metaProgression;
+        [SerializeField] private CharacterProgressionState metaProgression;
         [SerializeField] private InspectScreenUI inspectScreenUI;
 
         [Header("Legacy Fallback")]
@@ -195,7 +208,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         public static CharacterPotentialNodeState ResolveNodeState(
             CharacterObject character,
-            PlayerMetaProgression metaProgression,
+            CharacterProgressionState metaProgression,
             PotentialNodeDefinition node)
         {
             if (character == null || metaProgression == null || node == null)
@@ -322,7 +335,7 @@ namespace Project.TeamBuilder.UI.Panels
                     || (_selectedNode != null && node.track == _selectedNode.track && node.level == _selectedNode.level);
 
                 slot.gameObject.SetActive(true);
-                slot.Bind(node, state, selected, SelectNode);
+                slot.Bind(node, state, selected, SelectNode, ResolvePotentialIcon(node.track));
             }
         }
 
@@ -334,6 +347,12 @@ namespace Project.TeamBuilder.UI.Panels
             }
 
             upgradeWindow.BindUpgradeHandler(_ => TryUpgradeSelectedNode());
+            upgradeWindow.BindCloseHandler(() =>
+            {
+                _selectedNode = null;
+                CloseUpgradeWindow();
+                RefreshNodes();
+            });
 
             if (!_upgradeWindowOpen || _currentCharacter == null || _selectedNode == null)
             {
@@ -342,6 +361,23 @@ namespace Project.TeamBuilder.UI.Panels
             }
 
             upgradeWindow.Show(_currentCharacterItem, _currentCharacter, _selectedNode, GetMetaProgression());
+            upgradeWindow.SetIcon(ResolvePotentialIcon(_selectedNode.track));
+        }
+
+        private Sprite ResolvePotentialIcon(PotentialTrack track)
+        {
+            if (potentialArtwork != null)
+            {
+                for (int i = 0; i < potentialArtwork.Length; i++)
+                {
+                    PotentialArtwork art = potentialArtwork[i];
+                    if (art.character != _currentCharacter) continue;
+                    Sprite icon = track == PotentialTrack.Skill ? art.skill : track == PotentialTrack.Ultimate ? art.ultimate : art.passive;
+                    if (icon != null) return icon;
+                }
+            }
+            CharacterKitDefinition kit = _currentCharacter != null ? _currentCharacter.kitDefinition : null;
+            return track == PotentialTrack.Skill ? kit?.skill?.icon : track == PotentialTrack.Ultimate ? kit?.ultimate?.icon : kit?.passive?.icon;
         }
 
         private void RefreshLegacyFallback()
@@ -446,7 +482,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private PotentialNodeDefinition ResolveInitialSelection()
         {
-            PlayerMetaProgression progression = GetMetaProgression();
+            CharacterProgressionState progression = GetMetaProgression();
             if (_currentCharacter == null || progression == null)
             {
                 return null;
@@ -485,6 +521,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void ResolveReferences()
         {
+            metaProgression = Project.Training.CharacterStateContext.ResolveProgression(metaProgression);
             if (inspectScreenUI == null)
             {
                 inspectScreenUI = GetComponentInParent<InspectScreenUI>(true);
@@ -492,7 +529,7 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (metaProgression == null)
             {
-                metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+                metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
             }
 
             if (exitButton == null)
@@ -571,7 +608,7 @@ namespace Project.TeamBuilder.UI.Panels
                 return;
             }
 
-            PlayerMetaProgression progression = GetMetaProgression();
+            CharacterProgressionState progression = GetMetaProgression();
             int count = progression != null && _currentCharacter != null
                 ? progression.GetFragmentCount(_currentCharacter.characterId)
                 : 0;
@@ -580,7 +617,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void BindFragmentEvents()
         {
-            PlayerMetaProgression progression = GetMetaProgression();
+            CharacterProgressionState progression = GetMetaProgression();
             if (progression == null)
             {
                 return;
@@ -669,11 +706,12 @@ namespace Project.TeamBuilder.UI.Panels
             nodeSlots = slots.ToArray();
         }
 
-        private PlayerMetaProgression GetMetaProgression()
+        private CharacterProgressionState GetMetaProgression()
         {
+            metaProgression = Project.Training.CharacterStateContext.ResolveProgression(metaProgression);
             if (metaProgression == null)
             {
-                metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+                metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
             }
 
             return metaProgression;
@@ -717,7 +755,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void AppendTrackSummary(StringBuilder builder, CharacterObject data, PotentialTrack track)
         {
-            PlayerMetaProgression progression = GetMetaProgression();
+            CharacterProgressionState progression = GetMetaProgression();
             int currentLevel = progression != null ? progression.GetPotentialLevel(data, track) : 0;
             builder.Append(track);
             builder.Append(" Lv.");
@@ -746,7 +784,7 @@ namespace Project.TeamBuilder.UI.Panels
                 return;
             }
 
-            PlayerMetaProgression progression = GetMetaProgression();
+            CharacterProgressionState progression = GetMetaProgression();
             bool canUpgrade = progression != null
                 && _currentCharacter != null
                 && progression.CanUpgradePotential(_currentCharacter, track, out _);

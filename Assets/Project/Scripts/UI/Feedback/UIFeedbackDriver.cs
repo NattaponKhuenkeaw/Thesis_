@@ -11,6 +11,13 @@ public class UIFeedbackDriver : MonoBehaviour
     private static Sprite fallbackSprite;
     private readonly Dictionary<Transform, Coroutine> activePulseCoroutines = new Dictionary<Transform, Coroutine>();
     private readonly Dictionary<Transform, Image> pulseOverlays = new Dictionary<Transform, Image>();
+    private sealed class WiggleState
+    {
+        public Vector2 origin;
+        public Coroutine coroutine;
+    }
+
+    private readonly Dictionary<RectTransform, WiggleState> _activeWiggles = new();
 
     public static UIFeedbackDriver GetOrAdd(GameObject host)
     {
@@ -61,7 +68,18 @@ public class UIFeedbackDriver : MonoBehaviour
             return null;
         }
 
-        return StartCoroutine(WiggleRoutine(target, basePosition, distance, duration));
+        if (_activeWiggles.TryGetValue(target, out WiggleState previous))
+        {
+            // A retrigger arrives at an animated offset, not a new layout origin.
+            basePosition = previous.origin;
+            if (previous.coroutine != null) StopCoroutine(previous.coroutine);
+        }
+
+        target.anchoredPosition = basePosition;
+        var state = new WiggleState { origin = basePosition };
+        _activeWiggles[target] = state;
+        state.coroutine = StartCoroutine(WiggleRoutine(target, basePosition, distance, duration));
+        return state.coroutine;
     }
 
     public Coroutine PlayFlash(Graphic target, Color flashColor, float duration = 0.2f)
@@ -116,6 +134,12 @@ public class UIFeedbackDriver : MonoBehaviour
 
     private void OnDisable()
     {
+        foreach (var pair in _activeWiggles)
+        {
+            if (pair.Value.coroutine != null) StopCoroutine(pair.Value.coroutine);
+            if (pair.Key != null) pair.Key.anchoredPosition = pair.Value.origin;
+        }
+        _activeWiggles.Clear();
         foreach (var coroutine in activePulseCoroutines.Values) if (coroutine != null) StopCoroutine(coroutine);
         foreach (var overlay in pulseOverlays.Values) if (overlay != null) Destroy(overlay.gameObject);
         activePulseCoroutines.Clear(); pulseOverlays.Clear();
@@ -126,7 +150,7 @@ public class UIFeedbackDriver : MonoBehaviour
         float resolvedDuration = Mathf.Max(0.01f, duration);
         float elapsed = 0f;
 
-        while (elapsed < resolvedDuration)
+        while (target != null && elapsed < resolvedDuration)
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / resolvedDuration);
@@ -136,7 +160,8 @@ public class UIFeedbackDriver : MonoBehaviour
             yield return null;
         }
 
-        target.anchoredPosition = basePosition;
+        if (target != null) target.anchoredPosition = basePosition;
+        _activeWiggles.Remove(target);
     }
 
     private IEnumerator FlashRoutine(Graphic target, Color flashColor, float duration)

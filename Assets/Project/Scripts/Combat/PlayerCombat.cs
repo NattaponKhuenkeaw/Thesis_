@@ -180,6 +180,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     void OnDisable()
     {
+        CleanupStepVFX();
         if (movement != null)
         {
             movement.OnDashStart -= HandleDashStart;
@@ -219,7 +220,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         hadGrabAtStepStart = HasGrabbedEnemy();
         currentStepData = step;
-        CurrentExecution = new CombatExecutionContext(this, playerCharacter != null ? playerCharacter.characterObject : null, FieldSession, isQteIntro);
+        CurrentExecution = new CombatExecutionContext(this, playerCharacter != null ? playerCharacter.characterObject : null, FieldSession, isQteIntro, currentResolvedCombatAction);
         comboDepth = depth;
         isAirCombo = airCombo;
         isExecutingAutoChainStep = isAutoChain;
@@ -972,7 +973,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         RuntimeEffectDamageContext context,
         float currentDamage)
     {
-        PlayerRunInventory inventory = ResolveRunInventory();
+        CharacterInventoryState inventory = ResolveRunInventory();
         float result = inventory != null
             ? inventory.ModifyOutgoingDamage(character, context, currentDamage)
             : currentDamage;
@@ -989,7 +990,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void NotifyRuntimeHitDealt(CharacterObject character, RuntimeEffectDamageContext context)
     {
-        PlayerRunInventory inventory = ResolveRunInventory();
+        CharacterInventoryState inventory = ResolveRunInventory();
         inventory?.NotifyRuntimeHitDealt(character, context);
         if (playerCharacter != null
             && playerCharacter.characterObject == character
@@ -999,12 +1000,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
-    public PlayerRunInventory ResolveRunInventoryForEffects()
+    public CharacterInventoryState ResolveRunInventoryForEffects()
     {
         return ResolveRunInventory();
     }
 
-    private PlayerRunInventory ResolveRunInventory()
+    private CharacterInventoryState ResolveRunInventory()
     {
         if (teamLoader == null)
         {
@@ -1345,16 +1346,23 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private HashSet<AudioEntry> triggeredEntriesSet = new HashSet<AudioEntry>();
     private HashSet<VFXEntry> triggeredVFXEntriesSet = new HashSet<VFXEntry>();
-    private Dictionary<VFXEntry, Project.Combat.GenericVFXPlayer> activeStepVFX = new Dictionary<VFXEntry, Project.Combat.GenericVFXPlayer>();
+    private struct StepVfx
+    {
+        public Project.Combat.GenericVFXPlayer player;
+        public uint version;
+        public void Release()
+        {
+            // A pooled object may have completed and been reused by another action already.
+            if (player != null && player.PlaybackVersion == version) player.ReleaseToLifetime();
+        }
+    }
+    private Dictionary<VFXEntry, StepVfx> activeStepVFX = new Dictionary<VFXEntry, StepVfx>();
 
     private void CleanupStepVFX()
     {
         foreach (var vfx in activeStepVFX.Values)
         {
-            if (vfx != null)
-            {
-                vfx.Stop();
-            }
+            vfx.Release();
         }
         activeStepVFX.Clear();
     }
@@ -1392,17 +1400,13 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             {
                 triggeredVFXEntriesSet.Add(entry);
                 
-                // --- NEW: Selective Stop for Looping VFX ---
-                // If we are re-triggering this entry (e.g. during a loop), stop the previous instance first.
-                if (activeStepVFX.TryGetValue(entry, out var oldVfx) && oldVfx != null)
-                {
-                    oldVfx.Stop();
-                }
+                // Repeated entries release their previous visual without truncating its own duration.
+                if (activeStepVFX.TryGetValue(entry, out var oldVfx)) oldVfx.Release();
 
                 var vfx = vfxSpawner.SpawnVFX(entry);
                 if (vfx != null)
                 {
-                    activeStepVFX[entry] = vfx;
+                    activeStepVFX[entry] = new StepVfx { player = vfx, version = vfx.PlaybackVersion };
                 }
             }
         }
@@ -1602,7 +1606,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 defenderDefense = enemy.defense,
                 defenderDamageResistance = enemy.damageRes
             };
-            PlayerRunInventory inventory = ResolveRunInventory();
+            CharacterInventoryState inventory = ResolveRunInventory();
             inventory?.ModifyDamageInput(character, damageInput);
             if (playerCharacter != null && playerCharacter.RuntimeEffects != null)
             {

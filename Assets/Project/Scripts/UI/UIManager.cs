@@ -110,7 +110,8 @@ namespace Project.UI
                 return;
             }
 
-            ZoneMode mode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode mode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             if (mode != ZoneMode.SafeZone)
             {
                 Debug.Log("[UIManager] OpenInspector blocked: not in SafeZone.");
@@ -132,7 +133,8 @@ namespace Project.UI
                 return;
             }
 
-            ZoneMode mode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode mode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             if (mode != ZoneMode.SafeZone)
             {
                 Debug.Log("[UIManager] OpenInspectorWithCharacter blocked: not in SafeZone.");
@@ -154,7 +156,8 @@ namespace Project.UI
                 return;
             }
 
-            ZoneMode mode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode mode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             if (mode != ZoneMode.SafeZone)
             {
                 Debug.Log("[UIManager] OpenInspectorWithItem blocked: not in SafeZone.");
@@ -187,7 +190,8 @@ namespace Project.UI
                 return;
             }
 
-            ZoneMode mode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode mode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             if (mode != ZoneMode.SafeZone) return;
 
             // Open with the first available character (or keep current if already open).
@@ -206,7 +210,8 @@ namespace Project.UI
                 return;
             }
 
-            ZoneMode mode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            ZoneMode mode = Project.Training.TrainingAccessPolicy.LoadoutMode(
+                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
             if (mode != ZoneMode.SafeZone) return;
 
             inspectScreenUI.OpenInspectorWithCharacterOnPage(characterName, InspectPage.Potential);

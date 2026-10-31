@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.UI;
+using TMPro;
 
 namespace Project.TeamBuilder.UI
 {
@@ -33,6 +34,7 @@ namespace Project.TeamBuilder.UI
         private TeamSlotUI parentSlot;
         private bool isDropHighlighted;
         private bool isSelectionDestination;
+        private TMP_Text emptySlotLabel;
 
         // =========================================================
         // Properties
@@ -49,6 +51,7 @@ namespace Project.TeamBuilder.UI
         public void Init(TeamSlotUI parent)
         {
             parentSlot = parent;
+            EnsureEmptySlotLabel();
             ClearArtifact();
         }
 
@@ -57,8 +60,10 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         public void SetArtifact(ArtifactInstance artifact, ArtifactDefinition definition)
         {
+            EnsureEmptySlotLabel();
             currentArtifact = artifact;
             currentDefinition = definition;
+            if (emptySlotLabel != null) emptySlotLabel.gameObject.SetActive(artifact == null);
 
             if (artifactIcon != null)
             {
@@ -82,8 +87,10 @@ namespace Project.TeamBuilder.UI
 
         public void ClearArtifact()
         {
+            EnsureEmptySlotLabel();
             currentArtifact = null;
             currentDefinition = null;
+            if (emptySlotLabel != null) emptySlotLabel.gameObject.SetActive(true);
 
             if (artifactIcon != null)
             {
@@ -95,6 +102,33 @@ namespace Project.TeamBuilder.UI
             {
                 RefreshBackground();
             }
+        }
+
+        private void EnsureEmptySlotLabel()
+        {
+            if (emptySlotLabel != null) return;
+            Transform existing = transform.Find("Empty Slot Plus");
+            if (existing != null) emptySlotLabel = existing.GetComponent<TMP_Text>();
+            if (emptySlotLabel == null)
+            {
+                var labelObject = new GameObject("Empty Slot Plus", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                labelObject.transform.SetParent(transform, false);
+                var rect = (RectTransform)labelObject.transform;
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+                emptySlotLabel = labelObject.GetComponent<TMP_Text>();
+                emptySlotLabel.font = TMP_Settings.defaultFontAsset;
+                emptySlotLabel.fontSize = 32f;
+                emptySlotLabel.fontStyle = FontStyles.Bold;
+                emptySlotLabel.color = new Color(1f, 1f, 1f, .85f);
+                emptySlotLabel.alignment = TextAlignmentOptions.Center;
+                emptySlotLabel.textWrappingMode = TextWrappingModes.NoWrap;
+                emptySlotLabel.raycastTarget = false;
+            }
+            emptySlotLabel.text = "+";
+            emptySlotLabel.transform.SetAsLastSibling();
         }
 
         public ArtifactInstance GetArtifact()

@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="58" result="Failed(Child)" total="58" passed="55" failed="3" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:36:01Z" duration="14.1683431">
+  <test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="1419" result="Failed" site="Child" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:36:01Z" duration="14.168343" total="58" passed="55" failed="3" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="2729" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="1419" result="Failed" site="Child" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:36:01Z" duration="14.122041" total="58" passed="55" failed="3" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="7680" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestFixture" id="1091" name="ArtifactInstanceSystemTests" fullname="ArtifactInstanceSystemTests" classname="ArtifactInstanceSystemTests" runstate="Runnable" testcasecount="37" result="Failed" site="Child" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.255253" total="37" passed="35" failed="2" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1121" name="AcquisitionOrderPreservesSequentialInsertion" fullname="ArtifactInstanceSystemTests.AcquisitionOrderPreservesSequentialInsertion" methodname="AcquisitionOrderPreservesSequentialInsertion" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="989880692" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.051382" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1119" name="AllNineAuthoredArtifactsMigrateWithoutChangingStats" fullname="ArtifactInstanceSystemTests.AllNineAuthoredArtifactsMigrateWithoutChangingStats" methodname="AllNineAuthoredArtifactsMigrateWithoutChangingStats" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="2120268392" result="Failed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.018041" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[  Expected: 9
+  But was:  0
+]]></message>
+            <stack-trace><![CDATA[at ArtifactInstanceSystemTests.AllNineAuthoredArtifactsMigrateWithoutChangingStats () [0x00019] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ArtifactInstanceSystemTests.cs:344
+]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1107" name="AmountBandSelectionUsesApprovedWeightedThresholds" fullname="ArtifactInstanceSystemTests.AmountBandSelectionUsesApprovedWeightedThresholds" classname="ArtifactInstanceSystemTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.029943" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1102" name="AmountBandSelectionUsesApprovedWeightedThresholds(0.1f,0.0f,0.2f)" fullname="ArtifactInstanceSystemTests.AmountBandSelectionUsesApprovedWeightedThresholds(0.1f,0.0f,0.2f)" methodname="AmountBandSelectionUsesApprovedWeightedThresholds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="335102200" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.015313" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1103" name="AmountBandSelectionUsesApprovedWeightedThresholds(0.4f,0.2f,0.4f)" fullname="ArtifactInstanceSystemTests.AmountBandSelectionUsesApprovedWeightedThresholds(0.4f,0.2f,0.4f)" methodname="AmountBandSelectionUsesApprovedWeightedThresholds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="2101054761" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000352" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1104" name="AmountBandSelectionUsesApprovedWeightedThresholds(0.7f,0.4f,0.6f)" fullname="ArtifactInstanceSystemTests.AmountBandSelectionUsesApprovedWeightedThresholds(0.7f,0.4f,0.6f)" methodname="AmountBandSelectionUsesApprovedWeightedThresholds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1023102654" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000195" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1105" name="AmountBandSelectionUsesApprovedWeightedThresholds(0.9f,0.6f,0.8f)" fullname="ArtifactInstanceSystemTests.AmountBandSelectionUsesApprovedWeightedThresholds(0.9f,0.6f,0.8f)" methodname="AmountBandSelectionUsesApprovedWeightedThresholds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="500632293" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000196" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1106" name="AmountBandSelectionUsesApprovedWeightedThresholds(0.98f,0.8f,1.0f)" fullname="ArtifactInstanceSystemTests.AmountBandSelectionUsesApprovedWeightedThresholds(0.98f,0.8f,1.0f)" methodname="AmountBandSelectionUsesApprovedWeightedThresholds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="602314404" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000181" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+        <test-case id="1129" name="ArtifactInstanceTracksAcquisitionBiome" fullname="ArtifactInstanceSystemTests.ArtifactInstanceTracksAcquisitionBiome" methodname="ArtifactInstanceTracksAcquisitionBiome" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1566440726" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000973" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1114" name="ArtifactInventoryCardsAreClickOnlyWhileEquippedSlotsRemainDraggable" fullname="ArtifactInstanceSystemTests.ArtifactInventoryCardsAreClickOnlyWhileEquippedSlotsRemainDraggable" methodname="ArtifactInventoryCardsAreClickOnlyWhileEquippedSlotsRemainDraggable" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1178543248" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001265" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1120" name="ArtifactStatAggregatorCalculatesAllRolledStats" fullname="ArtifactInstanceSystemTests.ArtifactStatAggregatorCalculatesAllRolledStats" methodname="ArtifactStatAggregatorCalculatesAllRolledStats" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1320142740" result="Failed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.004118" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[  Expected: 1350.0f +/- 0.00999999978f
+  But was:  26100.0f
+]]></message>
+            <stack-trace><![CDATA[at ArtifactInstanceSystemTests.ArtifactStatAggregatorCalculatesAllRolledStats () [0x00160] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ArtifactInstanceSystemTests.cs:400
+]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-case id="1113" name="ArtifactStatCatalogReturnsFullDisplayNames" fullname="ArtifactInstanceSystemTests.ArtifactStatCatalogReturnsFullDisplayNames" methodname="ArtifactStatCatalogReturnsFullDisplayNames" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1176454020" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001270" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1126" name="BiomeBandWeightsMatchAuthoredProfiles" fullname="ArtifactInstanceSystemTests.BiomeBandWeightsMatchAuthoredProfiles" methodname="BiomeBandWeightsMatchAuthoredProfiles" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1240591891" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001116" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1125" name="BiomeRollQualityUpgradesAcrossBiomes" fullname="ArtifactInstanceSystemTests.BiomeRollQualityUpgradesAcrossBiomes" methodname="BiomeRollQualityUpgradesAcrossBiomes" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="742687748" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.008514" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1110" name="DecimalPercentAndFlatRollsAggregateFromCleanBase" fullname="ArtifactInstanceSystemTests.DecimalPercentAndFlatRollsAggregateFromCleanBase" methodname="DecimalPercentAndFlatRollsAggregateFromCleanBase" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1639018334" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000863" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1117" name="DeployedArtifactSnapshotDoesNotTrackMutableInventoryRollList" fullname="ArtifactInstanceSystemTests.DeployedArtifactSnapshotDoesNotTrackMutableInventoryRollList" methodname="DeployedArtifactSnapshotDoesNotTrackMutableInventoryRollList" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1164458661" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001701" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1108" name="DuplicateDefinitionsProduceIndependentInstances" fullname="ArtifactInstanceSystemTests.DuplicateDefinitionsProduceIndependentInstances" methodname="DuplicateDefinitionsProduceIndependentInstances" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1856771729" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.003089" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1101" name="GeneratedRollsStayInCatalogRangesAndAllowDuplicateStats" fullname="ArtifactInstanceSystemTests.GeneratedRollsStayInCatalogRangesAndAllowDuplicateStats" methodname="GeneratedRollsStayInCatalogRangesAndAllowDuplicateStats" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="219953121" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.017966" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1111" name="ImportedLegacyRollHasUnavailableQuality" fullname="ArtifactInstanceSystemTests.ImportedLegacyRollHasUnavailableQuality" methodname="ImportedLegacyRollHasUnavailableQuality" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="323283403" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000636" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1109" name="InstanceRemovalCannotDeleteAnEquippedCopyOrItsSibling" fullname="ArtifactInstanceSystemTests.InstanceRemovalCannotDeleteAnEquippedCopyOrItsSibling" methodname="InstanceRemovalCannotDeleteAnEquippedCopyOrItsSibling" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1795357613" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.002359" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1130" name="InventoryAcquisitionPreservesBiomeOverride" fullname="ArtifactInstanceSystemTests.InventoryAcquisitionPreservesBiomeOverride" methodname="InventoryAcquisitionPreservesBiomeOverride" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="683440291" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000794" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1112" name="LegacySpeedIsRuntimeOnlyAndNotPlayerVisible" fullname="ArtifactInstanceSystemTests.LegacySpeedIsRuntimeOnlyAndNotPlayerVisible" methodname="LegacySpeedIsRuntimeOnlyAndNotPlayerVisible" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1861259724" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000438" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1100" name="LineCountUsesApprovedCumulativeOdds" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.021971" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1092" name="LineCountUsesApprovedCumulativeOdds(0.0f,4)" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds(0.0f,4)" methodname="LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="568369064" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.002395" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1093" name="LineCountUsesApprovedCumulativeOdds(0.14999f,4)" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds(0.14999f,4)" methodname="LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1470018397" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000654" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1094" name="LineCountUsesApprovedCumulativeOdds(0.15f,3)" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds(0.15f,3)" methodname="LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="290302265" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000260" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1095" name="LineCountUsesApprovedCumulativeOdds(0.34999f,3)" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds(0.34999f,3)" methodname="LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="461500225" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000210" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1096" name="LineCountUsesApprovedCumulativeOdds(0.35f,2)" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds(0.35f,2)" methodname="LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1203391870" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001405" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1097" name="LineCountUsesApprovedCumulativeOdds(0.49999f,2)" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds(0.49999f,2)" methodname="LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="733851048" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001820" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1098" name="LineCountUsesApprovedCumulativeOdds(0.5f,1)" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds(0.5f,1)" methodname="LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="680021944" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000839" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1099" name="LineCountUsesApprovedCumulativeOdds(1.0f,1)" fullname="ArtifactInstanceSystemTests.LineCountUsesApprovedCumulativeOdds(1.0f,1)" methodname="LineCountUsesApprovedCumulativeOdds" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1850927397" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000421" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+        <test-case id="1123" name="MarkingArtifactSeenDoesNotTriggerFullArtifactsChangedEvent" fullname="ArtifactInstanceSystemTests.MarkingArtifactSeenDoesNotTriggerFullArtifactsChangedEvent" methodname="MarkingArtifactSeenDoesNotTriggerFullArtifactsChangedEvent" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="645546786" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.002628" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1118" name="MetaMigrationDropsOnlyArtifactFragments" fullname="ArtifactInstanceSystemTests.MetaMigrationDropsOnlyArtifactFragments" methodname="MetaMigrationDropsOnlyArtifactFragments" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="539818044" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.004896" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1127" name="NegativeBiomeClampsToBiomeZero" fullname="ArtifactInstanceSystemTests.NegativeBiomeClampsToBiomeZero" methodname="NegativeBiomeClampsToBiomeZero" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="110710546" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000860" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1128" name="OutOfRangeBiomeClampsToHighestAuthoredProfile" fullname="ArtifactInstanceSystemTests.OutOfRangeBiomeClampsToHighestAuthoredProfile" methodname="OutOfRangeBiomeClampsToHighestAuthoredProfile" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="796211248" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000626" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1115" name="QueryFiltersAndSortsDuplicateInstancesWithoutCollapsingThem" fullname="ArtifactInstanceSystemTests.QueryFiltersAndSortsDuplicateInstancesWithoutCollapsingThem" methodname="QueryFiltersAndSortsDuplicateInstancesWithoutCollapsingThem" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1104705476" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.010611" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1124" name="QuerySortsNewestAndOldestByCollectedTimestampUtc" fullname="ArtifactInstanceSystemTests.QuerySortsNewestAndOldestByCollectedTimestampUtc" methodname="QuerySortsNewestAndOldestByCollectedTimestampUtc" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1265965860" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001656" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1116" name="QuerySortsNewestAndOldestDeterministicallyWithDescendingToggle" fullname="ArtifactInstanceSystemTests.QuerySortsNewestAndOldestDeterministicallyWithDescendingToggle" methodname="QuerySortsNewestAndOldestDeterministicallyWithDescendingToggle" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="1807543701" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001172" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1122" name="SettingFavouriteDoesNotTriggerDestructiveArtifactsChangedEvent" fullname="ArtifactInstanceSystemTests.SettingFavouriteDoesNotTriggerDestructiveArtifactsChangedEvent" methodname="SettingFavouriteDoesNotTriggerDestructiveArtifactsChangedEvent" classname="ArtifactInstanceSystemTests" runstate="Runnable" seed="58733960" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001606" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="2411" name="RunGlobalLevelTests" fullname="RunGlobalLevelTests" classname="RunGlobalLevelTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.017768" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="2422" name="AddGlobalLevelsClampsAndEmitsPreviousAndCurrentLevel" fullname="RunGlobalLevelTests.AddGlobalLevelsClampsAndEmitsPreviousAndCurrentLevel" methodname="AddGlobalLevelsClampsAndEmitsPreviousAndCurrentLevel" classname="RunGlobalLevelTests" runstate="Runnable" seed="1954096551" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001624" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2421" name="InvalidRewardRollFallsBackToOneLevel" fullname="RunGlobalLevelTests.InvalidRewardRollFallsBackToOneLevel" methodname="InvalidRewardRollFallsBackToOneLevel" classname="RunGlobalLevelTests" runstate="Runnable" seed="342369169" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000255" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2423" name="ResetRunProgressResetsGlobalLevelAndEmitsChange" fullname="RunGlobalLevelTests.ResetRunProgressResetsGlobalLevelAndEmitsChange" methodname="ResetRunProgressResetsGlobalLevelAndEmitsChange" classname="RunGlobalLevelTests" runstate="Runnable" seed="2064894525" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000899" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="2420" name="RewardRollUsesApprovedBoundaries" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.002712" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="2412" name="RewardRollUsesApprovedBoundaries(-1.0f,1)" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries(-1.0f,1)" methodname="RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" seed="1730046360" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000280" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2413" name="RewardRollUsesApprovedBoundaries(0.0f,1)" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries(0.0f,1)" methodname="RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" seed="5317485" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000040" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2414" name="RewardRollUsesApprovedBoundaries(0.649999f,1)" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries(0.649999f,1)" methodname="RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" seed="1523008868" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000028" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2415" name="RewardRollUsesApprovedBoundaries(0.65f,2)" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries(0.65f,2)" methodname="RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" seed="69080123" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000029" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2416" name="RewardRollUsesApprovedBoundaries(0.899999f,2)" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries(0.899999f,2)" methodname="RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" seed="1313231103" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000027" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2417" name="RewardRollUsesApprovedBoundaries(0.9f,3)" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries(0.9f,3)" methodname="RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" seed="1679362827" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000026" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2418" name="RewardRollUsesApprovedBoundaries(1.0f,3)" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries(1.0f,3)" methodname="RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" seed="118771405" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000027" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2419" name="RewardRollUsesApprovedBoundaries(2.0f,3)" fullname="RunGlobalLevelTests.RewardRollUsesApprovedBoundaries(2.0f,3)" methodname="RewardRollUsesApprovedBoundaries" classname="RunGlobalLevelTests" runstate="Runnable" seed="1427980278" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.000026" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+        <test-case id="2424" name="UnownedCharacterStatsUseGlobalLevelWithoutCreatingRunState" fullname="RunGlobalLevelTests.UnownedCharacterStatsUseGlobalLevelWithoutCreatingRunState" methodname="UnownedCharacterStatsUseGlobalLevelWithoutCreatingRunState" classname="RunGlobalLevelTests" runstate="Runnable" seed="1254178527" result="Passed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:35:47Z" duration="0.001409" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="2714" name="TrainingFlowTests" fullname="TrainingFlowTests" classname="TrainingFlowTests" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:36:01Z" duration="13.635767" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="2715" name="MenuTrainingConfigurationDamageCameraAndExitPreserveSaves" fullname="TrainingFlowTests.MenuTrainingConfigurationDamageCameraAndExitPreserveSaves" methodname="MenuTrainingConfigurationDamageCameraAndExitPreserveSaves" classname="TrainingFlowTests" runstate="Runnable" seed="2050673589" result="Failed" start-time="2026-10-30 18:35:47Z" end-time="2026-10-30 18:36:01Z" duration="13.633609" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[  Expected: not null
+  But was:  null
+]]></message>
+            <stack-trace><![CDATA[at TrainingFlowTests+<MenuTrainingConfigurationDamageCameraAndExitPreserveSaves>d__3.MoveNext () [0x00572] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\TrainingFlowTests.cs:84
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@0b7a23ab2e1d\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+          </failure>
+          <output><![CDATA[[GameAudioManager] Standalone audio manager initialized from scene 'MainMenu'.
+[RootPersistentManager] Persistent manager root initialized from scene 'Test_Playground'.
+[SceneTransitionManager] Transition manager registered under persistent root 'Manager'.
+[SceneTransitionManager] Data bindings: ZoneStateProvider=ZoneStateProvider, MapSO=Test_MapSO.
+[GameRunManager] Zone state updated for boundary scene. Room=RoomData_Test_Playground, Mode=CombatZone.
+[GameAudioManager] Duplicate audio manager 'GameAudioManager' loaded from scene 'DontDestroyOnLoad'. Destroying duplicate.
+[GameFreezeManager] Freeze manager registered under persistent root 'Manager'.
+[RunProgressionManager] Auto-created RunProgressionManager.
+[ArtifactPassiveRuntimeSystem] ReconcileDeployment complete. Active artifact passives: 0
+[ArtifactPassiveRuntimeSystem] Initialized with TeamLoader. Registered passives: 0
+[ArtifactPassiveRuntimeSystem] ReconcileDeployment complete. Active artifact passives: 0
+[ArtifactPassiveRuntimeSystem] Initialized with TeamLoader. Registered passives: 0
+[ArtifactPassiveRuntimeSystem] ReconcileDeployment complete. Active artifact passives: 0
+[ArtifactPassiveRuntimeSystem] Initialized with TeamLoader. Registered passives: 0
+[ArtifactPassiveRuntimeSystem] ReconcileDeployment complete. Active artifact passives: 0
+Switched to: Asura Shin
+[CameraManager] EnterCombat: added Enemy_Dummy (weight=1.00)
+[CameraManager] LeaveCombat: fading out Enemy_Dummy
+]]></output>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="2716" name="TrainingSessionTests" fullname="TrainingSessionTests" classname="TrainingSessionTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.130182" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="2725" name="PassiveOrDisabledBrainCannotBeReactivatedByRecovery" fullname="TrainingSessionTests.PassiveOrDisabledBrainCannotBeReactivatedByRecovery" methodname="PassiveOrDisabledBrainCannotBeReactivatedByRecovery" classname="TrainingSessionTests" runstate="Runnable" seed="1963913280" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.001481" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2720" name="PracticeCatalogIsCompleteIdempotentAndDoesNotChangeSavedInventory" fullname="TrainingSessionTests.PracticeCatalogIsCompleteIdempotentAndDoesNotChangeSavedInventory" methodname="PracticeCatalogIsCompleteIdempotentAndDoesNotChangeSavedInventory" classname="TrainingSessionTests" runstate="Runnable" seed="73070625" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.003339" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2718" name="PracticeLevelCanIncreaseDecreaseAndStartsFreshEachTime" fullname="TrainingSessionTests.PracticeLevelCanIncreaseDecreaseAndStartsFreshEachTime" methodname="PracticeLevelCanIncreaseDecreaseAndStartsFreshEachTime" classname="TrainingSessionTests" runstate="Runnable" seed="472656328" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.001106" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2719" name="PracticePotentialsAreIndependentAndCopyConfigurationValues" fullname="TrainingSessionTests.PracticePotentialsAreIndependentAndCopyConfigurationValues" methodname="PracticePotentialsAreIndependentAndCopyConfigurationValues" classname="TrainingSessionTests" runstate="Runnable" seed="92411208" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.001938" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2721" name="PracticeStateCannotWriteSaveKeys" fullname="TrainingSessionTests.PracticeStateCannotWriteSaveKeys" methodname="PracticeStateCannotWriteSaveKeys" classname="TrainingSessionTests" runstate="Runnable" seed="223098227" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.002304" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2717" name="PracticeStateDoesNotUseSaveAssetTypes" fullname="TrainingSessionTests.PracticeStateDoesNotUseSaveAssetTypes" methodname="PracticeStateDoesNotUseSaveAssetTypes" classname="TrainingSessionTests" runstate="Runnable" seed="2046387804" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.001013" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="2724" name="TrainingCollectsDamageWithoutColliderDrawings" fullname="TrainingSessionTests.TrainingCollectsDamageWithoutColliderDrawings" classname="TrainingSessionTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.030015" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="2722" name="TrainingCollectsDamageWithoutColliderDrawings(False)" fullname="TrainingSessionTests.TrainingCollectsDamageWithoutColliderDrawings(False)" methodname="TrainingCollectsDamageWithoutColliderDrawings" classname="TrainingSessionTests" runstate="Runnable" seed="1490707306" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.004166" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2723" name="TrainingCollectsDamageWithoutColliderDrawings(True)" fullname="TrainingSessionTests.TrainingCollectsDamageWithoutColliderDrawings(True)" methodname="TrainingCollectsDamageWithoutColliderDrawings" classname="TrainingSessionTests" runstate="Runnable" seed="1026351388" result="Passed" start-time="2026-10-30 18:36:01Z" end-time="2026-10-30 18:36:01Z" duration="0.000867" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/Apricha/AppData/LocalLow/DefaultCompany/Thesis\TestResults.xml
+]]></output>
+          </test-case>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

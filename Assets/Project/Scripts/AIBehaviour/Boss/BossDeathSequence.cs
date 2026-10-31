@@ -283,7 +283,7 @@ namespace Project.AIBehaviour.Boss
             if (useRunBoundaryForLobby && IsLobbyDestination(roomId))
             {
                 GameRunManager runManager = GameRunManager.Instance ?? FindFirstObjectByType<GameRunManager>();
-                PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                CharacterInventoryState runInventory = Project.Training.CharacterStateContext.ResolveInventory();
                 runInventory?.SaveBossLobbyCheckpoint();
                 if (runManager != null && runManager.ReturnToLobby())
                 {

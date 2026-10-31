@@ -13,7 +13,7 @@ namespace Project.Progression.LevelRoom
     public sealed class LevelRoomController : MonoBehaviour
     {
         [Header("Dependencies")]
-        [SerializeField] private PlayerRunInventory runInventory;
+        [SerializeField] private CharacterInventoryState runInventory;
         [SerializeField] private LevelRoomDisplay display;
         [SerializeField] private LevelRoomInteractable interactable;
         [SerializeField] private Transform cameraFocusTarget;
@@ -53,7 +53,7 @@ namespace Project.Progression.LevelRoom
         {
             if (runInventory == null)
             {
-                runInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                runInventory = Project.Training.CharacterStateContext.ResolveInventory();
             }
 
             if (display == null)

@@ -43,8 +43,8 @@ namespace Project.Progression
 
         public static AcquisitionResult Acquire(
             BaseItem item,
-            PlayerRunInventory runInventory,
-            PlayerMetaProgression metaProgression,
+            CharacterInventoryState runInventory,
+            CharacterProgressionState metaProgression,
             int amount = 1,
             int? biomeIndexOverride = null)
         {
@@ -85,8 +85,8 @@ namespace Project.Progression
 
         private static AcquisitionResult AcquireUniqueOrFragments(
             BaseItem item,
-            PlayerRunInventory runInventory,
-            PlayerMetaProgression metaProgression)
+            CharacterInventoryState runInventory,
+            CharacterProgressionState metaProgression)
         {
             if (!runInventory.HasItem(item))
             {

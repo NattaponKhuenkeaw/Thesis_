@@ -28,6 +28,14 @@ public enum ActionDamageSourceStat
     Defense
 }
 
+public enum CombatActionType
+{
+    FromInput,
+    Normal,
+    Skill,
+    Ultimate
+}
+
 [System.Serializable]
 public abstract class CombatAction
 {
@@ -35,7 +43,33 @@ public abstract class CombatAction
     public string actionId;
     public string actionName = "New Action";
 
+    [Tooltip("Cooldown HUD icon while this action is selected on its input. Uses the slot's default artwork when unassigned.")]
+    public Sprite icon;
+
     public string ActionKey => !string.IsNullOrWhiteSpace(actionId) ? actionId : actionName;
+
+    [Tooltip("Interrupt policy and Ultimate hit flash only. From Input preserves the existing input-route policy. Does not change AE cost, cooldown, damage/passive category or input.")]
+    public CombatActionType actionType;
+    public CombatActionType EffectiveActionType => actionType != CombatActionType.FromInput ? actionType
+        : Category == AttackCategory.Ultimate ? CombatActionType.Ultimate
+        : Category == AttackCategory.Skill ? CombatActionType.Skill : CombatActionType.Normal;
+    public ActionCategory InterruptCategory => EffectiveActionType == CombatActionType.Ultimate ? ActionCategory.Ultimate
+        : EffectiveActionType == CombatActionType.Skill ? ActionCategory.Skill : ActionCategory.BasicAttack;
+
+    public InterruptPolicy GetTypeInterruptPolicy(bool airborne = false)
+    {
+        InterruptPolicy policy = EffectiveActionType == CombatActionType.Ultimate ? InterruptPolicy.Ultimate
+            : EffectiveActionType == CombatActionType.Skill ? InterruptPolicy.Skill
+            : airborne ? InterruptPolicy.AirborneAttack : InterruptPolicy.BasicAttack;
+        if (this is UltimateAction ultimate && !ultimate.allowUltimateInterrupt)
+        {
+            policy.startup &= ~ActionCategory.Ultimate;
+            policy.active &= ~ActionCategory.Ultimate;
+            policy.recovery &= ~ActionCategory.Ultimate;
+            policy.cancel &= ~ActionCategory.Ultimate;
+        }
+        return policy;
+    }
 
     [Header("Commit Requirements")]
     public string resourceCounterId;
@@ -140,7 +174,7 @@ public class UltimateAction : SkillAction
     public UltimateInputTrigger inputTrigger;
     [Tooltip("Seconds to hold Ultimate before selecting this action. Tap actions wait for release when a matching hold action exists.")]
     [Min(0.01f)] public float holdDuration = 0.35f;
-    [Tooltip("Allows another Ultimate input during this action's normal cancel window.")]
+    [Tooltip("Allows a different Ultimate during Recovery (MAX CANCEL) and during the normal cancel window.")]
     public bool allowUltimateInterrupt = true;
 
     [Header("Aura Energy Cost")]

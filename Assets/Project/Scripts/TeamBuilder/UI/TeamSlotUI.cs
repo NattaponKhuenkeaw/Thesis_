@@ -57,6 +57,7 @@ namespace Project.TeamBuilder.UI
 
 
         private CharacterItem currentCharacter;
+        private TMP_Text emptySlotLabel;
         private TeamBuilderUI parentBuilder;
         private int slotIndex;
         private CanvasGroup canvasGroup;
@@ -85,6 +86,7 @@ namespace Project.TeamBuilder.UI
         {
             parentBuilder = builder;
             slotIndex = index;
+            EnsureEmptySlotLabel();
             canvasGroup = GetComponent<CanvasGroup>();
             rectTransform = GetComponent<RectTransform>();
             feedbackDriver = UIFeedbackDriver.GetOrAdd(gameObject);
@@ -118,6 +120,7 @@ namespace Project.TeamBuilder.UI
         public void SetCharacter(CharacterItem character)
         {
             ResetDragState();
+            EnsureEmptySlotLabel();
             currentCharacter = character;
 
             if (character == null)
@@ -165,6 +168,7 @@ namespace Project.TeamBuilder.UI
             {
                 emptyStateOverlay.SetActive(false);
             }
+            if (emptySlotLabel != null) emptySlotLabel.gameObject.SetActive(false);
 
             RecalculateStats();
         }
@@ -172,18 +176,20 @@ namespace Project.TeamBuilder.UI
         public void ClearSlot()
         {
             ResetDragState();
+            EnsureEmptySlotLabel();
             currentCharacter = null;
             hasStatSnapshot = false;
 
             if (profileImage != null)
             {
-                profileImage.sprite = emptyPortraitSprite;
-                profileImage.color = new Color(1f, 1f, 1f, 0.3f);
+                profileImage.sprite = null;
+                profileImage.color = Color.white;
+                profileImage.enabled = false;
             }
 
             if (characterNameText != null)
             {
-                characterNameText.text = "Empty";
+                characterNameText.text = string.Empty;
             }
 
             if (levelText != null)
@@ -198,8 +204,9 @@ namespace Project.TeamBuilder.UI
 
             if (emptyStateOverlay != null)
             {
-                emptyStateOverlay.SetActive(true);
+                emptyStateOverlay.SetActive(false);
             }
+            if (emptySlotLabel != null) emptySlotLabel.gameObject.SetActive(true);
 
             for (int i = 0; i < artifactSlots.Length; i++)
             {
@@ -214,6 +221,32 @@ namespace Project.TeamBuilder.UI
             if (hpText != null) hpText.text = string.Empty;
 
             SetActiveState(false);
+        }
+
+        private void EnsureEmptySlotLabel()
+        {
+            if (emptySlotLabel != null) return;
+            Transform existing = transform.Find("Empty Slot Plus");
+            if (existing != null) emptySlotLabel = existing.GetComponent<TMP_Text>();
+            if (emptySlotLabel == null)
+            {
+                var labelObject = new GameObject("Empty Slot Plus", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                labelObject.transform.SetParent(transform, false);
+                var rect = (RectTransform)labelObject.transform;
+                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
+                rect.anchoredPosition = Vector2.zero;
+                rect.sizeDelta = new Vector2(96f, 96f);
+                emptySlotLabel = labelObject.GetComponent<TMP_Text>();
+                emptySlotLabel.font = characterNameText != null ? characterNameText.font : TMP_Settings.defaultFontAsset;
+                emptySlotLabel.fontSize = 64f;
+                emptySlotLabel.fontStyle = FontStyles.Bold;
+                emptySlotLabel.color = new Color(1f, 1f, 1f, .85f);
+                emptySlotLabel.alignment = TextAlignmentOptions.Center;
+                emptySlotLabel.textWrappingMode = TextWrappingModes.NoWrap;
+                emptySlotLabel.raycastTarget = false;
+            }
+            emptySlotLabel.text = "+";
+            emptySlotLabel.transform.SetAsLastSibling();
         }
 
         public void SetActiveState(bool isActive)

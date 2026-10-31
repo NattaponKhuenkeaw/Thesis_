@@ -5,14 +5,18 @@ public sealed class CombatExecutionContext
     public readonly CharacterObject character;
     public readonly int fieldSession;
     public readonly bool isQteIntro;
+    public readonly CombatActionType actionType;
+    public readonly string actionKey;
     public bool HasConfirmedHit { get; private set; }
 
-    public CombatExecutionContext(PlayerCombat owner, CharacterObject character, int fieldSession, bool isQteIntro)
+    public CombatExecutionContext(PlayerCombat owner, CharacterObject character, int fieldSession, bool isQteIntro, CombatAction action = null)
     {
         this.owner = owner;
         this.character = character;
         this.fieldSession = fieldSession;
         this.isQteIntro = isQteIntro;
+        actionType = action?.EffectiveActionType ?? CombatActionType.FromInput;
+        actionKey = action?.ActionKey;
     }
 
     public bool IsOnField => owner != null && owner.FieldSession == fieldSession
@@ -20,4 +24,7 @@ public sealed class CombatExecutionContext
         && owner.playerCharacter.characterObject == character;
 
     public void ConfirmHit() => HasConfirmedHit = true;
+
+    public bool UsesUltimateHitFlash(AttackCategory inputCategory) => actionType == CombatActionType.Ultimate
+        || (actionType == CombatActionType.FromInput && inputCategory == AttackCategory.Ultimate);
 }

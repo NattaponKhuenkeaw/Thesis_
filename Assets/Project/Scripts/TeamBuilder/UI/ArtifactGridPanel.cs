@@ -42,7 +42,7 @@ namespace Project.TeamBuilder.UI
         private ArtifactInventoryQuery query = ArtifactInventoryQuery.Default;
         private IReadOnlyList<ArtifactInstance> sourceArtifacts;
         private TeamBuilderUI parentBuilder;
-        private PlayerRunInventory playerInventory;
+        private CharacterInventoryState playerInventory;
         private bool favouriteMode;
         private bool inventorySubscribed;
         private TMP_Text runtimeSortLabel;
@@ -90,7 +90,7 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Initialization
         // =========================================================
-        public void Init(TeamBuilderUI builder, Canvas canvas, PlayerRunInventory inventory = null)
+        public void Init(TeamBuilderUI builder, Canvas canvas, CharacterInventoryState inventory = null)
         {
             parentBuilder = builder;
             rootCanvas = canvas;
@@ -564,7 +564,7 @@ namespace Project.TeamBuilder.UI
                 playerInventory = parentBuilder != null ? parentBuilder.PlayerInventory : null;
                 if (playerInventory == null)
                 {
-                    playerInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                    playerInventory = Project.Training.CharacterStateContext.ResolveInventory();
                 }
             }
 

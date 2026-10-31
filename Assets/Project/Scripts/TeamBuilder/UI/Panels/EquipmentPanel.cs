@@ -17,12 +17,12 @@ namespace Project.TeamBuilder.UI.Panels
         {
             if (artifactDescriptionText != null)
             {
-                PlayerRunInventory inventory = GetComponentInParent<InspectScreenUI>()?.ResolveRunInventory();
+                CharacterInventoryState inventory = GetComponentInParent<InspectScreenUI>()?.ResolveRunInventory();
                 artifactDescriptionText.text = BuildArtifactSummary(equippedArtifacts, inventory);
             }
         }
 
-        private string BuildArtifactSummary(ArtifactInstance[] currentArtifacts, PlayerRunInventory inventory)
+        private string BuildArtifactSummary(ArtifactInstance[] currentArtifacts, CharacterInventoryState inventory)
         {
             if (currentArtifacts == null || currentArtifacts.Length == 0) return "No equipped artifacts.";
 

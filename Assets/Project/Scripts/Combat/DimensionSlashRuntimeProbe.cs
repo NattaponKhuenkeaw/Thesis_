@@ -108,7 +108,7 @@ public sealed class DimensionSlashRuntimeProbe : MonoBehaviour
     private int _originalVsync;
     private bool _originalBackground;
     private CharacterObject _character;
-    private PlayerMetaProgression _progression;
+    private CharacterProgressionState _progression;
     private SpriteRenderer _actorRenderer;
     private ProceduralSlashField _field;
 
@@ -150,7 +150,7 @@ public sealed class DimensionSlashRuntimeProbe : MonoBehaviour
         CombatEventHub.Shared.DamageResolved += Damage;
         _character = Instantiate(characterSource);
         _character.actionResolverTable = Instantiate(characterSource.actionResolverTable);
-        _progression = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        _progression = ScriptableObject.CreateInstance<CharacterProgressionState>();
         _progression.SetPotentialLevel(_character, PotentialTrack.Passive, 4);
         player.SetCharacter(_character);
         _actorRenderer = player.Animator != null ? player.Animator.GetComponent<SpriteRenderer>() : null;

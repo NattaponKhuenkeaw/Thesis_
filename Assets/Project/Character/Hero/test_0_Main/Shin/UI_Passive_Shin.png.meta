@@ -1,0 +1,585 @@
+fileFormatVersion: 2
+guid: fd398c780027bbc4f9774dad91c8dfc9
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2014121876123109892
+    second: UI_Passive_Shin_0
+  - first:
+      213: 3732643103163528952
+    second: UI_Passive_Shin_1
+  - first:
+      213: -7809732022747087731
+    second: UI_Passive_Shin_2
+  - first:
+      213: -5892270563657682516
+    second: UI_Passive_Shin_3
+  - first:
+      213: -230345657722368000
+    second: UI_Passive_Shin_4
+  - first:
+      213: -7196266110105954563
+    second: UI_Passive_Shin_5
+  - first:
+      213: 4019996993705702513
+    second: UI_Passive_Shin_6
+  - first:
+      213: 728454721498385267
+    second: UI_Passive_Shin_7
+  - first:
+      213: -451798970219253585
+    second: UI_Passive_Shin_8
+  - first:
+      213: 969701847333773534
+    second: UI_Passive_Shin_9
+  - first:
+      213: 7015580190372610153
+    second: UI_Passive_Shin_10
+  - first:
+      213: -6719365331052525376
+    second: UI_Passive_Shin_11
+  - first:
+      213: -2106993579752463405
+    second: UI_Passive_Shin_12
+  - first:
+      213: -4719568866080422585
+    second: UI_Passive_Shin_13
+  - first:
+      213: 4701630746182068073
+    second: UI_Passive_Shin_14
+  - first:
+      213: 7137914010580388567
+    second: UI_Passive_Shin_15
+  - first:
+      213: -4565907250214424626
+    second: UI_Passive_Shin_16
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: UI_Passive_Shin_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1233
+        height: 1238
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf5b65f23d66c04e0800000000000000
+      internalID: -2014121876123109892
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_1
+      rect:
+        serializedVersion: 2
+        x: 305
+        y: 1197
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f6bf5d30230dc330800000000000000
+      internalID: 3732643103163528952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_2
+      rect:
+        serializedVersion: 2
+        x: 1188
+        y: 907
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8cba216a124e9390800000000000000
+      internalID: -7809732022747087731
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_3
+      rect:
+        serializedVersion: 2
+        x: 1180
+        y: 550
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca171b414237a3ea0800000000000000
+      internalID: -5892270563657682516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 369
+        width: 5
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00097ef38d5adccf0800000000000000
+      internalID: -230345657722368000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_5
+      rect:
+        serializedVersion: 2
+        x: 1219
+        y: 373
+        width: 35
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df6d3fda91ab12c90800000000000000
+      internalID: -7196266110105954563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_6
+      rect:
+        serializedVersion: 2
+        x: 1155
+        y: 290
+        width: 24
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17477f787f5e9c730800000000000000
+      internalID: 4019996993705702513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_7
+      rect:
+        serializedVersion: 2
+        x: 303
+        y: 79
+        width: 14
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 37b0edda5bdfb1a00800000000000000
+      internalID: 728454721498385267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_8
+      rect:
+        serializedVersion: 2
+        x: 892
+        y: 79
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa0b136fa33eab9f0800000000000000
+      internalID: -451798970219253585
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_9
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 47
+        width: 16
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed0ae5441b2157d00800000000000000
+      internalID: 969701847333773534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_10
+      rect:
+        serializedVersion: 2
+        x: 303
+        y: 63
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9604d6453095c5160800000000000000
+      internalID: 7015580190372610153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_11
+      rect:
+        serializedVersion: 2
+        x: 948
+        y: 53
+        width: 18
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c80a8605d400c2a0800000000000000
+      internalID: -6719365331052525376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_12
+      rect:
+        serializedVersion: 2
+        x: 376
+        y: 13
+        width: 19
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d363d6a08472c2e0800000000000000
+      internalID: -2106993579752463405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_13
+      rect:
+        serializedVersion: 2
+        x: 862
+        y: 17
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74588442f19b08eb0800000000000000
+      internalID: -4719568866080422585
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_14
+      rect:
+        serializedVersion: 2
+        x: 868
+        y: 18
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 967ac3bd04c8f3140800000000000000
+      internalID: 4701630746182068073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_15
+      rect:
+        serializedVersion: 2
+        x: 874
+        y: 21
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7da8ded69f6fe0360800000000000000
+      internalID: 7137914010580388567
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_Passive_Shin_16
+      rect:
+        serializedVersion: 2
+        x: 820
+        y: 0
+        width: 41
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ecfa6911c83a2a0c0800000000000000
+      internalID: -4565907250214424626
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      UI_Passive_Shin_0: -2014121876123109892
+      UI_Passive_Shin_1: 3732643103163528952
+      UI_Passive_Shin_10: 7015580190372610153
+      UI_Passive_Shin_11: -6719365331052525376
+      UI_Passive_Shin_12: -2106993579752463405
+      UI_Passive_Shin_13: -4719568866080422585
+      UI_Passive_Shin_14: 4701630746182068073
+      UI_Passive_Shin_15: 7137914010580388567
+      UI_Passive_Shin_16: -4565907250214424626
+      UI_Passive_Shin_2: -7809732022747087731
+      UI_Passive_Shin_3: -5892270563657682516
+      UI_Passive_Shin_4: -230345657722368000
+      UI_Passive_Shin_5: -7196266110105954563
+      UI_Passive_Shin_6: 4019996993705702513
+      UI_Passive_Shin_7: 728454721498385267
+      UI_Passive_Shin_8: -451798970219253585
+      UI_Passive_Shin_9: 969701847333773534
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

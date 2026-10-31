@@ -25,7 +25,7 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         [Header("Dependencies")]
         [Tooltip("Player inventory that stores owned items (CharacterItems live here).")]
-        [SerializeField] private PlayerRunInventory playerInventory;
+        [SerializeField] private CharacterInventoryState playerInventory;
 
         [Tooltip("The TeamLoader that manages the active team for gameplay.")]
         [SerializeField] private TeamLoader teamLoader;
@@ -89,8 +89,8 @@ namespace Project.TeamBuilder.UI
         public bool HasDraftChanges => draftController != null ? draftController.hasDraftChanges : false;
         public int StagedActiveIndex => draftController != null ? draftController.stagedActiveIndex : 0;
         public InspectScreenUI InspectScreenUI => inspectScreenUI;
-        public PlayerRunInventory RunInventory => playerInventory;
-        public PlayerRunInventory PlayerInventory => playerInventory;
+        public CharacterInventoryState RunInventory => Project.Training.CharacterStateContext.ResolveInventory(playerInventory);
+        public CharacterInventoryState PlayerInventory => Project.Training.CharacterStateContext.ResolveInventory(playerInventory);
         public int SelectedCharacterSlotIndex => selectedCharacterSwitchSlotIndex;
 
         private void OnEnable()
@@ -187,11 +187,12 @@ namespace Project.TeamBuilder.UI
                 owningTeamUI = GetComponentInParent<TeamUI>();
             }
 
+            playerInventory = Project.Training.CharacterStateContext.ResolveInventory(playerInventory);
             if (playerInventory == null)
             {
                 playerInventory = teamLoader != null && teamLoader.RunInventory != null
                     ? teamLoader.RunInventory
-                    : Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                    : Project.Training.CharacterStateContext.ResolveInventory();
             }
 
             // Scene UI can start before the persistent team loader has been created.
@@ -378,7 +379,7 @@ namespace Project.TeamBuilder.UI
 
         public void SetMode(ZoneMode mode)
         {
-            currentMode = mode;
+            currentMode = Project.Training.TrainingAccessPolicy.LoadoutMode(mode);
             if (currentMode == ZoneMode.CombatZone)
             {
                 isInventoryPanelOpen = false;
@@ -796,7 +797,7 @@ namespace Project.TeamBuilder.UI
                 return null;
             }
 
-            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            CharacterInventoryState inventory = ResolveRunInventoryReference();
             RunCharacterState state = inventory != null ? inventory.GetRunCharacter(character) : null;
             return state != null && state.upgrade != null
                 ? state.upgrade
@@ -805,13 +806,13 @@ namespace Project.TeamBuilder.UI
 
         public int ResolveRunGlobalLevel()
         {
-            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            CharacterInventoryState inventory = ResolveRunInventoryReference();
             return inventory != null ? inventory.GlobalLevel : 1;
         }
 
         public int ResolveRunGlobalMaxLevel()
         {
-            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            CharacterInventoryState inventory = ResolveRunInventoryReference();
             return inventory != null ? inventory.GlobalMaxLevel : 30;
         }
 
@@ -822,7 +823,7 @@ namespace Project.TeamBuilder.UI
                 return new CharacterStats();
             }
 
-            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            CharacterInventoryState inventory = ResolveRunInventoryReference();
             return inventory != null
                 ? inventory.GetCharacterStats(character)
                 : character.GetLeveledStats();
@@ -835,7 +836,7 @@ namespace Project.TeamBuilder.UI
                 return new CharacterStats();
             }
 
-            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            CharacterInventoryState inventory = ResolveRunInventoryReference();
             return inventory != null
                 ? inventory.GetCharacterBaseStats(character)
                 : character.GetLeveledStats();
@@ -905,8 +906,9 @@ namespace Project.TeamBuilder.UI
             }
         }
 
-        private PlayerRunInventory ResolveRunInventoryReference()
+        private CharacterInventoryState ResolveRunInventoryReference()
         {
+            playerInventory = Project.Training.CharacterStateContext.ResolveInventory(playerInventory);
             if (playerInventory != null)
             {
                 return playerInventory;
@@ -924,7 +926,7 @@ namespace Project.TeamBuilder.UI
 
             if (playerInventory == null)
             {
-                playerInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                playerInventory = Project.Training.CharacterStateContext.ResolveInventory();
             }
 
             return playerInventory;

@@ -29,9 +29,9 @@ public class PlayerAttackState : CombatPlayerState
 
     protected override InterruptPolicy GetInterruptPolicy()
     {
-        return player.Combat != null && player.Combat.IsAirCombo
+        return GetActionTypePolicy(player.Combat != null && player.Combat.IsAirCombo
             ? InterruptPolicy.AirborneAttack
-            : InterruptPolicy.BasicAttack;
+            : InterruptPolicy.BasicAttack);
     }
 
     // =========================================================

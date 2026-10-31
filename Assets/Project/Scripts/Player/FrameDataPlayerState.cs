@@ -28,6 +28,9 @@ public struct TransitionContext
 
     /// <summary>Whether the previous state was airborne.</summary>
     public bool wasAirborne;
+    public CombatActionType sourceActionType;
+    public string sourceActionKey;
+    public ActionPhase sourceActionPhase;
 
     /// <summary>No data / default context.</summary>
     public static TransitionContext Empty => new TransitionContext
@@ -125,6 +128,7 @@ public abstract class FrameDataPlayerState : PlayerState
     /// </summary>
     public bool CanBeInterruptedBy(ActionCategory incoming)
     {
+        incoming = fsm != null ? fsm.ResolveInputInterruptCategory(incoming) : incoming;
         ActionCategory allowed = GetInterruptPolicy().GetAllowedFor(currentPhase);
         return (allowed & incoming) != 0;
     }
@@ -443,14 +447,14 @@ public abstract class FrameDataPlayerState : PlayerState
             return fsm.CurrentState != this || currentFrame == -1;
         }
 
-        if ((allowed & ActionCategory.Ultimate) != 0 && buffer.HasUltimateBuffer)
+        if (buffer.HasUltimateBuffer && CanBeInterruptedBy(ActionCategory.Ultimate))
         {
             bool held = buffer.UltimateInputHeld;
             buffer.ConsumeUltimate();
             fsm.RouteUltimateInput(held);
             return fsm.CurrentState != this || currentFrame == -1;
         }
-        if ((allowed & ActionCategory.Skill) != 0 && buffer.ConsumeSkill())
+        if (buffer.HasSkillBuffer && CanBeInterruptedBy(ActionCategory.Skill) && buffer.ConsumeSkill())
         {
             fsm.RouteSkillInput();
             return fsm.CurrentState != this || currentFrame == -1;
@@ -469,7 +473,7 @@ public abstract class FrameDataPlayerState : PlayerState
             fsm.RouteJumpInput();
             return fsm.CurrentState != this || currentFrame == -1;
         }
-        if ((allowed & ActionCategory.BasicAttack) != 0 && buffer.ConsumeAttack())
+        if (buffer.HasAttackBuffer && CanBeInterruptedBy(ActionCategory.BasicAttack) && buffer.ConsumeAttack())
         {
             fsm.RouteAttackInput();
             return fsm.CurrentState != this || currentFrame == -1;

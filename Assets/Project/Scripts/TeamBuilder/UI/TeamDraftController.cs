@@ -11,7 +11,7 @@ namespace Project.TeamBuilder.UI
     /// </summary>
     public class TeamDraftController
     {
-        private PlayerRunInventory playerInventory;
+        private CharacterInventoryState playerInventory;
         private TeamLoader teamLoader;
         private TeamSlotUI[] teamSlots;
 
@@ -24,14 +24,14 @@ namespace Project.TeamBuilder.UI
 
         private readonly Dictionary<CharacterObject, CharacterItem> runtimeCharacterItems = new Dictionary<CharacterObject, CharacterItem>();
 
-        public TeamDraftController(PlayerRunInventory inventory, TeamLoader loader, TeamSlotUI[] slots)
+        public TeamDraftController(CharacterInventoryState inventory, TeamLoader loader, TeamSlotUI[] slots)
         {
             playerInventory = inventory;
             teamLoader = loader;
             teamSlots = slots;
         }
 
-        public void BindRuntimeSources(PlayerRunInventory inventory, TeamLoader loader)
+        public void BindRuntimeSources(CharacterInventoryState inventory, TeamLoader loader)
         {
             playerInventory = inventory;
             teamLoader = loader;

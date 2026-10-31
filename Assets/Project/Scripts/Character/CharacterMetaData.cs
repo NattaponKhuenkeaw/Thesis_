@@ -14,6 +14,8 @@ public class CharacterMetaData
     // Visual
     // =========================================================
     [Header("Visual")]
+    [Tooltip("Compact character icon for team-swap HUD slots. Falls back to the portrait when unassigned.")]
+    public Sprite icon;
     public Sprite portrait;
     public RuntimeAnimatorController animatorController;
 }
