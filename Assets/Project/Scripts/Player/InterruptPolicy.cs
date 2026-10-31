@@ -80,12 +80,12 @@ public struct InterruptPolicy
 
     // ─── Presets matching the user's rules ───
 
-    /// <summary>Ultimate: All phases uninterruptable. No input until Cancel.</summary>
+    /// <summary>Ultimate: Startup/Active committed; Recovery permits a distinct Ultimate MAX CANCEL.</summary>
     public static readonly InterruptPolicy Ultimate = new InterruptPolicy
     {
         startup  = ActionCategory.None,
         active   = ActionCategory.None,
-        recovery = ActionCategory.Skill | ActionCategory.Dash | ActionCategory.Jump | ActionCategory.Switch,
+        recovery = ActionCategory.Ultimate | ActionCategory.Skill | ActionCategory.Dash | ActionCategory.Jump | ActionCategory.Switch,
         cancel = ActionCategory.All & ~ActionCategory.Switch,
         // InputGate — fully committed, no continuous input until cancel
         startupGate  = InputGate.None,

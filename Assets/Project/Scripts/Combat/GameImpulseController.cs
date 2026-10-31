@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using CombatCore;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -32,7 +33,18 @@ public class GameImpulseRequest
     public float endStrength = 0.1f;
     public float duration = 0.16f;
     public float pulseInterval = 0.03f;
+    [Tooltip("Scale pulse timing and the shake waveform with nonzero gameplay slow motion.")]
+    public bool followSlowMotion;
+    [Tooltip("Freeze pulse timing and the shake waveform during hitstop/full freeze. Explicit pause always holds playback.")]
+    public bool followHitstop;
     public SlowMotionSettings slowMotion = new SlowMotionSettings();
+
+    public static float PlaybackDelta(bool followSlowMotion, bool followHitstop,
+        float scaledDelta, float unscaledDelta, float timeScale, bool paused)
+    {
+        if (paused || (followHitstop && timeScale <= 0f)) return 0f;
+        return Mathf.Max(0f, followSlowMotion && timeScale > 0f ? scaledDelta : unscaledDelta);
+    }
 
     public float GetTotalDurationSeconds()
     {
@@ -70,8 +82,24 @@ public class GameImpulseRequest
     }
 }
 
+[DefaultExecutionOrder(-100)]
 public class GameImpulseController : MonoBehaviour
 {
+    private struct ClockedImpulse
+    {
+        public CinemachineImpulseManager.ImpulseEvent impulse;
+        public ISignalSource6D signal;
+        public bool followSlowMotion;
+        public bool followHitstop;
+        public float elapsed;
+    }
+
+    private readonly List<ClockedImpulse> _activeImpulses = new List<ClockedImpulse>();
+    private CinemachineBrain _impulseBrain;
+    private CinemachineBrain.UpdateMethods _previousCameraUpdate;
+    private CinemachineBrain.BrainUpdateMethods _previousBlendUpdate;
+    private bool _ownsCameraUpdate;
+
     [System.Serializable]
     private class ImpactImpulseProfile
     {
@@ -183,9 +211,81 @@ public class GameImpulseController : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        AdvanceImpulses(Time.deltaTime, Time.unscaledDeltaTime, Time.timeScale,
+            GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld);
+    }
+
+    public void AdvanceImpulses(float scaledDelta, float unscaledDelta, float timeScale, bool paused)
+    {
+        for (int i = _activeImpulses.Count - 1; i >= 0; i--)
+        {
+            ClockedImpulse active = _activeImpulses[i];
+            // Cinemachine pools expired events; a retained handle must never retime a reused signal.
+            if (!ReferenceEquals(active.impulse.SignalSource, active.signal))
+            {
+                _activeImpulses.RemoveAt(i);
+                continue;
+            }
+            active.elapsed += GameImpulseRequest.PlaybackDelta(active.followSlowMotion, active.followHitstop,
+                scaledDelta, unscaledDelta, timeScale, paused);
+            active.impulse.StartTime = CinemachineImpulseManager.Instance.CurrentTime - active.elapsed;
+            if (active.impulse.Expired) _activeImpulses.RemoveAt(i);
+            else _activeImpulses[i] = active;
+        }
+        UpdateCameraClock(timeScale, paused);
+    }
+
+    private void UpdateCameraClock(float timeScale, bool paused)
+    {
+        bool needsRenderUpdate = false;
+        if (timeScale <= 0f && !paused)
+            for (int i = 0; i < _activeImpulses.Count; i++)
+                if (!_activeImpulses[i].followHitstop) { needsRenderUpdate = true; break; }
+
+        if (!needsRenderUpdate) { RestoreCameraClock(); return; }
+        if (_impulseBrain == null || _ownsCameraUpdate
+            || _impulseBrain.UpdateMethod == CinemachineBrain.UpdateMethods.ManualUpdate) return;
+        _previousCameraUpdate = _impulseBrain.UpdateMethod;
+        _previousBlendUpdate = _impulseBrain.BlendUpdateMethod;
+        // Smart/Fixed cameras can otherwise stop sampling noise when physics stops in hitstop.
+        // Delta time remains zero, so base follow damping and camera blends do not advance.
+        _impulseBrain.UpdateMethod = CinemachineBrain.UpdateMethods.LateUpdate;
+        _impulseBrain.BlendUpdateMethod = CinemachineBrain.BrainUpdateMethods.LateUpdate;
+        _ownsCameraUpdate = true;
+    }
+
+    private void RestoreCameraClock()
+    {
+        if (_ownsCameraUpdate && _impulseBrain != null)
+        {
+            if (_impulseBrain.UpdateMethod == CinemachineBrain.UpdateMethods.LateUpdate)
+                _impulseBrain.UpdateMethod = _previousCameraUpdate;
+            if (_impulseBrain.BlendUpdateMethod == CinemachineBrain.BrainUpdateMethods.LateUpdate)
+                _impulseBrain.BlendUpdateMethod = _previousBlendUpdate;
+        }
+        _ownsCameraUpdate = false;
+    }
+
+    private void OnDisable()
+    {
+        StopAllCoroutines();
+        for (int i = 0; i < _activeImpulses.Count; i++)
+        {
+            ClockedImpulse active = _activeImpulses[i];
+            if (!ReferenceEquals(active.impulse.SignalSource, active.signal)) continue;
+            active.impulse.Cancel(CinemachineImpulseManager.Instance.CurrentTime, true);
+            active.impulse.Envelope.SustainTime = Mathf.Max(float.Epsilon, active.impulse.Envelope.SustainTime);
+            active.impulse.SignalSource = null;
+        }
+        _activeImpulses.Clear();
+        RestoreCameraClock();
+    }
+
     public void Play(GameImpulseRequest request)
     {
-        if (request == null)
+        if (request == null || !isActiveAndEnabled)
         {
             return;
         }
@@ -195,7 +295,8 @@ public class GameImpulseController : MonoBehaviour
 
     public void PlayOneShot(float strength)
     {
-        EmitImpulse(strength * outputStrengthMultiplier);
+        if (!isActiveAndEnabled) return;
+        EmitImpulse(strength * outputStrengthMultiplier, false, false);
     }
 
     public void PlayImpact(DamageImpactTier tier)
@@ -208,25 +309,32 @@ public class GameImpulseController : MonoBehaviour
         float pulseDuration = Mathf.Max(0f, request.duration);
         float pulseInterval = Mathf.Max(0.01f, request.pulseInterval);
         float strengthMultiplier = Mathf.Max(0f, outputStrengthMultiplier);
+        bool followSlowMotion = request.followSlowMotion;
+        bool followHitstop = request.followHitstop;
 
         if (pulseDuration <= 0f)
         {
-            EmitImpulse(Mathf.Max(request.startStrength, request.endStrength) * strengthMultiplier);
+            EmitImpulse(Mathf.Max(request.startStrength, request.endStrength) * strengthMultiplier, followSlowMotion, followHitstop);
         }
         else
         {
             float elapsed = 0f;
+            float nextPulse = 0f;
             while (elapsed < pulseDuration)
             {
-                float normalized = pulseDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / pulseDuration);
-                float strength = Mathf.Lerp(request.startStrength, request.endStrength, normalized) * strengthMultiplier;
-                EmitImpulse(strength);
-
-                yield return new WaitForSecondsRealtime(pulseInterval);
-                elapsed += pulseInterval;
+                if (elapsed >= nextPulse)
+                {
+                    float strength = Mathf.Lerp(request.startStrength, request.endStrength, elapsed / pulseDuration) * strengthMultiplier;
+                    EmitImpulse(strength, followSlowMotion, followHitstop);
+                    nextPulse = elapsed + pulseInterval;
+                }
+                yield return null;
+                elapsed += GameImpulseRequest.PlaybackDelta(followSlowMotion, followHitstop,
+                    Time.deltaTime, Time.unscaledDeltaTime, Time.timeScale,
+                    GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld);
             }
 
-            EmitImpulse(request.endStrength * strengthMultiplier);
+            EmitImpulse(request.endStrength * strengthMultiplier, followSlowMotion, followHitstop);
         }
 
         if (request.slowMotion != null
@@ -240,28 +348,35 @@ public class GameImpulseController : MonoBehaviour
         }
     }
 
-    private void EmitImpulse(float strength)
+    private CinemachineImpulseManager.ImpulseEvent EmitImpulse(float strength, bool followSlowMotion, bool followHitstop)
     {
         if (strength <= 0f)
         {
-            return;
+            return null;
         }
 
+        CinemachineImpulseManager.ImpulseEvent impulse = null;
         if (CameraManager.instance != null)
         {
-            CameraManager.instance.EmitImpulse(strength);
-            return;
+            impulse = CameraManager.instance.CreateImpulse(strength);
+        }
+        else
+        {
+            if (fallbackImpulseSource == null)
+                fallbackImpulseSource = FindFirstObjectByType<CinemachineImpulseSource>();
+            if (fallbackImpulseSource != null)
+                impulse = fallbackImpulseSource.ImpulseDefinition.CreateAndReturnEvent(
+                    fallbackImpulseSource.transform.position, fallbackImpulseSource.DefaultVelocity * strength);
         }
 
-        if (fallbackImpulseSource == null)
+        if (impulse != null)
         {
-            fallbackImpulseSource = FindFirstObjectByType<CinemachineImpulseSource>();
+            _activeImpulses.Add(new ClockedImpulse { impulse = impulse, signal = impulse.SignalSource,
+                followSlowMotion = followSlowMotion, followHitstop = followHitstop });
+            if (_impulseBrain == null) _impulseBrain = FindFirstObjectByType<CinemachineBrain>();
+            UpdateCameraClock(Time.timeScale, GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld);
         }
-
-        if (fallbackImpulseSource != null)
-        {
-            fallbackImpulseSource.GenerateImpulse(strength);
-        }
+        return impulse;
     }
 
     private GameImpulseRequest GetImpactRequest(DamageImpactTier tier)

@@ -40,8 +40,8 @@ namespace Project.Core
         public event Action<string> OnRunStartFailed;
 
         [Header("Dependencies")]
-        [SerializeField] private PlayerRunInventory runInventory;
-        [SerializeField] private PlayerMetaProgression metaProgression;
+        [SerializeField] private CharacterInventoryState runInventory;
+        [SerializeField] private CharacterProgressionState metaProgression;
         [SerializeField] private MapSO mapData;
         [SerializeField] private ZoneStateProvider zoneStateProvider;
 
@@ -67,11 +67,13 @@ namespace Project.Core
         public GameRunPhase CurrentPhase => currentPhase;
         public bool IsBoundaryLoading => isBoundaryLoading;
         public string LobbySceneName => lobbySceneName;
-        public PlayerRunInventory RunInventory => runInventory;
-        public PlayerMetaProgression MetaProgression => metaProgression;
+        public CharacterInventoryState RunInventory => Project.Training.CharacterStateContext.ResolveInventory(runInventory);
+        public CharacterProgressionState MetaProgression => Project.Training.CharacterStateContext.ResolveProgression(metaProgression);
 
-        public static PlayerRunInventory ResolveSharedRunInventory(PlayerRunInventory current = null)
+        public static CharacterInventoryState ResolveSharedRunInventory(CharacterInventoryState current = null)
         {
+            if (Project.Training.TrainingSession.IsTrainingContext) return Project.Training.CharacterStateContext.ResolveInventory();
+
             if (current != null)
             {
                 return current;
@@ -81,7 +83,7 @@ namespace Project.Core
             {
                 if (Instance.runInventory == null && Application.isPlaying)
                 {
-                    Instance.runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+                    Instance.runInventory = Project.Training.CharacterStateContext.ResolveInventory();
                 }
 
                 if (Instance.runInventory != null)
@@ -95,7 +97,7 @@ namespace Project.Core
                 return null;
             }
 
-            return Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+            return Project.Training.CharacterStateContext.ResolveInventory();
         }
 
         private void Awake()
@@ -202,7 +204,7 @@ namespace Project.Core
 
         private static void RestoreBossLobbyBiome()
         {
-            PlayerRunInventory inventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+            CharacterInventoryState inventory = Project.Training.CharacterStateContext.ResolveInventory();
             if (inventory != null && inventory.DeathForcesLevelOne)
             {
                 inventory.ClearDeathForcesLevelOne();
@@ -514,6 +516,12 @@ namespace Project.Core
 
         private void ResolveDependencies()
         {
+            if (Project.Training.TrainingSession.IsTrainingContext)
+            {
+                runInventory = Project.Training.CharacterStateContext.ResolveInventory();
+                metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
+            }
+
             if (runInventory == null)
             {
                 runInventory = ResolveSharedRunInventory();
@@ -521,7 +529,7 @@ namespace Project.Core
 
             if (metaProgression == null && Application.isPlaying)
             {
-                metaProgression = Resources.Load<PlayerMetaProgression>(MetaProgressionResourcePath);
+                metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
                 metaProgression?.LoadPersistentStateIfNeeded();
             }
 

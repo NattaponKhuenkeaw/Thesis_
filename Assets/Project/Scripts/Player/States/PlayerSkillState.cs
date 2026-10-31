@@ -25,7 +25,7 @@ public class PlayerSkillState : CombatPlayerState
 
     protected override AttackCategory GetAttackCategory() => AttackCategory.Skill;
 
-    protected override InterruptPolicy GetInterruptPolicy() => InterruptPolicy.Skill;
+    protected override InterruptPolicy GetInterruptPolicy() => GetActionTypePolicy(InterruptPolicy.Skill);
 
     public override void Enter(TransitionContext context)
     {
@@ -55,6 +55,7 @@ public class PlayerSkillState : CombatPlayerState
 
     public override void OnSkillInput()
     {
+        if (currentPhase != ActionPhase.None && !CanBeInterruptedBy(ActionCategory.Skill)) return;
         Buffer?.ConsumeSkill();
 
         if (player.Combat == null || resolverTable == null)

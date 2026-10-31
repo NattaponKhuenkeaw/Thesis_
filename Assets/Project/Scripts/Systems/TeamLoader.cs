@@ -52,13 +52,13 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public event Action<CharacterObject, float, float> OnCharacterAuraEnergyUpdated;
 
     [Header("Team Data")]
-    [SerializeField] private PlayerRunInventory runInventory;
+    [SerializeField] private CharacterInventoryState runInventory;
     [FormerlySerializedAs("team")]
     [SerializeField, HideInInspector] private CharacterObject[] serializedBootstrapTeam = Array.Empty<CharacterObject>();
 
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
-    [SerializeField] private PlayerMetaProgression metaProgression;
+    [SerializeField] private CharacterProgressionState metaProgression;
 
     [Header("Switch Cooldown")]
     [Min(0f)] public float switchCooldownDuration = 1.5f;
@@ -108,14 +108,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return state;
     }
     private CharacterObject[] teamSnapshot = Array.Empty<CharacterObject>();
-    private PlayerRunInventory subscribedRuntimeEffectInventory;
-    private PlayerMetaProgression subscribedMetaProgression;
+    private CharacterInventoryState subscribedRuntimeEffectInventory;
+    private CharacterProgressionState subscribedMetaProgression;
     private bool isReconcilingAlwaysRuntimeEffects;
     private bool isRefreshingFromHealthChange;
     private bool isApplyingRuntimeStats;
 
-    public PlayerRunInventory RunInventory => runInventory;
-    public PlayerMetaProgression MetaProgression => metaProgression;
+    public CharacterInventoryState RunInventory => Project.Training.CharacterStateContext.ResolveInventory(runInventory);
+    public CharacterProgressionState MetaProgression => Project.Training.CharacterStateContext.ResolveProgression(metaProgression);
     public int CurrentIndex => currentIndex;
     public CharacterObject CurrentCharacter =>
         teamSnapshot != null && currentIndex >= 0 && currentIndex < teamSnapshot.Length
@@ -188,7 +188,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return snapshot;
     }
 
-    public void SetRunInventory(PlayerRunInventory inventory)
+    public void SetRunInventory(CharacterInventoryState inventory)
     {
         UnbindRunInventoryEvents();
         alwaysRuntimeEffectBindings.Clear();
@@ -1198,6 +1198,12 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void ResolveDependencies()
     {
+        if (Project.Training.TrainingSession.IsTrainingContext)
+        {
+            runInventory = Project.Training.CharacterStateContext.ResolveInventory();
+            metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
+        }
+
         if (playerCharacter == null)
         {
             playerCharacter = PlayerCharacter.Instance;
@@ -1210,7 +1216,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         if (runInventory == null && !Application.isPlaying)
         {
-            runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+            runInventory = ScriptableObject.CreateInstance<CharacterInventoryState>();
             runInventory.hideFlags = HideFlags.DontSave;
         }
 
@@ -1221,7 +1227,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         if (metaProgression == null && Application.isPlaying)
         {
-            metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+            metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
         }
 
         if (Application.isPlaying)

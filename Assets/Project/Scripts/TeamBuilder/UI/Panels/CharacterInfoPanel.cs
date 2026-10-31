@@ -145,7 +145,7 @@ namespace Project.TeamBuilder.UI.Panels
                 return;
             }
 
-            PlayerRunInventory runInventory = inspectScreenUI != null ? inspectScreenUI.ResolveRunInventory() : null;
+            CharacterInventoryState runInventory = inspectScreenUI != null ? inspectScreenUI.ResolveRunInventory() : null;
 
             for (int i = 0; i < equippedArtifactSlots.Length; i++)
             {
@@ -250,7 +250,7 @@ namespace Project.TeamBuilder.UI.Panels
         {
             if (data == null) return 0;
 
-            PlayerMetaProgression metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+            CharacterProgressionState metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
             if (metaProgression == null)
             {
                 return 0;

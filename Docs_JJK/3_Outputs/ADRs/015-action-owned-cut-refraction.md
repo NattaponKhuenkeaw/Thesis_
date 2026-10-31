@@ -2,6 +2,8 @@
 
 Date: 2026-10-28. Status: implementation for human feel review.
 
+2026-10-29 user-approved lifetime amendment: already spawned visual tails now remain eligible after their action ends or its field session changes. `ReleaseToLifetime` hands off procedural/sprite/bolt presentation without extending gameplay ownership. Actor flags release immediately; scaled clocks and visible-effect expiry govern detached tails, with the existing camera and latest-eligible-source rules retained. This supersedes the live-execution-only eligibility statements below for released effects. Native focused validation is 155/155, including released procedural distortion, QTE tails, pooled lifetime handoff and MAX CANCEL presentation; final combat feel remains for human review.
+
 GDD: `@tag:visual-audio` calls for large supernatural hit shapes with readable silhouettes and danger zones. The user requested chromatic aberration and a wind-like wave that bends the background during cut impact. This extends the approved action presentation; ActionResolver routing is unchanged.
 
 The existing 2D renderer has no screen capture effect, camera opaque texture or sorting-layer copy enabled. Reuse the installed URP FullScreenPassRendererFeature through a gated subclass. Its existing fetch-color path supplies the rendered scene, including transparent sprites, before postprocessing. Following the user's correction, the material warps the sampled scene in a band along the rendered cut, with localized RGB separation and blur across its edges. The original circular hit-anchor pulse is superseded. Point sampling and reference-pixel offsets preserve the pixel style. Screen-space overlay HUD renders afterward; world-space and camera-space UI already in the camera image can be distorted.

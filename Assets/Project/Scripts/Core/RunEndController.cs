@@ -19,8 +19,8 @@ namespace Project.Core.RunEnd
         public bool IsHandlingDeath => isHandlingDeath || waitingForRespawnScene;
 
         [Header("Dependencies")]
-        [SerializeField] private PlayerRunInventory runInventory;
-        [SerializeField] private PlayerMetaProgression metaProgression;
+        [SerializeField] private CharacterInventoryState runInventory;
+        [SerializeField] private CharacterProgressionState metaProgression;
         [SerializeField] private RunResultUI runResultUI;
 
         [Header("Room Clear Rewards")]
@@ -81,6 +81,7 @@ namespace Project.Core.RunEnd
 
         public void NotifyRoomCleared()
         {
+            if (Project.Training.TrainingSession.IsTrainingContext) return;
             roomsCleared = Mathf.Max(0, roomsCleared + 1);
             AwardRoomClearCurrency();
         }
@@ -123,6 +124,11 @@ namespace Project.Core.RunEnd
 
         private void HandlePlayerDied()
         {
+            if (Project.Training.TrainingSession.IsTrainingContext)
+            {
+                PauseMenuController.Instance?.ReturnFromTraining();
+                return;
+            }
             if (isHandlingDeath)
             {
                 return;
@@ -397,6 +403,12 @@ namespace Project.Core.RunEnd
 
         private void ResolveDependencies()
         {
+            if (Project.Training.TrainingSession.IsTrainingContext)
+            {
+                runInventory = Project.Training.CharacterStateContext.ResolveInventory();
+                metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
+            }
+
             if (runInventory == null)
             {
                 runInventory = GameRunManager.ResolveSharedRunInventory();
@@ -404,7 +416,7 @@ namespace Project.Core.RunEnd
 
             if (metaProgression == null && Application.isPlaying)
             {
-                metaProgression = Resources.Load<PlayerMetaProgression>(MetaProgressionResourcePath);
+                metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
             }
 
             if (runResultUI == null)

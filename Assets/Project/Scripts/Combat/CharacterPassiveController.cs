@@ -16,7 +16,7 @@ public class CharacterPassiveController : MonoBehaviour
 {
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
-    [SerializeField] private PlayerMetaProgression metaProgression;
+    [SerializeField] private CharacterProgressionState metaProgression;
 
     [Header("Runtime State")]
     [SerializeField] private CombatRuntimeState runtimeState = new CombatRuntimeState();
@@ -32,8 +32,8 @@ public class CharacterPassiveController : MonoBehaviour
     private IReadOnlyList<PotentialNodeDefinition> activeNodes = Array.Empty<PotentialNodeDefinition>();
     private CharacterObject activeNodesCharacter;
     private CharacterKitDefinition activeNodesKit;
-    private PlayerMetaProgression activeNodesProgression;
-    private PlayerMetaProgression subscribedMetaProgression;
+    private CharacterProgressionState activeNodesProgression;
+    private CharacterProgressionState subscribedMetaProgression;
 
     public CombatRuntimeState RuntimeState => runtimeState;
     public CombatMeterDefinition CombatMeter => GetKitDefinition()?.combatMeter;
@@ -61,7 +61,7 @@ public class CharacterPassiveController : MonoBehaviour
         int clamped = Mathf.Clamp(current, 0, GetMeterBoxCount() * Mathf.Max(1, meter.pointsPerBox));
         if (current != clamped) runtimeState.SetCounter(meter.counterId, clamped);
     }
-    public PlayerMetaProgression MetaProgression => metaProgression;
+    public CharacterProgressionState MetaProgression => Project.Training.CharacterStateContext.ResolveProgression(metaProgression);
 
     void Awake()
     {
@@ -80,7 +80,7 @@ public class CharacterPassiveController : MonoBehaviour
         UnbindMetaProgressionEvents();
     }
 
-    public void SetMetaProgression(PlayerMetaProgression progression)
+    public void SetMetaProgression(CharacterProgressionState progression)
     {
         UnbindMetaProgressionEvents();
         metaProgression = progression;
@@ -136,7 +136,7 @@ public class CharacterPassiveController : MonoBehaviour
             return 0;
         }
 
-        PlayerRunInventory inventory = ResolveRunInventory(ResolveTeamLoader());
+        CharacterInventoryState inventory = ResolveRunInventory(ResolveTeamLoader());
         if (inventory != null)
         {
             return inventory.GetRuntimeEffectStackCount(character, effectIdOrStackKey);
@@ -977,6 +977,11 @@ public class CharacterPassiveController : MonoBehaviour
     {
         PassiveEventContext context = BuildContext(category, actionId, actionName, stepData, null);
         context.actionStartExecution = execution;
+        QteSwapDefinition entry = playerCharacter?.characterObject?.qteSwap;
+        if (execution != null && execution.IsOnField && !execution.isQteIntro
+            && !string.IsNullOrEmpty(entry?.entryGrantConsumeActionId)
+            && string.Equals(entry.entryGrantConsumeActionId, actionId, StringComparison.Ordinal))
+            runtimeState.RemoveTag(entry.entryGrantTag);
         ApplyTriggeredEffects(PassiveTriggerType.OnActionStarted, context);
 
         for (int i = 0; i < activeHooks.Count; i++)
@@ -1040,6 +1045,17 @@ public class CharacterPassiveController : MonoBehaviour
         context.damageDealt = damageDealt;
         context.killedEnemy = killedEnemy;
         context.enemyMaxHp = enemy != null ? enemy.maxHP : 0f;
+
+        CombatMeterDefinition meter = CombatMeter;
+        if (damageDealt > 0f && meter != null && meter.IsConfigured)
+        {
+            int gain = playerCharacter?.characterObject?.combatRules?.GetMeterGain(category, actionId, actionName, stepData) ?? 0;
+            if (gain > 0)
+            {
+                runtimeState.AddCounter(meter.counterId, ModifyCounterGain(meter.counterId, gain));
+                ClampCombatMeter();
+            }
+        }
 
         ApplyTriggeredEffects(PassiveTriggerType.OnHitDealt, context);
         if (isCriticalHit)
@@ -1217,9 +1233,10 @@ public class CharacterPassiveController : MonoBehaviour
 
     private void ResolveMetaProgression()
     {
+        metaProgression = Project.Training.CharacterStateContext.ResolveProgression(metaProgression);
         if (metaProgression == null)
         {
-            metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+            metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
         }
     }
 
@@ -1540,7 +1557,7 @@ public class CharacterPassiveController : MonoBehaviour
             applyTarget = ScopeToApplyTarget(effect.scope);
         }
         TeamLoader teamLoader = ResolveTeamLoader();
-        PlayerRunInventory inventory = ResolveRunInventory(teamLoader);
+        CharacterInventoryState inventory = ResolveRunInventory(teamLoader);
         ResolveRuntimeEffectSource(effect, teamLoader, inventory, out CharacterObject sourceCharacter, out CharacterStats sourceStats);
         int effectiveStackLimit = ResolveRuntimeEffectStackLimit(effect);
 
@@ -1662,7 +1679,7 @@ public class CharacterPassiveController : MonoBehaviour
         }
 
         TeamLoader teamLoader = ResolveTeamLoader();
-        PlayerRunInventory inventory = ResolveRunInventory(teamLoader);
+        CharacterInventoryState inventory = ResolveRunInventory(teamLoader);
         ResolveRuntimeEffectSource(effect, teamLoader, inventory, out CharacterObject sourceCharacter, out _);
         int count = Mathf.Max(1, effect.applicationCount);
 
@@ -1713,7 +1730,7 @@ public class CharacterPassiveController : MonoBehaviour
     }
 
     private static void ApplyRuntimeEffectToInventory(
-        PlayerRunInventory inventory,
+        CharacterInventoryState inventory,
         CharacterObject target,
         RuntimeEffectRecipe recipe,
         CharacterObject sourceCharacter,
@@ -1729,7 +1746,7 @@ public class CharacterPassiveController : MonoBehaviour
     }
 
     private static void ApplyRuntimeEffectToInventory(
-        PlayerRunInventory inventory,
+        CharacterInventoryState inventory,
         CharacterObject target,
         RuntimeEffectDefinition effect,
         CharacterObject sourceCharacter,
@@ -1941,7 +1958,7 @@ public class CharacterPassiveController : MonoBehaviour
     private void ResolveRuntimeEffectSource(
         PassiveRuntimeEffectDefinition effect,
         TeamLoader teamLoader,
-        PlayerRunInventory inventory,
+        CharacterInventoryState inventory,
         out CharacterObject sourceCharacter,
         out CharacterStats sourceStats)
     {
@@ -1977,14 +1994,14 @@ public class CharacterPassiveController : MonoBehaviour
             : overrideCharacter.GetLeveledStats();
     }
 
-    private static PlayerRunInventory ResolveRunInventory(TeamLoader teamLoader)
+    private static CharacterInventoryState ResolveRunInventory(TeamLoader teamLoader)
     {
         if (teamLoader != null && teamLoader.RunInventory != null)
         {
             return teamLoader.RunInventory;
         }
 
-        return Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+        return Project.Training.CharacterStateContext.ResolveInventory();
     }
 
     private TeamLoader ResolveTeamLoader()
@@ -2020,7 +2037,7 @@ public class CharacterPassiveController : MonoBehaviour
         return loaders[0];
     }
 
-    private static CharacterObject[] ResolveRuntimeEffectTargets(TeamLoader teamLoader, PlayerRunInventory inventory)
+    private static CharacterObject[] ResolveRuntimeEffectTargets(TeamLoader teamLoader, CharacterInventoryState inventory)
     {
         if (teamLoader != null)
         {
@@ -2036,7 +2053,7 @@ public class CharacterPassiveController : MonoBehaviour
             : Array.Empty<CharacterObject>();
     }
 
-    private static CharacterObject ResolveTeamCharacterById(TeamLoader teamLoader, PlayerRunInventory inventory, string characterId)
+    private static CharacterObject ResolveTeamCharacterById(TeamLoader teamLoader, CharacterInventoryState inventory, string characterId)
     {
         if (string.IsNullOrWhiteSpace(characterId))
         {
@@ -2481,7 +2498,7 @@ public class CharacterPassiveController : MonoBehaviour
             return playerCharacter.Stats;
         }
 
-        PlayerRunInventory inventory = ResolveRunInventory(TeamLoader.Instance);
+        CharacterInventoryState inventory = ResolveRunInventory(TeamLoader.Instance);
         if (inventory != null)
         {
             return inventory.GetCharacterBaseStats(character);

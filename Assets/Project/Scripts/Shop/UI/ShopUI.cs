@@ -27,7 +27,7 @@ namespace Project.ShopSystem.UI
 
         private List<ShopGridItemUI> spawnedSlots = new List<ShopGridItemUI>();
         private ShopTab currentTab = ShopTab.Sell;
-        private PlayerRunInventory subscribedCurrencyInventory;
+        private CharacterInventoryState subscribedCurrencyInventory;
 
         private void OnEnable()
         {
@@ -177,7 +177,7 @@ namespace Project.ShopSystem.UI
 
         private void RebindCurrencyEvents()
         {
-            PlayerRunInventory inventory = shopManager != null ? shopManager.playerInventory : null;
+            CharacterInventoryState inventory = shopManager != null ? shopManager.playerInventory : null;
             if (inventory == subscribedCurrencyInventory)
             {
                 return;

@@ -174,7 +174,7 @@ public class ActionEventEntry
 
         if (eventType == ActionEventType.BackgroundOverlayFlash && backgroundOverlayFlashSettings != null)
         {
-            return Mathf.Max(1, backgroundOverlayFlashSettings.fadeOutFrames);
+            return Mathf.Max(1, backgroundOverlayFlashSettings.DurationFrames);
         }
 
         return 1;
@@ -184,16 +184,42 @@ public class ActionEventEntry
 [Serializable]
 public class BackgroundOverlayFlashSettings
 {
-    [Tooltip("Number of logic frames for the white impact flash to fade back to transparent.")]
-    [Min(1)]
+    [Tooltip("Logic frames to fade from transparent to peak opacity. Zero gives an instant flash.")]
+    [Min(0)] public int fadeInFrames;
+
+    [Tooltip("Logic frames to hold the flash at peak opacity before fading out.")]
+    [Min(0)] public int holdFrames;
+
+    [Tooltip("Logic frames to fade back to transparent. Zero gives an instant cut.")]
+    [Min(0)]
     public int fadeOutFrames = 18;
 
     [Tooltip("Color used by the fullscreen impact flash. White is the standard impact flash.")]
     public Color flashColor = Color.white;
 
-    [Tooltip("Peak opacity of the flash when the event triggers.")]
+    [Tooltip("Peak opacity reached at the end of the flash fade-in.")]
     [Range(0f, 1f)]
     public float peakAlpha = 1f;
+
+    public int DurationFrames => Mathf.Max(0, fadeInFrames) + Mathf.Max(0, holdFrames) + Mathf.Max(0, fadeOutFrames);
+
+    public float SampleAlpha(float frame)
+    {
+        if (frame < 0f || frame >= DurationFrames) return 0f;
+        int fadeIn = Mathf.Max(0, fadeInFrames);
+        int holdEnd = fadeIn + Mathf.Max(0, holdFrames);
+        float peak = Mathf.Clamp01(peakAlpha);
+        if (frame < fadeIn) return peak * frame / fadeIn;
+        if (frame < holdEnd) return peak;
+        return peak * (1f - (frame - holdEnd) / Mathf.Max(0, fadeOutFrames));
+    }
+
+    public void Rescale(float ratio)
+    {
+        fadeInFrames = Mathf.Max(0, Mathf.RoundToInt(fadeInFrames * ratio));
+        holdFrames = Mathf.Max(0, Mathf.RoundToInt(holdFrames * ratio));
+        fadeOutFrames = Mathf.Max(0, Mathf.RoundToInt(fadeOutFrames * ratio));
+    }
 }
 
 [Serializable]
@@ -329,6 +355,9 @@ public class ActionEventFrameData : ActionStepComponent
             }
 
             entry.triggerFrame = Mathf.RoundToInt(entry.triggerFrame * ratio);
+            if (entry.eventType == ActionEventType.BackgroundOverlayFlash
+                || (entry.eventType == ActionEventType.ProceduralSlashField && entry.slashFieldSettings?.fullScreenSlash == true))
+                entry.backgroundOverlayFlashSettings?.Rescale(ratio);
             if (entry.eventType == ActionEventType.CameraAnimationControl)
                 entry.cameraAnimation?.Rescale(ratio);
             if (entry.eventType == ActionEventType.ScreenImpulse)

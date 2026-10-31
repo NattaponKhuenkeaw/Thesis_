@@ -143,6 +143,7 @@ namespace Project.Core.ZoneState
         /// </summary>
         public void NotifyRoomCleared(RoomData clearedRoom)
         {
+            if (Project.Training.TrainingSession.IsTrainingContext) return;
             if (clearedRoom == null)
             {
                 return;

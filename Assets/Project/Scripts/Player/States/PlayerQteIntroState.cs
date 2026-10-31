@@ -64,6 +64,14 @@ public sealed class PlayerQteIntroState : PlayerAttackState
             player.Movement.ApplyQteEntryPosition(_preparedEntry.placement);
         }
         BeginQteIntro(_action, _step, _target, _combo);
+        QteSwapDefinition reward = player.characterObject?.qteSwap;
+        CombatRuntimeState runtime = player.PassiveController?.RuntimeState;
+        if (runtime != null && player.Combat?.CurrentExecution?.isQteIntro == true)
+        {
+            if (!string.IsNullOrEmpty(reward?.entryGrantTag)) runtime.SetTag(reward.entryGrantTag);
+            if (!string.IsNullOrEmpty(reward?.entryGrantCounterId) && reward.entryGrantAmount > 0)
+                runtime.AddCounter(reward.entryGrantCounterId, reward.entryGrantAmount);
+        }
         if (!_plungeActive) return;
         _plungeMotion = null;
         if (_step.motionData?.keyframes != null)
@@ -147,12 +155,16 @@ public sealed class PlayerQteIntroState : PlayerAttackState
             if (_plungeRenderers[i] != null) _plungeRenderers[i].forceRenderingOff = hidden || _originalRenderFlags[i];
     }
 
-    private void ReleasePlunge(bool finishTail = false)
+    private void ReleasePlunge(bool finishTail = true)
     {
         if (!_plungeActive) return;
         _plungeActive = false;
         SetPlungeActorHidden(false);
-        if (finishTail && _plungeLanded) _plungeVfx?.FinishTail(_step.ActivePhaseStart, player.Combat);
+        if (finishTail)
+        {
+            _plungeVfx?.FinishTail(_step.ActivePhaseStart, player.Combat, _plungeLanded);
+            _plungeVfx = null;
+        }
         else _plungeVfx?.Stop();
         player.Movement?.ClearCapturedWorldMotion();
     }
@@ -166,7 +178,6 @@ public sealed class PlayerQteIntroState : PlayerAttackState
 
     public void OnOwnerDisabled()
     {
-        _plungeVfx?.Stop();
         if (fsm.CurrentState != this || !_plungeActive) return;
         ReleasePlunge();
         _plungeNeedsAbort = true;

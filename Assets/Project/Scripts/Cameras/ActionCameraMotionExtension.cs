@@ -4,6 +4,12 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class ActionCameraMotionExtension : CinemachineExtension
 {
+    private sealed class PreNoiseState : VcamExtraStateBase
+    {
+        public Vector3 positionCorrection;
+        public Quaternion orientationCorrection;
+    }
+
     private CameraManager _owner;
     private CinemachineConfiner2D _confiner;
 
@@ -16,20 +22,33 @@ public sealed class ActionCameraMotionExtension : CinemachineExtension
     protected override void PostPipelineStageCallback(CinemachineVirtualCameraBase vcam,
         CinemachineCore.Stage stage, ref CameraState state, float deltaTime)
     {
+        var preNoise = GetExtraState<PreNoiseState>(vcam);
+        if (stage == CinemachineCore.Stage.Body || stage == CinemachineCore.Stage.Aim)
+        {
+            preNoise.positionCorrection = state.PositionCorrection;
+            preNoise.orientationCorrection = state.OrientationCorrection;
+        }
         if (stage != CinemachineCore.Stage.Finalize || _owner == null) return;
-        var normal = new CameraAnimationPose(state.GetCorrectedPosition(), state.Lens.OrthographicSize);
+        // Bound the authored composition without absorbing positional or rotational impulse noise.
+        // Keep Finalize ordering for group framing and Body components that run again after Aim.
+        CameraState composition = state;
+        composition.PositionCorrection = preNoise.positionCorrection;
+        composition.OrientationCorrection = preNoise.orientationCorrection;
+        var normal = new CameraAnimationPose(composition.GetCorrectedPosition(), composition.Lens.OrthographicSize);
         _owner.RecordNormalCamera(vcam, normal);
         if (!_owner.TrySampleActionCamera(out float size, out float offset)) return;
         var bounds = _confiner != null && _confiner.enabled ? _confiner.BoundingShape2D as BoxCollider2D : null;
         if (bounds == null || !bounds.enabled || Mathf.Abs(Mathf.DeltaAngle(bounds.transform.eulerAngles.z, 0f)) > 0.01f)
             return;
         if (_owner.TrySampleCameraAnimation(normal, out var pose))
-            ApplyBounded(ref state, bounds.bounds, pose.Size / normal.Size, 0f, true,
-                new Vector3(pose.Position.x, pose.Position.y, state.GetCorrectedPosition().z), 1f);
+            ApplyBounded(ref composition, bounds.bounds, pose.Size / normal.Size, 0f, true,
+                new Vector3(pose.Position.x, pose.Position.y, composition.GetCorrectedPosition().z), 1f);
         else if (_owner.TrySampleScreenImpulseCamera(out float zoom, out Vector3 lockedPosition, out float lockWeight))
-            ApplyBounded(ref state, bounds.bounds, zoom, offset, true, lockedPosition, lockWeight);
+            ApplyBounded(ref composition, bounds.bounds, zoom, offset, true, lockedPosition, lockWeight);
         else
-            ApplyBounded(ref state, bounds.bounds, size, offset);
+            ApplyBounded(ref composition, bounds.bounds, size, offset);
+        state.PositionCorrection += composition.PositionCorrection - preNoise.positionCorrection;
+        state.Lens = composition.Lens;
     }
 
     public static bool ApplyBounded(ref CameraState state, Bounds bounds, float sizeMultiplier, float viewportOffset,

@@ -1,0 +1,10 @@
+Tool: built-in image_gen
+Status: candidate; source pose geometry and proportions are approximate, not pixel-exact.
+Packaging: nearest-neighbor resize to 512x384; 4 columns x 3 rows; 128x128 frames; generated alpha preserved.
+
+Final generation prompt:
+Perform a very small localized pixel-art clothing edit on this sprite sheet. Preserve the original image as much as possible. DO NOT redraw the characters.
+Add an open long black/dark-charcoal coat over the existing torso clothing, with narrow split tails flowing behind the hips and thighs. Coat colors near #211c29 with purple-gray highlights #352c40. High dark collar and very narrow pale-lavender shirt piping visible at the chest. Keep the fitted purple pants and the existing boots.
+Every pixel of the original character's white hair, head, face, arms, hands, legs, boots and needle-thin sword must remain in the SAME original position, shape and small size. Preserve those areas verbatim. Only paint the coat and chest clothing. The coat must fit the ORIGINAL SMALL SLENDER CHARACTER, with narrow sleeves and narrow tails. Do not thicken or enlarge the figure.
+Hard reference: the input is a 512x384 sheet of twelve 128x128 pixel cells, 4 columns and 3 rows. Keep ALL TWELVE original poses and pixel coordinates unchanged. The small head in the first cell occupies approximately x70..84 y52..65; its feet reach y125. The last cell has its small head near x451 y306 and feet near y381. Keep original detailed hair pixels. Keep feet close to the bottom of each cell exactly as supplied. Keep fine thin swords exactly as supplied. Preserve original whitespace and proportions; do not shift any sprite within its cell.
+Output exactly 512x384 with true 128x128 resolution per frame. Hard single-pixel edges, no antialiasing, no extra details, no big heads, no thick weapons, no larger pixel scale. Actual transparent background with alpha 0 empty pixels and alpha 255 sprite pixels. No text, no labels, no grid. A clothing-only modification of the supplied original, not a fresh interpretation.

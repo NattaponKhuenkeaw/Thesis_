@@ -13,6 +13,10 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected ActionResolverTable resolverTable;
     protected bool hasStartedCooldown;
     private CombatAction counterCostCommittedAction;
+    public CombatAction ActiveCombatAction => resolver.ActiveCombatAction;
+
+    protected InterruptPolicy GetActionTypePolicy(InterruptPolicy fallback)
+        => ActiveCombatAction?.GetTypeInterruptPolicy(player.Combat?.IsAirCombo == true) ?? fallback;
     private ActionCameraToken _actionCameraToken;
     private CameraManager _actionCameraOwner;
     private ProceduralSlashField _slashField;
@@ -20,7 +24,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     private void ReleaseSlashField()
     {
-        if (_slashField != null) _slashField.Stop();
+        if (_slashField != null) _slashField.ReleaseToLifetime();
+        _slashField = null;
     }
 
     private void ReleaseActionCamera(bool allowTimedCompletion = false)
@@ -401,13 +406,21 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     protected virtual void OnStepBoundaryActionResolved(CombatAction action) { }
 
-    protected bool ExecuteCombatStep(AttackStepData step, InputContext ctx, bool isAutoChain)
+    protected bool ExecuteCombatStep(AttackStepData step, InputContext ctx, bool isAutoChain, bool counterCostAlreadyPaid = false)
     {
         CombatAction action = resolver.ActiveCombatAction;
         if (step == null || action == null || player.Combat == null) return false;
+        CombatExecutionContext previousExecution = player.Combat.CurrentExecution;
+        CombatActionType sourceType = currentPhase == ActionPhase.Recovery
+            ? previousExecution?.actionType ?? CombatActionType.FromInput : transitionContext.sourceActionType;
+        string sourceKey = currentPhase == ActionPhase.Recovery ? previousExecution?.actionKey : transitionContext.sourceActionKey;
+        ActionPhase sourcePhase = currentPhase == ActionPhase.Recovery ? currentPhase : transitionContext.sourceActionPhase;
+        bool maxCancel = !isAutoChain && !IsQteIntroExecution && sourcePhase == ActionPhase.Recovery
+            && sourceType == CombatActionType.Ultimate && action.EffectiveActionType == CombatActionType.Ultimate
+            && !string.IsNullOrEmpty(sourceKey) && !string.Equals(sourceKey, action.ActionKey, System.StringComparison.Ordinal);
         bool beginsNewCounterAction = action != counterCostCommittedAction;
-        if (beginsNewCounterAction && action != null && action.resourceCost > 0
-            && !player.TryCommitActionCounterCost(action)) return false;
+        if (beginsNewCounterAction && !counterCostAlreadyPaid && action != null && action.resourceCost > 0
+            && !player.TryCommitActionCounterCost(action, ctx.actionAvailabilityProvider)) return false;
         counterCostCommittedAction = action;
         EnemyController target = beginsNewCounterAction && action != null && action.requiresEnemyTarget
             ? player.Combat?.FindNearestEnemyTarget(action.GetTargetSearchRadius()) : null;
@@ -445,6 +458,10 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             IsQteIntroExecution);
         if (beginsNewCounterAction && target != null) player.Movement?.SetActionMotionTarget(target);
         RestartAction();
+        transitionContext.sourceActionType = CombatActionType.FromInput;
+        transitionContext.sourceActionKey = null;
+        transitionContext.sourceActionPhase = ActionPhase.None;
+        if (maxCancel) MaxCancelFeedback.Show(player);
         return true;
     }
 
@@ -563,13 +580,13 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                 if (_slashField == null)
                 {
                     var host = new GameObject("Action Slash Presentation");
-                    host.transform.SetParent(player.transform, false);
                     _slashField = host.AddComponent<ProceduralSlashField>();
                 }
                 _slashFieldStartFrame = entry.triggerFrame;
                 _slashField.Begin(player.Combat?.CurrentExecution, entry.slashFieldSettings, player.transform.position,
                     player.Movement != null ? player.Movement.FacingDirection : 1,
-                    player.Animator != null ? player.Animator.GetComponent<SpriteRenderer>() : null);
+                    player.Animator != null ? player.Animator.GetComponent<SpriteRenderer>() : null,
+                    disposeOnComplete: true);
                 if (entry.slashFieldSettings?.fullScreenSlash == true)
                     PlayBackgroundImpactFlash(entry);
                 break;

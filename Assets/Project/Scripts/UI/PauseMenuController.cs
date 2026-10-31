@@ -135,6 +135,14 @@ namespace Project.UI
             ShowSettings(true);
         }
 
+        public void OpenPauseMenu()
+        {
+            if (isLeaving) return;
+            if (!isPaused) TryPause();
+            if (!isPaused || isLeaving) return;
+            ShowSettings(true);
+        }
+
         public void OnReturnToTitleClicked()
         {
             if (!isPaused || isLeaving)
@@ -218,6 +226,11 @@ namespace Project.UI
             returnFocus = null;
         }
 
+        public void ReturnFromTraining()
+        {
+            if (Project.Training.TrainingSession.IsTrainingContext) ReturnToTitle();
+        }
+
         private void ReturnToTitle()
         {
             if (isLeaving)
@@ -230,8 +243,17 @@ namespace Project.UI
             HideAll();
             ForceGameplayResume();
 
-            PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaResourcePath);
-            PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+            if (Project.Training.TrainingSession.IsTrainingContext)
+            {
+                Project.Training.TrainingSession.Instance?.EndSession();
+                GameSettings.Save();
+                TeardownRunSession();
+                SceneManager.LoadScene(mainMenuSceneName);
+                return;
+            }
+
+            CharacterProgressionState meta = Project.Training.CharacterStateContext.ResolveProgression();
+            CharacterInventoryState runInventory = Project.Training.CharacterStateContext.ResolveInventory();
             if (IsLobbyCheckpointScene())
             {
                 meta?.SavePersistentState();
@@ -256,7 +278,8 @@ namespace Project.UI
 
         private bool CanPause()
         {
-            if (isPaused || isLeaving)
+            if (isPaused || isLeaving || (Project.UI.Training.TrainingConfigurationPanel.Instance != null
+                && Project.UI.Training.TrainingConfigurationPanel.Instance.IsOpen))
             {
                 return false;
             }

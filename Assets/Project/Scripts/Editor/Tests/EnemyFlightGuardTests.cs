@@ -479,7 +479,7 @@ public class EnemyFlightGuardTests
         Assert.That(clip.length, Is.EqualTo(.2f).Within(.001f));
         Assert.That(clip.isLooping, Is.False);
         Assert.That(kit.HitWindowDuration, Is.EqualTo(.15f));
-        Assert.That(kit.AttackCooldown, Is.EqualTo(1.17f));
+        Assert.That(kit.AttackCooldown, Is.EqualTo(1.5f));
     }
 
     [TestCase("EnemyCore/EnemyCore")]

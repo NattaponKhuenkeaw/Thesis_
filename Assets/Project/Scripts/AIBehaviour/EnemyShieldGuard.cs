@@ -32,6 +32,8 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     private RigidbodyConstraints2D originalConstraints;
 
     public GuardPhase Phase { get; private set; }
+    public float WindupProgress => Phase == GuardPhase.Windup
+        ? Mathf.Clamp01(phaseElapsed / Mathf.Max(.05f, windupDuration)) : 0f;
     public bool IsEngaged => Phase != GuardPhase.Inactive;
     public float EngagementRange => Mathf.Max(.1f, enemy != null
         ? enemy.ResolveAttackRange(detectionRadius) : detectionRadius);

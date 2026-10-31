@@ -23,6 +23,8 @@ public class EnemyNoticeCombatRegistrationTests
         player = new GameObject("NoticePlayer") { tag = "Player" };
         cameraHost = new GameObject("NoticeCamera");
         camera = cameraHost.AddComponent<CameraManager>();
+        // EditMode AddComponent does not invoke this non-ExecuteAlways component's Awake.
+        CameraManager.instance = camera;
         Set(camera, "_playerTransform", player.transform);
 
         enemyHost = new GameObject("NoticeEnemy");

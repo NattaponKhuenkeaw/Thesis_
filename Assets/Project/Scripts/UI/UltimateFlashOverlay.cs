@@ -214,6 +214,13 @@ public class UltimateFlashOverlay : MonoBehaviour
             impactFlashCoroutine = null;
         }
 
+        if (settings.DurationFrames <= 0)
+        {
+            SetAlpha(0f);
+            return;
+        }
+
+        FitToCamera();
         impactFlashCoroutine = StartCoroutine(ImpactFlashRoutine(settings));
     }
 
@@ -300,19 +307,12 @@ public class UltimateFlashOverlay : MonoBehaviour
         }
 
         Color flashColor = settings.flashColor;
-        float peakAlpha = Mathf.Clamp01(settings.peakAlpha);
-        int fadeOutFrames = Mathf.Max(1, settings.fadeOutFrames);
-        float fadeDuration = fadeOutFrames / (float)CombatCore.FrameDataConstants.LOGIC_FPS;
-
-        flashRenderer.color = WithAlpha(flashColor, peakAlpha);
-
-        float elapsed = 0f;
-        while (elapsed < fadeDuration)
+        float elapsedFrames = 0f;
+        while (elapsedFrames < settings.DurationFrames)
         {
+            flashRenderer.color = WithAlpha(flashColor, settings.SampleAlpha(elapsedFrames));
             yield return null;
-            elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / fadeDuration);
-            flashRenderer.color = WithAlpha(flashColor, peakAlpha * (1f - t));
+            elapsedFrames += Time.unscaledDeltaTime * CombatCore.FrameDataConstants.LOGIC_FPS;
         }
 
         SetAlpha(0f);

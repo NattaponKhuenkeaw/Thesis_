@@ -50,6 +50,8 @@ public partial class CameraManager
         _actionMotionFrame = eventStartFrame;
         _actionMotionFacing = capturedFacing >= 0 ? 1 : -1;
         GetComponentsInChildren(true, _actionMotionCameras);
+        if (_trainingMode && _combatCam != null && !_actionMotionCameras.Contains(_combatCam))
+            _actionMotionCameras.Add(_combatCam);
         for (int i = 0; i < _actionMotionCameras.Count; i++)
         {
             CinemachineCamera camera = _actionMotionCameras[i];

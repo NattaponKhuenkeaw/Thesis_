@@ -41,7 +41,7 @@ namespace Project.TeamBuilder.UI
         private CanvasGroup canvasGroup;
         private Canvas rootCanvas;
         private Action<CharacterItem> clickCallback;
-        private PlayerRunInventory runInventory;
+        private CharacterInventoryState runInventory;
         private bool isInTeam = false;
         private bool isSelected;
 
@@ -64,7 +64,7 @@ namespace Project.TeamBuilder.UI
             Canvas canvas,
             bool alreadyInTeam = false,
             Action<CharacterItem> onClicked = null,
-            PlayerRunInventory inventory = null)
+            CharacterInventoryState inventory = null)
         {
             characterItem = item;
             rootCanvas = canvas;

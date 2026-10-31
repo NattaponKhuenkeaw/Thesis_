@@ -12,6 +12,7 @@ public sealed class CutImpactVfxSource : MonoBehaviour
     private Camera _camera;
     private SpriteRenderer _sprite;
     private bool _manual, _preview, _suppressChromatic;
+    private bool _released;
     private float _frame, _lifetime;
     private Vector3 _start, _end;
     private float _halfWidth;
@@ -35,7 +36,7 @@ public sealed class CutImpactVfxSource : MonoBehaviour
 
     private void Begin(CutImpactDistortionSettings settings, Camera camera, CombatExecutionContext execution, bool preview)
     {
-        Stop(); _settings = settings; _camera = camera; _execution = execution; _preview = preview;
+        Stop(); _settings = settings; _camera = camera; _execution = execution; _preview = preview; _released = false;
         _frame = -1f;
         Sources.Add(this);
     }
@@ -56,8 +57,8 @@ public sealed class CutImpactVfxSource : MonoBehaviour
     private bool IsEligible(Camera camera)
     {
         if (_settings == null || !isActiveAndEnabled || (camera != _camera && !(_preview && camera.cameraType == CameraType.SceneView))) return false;
-        if (!_preview && (_execution == null || !_execution.IsOnField)) return false;
-        if (!_manual && !_preview && (_execution.owner.CurrentExecution != _execution || !_execution.owner.IsAttacking())) return false;
+        if (!_released && !_preview && (_execution == null || !_execution.IsOnField)) return false;
+        if (!_released && !_manual && !_preview && (_execution.owner.CurrentExecution != _execution || !_execution.owner.IsAttacking())) return false;
         return _manual || (_sprite != null && _sprite.enabled && _sprite.sprite != null
             && !_sprite.forceRenderingOff && _sprite.color.a > 0.002f && _frame < _lifetime);
     }
@@ -110,6 +111,8 @@ public sealed class CutImpactVfxSource : MonoBehaviour
         }
         return false;
     }
+
+    public void ReleaseToLifetime() => _released = true;
 
     public void Stop()
     {

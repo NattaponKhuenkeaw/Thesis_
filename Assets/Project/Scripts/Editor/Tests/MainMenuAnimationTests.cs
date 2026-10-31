@@ -31,12 +31,12 @@ public class MainMenuAnimationTests
             Assert.That(intro, Is.Not.Null);
             Assert.That(Get<CanvasGroup[]>(intro, "backgroundGroups").All(x => x != null), Is.True);
             Assert.That(Get<CanvasGroup>(intro, "logoGroup"), Is.Not.Null);
-            Assert.That(Get<CanvasGroup[]>(intro, "buttonGroups").Length, Is.EqualTo(3));
+            Assert.That(Get<CanvasGroup[]>(intro, "buttonGroups").Length, Is.EqualTo(4));
             Assert.That(Get<GameObject>(menu, "mainPanel").GetComponent<CanvasGroup>(), Is.Not.Null);
-            Assert.That(Get<float>(intro, "buttonsDelay") + Get<float>(intro, "buttonStagger") * 2 + Get<float>(intro, "buttonFade"), Is.LessThanOrEqualTo(.7f));
+            Assert.That(Get<float>(intro, "buttonsDelay") + Get<float>(intro, "buttonStagger") * 3 + Get<float>(intro, "buttonFade"), Is.LessThanOrEqualTo(.7f));
             foreach (string field in new[] { "settingsPanel", "confirmPanel" })
                 Assert.That(Get<GameObject>(menu, field).GetComponent<UIVisibilityTransition>(), Is.Not.Null);
-            foreach (string field in new[] { "playButton", "settingsButton", "quitButton" })
+            foreach (string field in new[] { "playButton", "trainingButton", "settingsButton", "quitButton" })
                 Assert.That(Get<Button>(menu, field).GetComponent<UIMenuButtonAccent>(), Is.Not.Null);
             var save = Resources.Load<SaveSelectPanel>("UI/SaveSelectPanel");
             Assert.That(Get<UIVisibilityTransition>(save, "visibilityTransition"), Is.Not.Null);

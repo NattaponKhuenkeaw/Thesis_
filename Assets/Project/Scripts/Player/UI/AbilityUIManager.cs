@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Drives Skill, Ultimate, Dash cooldowns and committed normal-attack feedback.
+/// Displays resolver action icons/windows, cooldowns and committed normal-attack feedback.
 ///
 /// Per-slot elements (Skill and Ultimate each have their own set):
 ///   CooldownOverlay  — fillAmount 1→0 while cooling down;
 ///                      on expiry: rushes 0→1 then deactivates ("ready rush").
 ///   Icon             — alpha 1.0 when ready, 0.39 (≈100/255) when not ready.
-///   FollowUpOverlay  — fillAmount 1→0 during an active follow-up window.
-///                      Shown whenever a window is active, no ground-condition gate.
+///   Opportunity ring — expanding outline during an active follow-up window.
+///                      Uses the selected action's context and availability.
 ///   CountdownText    — counts down remaining cooldown seconds.
 ///
 /// Ultimate only:
@@ -26,12 +26,13 @@ public class AbilityUIManager : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private PlayerCharacter playerCharacter;
+    [SerializeField] private Sprite defaultActionIcon;
 
     // ─── Skill Slot ──────────────────────────────────────────────────────────
     [Header("Skill Slot")]
     [SerializeField] private Image skillCooldownOverlay;
     [SerializeField] private Image skillIcon;
-    [SerializeField] private Image skillFollowUpOverlay;
+    [SerializeField] private TimedOpportunityGraphic skillWindowEffect;
     [SerializeField] private TMP_Text skillCountdownText;
     [SerializeField] private RectTransform skillFeedbackRoot;
 
@@ -39,7 +40,7 @@ public class AbilityUIManager : MonoBehaviour
     [Header("Ultimate Slot")]
     [SerializeField] private Image ultCooldownOverlay;
     [SerializeField] private Image ultIcon;
-    [SerializeField] private Image ultFollowUpOverlay;
+    [SerializeField] private TimedOpportunityGraphic ultWindowEffect;
     [SerializeField] private TMP_Text ultCountdownText;
     [SerializeField] private Image ultAEOverlay;
     [SerializeField] private RectTransform ultFeedbackRoot;
@@ -52,6 +53,19 @@ public class AbilityUIManager : MonoBehaviour
 
     [Header("Normal Attack Slot")]
     [SerializeField] private RectTransform normalAttackFeedbackRoot;
+    [SerializeField] private Image normalAttackIcon;
+    [SerializeField] private TimedOpportunityGraphic normalAttackWindowEffect;
+
+    private readonly Dictionary<Image, Sprite> _defaultIcons = new();
+    private struct ActionDisplayState
+    {
+        public CombatAction action;
+        public bool available;
+    }
+    private ActionDisplayState _normalDisplay;
+    private ActionDisplayState _skillDisplay;
+    private ActionDisplayState _ultimateDisplay;
+    private bool _normalFollowUpWasActive;
 
     // ─── Ready Rush ──────────────────────────────────────────────────────────
     [Header("Ready Rush")]
@@ -143,10 +157,12 @@ public class AbilityUIManager : MonoBehaviour
         if (Instance == null) Instance = this;
         CacheReferences();
         feedbackDriver = UIFeedbackDriver.GetOrAdd(gameObject);
-        ResetSlot(skillCooldownOverlay, skillCountdownText, skillFollowUpOverlay, skillIcon);
-        ResetSlot(ultCooldownOverlay, ultCountdownText, ultFollowUpOverlay, ultIcon);
+        CacheDefaultIcons();
+        ResetSlot(skillCooldownOverlay, skillCountdownText, skillIcon);
+        ResetSlot(ultCooldownOverlay, ultCountdownText, ultIcon);
         SetOverlayFill(ultAEOverlay, 0f, active: false);
-        ResetSlot(dashCooldownOverlay, dashCountdownText, null, dashIcon);
+        ResetSlot(dashCooldownOverlay, dashCountdownText, dashIcon);
+        ClearWindowEffects();
     }
 
     private void Start()
@@ -169,6 +185,7 @@ public class AbilityUIManager : MonoBehaviour
     private void OnDisable()
     {
         UnbindPlayer();
+        ClearWindowEffects();
         if (teamLoader != null)
             teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
     }
@@ -321,6 +338,16 @@ public class AbilityUIManager : MonoBehaviour
         string characterKey = GetCurrentCharacterKey();
         displayedCharacterKey = characterKey;
 
+        CacheDefaultIcons();
+        _normalDisplay = ResolveActionDisplay(AttackCategory.Normal);
+        _skillDisplay = ResolveActionDisplay(AttackCategory.Skill);
+        _ultimateDisplay = ResolveActionDisplay(AttackCategory.Ultimate);
+        UpdateActionIcon(normalAttackIcon, ResolveCharacterActionIcon(AttackCategory.Normal, _normalDisplay.action));
+        UpdateActionIcon(skillIcon, ResolveCharacterActionIcon(AttackCategory.Skill, _skillDisplay.action));
+        UpdateActionIcon(ultIcon, ResolveCharacterActionIcon(AttackCategory.Ultimate, _ultimateDisplay.action));
+        SetIconAlpha(normalAttackIcon, AlphaReady);
+        UpdateWindowEffect(AttackCategory.Normal, normalAttackIcon, ref normalAttackWindowEffect,
+            ref _normalFollowUpWasActive, AbilityType.NormalAttack);
         UpdateSkillUI(characterKey);
         UpdateUltimateUI(characterKey);
         UpdateDashUI();
@@ -339,6 +366,8 @@ public class AbilityUIManager : MonoBehaviour
     private void UpdateDashUI()
     {
         PlayerMovement movement = playerCharacter != null ? playerCharacter.Movement : null;
+        CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
+        UpdateActionIcon(dashIcon, character != null && character.DashData != null ? character.DashData.icon : null);
         float remaining = movement != null ? movement.DashCooldownRemaining : 0f;
         float duration = movement != null ? movement.DashCooldownDuration : 0f;
         bool coolingDown = remaining > 0f;
@@ -379,8 +408,8 @@ public class AbilityUIManager : MonoBehaviour
         // While rush is playing, TickRush() owns the overlay — skip cooldown draw
         if (skillRush.isRushing)
         {
-            // Still update follow-up and countdown even during rush
-            UpdateFollowUpOverlay(AttackCategory.Skill, skillFollowUpOverlay,
+            // Still update window effect and countdown even during rush
+            UpdateWindowEffect(AttackCategory.Skill, skillIcon, ref skillWindowEffect,
                 ref skillFollowUpWasActiveLastFrame, AbilityType.Skill);
             SetTextActive(skillCountdownText, false);
             skillWasReadyLastFrame = true;
@@ -388,7 +417,8 @@ public class AbilityUIManager : MonoBehaviour
         }
 
         // ── Cooldown ────────────────────────────────────────────────────────
-        SkillAction resolvedAction = ResolveDisplayedActionContextFree(AttackCategory.Skill) as SkillAction;
+        SkillAction resolvedAction = (_skillDisplay.action
+            ?? ResolveDisplayedActionContextFree(AttackCategory.Skill)) as SkillAction;
         float remainingCooldown = resolvedAction != null
             && playerCharacter != null
             && playerCharacter.Combat != null
@@ -439,8 +469,8 @@ public class AbilityUIManager : MonoBehaviour
 
         skillWasReadyLastFrame = !onCooldown;
 
-        // ── Follow-Up Overlay ────────────────────────────────────────────────
-        UpdateFollowUpOverlay(AttackCategory.Skill, skillFollowUpOverlay,
+        // ── Opportunity Outline ────────────────────────────────────────────────
+        UpdateWindowEffect(AttackCategory.Skill, skillIcon, ref skillWindowEffect,
             ref skillFollowUpWasActiveLastFrame, AbilityType.Skill);
     }
 
@@ -453,7 +483,8 @@ public class AbilityUIManager : MonoBehaviour
         CharacterObject currentCharacter = playerCharacter != null ? playerCharacter.characterObject : null;
         if (currentCharacter == null || teamLoader == null)
         {
-            ResetSlot(ultCooldownOverlay, ultCountdownText, ultFollowUpOverlay, ultIcon);
+            ResetSlot(ultCooldownOverlay, ultCountdownText, ultIcon);
+            if (ultWindowEffect != null) ultWindowEffect.Clear();
             SetOverlayFill(ultAEOverlay, 0f, active: false);
             ultimateWasReadyLastFrame          = false;
             ultimateFollowUpWasActiveLastFrame = false;
@@ -464,7 +495,8 @@ public class AbilityUIManager : MonoBehaviour
         // ── Resolve ultimate action data ─────────────────────────────────────
         // Use context-free resolution so cooldown display works regardless of
         // whether the player is grounded or airborne.
-        UltimateAction resolvedAction = ResolveDisplayedActionContextFree(AttackCategory.Ultimate) as UltimateAction;
+        UltimateAction resolvedAction = (_ultimateDisplay.action
+            ?? ResolveDisplayedActionContextFree(AttackCategory.Ultimate)) as UltimateAction;
 
         float currentAE        = teamLoader.GetCharacterCurrentAE(currentCharacter);
         float maxAE            = teamLoader.GetCharacterMaxAE(currentCharacter);
@@ -527,55 +559,124 @@ public class AbilityUIManager : MonoBehaviour
 
         ultimateWasReadyLastFrame = isReady;
 
-        // ── Follow-Up Overlay ────────────────────────────────────────────────
-        UpdateFollowUpOverlay(AttackCategory.Ultimate, ultFollowUpOverlay,
+        // ── Opportunity Outline ────────────────────────────────────────────────
+        UpdateWindowEffect(AttackCategory.Ultimate, ultIcon, ref ultWindowEffect,
             ref ultimateFollowUpWasActiveLastFrame, AbilityType.Ultimate);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Follow-Up Overlay (shared for Skill + Ultimate)
+    // Opportunity Outline (shared for Skill + Ultimate)
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Shows the follow-up overlay (fill 1→0) whenever a passive availability
-    /// window is active, regardless of ground/air state.
-    /// Fires the ready feedback on the transition into the window.
-    /// </summary>
-    private void UpdateFollowUpOverlay(
-        AttackCategory category,
-        Image overlay,
-        ref bool wasActiveLastFrame,
-        AbilityType feedbackType)
+    private void UpdateWindowEffect(
+        AttackCategory category, Image icon, ref TimedOpportunityGraphic effect,
+        ref bool wasActiveLastFrame, AbilityType feedbackType)
     {
+        if (effect == null && icon != null) effect = TimedOpportunityGraphic.GetOrCreate(icon);
         FollowUpWindowState window = GetFollowUpWindowState(category);
-
-        if (window.active)
-        {
-            // fill 1 → 0 as window drains
-            float ratio = Mathf.Clamp01(window.remaining / window.duration);
-            SetOverlayFill(overlay, ratio, active: true);
-
-            if (!wasActiveLastFrame)
-                PlayAbilityReadyFeedback(feedbackType);
-        }
-        else
-        {
-            SetOverlayFill(overlay, 0f, active: false);
-        }
-
+        bool reduceMotion = teamLoader != null && teamLoader.QteSwaps != null
+            && teamLoader.QteSwaps.reduceUiMotion;
+        if (effect != null) effect.SetPresentation(window.active, reduceMotion, Time.timeScale <= 0f);
+        if (window.active && !wasActiveLastFrame && !reduceMotion)
+            PlayAbilityReadyFeedback(feedbackType);
         wasActiveLastFrame = window.active;
+    }
+
+    private void ClearWindowEffects()
+    {
+        if (normalAttackWindowEffect != null) normalAttackWindowEffect.Clear();
+        if (skillWindowEffect != null) skillWindowEffect.Clear();
+        if (ultWindowEffect != null) ultWindowEffect.Clear();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Data Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    private CombatAction ResolveDisplayedAction(AttackCategory category)
+    private void CacheDefaultIcons()
     {
-        if (playerCharacter == null
-            || !playerCharacter.TryResolveActionForContext(category, out CombatAction action, out _))
+        CacheDefaultIcon(normalAttackIcon, defaultActionIcon);
+        CacheDefaultIcon(skillIcon, defaultActionIcon);
+        CacheDefaultIcon(ultIcon, defaultActionIcon);
+        CacheDefaultIcon(dashIcon);
+    }
+
+    private void CacheDefaultIcon(Image icon, Sprite fallback = null)
+    {
+        if (icon == null) return;
+        if (!_defaultIcons.ContainsKey(icon))
+            _defaultIcons.Add(icon, icon.sprite != null ? icon.sprite : fallback);
+        else if (_defaultIcons[icon] == null && icon.sprite != null)
+            _defaultIcons[icon] = icon.sprite;
+    }
+
+    private void UpdateActionIcon(Image image, CombatAction action)
+    {
+        UpdateActionIcon(image, action != null ? action.icon : null);
+    }
+
+    private Sprite ResolveCharacterActionIcon(AttackCategory category, CombatAction selectedAction)
+    {
+        if (selectedAction != null && selectedAction.icon != null)
+            return selectedAction.icon;
+
+        CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
+        CharacterKitDefinition kit = character != null ? character.kitDefinition : null;
+        if (category == AttackCategory.Skill && kit?.skill?.icon != null)
+            return kit.skill.icon;
+        if (category == AttackCategory.Ultimate && kit?.ultimate?.icon != null)
+            return kit.ultimate.icon;
+
+        if (category != AttackCategory.Normal || character == null || character.actionResolverTable == null)
             return null;
-        return action;
+
+        bool grounded = playerCharacter.StateMachine == null || playerCharacter.StateMachine.IsGroundedContext;
+        CombatActionContext expectedContext = grounded ? CombatActionContext.Ground : CombatActionContext.Air;
+        IReadOnlyList<ComboAction> actions = character.actionResolverTable.comboActions;
+        if (actions == null)
+            return null;
+
+        for (int i = 0; i < actions.Count; i++)
+        {
+            ComboAction action = actions[i];
+            if (action != null && action.icon != null
+                && (action.context == CombatActionContext.Both || action.context == expectedContext))
+                return action.icon;
+        }
+
+        return null;
+    }
+
+    private void UpdateActionIcon(Image image, Sprite actionIcon)
+    {
+        if (image == null) return;
+        CacheDefaultIcon(image);
+        Sprite fallback = _defaultIcons.TryGetValue(image, out Sprite defaultIcon) ? defaultIcon : null;
+        image.sprite = actionIcon != null ? actionIcon : fallback;
+        image.type = Image.Type.Simple;
+        image.fillAmount = 1f;
+    }
+
+    private ActionDisplayState ResolveActionDisplay(AttackCategory category)
+    {
+        if (playerCharacter == null) return default;
+        // ResolveInitial can select an action before discovering that its current
+        // route has no executable step. The resolver still supplies the correct
+        // context/condition-matched action icon in that case, so use the action
+        // output independently from the method's step-success return value.
+        playerCharacter.TryResolveActionForContext(category, out CombatAction action, out _,
+            requireAvailability: true);
+        if (action != null)
+            return new ActionDisplayState { action = action, available = true };
+
+        // A cooldown or resource gate can make the action unavailable without
+        // making its current context-specific icon ambiguous. The resolver still
+        // enforces Ground/Air and action conditions when availability is omitted.
+        playerCharacter.TryResolveActionForContext(category, out action, out _);
+        if (action != null)
+            return new ActionDisplayState { action = action, available = false };
+
+        return default;
     }
 
     /// <summary>
@@ -627,13 +728,12 @@ public class AbilityUIManager : MonoBehaviour
     private FollowUpWindowState GetFollowUpWindowState(AttackCategory category)
     {
         FollowUpWindowState state = default;
+        ActionDisplayState display = category == AttackCategory.Normal ? _normalDisplay
+            : category == AttackCategory.Skill ? _skillDisplay : _ultimateDisplay;
+        CombatAction action = display.action;
         if (playerCharacter == null
             || playerCharacter.PassiveController == null
-            || !playerCharacter.TryResolveActionForContext(
-                category,
-                out CombatAction action,
-                out _,
-                requireAvailability: true)
+            || !display.available
             || action == null)
             return state;
 
@@ -688,10 +788,9 @@ public class AbilityUIManager : MonoBehaviour
     }
 
     /// <summary>Fully resets a slot to its default (inactive) state.</summary>
-    private static void ResetSlot(Image cooldownOverlay, TMP_Text countdownText, Image followUpOverlay, Image icon)
+    private static void ResetSlot(Image cooldownOverlay, TMP_Text countdownText, Image icon)
     {
         SetOverlayFill(cooldownOverlay,  0f, active: false);
-        SetOverlayFill(followUpOverlay,  0f, active: false);
         SetTextActive(countdownText, false);
         SetIconAlpha(icon, AlphaReady);
     }
@@ -762,18 +861,25 @@ public class AbilityUIManager : MonoBehaviour
 
     private void CacheReferences()
     {
-        if (playerCharacter == null)
-            playerCharacter = FindFirstObjectByType<PlayerCharacter>();
-
         if (teamLoader == null)
         {
-            teamLoader = FindFirstObjectByType<TeamLoader>();
+            teamLoader = TeamLoader.Instance != null
+                ? TeamLoader.Instance
+                : FindFirstObjectByType<TeamLoader>();
             if (teamLoader != null)
             {
                 teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
                 teamLoader.OnCharacterAuraEnergyUpdated += HandleCharacterAuraEnergyUpdated;
             }
         }
+
+        // TeamLoader owns the active combat player. Prefer its reference over
+        // FindFirstObjectByType, which can select an unrelated player in scenes
+        // that keep multiple PlayerCharacter objects alive.
+        if (teamLoader != null && teamLoader.playerCharacter != null)
+            playerCharacter = teamLoader.playerCharacter;
+        else if (playerCharacter == null)
+            playerCharacter = FindFirstObjectByType<PlayerCharacter>();
     }
 
     private void HandleCharacterAuraEnergyUpdated(CharacterObject character, float currentAE, float maxAE)
@@ -815,6 +921,7 @@ public class AbilityUIManager : MonoBehaviour
         skillWasReadyLastFrame             = false;
         skillFollowUpWasActiveLastFrame    = false;
         ultimateFollowUpWasActiveLastFrame = false;
+        _normalFollowUpWasActive           = false;
         skillRush                          = default;
         ultRush                            = default;
         lastObservedUltimateAE             = GetCurrentAuraEnergy();

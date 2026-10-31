@@ -39,6 +39,18 @@ public class ActionResolver
         fsm = stateMachine;
     }
 
+    public void AdoptResolved(ActionResolver preview)
+    {
+        // Commit the exact validated route, including its follow-ups, without resolving twice.
+        currentNode = preview.currentNode;
+        activeTree = preview.activeTree;
+        activeStandalone = preview.activeStandalone;
+        treeDepth = preview.treeDepth;
+        activeActionStartedAirborne = preview.activeActionStartedAirborne;
+        ActiveCombatAction = preview.ActiveCombatAction;
+        LastMatchedConditions = preview.LastMatchedConditions;
+    }
+
     private void Log(string message, Color color)
     {
         if (fsm != null && fsm.showCombatLogs)

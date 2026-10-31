@@ -184,10 +184,16 @@ public class InputHandler_Player : MonoBehaviour
             ReleaseUltimateGesture();
             return;
         }
+        BeginUltimateGesture();
+    }
+
+    private void BeginUltimateGesture()
+    {
         if (ultimatePressed) return;
         ultimatePressed = true;
 
         PlayerCharacter actor = stateMachine != null ? stateMachine.playerCharacter : null;
+        ultimateInputCharacter = actor != null ? actor.characterObject : null;
         // Resolve the hold candidate through the same authored conditions and
         // locomotion context. Characters without one keep immediate press input.
         if (actor != null && actor.TryResolveActionForContext(AttackCategory.Ultimate,
@@ -197,7 +203,6 @@ public class InputHandler_Player : MonoBehaviour
             ultimatePending = true;
             ultimatePressedAt = Time.unscaledTime;
             ultimateHoldDuration = Mathf.Max(0.01f, ultimate.holdDuration);
-            ultimateInputCharacter = actor.characterObject;
             return;
         }
         DispatchUltimateGesture(held: false);
@@ -231,13 +236,19 @@ public class InputHandler_Player : MonoBehaviour
         && !Project.UI.PauseMenuController.IsOpen && !InteractableWorldUI.IsPlayerInInteractableArea
         && stateMachine != null && stateMachine.playerCharacter != null
         && playerInput != null && playerInput.currentActionMap != null && playerInput.currentActionMap.enabled
-        && (!ultimatePending || stateMachine.playerCharacter.characterObject == ultimateInputCharacter);
+        && stateMachine.playerCharacter.characterObject == ultimateInputCharacter;
 
     private void ReleaseUltimateGesture()
     {
-        if (ultimatePending && IsUltimateGestureValid())
+        if (!IsUltimateGestureValid())
+        {
+            CancelUltimateGesture();
+            return;
+        }
+        if (ultimatePending)
             DispatchUltimateGesture(Time.unscaledTime - ultimatePressedAt >= ultimateHoldDuration);
-        CancelUltimateGesture();
+        stateMachine?.InputBuffer?.ReleaseUltimateHold();
+        CancelUltimateGesture(clearBuffer: false);
     }
 
     private void DispatchUltimateGesture(bool held)
@@ -245,10 +256,12 @@ public class InputHandler_Player : MonoBehaviour
         ultimatePending = false;
         stateMachine?.InputBuffer?.SetDirectionalInput(GetLatestMoveInput());
         stateMachine?.RouteUltimateInput(held);
+        if (held && ultimatePressed) stateMachine?.InputBuffer?.SustainUltimateHold();
     }
 
-    private void CancelUltimateGesture()
+    private void CancelUltimateGesture(bool clearBuffer = true)
     {
+        if (clearBuffer && ultimatePressed) stateMachine?.InputBuffer?.ClearUltimate();
         ultimatePressed = false;
         ultimatePending = false;
         ultimateInputCharacter = null;
@@ -291,12 +304,38 @@ public class InputHandler_Player : MonoBehaviour
         if (Keyboard.current == null || stateMachine == null || stateMachine.InputBuffer == null)
             return;
 
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
-            stateMachine.InputBuffer.BufferSwitch(0);
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
-            stateMachine.InputBuffer.BufferSwitch(1);
+        if (Keyboard.current.digit1Key.wasPressedThisFrame
+            || Keyboard.current.numpad1Key.wasPressedThisFrame)
+        {
+            int targetIndex = FindNextLivingTeamSwitchTarget();
+            if (targetIndex >= 0)
+                stateMachine.InputBuffer.BufferSwitch(targetIndex);
+        }
 
         stateMachine.TryConsumeBufferedSwitch();
+    }
+
+    private int FindNextLivingTeamSwitchTarget()
+    {
+        if (teamLoader == null)
+            teamLoader = stateMachine != null ? stateMachine.teamLoader : null;
+        if (teamLoader == null)
+            return -1;
+
+        CharacterObject[] roster = teamLoader.GetTeamSnapshot();
+        if (roster == null || roster.Length == 0)
+            return -1;
+
+        int currentIndex = Mathf.Clamp(teamLoader.CurrentIndex, 0, roster.Length - 1);
+        for (int offset = 1; offset < roster.Length; offset++)
+        {
+            int candidateIndex = (currentIndex + offset) % roster.Length;
+            CharacterObject candidate = roster[candidateIndex];
+            if (candidate != null && teamLoader.IsCharacterAlive(candidate))
+                return candidateIndex;
+        }
+
+        return -1;
     }
 
     private Vector2 GetLatestMoveInput()
@@ -325,6 +364,9 @@ public class InputHandler_Player : MonoBehaviour
         if (!isMouseActive && !isTouchActive)
             return false;
 
+        if (isMouseActive && CombatCore.TrainingDebugHUD.IsPointerOverHud(Mouse.current.position.ReadValue()))
+            return true;
+
         if (isTouchActive)
         {
             var touches = Touchscreen.current.touches;
@@ -333,6 +375,7 @@ public class InputHandler_Player : MonoBehaviour
                 var touch = touches[i];
                 if (touch.press.isPressed)
                 {
+                    if (CombatCore.TrainingDebugHUD.IsPointerOverHud(touch.position.ReadValue())) return true;
                     PointerEventData touchData = new PointerEventData(EventSystem.current)
                     {
                         position = touch.position.ReadValue()

@@ -12,6 +12,8 @@ blocked_by: []
 
 Automated Editor checks: `Tools/Neo-JJK/UI/Validate TeamBuilder Inventory Layout` uses an isolated prefab preview scene and a temporary inventory. It checks three columns with clipped vertical scrolling, asset sources, initial-hidden previews, preview-before-assignment, current-character disabling, swap/equip routing, category/destination/reopen resets, combat editing lock, three artifact slots, active indicator, complete slot visibility at 16:9 and 4:3, white overlay input behavior, unchanged content scale, and inventory slide/fade poses.
 
+Empty-slot regression: Empty team character slots show only a centered `+` with no portrait, `Empty` label or overlay. Empty artifact slots show a centered `+` with no fallback art. Clicking `+` still opens/selects the destination, and assigning, swapping, removing and dragging filled slots continue to work.
+
 Regression fixtures: `Tools/Neo-JJK/UI/Validate TeamBuilder Feedback Regression` runs `ShadowMeterTests` and `AbilityUIFeedbackTests` in the existing isolated-scene runner.
 
 Manual gameplay review:

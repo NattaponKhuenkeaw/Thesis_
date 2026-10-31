@@ -1,0 +1,11 @@
+# MAX CANCEL presentation and VFX lifetime validation
+
+User-requested sequence implemented with the existing GNF TTF font, left entrance/fade, expanding white text aura, continuous right drift, and right exit/fade. The resource label prefab retains the font reference in builds. Twenty-eight frames were rendered with a native Unity camera; representative phases were inspected, including correction of the aura's scaling pivot. The GIF is assembled from those native frames on a neutral background, rather than a live combat recording.
+
+Already spawned procedural, timeline sprite and QTE plunge visuals finish independently after interruption. Procedural fields relinquish actor hiding and step-frame sampling, then advance to their authored end on a scaled clock. Timeline VFX retain their own playback coroutine and captured transform space; playback generations prevent stale cleanup from touching an instance already reused by another action. Released cut distortion follows the visible effect. QTE tails detach after contact; pre-contact interruption fades existing geometry and particles without generating impact. Normal action cleanup still owns movement, camera, hitboxes and resource/input policy.
+
+Native focused validation: **155 passed, 0 failed**, completed **2026-10-29 16:17:56 UTC / 23:17 Bangkok**. Fixture totals: ActionVfxLifetimeTests 13, MainMeterMaxCancelTests 31, MainDimensionSlashTests selected cases 8, QteTeamSwapTests 34, ShadowMeterTests 69. Runtime and Editor compilation succeed, and a fresh console read has no errors. Scoped diff whitespace checks pass. Source XML is `Temp/main-meter-qte-max-cancel-tests.xml`.
+
+Artifacts: [animated native UI preview](MaxCancelPresentation/max-cancel-sequence.gif), [sampled phases](MaxCancelPresentation/max-cancel-phases.png), [machine-readable result](MaxCancelPresentation/native-validation-summary.json).
+
+The existing broad-suite failures recorded in `main-meter-max-cancel-validation.md` were not rerun for this scoped change and remain unresolved. Native assertions/captures do not replace live gameplay density, performance or timing/feel approval. The user's existing dirty scene, prefab, progression and character-data edits were preserved; this follow-up authors only the new GNF label prefab.

@@ -126,7 +126,7 @@ namespace Project.Save
                 if (meta || bossRun || bossMeta)
                 {
                     string bossJson = PlayerPrefs.GetString(BossRunKey(0), string.Empty);
-                    if (!Project.ShopSystem.PlayerRunInventory.TryBuildHeaderFromBossJson(bossJson, out SaveSlotHeader header))
+                    if (!Project.ShopSystem.CharacterInventoryState.TryBuildHeaderFromBossJson(bossJson, out SaveSlotHeader header))
                     {
                         header = new SaveSlotHeader();
                     }

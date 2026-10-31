@@ -17,6 +17,7 @@ public class ActionInputBuffer
     private float skillBufferedUntil  = -999f;
     private float ultimateBufferedUntil = -999f;
     private bool ultimateInputHeld;
+    private bool ultimateHoldSustained;
     private float switchBufferedUntil = -999f;
 
     // Directional input snapshot at time of buffer
@@ -46,7 +47,7 @@ public class ActionInputBuffer
     public bool HasDashBuffer   => Time.time <= dashBufferedUntil;
     public bool HasJumpBuffer   => Time.time <= jumpBufferedUntil;
     public bool HasSkillBuffer  => Time.time <= skillBufferedUntil;
-    public bool HasUltimateBuffer => Time.time <= ultimateBufferedUntil;
+    public bool HasUltimateBuffer => ultimateHoldSustained || Time.time <= ultimateBufferedUntil;
     public bool UltimateInputHeld => HasUltimateBuffer && ultimateInputHeld;
     public bool HasSwitchBuffer => Time.time <= switchBufferedUntil;
     public int BufferedSwitchTarget => HasSwitchBuffer ? switchTargetIndex : -1;
@@ -91,8 +92,30 @@ public class ActionInputBuffer
     public void BufferUltimate(float duration = DEFAULT_BUFFER_DURATION, bool held = false)
     {
         ultimateInputHeld = held;
+        ultimateHoldSustained = false;
         ultimateBufferedUntil = Time.time + duration;
         Log($"Buffered <b>Ultimate</b> for {duration}s");
+    }
+
+    // A charged physical hold remains intentional until release or consumption.
+    // Never recreate an input that routing has already consumed.
+    public void SustainUltimateHold()
+    {
+        if (UltimateInputHeld) ultimateHoldSustained = true;
+    }
+
+    public void ReleaseUltimateHold()
+    {
+        if (!ultimateHoldSustained) return;
+        ultimateHoldSustained = false;
+        ultimateBufferedUntil = Time.time + DEFAULT_BUFFER_DURATION;
+    }
+
+    public void ClearUltimate()
+    {
+        ultimateBufferedUntil = -999f;
+        ultimateInputHeld = false;
+        ultimateHoldSustained = false;
     }
 
     public void BufferSwitch(int targetIndex, float duration = SWITCH_BUFFER_DURATION)
@@ -181,8 +204,7 @@ public class ActionInputBuffer
         dashBufferedUntil   = -999f;
         jumpBufferedUntil   = -999f;
         skillBufferedUntil  = -999f;
-        ultimateBufferedUntil = -999f;
-        ultimateInputHeld = false;
+        ClearUltimate();
         switchBufferedUntil = -999f;
         dashInputX = 0f;
         switchTargetIndex = -1;

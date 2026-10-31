@@ -23,7 +23,8 @@ public partial class PlayerMovement
         Vector2 footOffset = (Vector2)groundCheck.position - rb.position;
         // The entry arrives above the target; only its vertical descent crosses terrain.
         Vector2 startFoot = start + footOffset;
-        float probeDistance = Mathf.Max(0.3f, startFoot.y - Mathf.Min(targetPosition.y, groundCheck.position.y) + 0.3f);
+        // Enemy origins can sit a body-height above support on a lower platform.
+        float probeDistance = Mathf.Max(0.3f, startFoot.y - Mathf.Min(targetPosition.y + footOffset.y, groundCheck.position.y) + 0.3f);
         var filter = new ContactFilter2D();
         filter.SetLayerMask(GetGroundCheckMask());
         filter.useTriggers = false;

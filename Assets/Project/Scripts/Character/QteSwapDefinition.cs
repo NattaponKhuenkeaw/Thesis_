@@ -21,6 +21,13 @@ public sealed class QteSwapDefinition
     [Tooltip("Spawn behind the outgoing character on X, mirrored by their facing direction. Then face the enemy.")]
     [FormerlySerializedAs("targetOffset"), Min(0f)] public float entryOffset = 1f;
     public AudioClip readySfx;
+    [Header("Committed Intro Reward")]
+    [Tooltip("Granted once when this character actually starts its QTE intro, never on readiness or an ordinary swap.")]
+    public string entryGrantTag;
+    public string entryGrantCounterId;
+    [Min(0)] public int entryGrantAmount;
+    [Tooltip("Manual action that consumes the entry marker; the counter itself uses normal action resource costs.")]
+    public string entryGrantConsumeActionId;
     [NonSerialized] private ActionResolverTable _cachedTable;
     [NonSerialized] private CombatAction _cachedAction;
     [NonSerialized] private AttackStepData _cachedStep;

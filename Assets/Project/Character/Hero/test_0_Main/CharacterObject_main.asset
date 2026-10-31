@@ -31,7 +31,8 @@ MonoBehaviour:
   metaData:
     displayName: Asura Shin
     description: 
-    portrait: {fileID: 21300000, guid: 2a8a8c8314f308f47a71f5e50ea91e12, type: 3}
+    icon: {fileID: 21300000, guid: e8a37ea1cc028f34bb96aca6051eb76a, type: 3}
+    portrait: {fileID: 21300000, guid: 011ac730786999640ad87686dae5ecf6, type: 3}
     animatorController: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
   auraEnergyRate: 1
   audioData: {fileID: 11400000, guid: ef4f15f931ec82243bf22d736d76277c, type: 2}
@@ -48,6 +49,7 @@ MonoBehaviour:
     maxHpPerLevel: 81
   _dashData:
     animationClip: {fileID: 7400000, guid: a3c837dc24c5bff43b19dd4e52b327ab, type: 2}
+    icon: {fileID: 21300000, guid: 44824257e67aada4fb2f557399e27c1d, type: 3}
     startupFrames: 5
     activeFrames: 12
     recoveryFrames: 12
@@ -66,22 +68,23 @@ MonoBehaviour:
     skill:
       abilityId: main.skill.dark_chain
       abilityName: Dark Chain
-      icon: {fileID: 0}
+      icon: {fileID: 21300000, guid: 7ee4ee77719136f42b9aedb077eb0098, type: 3}
       description: Unleash a chain across the field.
     ultimate:
       abilityId: main.ultimate.jailbreak_punisher
       abilityName: Jailbreak Punisher
-      icon: {fileID: 0}
+      icon: {fileID: 21300000, guid: 9ef1f814da0fabf428383fc49cca0531, type: 3}
       description: Tap Ultimate for Jailbreak Punisher. Hold Ultimate for Execution
         Breakdown. Open a Void Area that deals periodic Void damage. Inflict <color=#8B3DFF>Void</color>
         DMG 700% of ATK
     passive:
       abilityId: main.passive
       abilityName: Shadow Dimension
-      icon: {fileID: 0}
-      description: Land hits to build Shadow Meter. Each committed Dash spends one
-        ready 20-point box to cache a Dimension Cut. Normal Attack spends one cached
-        cut against an enemy; continue the combo to spend the remaining cuts. Stores
+      icon: {fileID: 21300000, guid: fd398c780027bbc4f9774dad91c8dfc9, type: 3}
+      description: Successful actions generate different amounts of Shadow Meter.
+        Execution Breakdown grants 5 per hit. Each committed Dash spends one ready
+        20-point box to cache a Dimension Cut. Normal Attack spends one cached cut
+        against an enemy; continue the combo to spend the remaining cuts. Stores
         2 meter boxes, up to 5 through Potential.
     baseSkillNode:
       meterCapacityModifiers: []
@@ -294,126 +297,6 @@ MonoBehaviour:
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
       counterEffects:
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 1
-          actionName: Ground
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        counterId: main.shadow
-        operation: 1
-        value: 2
-        destinationCounterId: 
-        destinationValue: 1
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 1
-          actionName: Air
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        counterId: main.shadow
-        operation: 1
-        value: 2
-        destinationCounterId: 
-        destinationValue: 1
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 1
-          stepName: Attack3
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        counterId: main.shadow
-        operation: 1
-        value: 2
-        destinationCounterId: 
-        destinationValue: 1
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 1
-          stepName: Attack6
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        counterId: main.shadow
-        operation: 1
-        value: 4
-        destinationCounterId: 
-        destinationValue: 1
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 1
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        counterId: main.shadow
-        operation: 1
-        value: 8
-        destinationCounterId: 
-        destinationValue: 1
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        counterId: main.shadow
-        operation: 1
-        value: 10
-        destinationCounterId: 
-        destinationValue: 1
       - trigger: 7
         filter:
           filterByCategory: 0
@@ -445,13 +328,15 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: base.passive
       nodeName: Base Passive
-      description: Land hits to build Shadow Meter. Each committed Dash spends one
-        ready 20-point box to cache a Dimension Cut. Normal Attack spends one cached
-        cut against an enemy; continue the combo to spend the remaining cuts. Stores
+      description: Successful actions generate different amounts of Shadow Meter.
+        Execution Breakdown grants 5 per hit. Each committed Dash spends one ready
+        20-point box to cache a Dimension Cut. Normal Attack spends one cached cut
+        against an enemy; continue the combo to spend the remaining cuts. Stores
         2 meter boxes, up to 5 through Potential.
-      skillPanelDescriptionOverride: Land hits to build Shadow Meter. Each committed
-        Dash spends one ready 20-point box to cache a Dimension Cut. Normal Attack
-        spends one cached cut against an enemy; continue the combo to spend the remaining
+      skillPanelDescriptionOverride: Successful actions generate different amounts
+        of Shadow Meter. Execution Breakdown grants 5 per hit. Each committed Dash
+        spends one ready 20-point box to cache a Dimension Cut. Normal Attack spends
+        one cached cut against an enemy; continue the combo to spend the remaining
         cuts. Stores 2 meter boxes, up to 5 through Potential.
       track: 2
       level: 0
@@ -1398,10 +1283,10 @@ MonoBehaviour:
       nodeName: Shadow Edge
       description: Shadow Meter capacity +1. Dimension Cut gains +15% CRIT RATE and
         its critical hits ignore enemy Defense.
-      skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
-        a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
-        3 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
-        Defense.
+      skillPanelDescriptionOverride: Successful actions generate different amounts
+        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
+        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
+        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
       track: 2
       level: 1
       fragmentCost: 1
@@ -1427,10 +1312,11 @@ MonoBehaviour:
       nodeId: main.passive.lv2
       nodeName: Chain Release
       description: Shadow Meter stores 3 boxes. Unlock Basic Attack stages 4-6.
-      skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
-        a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
-        3 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
-        Defense. Unlocks NA 4-6.
+      skillPanelDescriptionOverride: Successful actions generate different amounts
+        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
+        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
+        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
+        Unlocks NA 4-6.
       track: 2
       level: 2
       fragmentCost: 1
@@ -1488,10 +1374,11 @@ MonoBehaviour:
       nodeId: main.passive.lv3
       nodeName: Shadow Restoration
       description: Dimension Cut heals Main for 8% of its damage dealt.
-      skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
-        a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
-        3 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
-        Defense. Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt.
+      skillPanelDescriptionOverride: Successful actions generate different amounts
+        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
+        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
+        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
+        Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt.
       track: 2
       level: 3
       fragmentCost: 1
@@ -1509,7 +1396,7 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 2
+      - category: 1
         actionId: main.skill.dimension_slash
         actionName: 
         stepName: 
@@ -1660,7 +1547,7 @@ MonoBehaviour:
       - trigger: 1
         filter:
           filterByCategory: 1
-          category: 2
+          category: 1
           filterByActionId: 1
           actionId: main.skill.dimension_slash
           filterByActionName: 0
@@ -1709,13 +1596,14 @@ MonoBehaviour:
       nodeName: Shadow Domain
       description: Shadow Meter capacity +2, reaching 5 boxes. Main gains 2x Shadow
         Meter while inside Void Area. Perform 5 paid Dimension Cuts to open a 5s
-        Ultimate follow-up for Judgment Cut.
-      skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
-        a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
-        5 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
-        Defense. Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt.
-        Shadow Meter gain is doubled while Main is inside Void Area. Perform 5 paid
-        Dimension Cuts to open a 5s Ultimate follow-up for Judgment Cut.
+        Skill follow-up for Judgment Cut.
+      skillPanelDescriptionOverride: Successful actions generate different amounts
+        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
+        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 5 boxes.
+        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
+        Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt. Shadow Meter
+        gain is doubled while Main is inside Void Area. Perform 5 paid Dimension
+        Cuts to open a 5s Skill follow-up for Judgment Cut.
       track: 2
       level: 4
       fragmentCost: 1
@@ -1763,9 +1651,9 @@ MonoBehaviour:
         windFrames: 108
         residualFrames: 118
         exitDelayFrames: 0
-        exitFrames: 78
-        exitScatter: 0.65
-        stormLift: 0.6
+        exitFrames: 15
+        exitScatter: 0.48
+        stormLift: 0.82
         groundShockwaveEnabled: 1
         fallingArcCount: 6
         impactArcCount: 9
@@ -1793,6 +1681,62 @@ MonoBehaviour:
         suppressChromaticAberration: 1
     entryOffset: 3
     readySfx: {fileID: 0}
+    entryGrantTag: main.qte.dimension_cut.ready
+    entryGrantCounterId: main.shadow.cached_cuts
+    entryGrantAmount: 1
+    entryGrantConsumeActionId: main.dash.dimension_cut
+  combatRules:
+    meterGainRules:
+    - actionKey: main.ultimate.execution_breakdown
+      stepName: 
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 5
+    - actionKey: main.dash.dimension_cut
+      stepName: 
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 1
+    - actionKey: main.skill.dimension_slash
+      stepName: 
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 1
+    - actionKey: main.ultimate.jailbreak_punisher
+      stepName: 
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 1
+    - actionKey: Ground
+      stepName: Attack6
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 6
+    - actionKey: Ground
+      stepName: Attack3
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 4
+    - actionKey: Ground
+      stepName: 
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 2
+    - actionKey: Air
+      stepName: Attack3
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 4
+    - actionKey: Air
+      stepName: 
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 2
+    - actionKey: main.skill.dark_chain
+      stepName: 
+      filterByCategory: 0
+      category: 0
+      pointsPerHit: 8
   actionResolverTable: {fileID: 11400000, guid: 1c5e68805e1f0064d92ecf2652b00e2c, type: 2}
   references:
     version: 2

@@ -15,6 +15,8 @@ MonoBehaviour:
   comboActions:
   - actionId: 
     actionName: Ground
+    icon: {fileID: 7233341647970129877, guid: 5a4c40ea0e904e44abf0f388ba51be84, type: 3}
+    actionType: 0
     resourceCounterId: 
     resourceCost: 0
     commitsDash: 0
@@ -35,6 +37,8 @@ MonoBehaviour:
         rid: 1588256136747024573
   - actionId: 
     actionName: Air
+    icon: {fileID: 7233341647970129877, guid: 5a4c40ea0e904e44abf0f388ba51be84, type: 3}
+    actionType: 0
     resourceCounterId: 
     resourceCost: 0
     commitsDash: 0
@@ -56,6 +60,8 @@ MonoBehaviour:
   skillActions:
   - actionId: cg.skill
     actionName: Capture Da Soul
+    icon: {fileID: -8106061018650876297, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
+    actionType: 0
     resourceCounterId: 
     resourceCost: 0
     commitsDash: 0
@@ -77,6 +83,8 @@ MonoBehaviour:
     cooldown: 7
   - actionId: cg.skill.ex
     actionName: Shadow Attack
+    icon: {fileID: -8106061018650876297, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
+    actionType: 0
     resourceCounterId: 
     resourceCost: 0
     commitsDash: 0
@@ -100,6 +108,8 @@ MonoBehaviour:
   ultimateActions:
   - actionId: cg.ult
     actionName: Send Da Btch
+    icon: {fileID: 8054154319732370559, guid: f29a60c7b0bbd7a4ab8ce62ca53ad960, type: 3}
+    actionType: 0
     resourceCounterId: 
     resourceCost: 0
     commitsDash: 0
@@ -194,6 +204,123 @@ MonoBehaviour:
             chromaticPixels: 0
             blurPixels: 1
             referenceHeight: 270
+    - rid: 1267093284620075252
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 2
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 4.8377643, y: 2.3463008}
+        size: {x: 10.597951, y: 5.6553593}
+        damageRatio: 0.08
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 0
+        impactFreezeFrames: 0
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 12
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 0
+    - rid: 1267093284620075253
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 5
+        activeFrames: 2
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 4.3752766, y: 2.7205577}
+        size: {x: 11.172674, y: 5.4411154}
+        damageRatio: 0.08
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 0
+        impactFreezeFrames: 0
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 1
+    - rid: 1267093284620075254
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 10
+        activeFrames: 2
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 4.618126, y: 2.6800828}
+        size: {x: 10.633011, y: 5.3601656}
+        damageRatio: 0.08
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 0
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 1
     - rid: 1588256136747024573
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -940,6 +1067,8 @@ MonoBehaviour:
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
           backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
             fadeOutFrames: 18
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             peakAlpha: 1
@@ -974,6 +1103,8 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
@@ -1177,6 +1308,8 @@ MonoBehaviour:
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
           backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
             fadeOutFrames: 18
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             peakAlpha: 1
@@ -1211,6 +1344,8 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
@@ -1313,7 +1448,7 @@ MonoBehaviour:
           triggerFrame: 3
           duration: 5
           channel: 1
-          volume: 1
+          volume: 0.5
           pitchVariation: 0.9
           slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
@@ -1428,6 +1563,8 @@ MonoBehaviour:
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
           backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
             fadeOutFrames: 18
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             peakAlpha: 1
@@ -1462,6 +1599,8 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
@@ -1815,6 +1954,8 @@ MonoBehaviour:
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
           backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
             fadeOutFrames: 18
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             peakAlpha: 1
@@ -1849,6 +1990,8 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
@@ -2018,10 +2161,13 @@ MonoBehaviour:
       data:
         hitboxes:
         - rid: 8312694097921704031
+        - rid: 1267093284620075252
+        - rid: 1267093284620075253
+        - rid: 1267093284620075254
     - rid: 8312694097921704031
       type: {class: ProjectileSpawnHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 17
+        startFrameOffset: 0
         activeFrames: 3
         elementType: 0
         damageTags: 0

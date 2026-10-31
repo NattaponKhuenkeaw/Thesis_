@@ -167,6 +167,12 @@ public class PlayerStateMachine : MonoBehaviour
         PlayerStateId prevId = CurrentStateId;
         context.previousState = prevId;
         context.wasAirborne = IsAirborneContext;
+        if (CurrentState is CombatPlayerState sourceCombatState)
+        {
+            context.sourceActionType = sourceCombatState.ActiveCombatAction?.EffectiveActionType ?? CombatActionType.FromInput;
+            context.sourceActionKey = sourceCombatState.ActiveCombatAction?.ActionKey;
+            context.sourceActionPhase = sourceCombatState.CurrentPhase;
+        }
 
         CurrentState?.Exit();
         CurrentState = newState;
@@ -630,6 +636,10 @@ public class PlayerStateMachine : MonoBehaviour
 
         InputBuffer.BufferSkill();
 
+        if (CurrentState is CombatPlayerState sourceSkill
+            && sourceSkill.ActiveCombatAction?.EffectiveActionType == CombatActionType.Ultimate
+            && !sourceSkill.CanBeInterruptedBy(ActionCategory.Skill)) return;
+
         if (HasActiveActionWindow(AttackCategory.Skill))
         {
             if (CurrentState.HandleSkillInput()) return;
@@ -673,7 +683,9 @@ public class PlayerStateMachine : MonoBehaviour
 
         // A ready follow-up may cut into other states, but never bypass an
         // Ultimate's own commitment/cancel rules.
-        if (CurrentState is PlayerUltimateState ultimateState && !ultimateState.CanBeInterruptedBy(ActionCategory.Ultimate))
+        if (CurrentState is CombatPlayerState ultimateState
+            && ultimateState.ActiveCombatAction?.EffectiveActionType == CombatActionType.Ultimate
+            && !ultimateState.CanBeInterruptedBy(ActionCategory.Ultimate))
             return;
 
         if (HasActiveActionWindow(AttackCategory.Ultimate))
@@ -840,6 +852,17 @@ public class PlayerStateMachine : MonoBehaviour
 
         return playerCharacter != null
             && playerCharacter.TryResolveActionForContext(category, out action, out step, requireAvailability: true);
+    }
+
+    public ActionCategory ResolveInputInterruptCategory(ActionCategory input)
+    {
+        AttackCategory category;
+        if (input == ActionCategory.BasicAttack) category = AttackCategory.Normal;
+        else if (input == ActionCategory.Skill) category = AttackCategory.Skill;
+        else if (input == ActionCategory.Ultimate) category = AttackCategory.Ultimate;
+        else return input;
+        return playerCharacter != null && playerCharacter.TryResolveActionForContext(category, out CombatAction action, out _)
+            ? action.InterruptCategory : input;
     }
 
     private bool HasActiveActionWindow(AttackCategory category)

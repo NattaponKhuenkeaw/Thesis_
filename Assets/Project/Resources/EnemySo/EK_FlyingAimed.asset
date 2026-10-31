@@ -18,7 +18,7 @@ MonoBehaviour:
   walkingSpeedMultiplier: 1
   warningDuration: 0.7
   hitWindowDuration: 0.15
-  attackCooldown: 1.17
+  attackCooldown: 1.5
   lungeDistance: 0
   bodyCharge: 0
   commitTelegraphFraction: 0

@@ -1,0 +1,38 @@
+{
+  "scope": "max-cancel-presentation",
+  "endTimeUtc": "2026-10-29 16:17:56Z",
+  "result": "Passed",
+  "total": 155,
+  "passed": 155,
+  "failed": 0,
+  "fixtures": [
+    {
+      "name": "ActionVfxLifetimeTests",
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "name": "MainDimensionSlashTests",
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "name": "MainMeterMaxCancelTests",
+      "passed": 31,
+      "failed": 0
+    },
+    {
+      "name": "QteTeamSwapTests",
+      "passed": 34,
+      "failed": 0
+    },
+    {
+      "name": "ShadowMeterTests",
+      "passed": 69,
+      "failed": 0
+    }
+  ],
+  "nativeUiFrames": 28,
+  "humanReview": "Live combat feel, overlap density and performance pending",
+  "broaderSuite": "Prior seven failures remain unresolved; not rerun for this follow-up"
+}

@@ -689,7 +689,7 @@ public class ProjectileRuntime : MonoBehaviour
         CharacterObject sourceCharacter = spawnContext.sourceCharacter;
         CharacterStats sourceStats = spawnContext.attackerStats;
         TeamLoader teamLoader = TeamLoader.Instance;
-        PlayerRunInventory inventory = teamLoader != null ? teamLoader.RunInventory : null;
+        CharacterInventoryState inventory = teamLoader != null ? teamLoader.RunInventory : null;
         CharacterObject[] team = teamLoader != null
             ? teamLoader.GetTeamSnapshot()
             : new[] { activePlayer.characterObject };

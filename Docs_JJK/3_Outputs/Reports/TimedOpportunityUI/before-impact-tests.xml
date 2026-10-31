@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="60" result="Passed" total="60" passed="60" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-30 23:03:51Z" end-time="2026-10-30 23:03:54Z" duration="2.2850927">
+  <test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="1430" result="Passed" start-time="2026-10-30 23:03:51Z" end-time="2026-10-30 23:03:54Z" duration="2.285093" total="60" passed="60" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2741" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="1430" result="Passed" start-time="2026-10-30 23:03:51Z" end-time="2026-10-30 23:03:54Z" duration="2.222359" total="60" passed="60" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="7680" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestFixture" id="1001" name="AbilityUIFeedbackTests" fullname="AbilityUIFeedbackTests" classname="AbilityUIFeedbackTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-10-30 23:03:51Z" end-time="2026-10-30 23:03:52Z" duration="0.242935" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1009" name="AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" fullname="AbilityUIFeedbackTests.AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" methodname="AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1287334095" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.062982" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1002" name="CharacterRefreshDoesNotStartSkillReadyRush" fullname="AbilityUIFeedbackTests.CharacterRefreshDoesNotStartSkillReadyRush" methodname="CharacterRefreshDoesNotStartSkillReadyRush" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="132099146" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.008262" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1004" name="DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" fullname="AbilityUIFeedbackTests.DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" methodname="DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="743739383" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.030857" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1005" name="RebindingAfterDashExpiryDoesNotQueueReadyFeedback" fullname="AbilityUIFeedbackTests.RebindingAfterDashExpiryDoesNotQueueReadyFeedback" methodname="RebindingAfterDashExpiryDoesNotQueueReadyFeedback" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1763403027" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.002808" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1011" name="ReducedMotionKeepsOnlyTheCoreAndPauseDoesNotAdvancePulse" fullname="AbilityUIFeedbackTests.ReducedMotionKeepsOnlyTheCoreAndPauseDoesNotAdvancePulse" methodname="ReducedMotionKeepsOnlyTheCoreAndPauseDoesNotAdvancePulse" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1830825328" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.032231" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1003" name="ReenableEstablishesReadyStateWithoutBounce" fullname="AbilityUIFeedbackTests.ReenableEstablishesReadyStateWithoutBounce" methodname="ReenableEstablishesReadyStateWithoutBounce" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="200496858" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.004604" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1010" name="SharedOutlineReusesItsGraphicAndNeverBlocksInput" fullname="AbilityUIFeedbackTests.SharedOutlineReusesItsGraphicAndNeverBlocksInput" methodname="SharedOutlineReusesItsGraphicAndNeverBlocksInput" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="152214802" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.002552" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1008" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.034638" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1006" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation(True)" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation(True)" methodname="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="2083805382" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.006866" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1007" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation(False)" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation(False)" methodname="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1811124140" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.002948" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1029" name="ActionWindowIconTests" fullname="ActionWindowIconTests" classname="ActionWindowIconTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.580686" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1037" name="CooldownKeepsTheSelectedPictureDimAndDoesNotConsumeTheTimer" fullname="ActionWindowIconTests.CooldownKeepsTheSelectedPictureDimAndDoesNotConsumeTheTimer" methodname="CooldownKeepsTheSelectedPictureDimAndDoesNotConsumeTheTimer" classname="ActionWindowIconTests" runstate="Runnable" seed="333701169" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.024421" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1036" name="GroundMismatchDoesNotAdvertiseAnAvailableReplacement" fullname="ActionWindowIconTests.GroundMismatchDoesNotAdvertiseAnAvailableReplacement" methodname="GroundMismatchDoesNotAdvertiseAnAvailableReplacement" classname="ActionWindowIconTests" runstate="Runnable" seed="1536217850" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.003682" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1034" name="HigherPriorityWindowWinsAndUnavailableCounterActionFallsBack" fullname="ActionWindowIconTests.HigherPriorityWindowWinsAndUnavailableCounterActionFallsBack" methodname="HigherPriorityWindowWinsAndUnavailableCounterActionFallsBack" classname="ActionWindowIconTests" runstate="Runnable" seed="1066669118" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.003674" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1038" name="InsufficientUltimateEnergyDimsTheAuthoredIcon" fullname="ActionWindowIconTests.InsufficientUltimateEnergyDimsTheAuthoredIcon" methodname="InsufficientUltimateEnergyDimsTheAuthoredIcon" classname="ActionWindowIconTests" runstate="Runnable" seed="1619874865" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.004514" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1040" name="MainAuthoredPicturesRenderInThePrefabAndJudgmentCutStaysOnSkill" fullname="ActionWindowIconTests.MainAuthoredPicturesRenderInThePrefabAndJudgmentCutStaysOnSkill" methodname="MainAuthoredPicturesRenderInThePrefabAndJudgmentCutStaysOnSkill" classname="ActionWindowIconTests" runstate="Runnable" seed="1685992834" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.449318" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1035" name="MissingArtAfterCharacterChangeRestoresOriginalPrefabSprite" fullname="ActionWindowIconTests.MissingArtAfterCharacterChangeRestoresOriginalPrefabSprite" methodname="MissingArtAfterCharacterChangeRestoresOriginalPrefabSprite" classname="ActionWindowIconTests" runstate="Runnable" seed="802234292" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.004030" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1039" name="PrefabWiresNormalIconAndSharedWindowOutline" fullname="ActionWindowIconTests.PrefabWiresNormalIconAndSharedWindowOutline" methodname="PrefabWiresNormalIconAndSharedWindowOutline" classname="ActionWindowIconTests" runstate="Runnable" seed="918623664" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.007721" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1033" name="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" fullname="ActionWindowIconTests.SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" classname="ActionWindowIconTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.066272" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1030" name="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Normal)" fullname="ActionWindowIconTests.SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Normal)" methodname="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" classname="ActionWindowIconTests" runstate="Runnable" seed="9733022" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.007637" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1031" name="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Skill)" fullname="ActionWindowIconTests.SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Skill)" methodname="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" classname="ActionWindowIconTests" runstate="Runnable" seed="838791800" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.003142" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1032" name="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Ultimate)" fullname="ActionWindowIconTests.SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay(Ultimate)" methodname="SelectedWindowReplacesIconAndRestoresItWithoutConsumingGameplay" classname="ActionWindowIconTests" runstate="Runnable" seed="343425257" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:52Z" duration="0.004262" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="2268" name="QteTeamSwapTests" fullname="QteTeamSwapTests" classname="QteTeamSwapTests" runstate="Runnable" testcasecount="39" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:54Z" duration="1.279301" total="39" passed="39" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="2284" name="AcceptedDamagePipelineCarriesExecutionAndArmsWindow" fullname="QteTeamSwapTests.AcceptedDamagePipelineCarriesExecutionAndArmsWindow" methodname="AcceptedDamagePipelineCarriesExecutionAndArmsWindow" classname="QteTeamSwapTests" runstate="Runnable" seed="660125419" result="Passed" start-time="2026-10-30 23:03:52Z" end-time="2026-10-30 23:03:53Z" duration="0.203157" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2274" name="AuthoredProfilesReferenceActualAttacksWithoutMutatingTheirNextNode" fullname="QteTeamSwapTests.AuthoredProfilesReferenceActualAttacksWithoutMutatingTheirNextNode" methodname="AuthoredProfilesReferenceActualAttacksWithoutMutatingTheirNextNode" classname="QteTeamSwapTests" runstate="Runnable" seed="1619839520" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.012876" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2291" name="BlockedEntryPreservesReadinessDuringCooldownThenAllowsOrdinarySwap" fullname="QteTeamSwapTests.BlockedEntryPreservesReadinessDuringCooldownThenAllowsOrdinarySwap" methodname="BlockedEntryPreservesReadinessDuringCooldownThenAllowsOrdinarySwap" classname="QteTeamSwapTests" runstate="Runnable" seed="2074945080" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.036384" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Switched to: Yureka Rei
+]]></output>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="2305" name="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown" fullname="QteTeamSwapTests.CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown" classname="QteTeamSwapTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.329854" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="2301" name="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(&quot;cg.skill&quot;,False)" fullname="QteTeamSwapTests.CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(&quot;cg.skill&quot;,False)" methodname="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown" classname="QteTeamSwapTests" runstate="Runnable" seed="1518825622" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.148843" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[Switched to: Yureka Rei
+Switched to: Asura Shin
+]]></output>
+          </test-case>
+          <test-case id="2302" name="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(&quot;cg.skill.ex&quot;,False)" fullname="QteTeamSwapTests.CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(&quot;cg.skill.ex&quot;,False)" methodname="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown" classname="QteTeamSwapTests" runstate="Runnable" seed="2070247264" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.045466" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[Switched to: Yureka Rei
+Switched to: Asura Shin
+]]></output>
+          </test-case>
+          <test-case id="2303" name="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(&quot;cg.skill&quot;,True)" fullname="QteTeamSwapTests.CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(&quot;cg.skill&quot;,True)" methodname="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown" classname="QteTeamSwapTests" runstate="Runnable" seed="21971917" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.068771" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[Switched to: Yureka Rei
+Switched to: Asura Shin
+]]></output>
+          </test-case>
+          <test-case id="2304" name="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(&quot;cg.skill.ex&quot;,True)" fullname="QteTeamSwapTests.CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(&quot;cg.skill.ex&quot;,True)" methodname="CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown" classname="QteTeamSwapTests" runstate="Runnable" seed="1883396114" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.038467" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[Switched to: Yureka Rei
+Switched to: Asura Shin
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-case id="2281" name="CloneIntroUnrelatedActionAndPreviousFieldSessionCannotArm" fullname="QteTeamSwapTests.CloneIntroUnrelatedActionAndPreviousFieldSessionCannotArm" methodname="CloneIntroUnrelatedActionAndPreviousFieldSessionCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="517938620" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.009105" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2283" name="EntryUsesOutgoingFacingEvenWhenEnemyIsBehindAfterDashThrough" fullname="QteTeamSwapTests.EntryUsesOutgoingFacingEvenWhenEnemyIsBehindAfterDashThrough" methodname="EntryUsesOutgoingFacingEvenWhenEnemyIsBehindAfterDashThrough" classname="QteTeamSwapTests" runstate="Runnable" seed="1906978113" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.008479" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2282" name="GroundedIntroPlacementUsesOutgoingOffsetAndMirrors" fullname="QteTeamSwapTests.GroundedIntroPlacementUsesOutgoingOffsetAndMirrors" methodname="GroundedIntroPlacementUsesOutgoingOffsetAndMirrors" classname="QteTeamSwapTests" runstate="Runnable" seed="690281017" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.008208" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2299" name="HealthAndStatRefreshDoNotConsumeOrRestartPreparedWindow" fullname="QteTeamSwapTests.HealthAndStatRefreshDoNotConsumeOrRestartPreparedWindow" methodname="HealthAndStatRefreshDoNotConsumeOrRestartPreparedWindow" classname="QteTeamSwapTests" runstate="Runnable" seed="514576623" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.015729" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2308" name="HitHistoryTransferPreventsCloneReplayingAcceptedTarget" fullname="QteTeamSwapTests.HitHistoryTransferPreventsCloneReplayingAcceptedTarget" methodname="HitHistoryTransferPreventsCloneReplayingAcceptedTarget" classname="QteTeamSwapTests" runstate="Runnable" seed="99834394" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.011500" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2296" name="HitstunAndPauseCannotUsePreparedEntry" fullname="QteTeamSwapTests.HitstunAndPauseCannotUsePreparedEntry" methodname="HitstunAndPauseCannotUsePreparedEntry" classname="QteTeamSwapTests" runstate="Runnable" seed="855850829" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.007932" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2306" name="IntroDoesNotAcceptCombatCancelBeforeItsAuthoredBoundary" fullname="QteTeamSwapTests.IntroDoesNotAcceptCombatCancelBeforeItsAuthoredBoundary" methodname="IntroDoesNotAcceptCombatCancelBeforeItsAuthoredBoundary" classname="QteTeamSwapTests" runstate="Runnable" seed="732542824" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.011049" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2297" name="IntroSlowMotionHasEditableStrongHandoffDefaults" fullname="QteTeamSwapTests.IntroSlowMotionHasEditableStrongHandoffDefaults" methodname="IntroSlowMotionHasEditableStrongHandoffDefaults" classname="QteTeamSwapTests" runstate="Runnable" seed="1632129935" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.010664" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="2290" name="LostQteTargetFallsBackToLegalOrdinarySwap" fullname="QteTeamSwapTests.LostQteTargetFallsBackToLegalOrdinarySwap" classname="QteTeamSwapTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.049765" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="2288" name="LostQteTargetFallsBackToLegalOrdinarySwap(False)" fullname="QteTeamSwapTests.LostQteTargetFallsBackToLegalOrdinarySwap(False)" methodname="LostQteTargetFallsBackToLegalOrdinarySwap" classname="QteTeamSwapTests" runstate="Runnable" seed="1746466801" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.012417" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[Switched to: Yureka Rei
+]]></output>
+          </test-case>
+          <test-case id="2289" name="LostQteTargetFallsBackToLegalOrdinarySwap(True)" fullname="QteTeamSwapTests.LostQteTargetFallsBackToLegalOrdinarySwap(True)" methodname="LostQteTargetFallsBackToLegalOrdinarySwap" classname="QteTeamSwapTests" runstate="Runnable" seed="804513389" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.016106" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[Switched to: Yureka Rei
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-case id="2285" name="MainIntroCompletionReturnsToLocomotionWithoutAttack5OrResourceCost" fullname="QteTeamSwapTests.MainIntroCompletionReturnsToLocomotionWithoutAttack5OrResourceCost" methodname="MainIntroCompletionReturnsToLocomotionWithoutAttack5OrResourceCost" classname="QteTeamSwapTests" runstate="Runnable" seed="1488590553" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.022736" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[<color=#00FFFF><b>[FSM]</b> [Exit] Determined: Grounded + Static → Idle</color>
+]]></output>
+        </test-case>
+        <test-case id="2293" name="MainIntroDoesNotRequireCachedCutAndHasOriginalDamageBudget" fullname="QteTeamSwapTests.MainIntroDoesNotRequireCachedCutAndHasOriginalDamageBudget" methodname="MainIntroDoesNotRequireCachedCutAndHasOriginalDamageBudget" classname="QteTeamSwapTests" runstate="Runnable" seed="2119181247" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.013884" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2294" name="MissingGroundRejectsPreparedEntry" fullname="QteTeamSwapTests.MissingGroundRejectsPreparedEntry" methodname="MissingGroundRejectsPreparedEntry" classname="QteTeamSwapTests" runstate="Runnable" seed="1753707513" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.010532" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2300" name="OrdinaryFallbackToMainDoesNotGrantCommittedQteReward" fullname="QteTeamSwapTests.OrdinaryFallbackToMainDoesNotGrantCommittedQteReward" methodname="OrdinaryFallbackToMainDoesNotGrantCommittedQteReward" classname="QteTeamSwapTests" runstate="Runnable" seed="1492986387" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.016367" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Switched to: Yureka Rei
+Switched to: Asura Shin
+]]></output>
+        </test-case>
+        <test-case id="2287" name="OrdinarySwapStillRequiresCooldown" fullname="QteTeamSwapTests.OrdinarySwapStillRequiresCooldown" methodname="OrdinarySwapStillRequiresCooldown" classname="QteTeamSwapTests" runstate="Runnable" seed="1406738374" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.009046" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2309" name="OutgoingClonePreservesResolvedTargetMotionAndLongActionLifetime" fullname="QteTeamSwapTests.OutgoingClonePreservesResolvedTargetMotionAndLongActionLifetime" methodname="OutgoingClonePreservesResolvedTargetMotionAndLongActionLifetime" classname="QteTeamSwapTests" runstate="Runnable" seed="2023654696" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.012677" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2295" name="PlungeChecksDestinationInsteadOfOutgoingGroundCorridor" fullname="QteTeamSwapTests.PlungeChecksDestinationInsteadOfOutgoingGroundCorridor" methodname="PlungeChecksDestinationInsteadOfOutgoingGroundCorridor" classname="QteTeamSwapTests" runstate="Runnable" seed="625765252" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.016781" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2310" name="PortraitShowsReadyPulseAndClearsAfterEntry" fullname="QteTeamSwapTests.PortraitShowsReadyPulseAndClearsAfterEntry" methodname="PortraitShowsReadyPulseAndClearsAfterEntry" classname="QteTeamSwapTests" runstate="Runnable" seed="1017972000" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.054030" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Switched to: Yureka Rei
+]]></output>
+        </test-case>
+        <test-case id="2286" name="PreparedEntryBypassesSwapCooldownAndRestartsIt" fullname="QteTeamSwapTests.PreparedEntryBypassesSwapCooldownAndRestartsIt" methodname="PreparedEntryBypassesSwapCooldownAndRestartsIt" classname="QteTeamSwapTests" runstate="Runnable" seed="1002462437" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.009850" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Switched to: Yureka Rei
+]]></output>
+        </test-case>
+        <test-case id="2298" name="PreparedQteUsesTheOrdinaryTeamSwapPolicy" fullname="QteTeamSwapTests.PreparedQteUsesTheOrdinaryTeamSwapPolicy" methodname="PreparedQteUsesTheOrdinaryTeamSwapPolicy" classname="QteTeamSwapTests" runstate="Runnable" seed="1630291712" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.009513" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2273" name="RapidPortraitExchangesConvergeWithoutCloningInteractiveSlots" fullname="QteTeamSwapTests.RapidPortraitExchangesConvergeWithoutCloningInteractiveSlots" methodname="RapidPortraitExchangesConvergeWithoutCloningInteractiveSlots" classname="QteTeamSwapTests" runstate="Runnable" seed="524795786" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.033063" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2292" name="ReadyPortraitRemainsAvailableWhenOnlyTheOrdinarySwapCanRun" fullname="QteTeamSwapTests.ReadyPortraitRemainsAvailableWhenOnlyTheOrdinarySwapCanRun" methodname="ReadyPortraitRemainsAvailableWhenOnlyTheOrdinarySwapCanRun" classname="QteTeamSwapTests" runstate="Runnable" seed="894675650" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.029680" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Switched to: Yureka Rei
+]]></output>
+        </test-case>
+        <test-case id="2272" name="ReducedMotionPortraitExchangeHasNoSnapshotOrPositionDrift" fullname="QteTeamSwapTests.ReducedMotionPortraitExchangeHasNoSnapshotOrPositionDrift" methodname="ReducedMotionPortraitExchangeHasNoSnapshotOrPositionDrift" classname="QteTeamSwapTests" runstate="Runnable" seed="696199624" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.016385" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2271" name="StandbyCooldownUsesAuthoredGroupAlphaAndNeverHidesItsContent" fullname="QteTeamSwapTests.StandbyCooldownUsesAuthoredGroupAlphaAndNeverHidesItsContent" methodname="StandbyCooldownUsesAuthoredGroupAlphaAndNeverHidesItsContent" classname="QteTeamSwapTests" runstate="Runnable" seed="273096307" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.027657" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2270" name="StandbyHudPreservesRosterIndexGapsAndRemovesTheSlotForASoloTeam" fullname="QteTeamSwapTests.StandbyHudPreservesRosterIndexGapsAndRemovesTheSlotForASoloTeam" methodname="StandbyHudPreservesRosterIndexGapsAndRemovesTheSlotForASoloTeam" classname="QteTeamSwapTests" runstate="Runnable" seed="1726779076" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.025026" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2275" name="SuccessfulHitRefreshesOneFiveSecondWindow" fullname="QteTeamSwapTests.SuccessfulHitRefreshesOneFiveSecondWindow" methodname="SuccessfulHitRefreshesOneFiveSecondWindow" classname="QteTeamSwapTests" runstate="Runnable" seed="1991680901" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.012901" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2269" name="TwoMemberHudReusesOneStandbySlotAndRebindsItsActualDestination" fullname="QteTeamSwapTests.TwoMemberHudReusesOneStandbySlotAndRebindsItsActualDestination" methodname="TwoMemberHudReusesOneStandbySlotAndRebindsItsActualDestination" classname="QteTeamSwapTests" runstate="Runnable" seed="2052938433" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:53Z" duration="0.060371" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="2280" name="UnqualifiedDamageCannotArm" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-30 23:03:53Z" end-time="2026-10-30 23:03:54Z" duration="0.088047" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="2276" name="UnqualifiedDamageCannotArm(Primary,0.0f,None)" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm(Primary,0.0f,None)" methodname="UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="45785901" result="Passed" start-time="2026-10-30 23:03:54Z" end-time="2026-10-30 23:03:54Z" duration="0.017066" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2277" name="UnqualifiedDamageCannotArm(Dot,10.0f,None)" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm(Dot,10.0f,None)" methodname="UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="1201017316" result="Passed" start-time="2026-10-30 23:03:54Z" end-time="2026-10-30 23:03:54Z" duration="0.014798" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2278" name="UnqualifiedDamageCannotArm(Additional,10.0f,None)" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm(Additional,10.0f,None)" methodname="UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="306448382" result="Passed" start-time="2026-10-30 23:03:54Z" end-time="2026-10-30 23:03:54Z" duration="0.011790" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="2279" name="UnqualifiedDamageCannotArm(Primary,10.0f,Artifact)" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm(Primary,10.0f,Artifact)" methodname="UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="1459107158" result="Passed" start-time="2026-10-30 23:03:54Z" end-time="2026-10-30 23:03:54Z" duration="0.013605" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+        <test-case id="2307" name="WallClampsEntryAndGapRejectsIt" fullname="QteTeamSwapTests.WallClampsEntryAndGapRejectsIt" methodname="WallClampsEntryAndGapRejectsIt" classname="QteTeamSwapTests" runstate="Runnable" seed="1435513016" result="Passed" start-time="2026-10-30 23:03:54Z" end-time="2026-10-30 23:03:54Z" duration="0.013908" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="2738" name="UIFeedbackWiggleTests" fullname="UIFeedbackWiggleTests" classname="UIFeedbackWiggleTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-30 23:03:54Z" end-time="2026-10-30 23:03:54Z" duration="0.036588" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="2740" name="IndependentTargetsAndLayoutMovementUseTheirOwnRestingPositions" fullname="UIFeedbackWiggleTests.IndependentTargetsAndLayoutMovementUseTheirOwnRestingPositions" methodname="IndependentTargetsAndLayoutMovementUseTheirOwnRestingPositions" classname="UIFeedbackWiggleTests" runstate="Runnable" seed="1095415209" result="Passed" start-time="2026-10-30 23:03:54Z" end-time="2026-10-30 23:03:54Z" duration="0.008683" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2739" name="RepeatedRequestsKeepOneOriginalOriginAndDisableRestoresIt" fullname="UIFeedbackWiggleTests.RepeatedRequestsKeepOneOriginalOriginAndDisableRestoresIt" methodname="RepeatedRequestsKeepOneOriginalOriginAndDisableRestoresIt" classname="UIFeedbackWiggleTests" runstate="Runnable" seed="1105447271" result="Passed" start-time="2026-10-30 23:03:54Z" end-time="2026-10-30 23:03:54Z" duration="0.004410" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/Apricha/AppData/LocalLow/DefaultCompany/Thesis\TestResults.xml
+]]></output>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

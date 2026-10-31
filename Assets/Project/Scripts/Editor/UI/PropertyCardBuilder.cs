@@ -689,6 +689,19 @@ namespace CombatEditor.UI
                     MarkDirtyAndRebuild();
                 });
 
+                AddObjectField(body, "Action Icon", action.icon, value => {
+                    RecordUndo("Edit Action Icon");
+                    action.icon = value as Sprite;
+                    MarkDirty();
+                });
+
+                AddEnumField(body, "Action Type", action.actionType, value => {
+                    RecordUndo("Edit Action Type");
+                    action.actionType = (CombatActionType)value;
+                    MarkDirtyAndRebuild();
+                });
+                body.Add(new HelpBox("Action Type controls interrupt policy and Ultimate hit flashes. Input, AE cost, cooldown and damage/passive category keep their existing setup.", HelpBoxMessageType.Info));
+
                 AddTextField(body, "Resource Counter", action.resourceCounterId, value => {
                     RecordUndo("Edit Action Resource"); action.resourceCounterId = value; MarkDirty();
                 });
@@ -1917,10 +1930,22 @@ namespace CombatEditor.UI
         {
             BackgroundOverlayFlashSettings settings = entry.backgroundOverlayFlashSettings ??= new BackgroundOverlayFlashSettings();
             AddSeparator(inner, "Background Impact Flash");
+            AddIntField(inner, "Fade In Frames", settings.fadeInFrames, value =>
+            {
+                RecordUndo("Edit Impact Flash Fade In");
+                settings.fadeInFrames = Mathf.Max(0, value);
+                MarkDirty();
+            });
+            AddIntField(inner, "Hold Frames", settings.holdFrames, value =>
+            {
+                RecordUndo("Edit Impact Flash Hold");
+                settings.holdFrames = Mathf.Max(0, value);
+                MarkDirty();
+            });
             AddIntField(inner, "Fade Out Frames", settings.fadeOutFrames, value =>
             {
                 RecordUndo("Edit Impact Flash Fade Frames");
-                settings.fadeOutFrames = Mathf.Max(1, value);
+                settings.fadeOutFrames = Mathf.Max(0, value);
                 MarkDirty();
             });
             AddColorField(inner, "Flash Color", settings.flashColor, value =>
@@ -1999,6 +2024,20 @@ namespace CombatEditor.UI
             }
 
             request.slowMotion ??= new SlowMotionSettings();
+
+            AddToggleField(inner, "Follow Slow Motion", request.followSlowMotion, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Follow Slow Motion");
+                request.followSlowMotion = value;
+                MarkDirty();
+            });
+            AddToggleField(inner, "Follow Hitstop", request.followHitstop, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Follow Hitstop");
+                request.followHitstop = value;
+                MarkDirty();
+            });
+            inner.Add(new HelpBox("These options control shake playback after the event fires. Off ignores that time effect. Explicit pause always holds playback. Enable Slow Motion below creates a slow-motion effect; it does not make the shake follow slow motion.", HelpBoxMessageType.Info));
 
             AddFloatField(inner, "Start Strength", request.startStrength, value =>
             {
@@ -2694,6 +2733,13 @@ namespace CombatEditor.UI
             if (dash == null) return;
             BuildFoldoutCard("Dash Configuration", "dash_config", new Color(0f, 0.83f, 1f), body =>
             {
+                AddObjectField(body, "Dash Icon", dash.icon, value =>
+                {
+                    RecordUndo("Edit Dash Icon");
+                    dash.icon = value as Sprite;
+                    MarkDirty();
+                });
+
                 if (dash.animationClip != null)
                 {
                     int total = Mathf.RoundToInt(dash.animationClip.length * FrameDataConstants.LOGIC_FPS);

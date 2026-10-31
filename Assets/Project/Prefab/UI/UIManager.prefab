@@ -78,7 +78,7 @@ MonoBehaviour:
   popStartScaleMultiplier: 3
   fadeEndScaleMultiplier: 0.82
   elementalDamageScaleMultiplier: 1.5
-  criticalScaleMultiplier: 1.5
+  criticalScaleMultiplier: 1.8
   highRatioScaleMultiplier: 1.35
   highRatioThreshold: 1
   lowTierScale: 1
