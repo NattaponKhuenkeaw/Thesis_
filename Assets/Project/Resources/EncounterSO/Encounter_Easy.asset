@@ -22,7 +22,7 @@ MonoBehaviour:
   typePickMode: 0
   waves: []
   delayBetweenWaves: 1.25
-  chamberQuota: 4
+  chamberQuota: 8
   spawnMode: 0
-  aliveCap: 3
+  aliveCap: 5
   spawnInterval: 0.35

@@ -208,6 +208,43 @@ public class EncounterPressureSpawnTests
     }
 
 #if UNITY_EDITOR
+    [TestCase(RouteDifficulty.Easy, 8)]
+    [TestCase(RouteDifficulty.Medium, 12)]
+    [TestCase(RouteDifficulty.Hard, 16)]
+    public void ProductionDifficultyRefillsFiveLivingEnemiesUntilTheDoubledQuotaIsExhausted(RouteDifficulty difficulty, int quota)
+    {
+        EncounterSO encounter = CombatRouteContent.LoadPalette(difficulty);
+        Assert.That(encounter.ChamberQuota, Is.EqualTo(quota));
+        Assert.That(encounter.AliveCap, Is.EqualTo(5));
+        Assert.That(encounter.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
+        var enemies = encounter.RollQuota(encounter.ChamberQuota);
+        Assert.That(enemies.Count, Is.EqualTo(quota));
+        var director = new EncounterPressureDirector(encounter.AliveCap, enemies);
+        int living = 0;
+        int spawned = 0;
+        while (director.CanSpawn(living))
+        {
+            Assert.That(director.DequeueNext(), Is.Not.Null);
+            living++;
+            spawned++;
+        }
+        Assert.That(living, Is.EqualTo(5));
+        Assert.That(director.CanSpawn(living), Is.False);
+        while (director.Remaining > 0)
+        {
+            living--;
+            Assert.That(director.CanSpawn(living), Is.True);
+            Assert.That(director.DequeueNext(), Is.Not.Null);
+            living++;
+            spawned++;
+            Assert.That(living, Is.EqualTo(5));
+            Assert.That(director.CanSpawn(living), Is.False);
+        }
+        Assert.That(spawned, Is.EqualTo(quota));
+        Assert.That(director.IsCleared(living), Is.False);
+        Assert.That(director.IsCleared(0), Is.True);
+    }
+
     [Test]
     public void CombatEncounterAssetsUsePressureAndBossUsesBurst()
     {
