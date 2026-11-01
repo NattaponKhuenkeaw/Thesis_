@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
   characterId: char-1-camera_girl
   characterType: 0
-  characterRole: 3
+  characterRole: 0
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 973
@@ -54,6 +54,7 @@ MonoBehaviour:
   _dashData:
     animationClip: {fileID: 7400000, guid: fa372523c264ac241bbda4f3e01c1c3f, type: 2}
     icon: {fileID: 21300000, guid: 4185668ee7484be49aca99f95f6e49e2, type: 3}
+    meterReadyIcon: {fileID: 0}
     startupFrames: 4
     activeFrames: 13
     recoveryFrames: 14
@@ -2499,6 +2500,7 @@ MonoBehaviour:
     entryGrantCounterId: 
     entryGrantAmount: 0
     entryGrantConsumeActionId: 
+    entryAuraEnergyPerAlly: 7
   combatRules:
     meterGainRules: []
   actionResolverTable: {fileID: 11400000, guid: 90f3f5c1e3c9d334a90282b1605414b6, type: 2}

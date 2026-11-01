@@ -46,6 +46,8 @@ Root cause: action availability and commitment used CombatAction.targetRadius (8
 
 ## Potential revision — 2026-10-27
 
+The Skill-track rules in this historical revision are superseded by `main-skill-potential-task-card.md` (2026-11-02). Passive-track rules below remain applicable.
+
 Source: Apricha's follow-up in this chat. Skill Lv1-3 and the Ultimate track keep their current behavior. Skill Lv4 replaces magnetism with 40% increased enemy damage taken (replacing the base 15%, retaining its 16-second duration). Successful Skill hits also grant all allies, including Main, +15 percentage points of CRIT RATE for 7 seconds; further hits refresh without stacking.
 
 - Passive Lv1: capacity +1; Dimension Cut gains +15 percentage points of CRIT RATE. Only its critical hits ignore Defense; resistance and elemental reductions still apply.
@@ -60,3 +62,7 @@ The old Void Area speed, ally DOT Mastery and enemy slow applications are replac
 User report: with Face Target On Arrival disabled on DashThroughTarget, buffered NA, Skill and Ultimate retain travel facing after passing the enemy. Workflow: `/fix-bug`. Each manually committed step must receive its own initial auto-target turn, even if the next step has the same combo depth and no idle movement tick occurs. The arrival-facing option still controls the cut's endpoint; automatic chains retain facing and held horizontal input keeps its existing targeting override.
 
 Root cause: PlayerMovement inferred step starts from attacking/idle samples and combo-depth changes. Buffered replacements at the same depth retained the previous step's completed or cancelled initial-lock flag. PlayerCombat now explicitly calls BeginCombatStepFacing after committing the new step metadata and before animation/payload processing.
+
+## Damage-Taken Debuff Visual Follow-up — 2026-11-01
+
+Source: Apricha's follow-up in chat. Reuse the approved downward-chevron `FieldPowerDown` visual for Main's `Damage Taken Increase` Skill recipe at both base strength and Potential Lv.4. This is presentation-only: preserve the 16-second duration, refresh behavior, and existing damage-taken values. The saved recipe references are in `CharacterObject_main.asset`; manual combat readability and expiry review remain pending.

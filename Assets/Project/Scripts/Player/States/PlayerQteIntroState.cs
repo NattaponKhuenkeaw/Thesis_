@@ -71,6 +71,13 @@ public sealed class PlayerQteIntroState : PlayerAttackState
             if (!string.IsNullOrEmpty(reward?.entryGrantTag)) runtime.SetTag(reward.entryGrantTag);
             if (!string.IsNullOrEmpty(reward?.entryGrantCounterId) && reward.entryGrantAmount > 0)
                 runtime.AddCounter(reward.entryGrantCounterId, reward.entryGrantAmount);
+            if (reward.entryAuraEnergyPerAlly > 0f)
+            {
+                TeamLoader team = TeamLoader.Instance;
+                CharacterObject[] allies = team != null ? team.GetTeamSnapshot() : System.Array.Empty<CharacterObject>();
+                for (int i = 0; i < allies.Length; i++)
+                    if (team.IsCharacterAlive(allies[i])) team.AddCharacterAE(allies[i], reward.entryAuraEnergyPerAlly);
+            }
         }
         if (!_plungeActive) return;
         _plungeMotion = null;

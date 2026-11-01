@@ -17,12 +17,14 @@ namespace Project.Combat
         private Animator cachedAnimator;
         private AnimatorOverrideController overrideController;
         private ProjectileRuntime runtime;
+        private VoidAreaParticleVisual _voidAreaParticles;
 
         public ProjectileRuntime Runtime => runtime;
 
         private void Awake()
         {
             runtime = GetComponent<ProjectileRuntime>();
+            _voidAreaParticles = GetComponent<VoidAreaParticleVisual>();
             cachedAnimator = GetComponentInChildren<Animator>();
 
             if (cachedAnimator != null && cachedAnimator.runtimeAnimatorController != null)
@@ -70,6 +72,7 @@ namespace Project.Combat
 
             gameObject.SetActive(true);
             runtime.Initialize(this, manager, projectileType, data, context);
+            if (_voidAreaParticles != null) _voidAreaParticles.Begin(data, context);
         }
 
         public void ReleaseToPool()
@@ -85,6 +88,7 @@ namespace Project.Combat
 
         public void PrepareForPool()
         {
+            if (_voidAreaParticles != null) _voidAreaParticles.Clear();
             runtime.ResetRuntime();
 
             if (cachedAnimator != null)

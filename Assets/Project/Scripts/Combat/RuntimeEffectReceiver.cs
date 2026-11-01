@@ -301,6 +301,9 @@ public class RuntimeEffectReceiver : MonoBehaviour
             }
             else if (resolvedRefreshDuration)
             {
+                // Match inventory-owned stat buffs when the same recipe is applied with newer source stats.
+                if (definition is StatRuntimeEffectDefinition)
+                    existing.Rebind(recipe, sourceCharacter, sourceStats);
                 existing.Refresh(durationOverride);
                 definition.OnReapplied(BuildContext(existing, 0f));
             }

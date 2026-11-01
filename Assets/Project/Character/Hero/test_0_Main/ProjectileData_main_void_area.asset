@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: ProjectileData_main_void_area
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
   projectileType: 101
-  projectilePrefab: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
-  spawnClip: {fileID: 7400000, guid: b38820d337dc0964db638402fb8c6f61, type: 2}
-  loopClip: {fileID: 7400000, guid: 0a6f50b4e2cb96646be846ad974af77e, type: 2}
+  projectilePrefab: {fileID: 6165748194545303423, guid: dde9c3e2cf1fc1548865eacd3bc5b695, type: 3}
+  spawnClip: {fileID: 0}
+  loopClip: {fileID: 0}
   spawnOffset: {x: 0, y: 0}
   spawnPositionMode: 2
   spawnReferencePointMode: 2
-  playSpawnAnimation: 1
-  spawnDuration: 0
+  playSpawnAnimation: 0
+  spawnDuration: 0.1
   inheritFacingDirection: 1
   applyOffsetToTarget: 1
   spawningHitbox:
@@ -86,7 +86,7 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
   expireFeedback:
     vfxType: 0
-    vfxClip: {fileID: 7400000, guid: afe8147dda1b702479c521a01e64dd12, type: 2}
+    vfxClip: {fileID: 0}
     audio: {fileID: 0}
     offset: {x: 0, y: 0}
   impactVFXType: 15

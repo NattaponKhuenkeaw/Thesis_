@@ -28,6 +28,8 @@ public sealed class QteSwapDefinition
     [Min(0)] public int entryGrantAmount;
     [Tooltip("Manual action that consumes the entry marker; the counter itself uses normal action resource costs.")]
     public string entryGrantConsumeActionId;
+    [Tooltip("Aura Energy granted to each living ally when this QTE intro is committed.")]
+    [Min(0f)] public float entryAuraEnergyPerAlly;
     [NonSerialized] private ActionResolverTable _cachedTable;
     [NonSerialized] private CombatAction _cachedAction;
     [NonSerialized] private AttackStepData _cachedStep;

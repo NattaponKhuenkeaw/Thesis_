@@ -734,8 +734,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Debug Mode
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 7752f6644e1ebd6459cda217bd3b8f89, type: 2}
-  m_sharedMaterial: {fileID: 8293782056677331817, guid: 7752f6644e1ebd6459cda217bd3b8f89, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 12e08037411c9b349a2308988f8cbc92, type: 2}
+  m_sharedMaterial: {fileID: -5062690719849020491, guid: 12e08037411c9b349a2308988f8cbc92, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

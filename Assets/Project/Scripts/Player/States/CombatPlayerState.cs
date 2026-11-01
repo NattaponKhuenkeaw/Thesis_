@@ -422,7 +422,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         if (beginsNewCounterAction && !counterCostAlreadyPaid && action != null && action.resourceCost > 0
             && !player.TryCommitActionCounterCost(action, ctx.actionAvailabilityProvider)) return false;
         counterCostCommittedAction = action;
-        EnemyController target = beginsNewCounterAction && action != null && action.requiresEnemyTarget
+        EnemyController target = beginsNewCounterAction && action != null
+            && (action.requiresEnemyTarget || action.GetEntryTargetMotion() != null)
             ? player.Combat?.FindNearestEnemyTarget(action.GetTargetSearchRadius()) : null;
         ReleaseActionCamera(isAutoChain || currentPhase == ActionPhase.Done);
         ReleaseSlashField();

@@ -298,8 +298,13 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             }
         }
 
-        if (category == AttackCategory.Normal && !isAutoChain)
-            AbilityUIManager.Instance?.PlayNormalAttackCommittedFeedback();
+        if (!isAutoChain && !isQteIntro)
+        {
+            AbilityUIManager.AbilityType slot = category == AttackCategory.Skill ? AbilityUIManager.AbilityType.Skill
+                : category == AttackCategory.Ultimate ? AbilityUIManager.AbilityType.Ultimate
+                : AbilityUIManager.AbilityType.NormalAttack;
+            AbilityUIManager.Instance?.PlayAbilityCommittedFeedback(slot);
+        }
 
         passiveController?.NotifyActionStarted(category, currentActionId, currentActionName, step, CurrentExecution);
     }
@@ -1505,6 +1510,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private void HandleDashStart()
     {
+        AbilityUIManager.Instance?.PlayAbilityCommittedFeedback(AbilityUIManager.AbilityType.Dash);
         passiveController?.NotifyAfterDash();
         StartDashThroughDamageCoroutine();
 

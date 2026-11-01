@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: ProjectileData_main_void_area_lv3
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
   projectileType: 101
-  projectilePrefab: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
-  spawnClip: {fileID: 7400000, guid: b38820d337dc0964db638402fb8c6f61, type: 2}
-  loopClip: {fileID: 7400000, guid: 0a6f50b4e2cb96646be846ad974af77e, type: 2}
+  projectilePrefab: {fileID: 6165748194545303423, guid: dde9c3e2cf1fc1548865eacd3bc5b695, type: 3}
+  spawnClip: {fileID: 0}
+  loopClip: {fileID: 0}
   spawnOffset: {x: 0, y: 0}
   spawnPositionMode: 2
   spawnReferencePointMode: 2
-  playSpawnAnimation: 1
-  spawnDuration: 0
+  playSpawnAnimation: 0
+  spawnDuration: 0.1
   inheritFacingDirection: 1
   applyOffsetToTarget: 1
   spawningHitbox:
@@ -36,7 +36,7 @@ MonoBehaviour:
   trackingRadius: 0
   speed: 0
   lifetime: 20
-  maxHits: 2
+  maxHits: 99
   hitCountMode: 1
   routineHitbox:
     enabled: 1
@@ -63,6 +63,8 @@ MonoBehaviour:
       presentation:
         effectId: main.void_area.shadow_gain
         displayName: Shadow Meter Gain x2
+        icon: {fileID: 0}
+        fieldVisualPrefab: {fileID: 0}
       policy:
         kind: 0
         appliesOn: 0
@@ -71,13 +73,100 @@ MonoBehaviour:
         stackMode: 1
         stackLimit: 1
         refreshDurationOnReapply: 1
+        stackable: 0
+        removeOnOwnerDamaged: 0
         stackKey: main.void_area.shadow_gain
       parameters:
         overrideStatModifiers: 1
         statModifiers: []
+        overrideDamageModifier: 0
+        damageModifier:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+          outgoingDamagePercentAdd: 0
+          incomingDamageTakenPercentAdd: 0
+        overrideDamageInput: 0
+        damageInput:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+          defenderDefensePercentAdd: 0
+          defenderDamageResistancePercentAdd: 0
+          ignoreDefense: 0
+          ignoreDamageResistance: 0
+          ignoreTypeReduction: 0
+        overridePeriodicHeal: 0
+        periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+          tickInterval: 1
+        overrideHeal: 0
+        heal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+        overrideLifesteal: 0
+        lifesteal:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+          damageDealtRatio: 0.5
+          lowHpThreshold: 0.3
+          lowHpMultiplier: 2
+        overrideAdditionalDamage: 0
+        additionalDamage:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+          chance: 1
+          internalCooldown: 0
+          attackRatio: 0.2
+          sourceStatDamageSource: 0
+          sourceStatRatio: 0
+          targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey: 
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
+          capTargetMaxHpDamage: 0
+          targetMaxHpDamageCapSource: 1
+          targetMaxHpDamageCapRatio: 1
+          elementType: 0
+        overrideStatus: 0
+        status:
+          status: 5
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
       childRecipes: []
+    effect: {fileID: 0}
     requiredNodeId: main.passive.lv4
     scope: 0
+    stackMode: 0
+    stackLimit: 1
+    refreshDurationOnReapply: 1
     durationOverride: 0.3
   spawnFeedback:
     vfxType: 0
@@ -86,7 +175,7 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
   expireFeedback:
     vfxType: 0
-    vfxClip: {fileID: 7400000, guid: afe8147dda1b702479c521a01e64dd12, type: 2}
+    vfxClip: {fileID: 0}
     audio: {fileID: 0}
     offset: {x: 0, y: 0}
   impactVFXType: 15
@@ -103,6 +192,8 @@ MonoBehaviour:
         activeFrames: 3
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0, y: 2}
         size: {x: 45, y: 8}
@@ -126,6 +217,8 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 7c1b8c226596fc4498a647193d825b4d, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}

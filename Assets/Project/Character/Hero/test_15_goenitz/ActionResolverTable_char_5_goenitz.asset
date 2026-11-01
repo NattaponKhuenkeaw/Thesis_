@@ -15,6 +15,14 @@ MonoBehaviour:
   comboActions:
   - actionId: goenitz.basic.ground
     actionName: Ground
+    icon: {fileID: 0}
+    actionType: 0
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 8
     context: 0
     outputContext: 0
     priority: 0
@@ -29,6 +37,14 @@ MonoBehaviour:
         rid: 1588256048081535101
   - actionId: goenitz.basic.air
     actionName: Air
+    icon: {fileID: 0}
+    actionType: 0
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 8
     context: 1
     outputContext: 0
     priority: 0
@@ -44,6 +60,14 @@ MonoBehaviour:
   skillActions:
   - actionId: goenitz.skill.yonokaze
     actionName: Yonokaze
+    icon: {fileID: 0}
+    actionType: 0
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 8
     context: 0
     outputContext: 0
     priority: 0
@@ -60,6 +84,14 @@ MonoBehaviour:
   ultimateActions:
   - actionId: goenitz.ultimate.yamidokoku
     actionName: Yamidokoku
+    icon: {fileID: 0}
+    actionType: 0
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 8
     context: 0
     outputContext: 1
     priority: 0
@@ -73,16 +105,28 @@ MonoBehaviour:
       rootNode:
         rid: 1588256193077837929
     cooldown: 18
+    inputTrigger: 0
+    holdDuration: 0.35
+    allowUltimateInterrupt: 1
     energyCost: 70
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}
     activationVoice: {fileID: 8300000, guid: eac3ad0f9e2cf834c96b0930a5e7c8bb, type: 3}
     activationSFX: {fileID: 8300000, guid: 89828ad405b7a3242a87e2d30d0cadeb, type: 3}
+    activationSFXVolume: 1
     voiceDelay: 0.1
     useDashAfterImage: 1
   - actionId: goenitz.ultimate2.shin.yaotome
     actionName: 'Shin Yaotome : Jissokoku'
+    icon: {fileID: 0}
+    actionType: 0
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 8
     context: 0
     outputContext: 1
     priority: 10
@@ -97,14 +141,19 @@ MonoBehaviour:
       rootNode:
         rid: 3612912841365651558
     cooldown: 0
+    inputTrigger: 0
+    holdDuration: 0.35
+    allowUltimateInterrupt: 1
     energyCost: 0
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}
     activationVoice: {fileID: 0}
     activationSFX: {fileID: 0}
+    activationSFXVolume: 1
     voiceDelay: 0.1
     useDashAfterImage: 0
+  qteActions: []
   standaloneActions: []
   references:
     version: 2
@@ -122,6 +171,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack1
           animationClip: {fileID: 7400000, guid: 7eaf83962973e0e4faf93bf94628f133, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -155,10 +205,19 @@ MonoBehaviour:
     - rid: 1588256048081535103
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 3
           endFrame: 8
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 0.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -166,6 +225,14 @@ MonoBehaviour:
         - startFrame: 17
           endFrame: 21
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 0.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -181,6 +248,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: cc60b0af98e523f4fae94fd132d7fb75, type: 3}
@@ -189,6 +257,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256048081535105
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
@@ -196,6 +265,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.55962616, y: 2.224654}
         size: {x: 1, y: 0.8}
@@ -219,16 +291,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 4
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535106
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 14
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.54870015, y: 1.7111288}
         size: {x: 1, y: 1.0403736}
@@ -252,10 +330,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 4
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535107
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -267,6 +348,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack2
           animationClip: {fileID: 7400000, guid: 694f8e50d53d3ca47b241fd5f0664c4c, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -294,10 +376,19 @@ MonoBehaviour:
     - rid: 1588256048081535108
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 16
           endFrame: 27
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 1, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -314,6 +405,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.1777005, y: 1.7123238}
         size: {x: 1.4165428, y: 1.0354373}
@@ -337,16 +431,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: d517d1ac88bbb2f48b4747a86083d9c5, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535111
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 5
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.5589739, y: 1.667979}
         size: {x: 1.5399754, y: 1.0606937}
@@ -370,10 +470,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535112
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -385,6 +488,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack3
           animationClip: {fileID: 7400000, guid: 83151d996a6968a4f8a06082ac89002d, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -412,10 +516,19 @@ MonoBehaviour:
     - rid: 1588256048081535113
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 6
           endFrame: 13
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 2.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -431,6 +544,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.6363741, y: 2.4763553}
         size: {x: 1.3272519, y: 1.8607463}
@@ -454,10 +570,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535124
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -469,6 +588,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256048081535132
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
@@ -481,6 +601,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack4
           animationClip: {fileID: 7400000, guid: b7c69215ba51ba54992e51326492199f, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows: []
@@ -508,10 +629,19 @@ MonoBehaviour:
     - rid: 1588256048081535133
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 6
           endFrame: 21
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 2.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -519,6 +649,14 @@ MonoBehaviour:
         - startFrame: 32
           endFrame: 50
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 1, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -541,6 +679,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.3484751, y: 2.3600645}
         size: {x: 1.3573036, y: 0.8}
@@ -564,16 +705,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535136
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 4
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.50700116, y: 2.2171428}
         size: {x: 2.1564097, y: 1.249182}
@@ -597,16 +744,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535137
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 9
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.3614767, y: 1.4519806}
         size: {x: 0.9591657, y: 1.9851809}
@@ -630,16 +783,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535138
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 13
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.7225633, y: 0.96830124}
         size: {x: 1.1994475, y: 1.8697412}
@@ -663,16 +822,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535139
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 30
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.010522366, y: 1.5199299}
         size: {x: 2.209425, y: 0.9894409}
@@ -696,16 +861,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535140
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 34
         activeFrames: 2
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.7403507, y: 1.1611063}
         size: {x: 1.7498999, y: 2.5450845}
@@ -729,16 +900,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535141
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 36
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.1089149, y: 1.4459796}
         size: {x: 2.2896729, y: 1.467691}
@@ -762,16 +939,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535142
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 41
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9078615, y: 1.9151957}
         size: {x: 2.3253684, y: 1.2794119}
@@ -795,10 +978,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 1}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535167
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -810,6 +996,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack5
           animationClip: {fileID: 7400000, guid: 77d412f45290155448db2f15da644676, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -848,6 +1035,9 @@ MonoBehaviour:
         startFrameOffset: 4
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8841436, y: 1.2545096}
         size: {x: 3.593923, y: 2.298166}
@@ -871,16 +1061,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535171
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 7
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8435936, y: 1.2498498}
         size: {x: 3.8552637, y: 2.3133125}
@@ -904,16 +1100,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535172
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 10
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.963199, y: 1.1932151}
         size: {x: 3.6093466, y: 2.2099414}
@@ -937,16 +1139,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535173
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 13
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.079531, y: 1.1694081}
         size: {x: 3.7406754, y: 2.2753167}
@@ -970,10 +1178,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256048081535184
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -985,6 +1196,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack6
           animationClip: {fileID: 7400000, guid: 0135963a5a85efc4bb64d158695020d1, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows: []
@@ -1020,6 +1232,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 4c561112b8238eb4cb30c0b81d7bf72e, type: 2}
@@ -1044,6 +1259,15 @@ MonoBehaviour:
           loopDuringActive: 0
           adjustLayer: 0
           fitScreenSize: 0
+          impactDistortion:
+            enabled: 0
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
         - label: VFX
           vfxType: 131
           vfxClip: {fileID: 0}
@@ -1059,6 +1283,15 @@ MonoBehaviour:
           loopDuringActive: 0
           adjustLayer: 0
           fitScreenSize: 0
+          impactDistortion:
+            enabled: 0
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
     - rid: 1588256115435503723
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1078,6 +1311,15 @@ MonoBehaviour:
           loopDuringActive: 0
           adjustLayer: 0
           fitScreenSize: 0
+          impactDistortion:
+            enabled: 0
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
     - rid: 1588256115435503773
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -1089,6 +1331,7 @@ MonoBehaviour:
           loopActivePhase: 1
           stepName: Attack7
           animationClip: {fileID: 7400000, guid: aab3cdb52154db54b86a0acd86dc1a2b, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows:
@@ -1140,6 +1383,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack8
           animationClip: {fileID: 7400000, guid: 0106abd9d8bdbc94985a0afa230a1f2f, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -1175,6 +1419,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Yonokaze
           animationClip: {fileID: 7400000, guid: 6ae74e424f6da7541ac385765b953aca, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -1210,6 +1455,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: f8b7ea09989c82a478645e674010a3c5, type: 3}
@@ -1218,6 +1464,7 @@ MonoBehaviour:
           channel: 1
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256145469341791
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
@@ -1230,6 +1477,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 1
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: c29dd69da0c215d4e92ee4ad2b461f42, type: 2}
@@ -1246,6 +1496,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
@@ -1254,6 +1505,7 @@ MonoBehaviour:
           channel: 1
           volume: 0.7
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256145469341794
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
@@ -1266,6 +1518,7 @@ MonoBehaviour:
           channel: 1
           volume: 0.5
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: 89828ad405b7a3242a87e2d30d0cadeb, type: 3}
@@ -1274,6 +1527,7 @@ MonoBehaviour:
           channel: 1
           volume: 1
           pitchVariation: 0.8
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: eac3ad0f9e2cf834c96b0930a5e7c8bb, type: 3}
@@ -1282,6 +1536,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256145469341795
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
@@ -1294,6 +1549,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256185409339497
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
@@ -1306,6 +1562,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: air_Attack1
           animationClip: {fileID: 7400000, guid: d8ab65ab69d494849af9abadf64659d1, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -1341,6 +1598,9 @@ MonoBehaviour:
         startFrameOffset: 1
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.61369413, y: 1.8414361}
         size: {x: 2.113898, y: 1.6307037}
@@ -1364,17 +1624,29 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256185409339500
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 1
           endFrame: 13
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 1, y: 0.5, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -1390,6 +1662,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: air_Attack2
           animationClip: {fileID: 7400000, guid: 9446fe47754d929439d95397f9da8f83, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -1425,6 +1698,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: air_Attack3
           animationClip: {fileID: 7400000, guid: 849b3273fb6fe5647ab197ae9abf2063, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -1452,10 +1726,19 @@ MonoBehaviour:
     - rid: 1588256193077837915
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 0
           endFrame: 31
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 34
           position: {x: 2, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -1475,6 +1758,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.31411844, y: 2.2097054}
         size: {x: 2.803811, y: 1.4484291}
@@ -1498,16 +1784,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077837920
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 8
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.68799794, y: 2.3217068}
         size: {x: 2.497281, y: 1.837486}
@@ -1531,16 +1823,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077837921
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 13
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.58778733, y: 2.0092814}
         size: {x: 2.626967, y: 2.03791}
@@ -1564,16 +1862,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077837922
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 17
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.49347055, y: 1.7852793}
         size: {x: 2.155382, y: 3.5705585}
@@ -1597,16 +1901,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077837923
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 21
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0593717, y: 2.0151768}
         size: {x: 2.6033874, y: 2.2383327}
@@ -1630,17 +1940,29 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077837924
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 0
           endFrame: 15
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 3, y: 0.5, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -1648,6 +1970,14 @@ MonoBehaviour:
         - startFrame: 15
           endFrame: 20
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 1, y: 0.2, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -1655,6 +1985,14 @@ MonoBehaviour:
         - startFrame: 20
           endFrame: 41
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 0.5, y: -1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -1671,6 +2009,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8471581, y: 1.3313793}
         size: {x: 3.1928675, y: 2.8985507}
@@ -1694,16 +2035,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077837928
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 5
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.32590866, y: 0.9776908}
         size: {x: 3.2989745, y: 2.0732775}
@@ -1727,10 +2074,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077837929
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -1742,6 +2092,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Grab Teleport
           animationClip: {fileID: 7400000, guid: 1873af014d3bc274a86b34200a1ad11e, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows:
@@ -1784,6 +2135,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256193077837933
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
@@ -1801,6 +2153,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -1809,11 +2167,12 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 40
             teleportOffsetX: 1.2
-            snapCameraToPlayer: 1
+            snapCameraToPlayer: 0
             cameraSnapDuration: 0.12
             playScreenFlick: 0
             screenFlickSettings:
@@ -1831,17 +2190,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1856,6 +2279,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -1864,6 +2293,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -1886,17 +2316,81 @@ MonoBehaviour:
               endStrength: 0
               duration: 0
               pulseInterval: 0.01
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 1
                 timeScale: 0.05
                 duration: 0.2
                 delaySeconds: 0.12
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1911,6 +2405,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -1919,6 +2419,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 1.5, z: 0}
           activationVoice: {fileID: 8300000, guid: 6e3ebf251f8ddb54ca5ede10de59f7b1, type: 3}
           activationSFX: {fileID: 8300000, guid: c3bf06b75cc2e304391b4a46ca4fad18, type: 3}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -1941,17 +2442,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 1
           ultimateZoomSize: 5
     - rid: 1588256193077837934
@@ -1960,6 +2525,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 20
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.9700972, y: 1.6573766}
         size: {x: 1.9530275, y: 3.1498673}
@@ -1971,6 +2539,8 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 10
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -2000,6 +2570,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Yamidokoku
           animationClip: {fileID: 7400000, guid: 5bdd343923da13c46a74eebfe903153f, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows: []
@@ -2035,6 +2606,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 1
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 910706f3c74d07340b4569499057cc55, type: 2}
@@ -2051,6 +2625,7 @@ MonoBehaviour:
           loopActivePhase: 1
           stepName: Wind Up Loop
           animationClip: {fileID: 7400000, guid: 3312351e8f864b5488fa43a0d10aa9d1, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows:
@@ -2087,6 +2662,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256193077837945
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
@@ -2099,6 +2675,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Yamidokoku Exit
           animationClip: {fileID: 7400000, guid: f1b8fde2b12cce34e835d4c3d5b794b7, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows: []
@@ -2134,6 +2711,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256193077837947
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
@@ -2146,6 +2724,9 @@ MonoBehaviour:
         startFrameOffset: 18
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 2.274058, y: 1.7251742}
         size: {x: 4.300432, y: 3.1781354}
@@ -2169,10 +2750,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 4bd6b8731ae78744395b02a901c49b23, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 1
+        breaksArmor: 0
     - rid: 1588256193077837949
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -2189,6 +2773,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -2197,6 +2787,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -2219,17 +2810,81 @@ MonoBehaviour:
               endStrength: 0
               duration: 0
               pulseInterval: 0.01
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 1
                 timeScale: 0.2
                 duration: 1
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -2244,6 +2899,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -2252,6 +2913,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -2274,17 +2936,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077837951
@@ -2316,6 +3042,7 @@ MonoBehaviour:
           channel: 1
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: e79495f52477fbe43b43b9225312fe16, type: 3}
@@ -2324,6 +3051,7 @@ MonoBehaviour:
           channel: 1
           volume: 0.6
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256193077837968
       type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
@@ -2356,6 +3084,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -2364,6 +3098,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -2386,17 +3121,81 @@ MonoBehaviour:
               endStrength: 0
               duration: 0
               pulseInterval: 0.01
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 1
                 timeScale: 0.2
                 duration: 0.7
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697674
@@ -2410,6 +3209,7 @@ MonoBehaviour:
           channel: 1
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256211525697675
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
@@ -2422,6 +3222,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
@@ -2430,6 +3231,7 @@ MonoBehaviour:
           channel: 1
           volume: 0.5
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256211525697676
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
@@ -2442,6 +3244,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 0.95
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256211525697677
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
@@ -2459,6 +3262,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -2467,6 +3276,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -2489,17 +3299,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697678
@@ -2518,6 +3392,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -2526,6 +3406,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -2548,17 +3429,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912841365651557
@@ -2572,6 +3517,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Recover
           animationClip: {fileID: 7400000, guid: 920ce8341d962654895537b0323ca112, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -2607,6 +3553,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Start Tap
           animationClip: {fileID: 7400000, guid: eaf2a2eba41928442b64a4cbbce32d4b, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows:
@@ -2648,6 +3595,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 1
           timelineMode: 0
@@ -2656,6 +3609,7 @@ MonoBehaviour:
           activationVFXOffset: {x: -0.5, y: 1, z: 0}
           activationVoice: {fileID: 8300000, guid: 367fc337de3bc9d44b6fbf4d782ba5c4, type: 3}
           activationSFX: {fileID: 8300000, guid: 6047e38506eb20347b9750b41ccfda17, type: 3}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -2678,17 +3632,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 1
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -2703,6 +3721,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -2711,6 +3735,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -2733,17 +3758,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912841365651560
@@ -2757,6 +3846,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: e79495f52477fbe43b43b9225312fe16, type: 3}
@@ -2765,6 +3855,7 @@ MonoBehaviour:
           channel: 1
           volume: 0.7
           pitchVariation: 1.1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 3612912841365651562
       type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
@@ -2791,6 +3882,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 41
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.09770262, y: 1.5932666}
         size: {x: 3.6388175, y: 3.3019567}
@@ -2802,6 +3896,8 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 332041b5ca70b034dad992b18618a489, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 14
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -2809,10 +3905,19 @@ MonoBehaviour:
     - rid: 3612912841365651566
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 13
           endFrame: 20
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 2.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -2820,6 +3925,14 @@ MonoBehaviour:
         - startFrame: 40
           endFrame: 67
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 2, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -2827,6 +3940,14 @@ MonoBehaviour:
         - startFrame: 20
           endFrame: 40
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 10, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -2842,6 +3963,7 @@ MonoBehaviour:
           loopActivePhase: 1
           stepName: Yaotome
           animationClip: {fileID: 7400000, guid: 24163526687b336478288955cf280500, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows:
@@ -2879,6 +4001,9 @@ MonoBehaviour:
         startFrameOffset: 5
         activeFrames: 2
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.5329468, y: 1.2551045}
         size: {x: 2.9169376, y: 2.62297}
@@ -2902,16 +4027,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 4
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 1
+        breaksArmor: 0
     - rid: 3612912841365651576
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 22
         activeFrames: 2
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.5460851, y: 1.4373848}
         size: {x: 2.6807704, y: 2.8747697}
@@ -2935,17 +4066,29 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 4
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 3612912841365651577
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
+        followSlowMotion: 1
         keyframes:
         - startFrame: 1
           endFrame: 28
           taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
           easing: 1
           position: {x: 1, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
@@ -2961,6 +4104,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Yaotome-Folow
           animationClip: {fileID: 7400000, guid: b7f6735a5e99884408ee919427c09d9a, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows: []
@@ -3001,6 +4145,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 2
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9411199, y: 1.283295}
         size: {x: 3.9509192, y: 2.904873}
@@ -3024,16 +4171,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: be42944712cebd14a9f9a6b13cb00fe6, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 3612912841365651583
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 2
         activeFrames: 2
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.687238, y: 1.3020884}
         size: {x: 3.8190255, y: 2.7169378}
@@ -3057,16 +4210,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: be42944712cebd14a9f9a6b13cb00fe6, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 50
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 3612912841365651584
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 4
         activeFrames: 4
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.51809716, y: 1.3396753}
         size: {x: 4.7587023, y: 3.0552206}
@@ -3090,16 +4249,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: be42944712cebd14a9f9a6b13cb00fe6, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 3612912841365651585
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 8
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0161245, y: 1.9034806}
         size: {x: 5.8299313, y: 4.145244}
@@ -3123,10 +4288,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: c8e946256ad2d6b4ba129d9337e00394, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 3612912841365651586
       type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
       data:
@@ -3153,6 +4321,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 3612912846363689063
       type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
@@ -3167,6 +4336,9 @@ MonoBehaviour:
         startFrameOffset: 11
         activeFrames: 5
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0298467, y: 1.9507844}
         size: {x: 5.734492, y: 3.901569}
@@ -3190,16 +4362,22 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: c8e946256ad2d6b4ba129d9337e00394, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 3612912846363689082
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 16
         activeFrames: 5
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.029847, y: 1.950784}
         size: {x: 5.734492, y: 3.901569}
@@ -3223,10 +4401,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: c8e946256ad2d6b4ba129d9337e00394, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 3612912846363689084
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -3238,6 +4419,7 @@ MonoBehaviour:
           channel: 1
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: be884973a50299543ab257a512faff18, type: 3}
@@ -3246,6 +4428,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: 8f1fbecfcb907db4faede25c1428b90b, type: 3}
@@ -3254,6 +4437,7 @@ MonoBehaviour:
           channel: 2
           volume: 0.7
           pitchVariation: 0.9
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 3612912846363689085
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
@@ -3266,6 +4450,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Exit
           animationClip: {fileID: 7400000, guid: 2d2c7cb7338cfb044a1af8c73f1af129, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 1
           triggerWindows: []
@@ -3301,6 +4486,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Recover
           animationClip: {fileID: 7400000, guid: 1ee3715e1567e8a499eaee154b707434, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -3338,6 +4524,9 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: e8c2011236aa4804db1c338c71b3be9f, type: 2}
@@ -3349,6 +4538,9 @@ MonoBehaviour:
         startFrameOffset: 45
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 14292fe5ae190d2479e09342f1788db7, type: 2}
@@ -3360,6 +4552,9 @@ MonoBehaviour:
         startFrameOffset: 112
         activeFrames: 20
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 2c97fdb97c2849845993269349973027, type: 2}
@@ -3376,6 +4571,7 @@ MonoBehaviour:
           channel: 0
           volume: 1
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 3612912846363689099
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
@@ -3388,6 +4584,7 @@ MonoBehaviour:
           channel: 1
           volume: 0.5
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: bd84abf6c9f438f4e9ba190e72bd497d, type: 3}
@@ -3396,6 +4593,7 @@ MonoBehaviour:
           channel: 1
           volume: 0.5
           pitchVariation: 1
+          slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 3612912846363689100
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
@@ -3413,6 +4611,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -3421,6 +4625,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -3443,17 +4648,81 @@ MonoBehaviour:
               endStrength: 0
               duration: 0
               pulseInterval: 0.01
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 1
                 timeScale: 0.35
                 duration: 0.3
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -3468,6 +4737,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -3476,6 +4751,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -3498,17 +4774,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912846363689101
@@ -3530,6 +4870,15 @@ MonoBehaviour:
           loopDuringActive: 0
           adjustLayer: 0
           fitScreenSize: 0
+          impactDistortion:
+            enabled: 0
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
     - rid: 3612912846363689102
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -3545,6 +4894,15 @@ MonoBehaviour:
           loopDuringActive: 1
           adjustLayer: 0
           fitScreenSize: 0
+          impactDistortion:
+            enabled: 0
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
         - label: VFX
           vfxType: 131
           vfxClip: {fileID: 0}
@@ -3560,6 +4918,15 @@ MonoBehaviour:
           loopDuringActive: 1
           adjustLayer: 0
           fitScreenSize: 0
+          impactDistortion:
+            enabled: 0
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
     - rid: 3612912846363689112
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -3579,6 +4946,15 @@ MonoBehaviour:
           loopDuringActive: 0
           adjustLayer: 0
           fitScreenSize: 0
+          impactDistortion:
+            enabled: 0
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
     - rid: 3612912846363689113
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -3598,6 +4974,15 @@ MonoBehaviour:
           loopDuringActive: 1
           adjustLayer: 0
           fitScreenSize: 0
+          impactDistortion:
+            enabled: 0
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
     - rid: 3612912846363689114
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -3609,6 +4994,9 @@ MonoBehaviour:
         startFrameOffset: 1
         activeFrames: 9
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.1238122, y: 3.0906808}
         size: {x: 4.1443877, y: 6.5585485}
@@ -3620,6 +5008,8 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -3640,6 +5030,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -3648,6 +5044,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -3670,17 +5067,81 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912846363689303
@@ -3699,6 +5160,12 @@ MonoBehaviour:
             fadeOutDuration: 0.25
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 0
@@ -3707,6 +5174,7 @@ MonoBehaviour:
           activationVFXOffset: {x: 0, y: 0, z: 0}
           activationVoice: {fileID: 0}
           activationSFX: {fileID: 0}
+          activationSFXVolume: 1
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -3729,16 +5197,80 @@ MonoBehaviour:
               endStrength: 0.08
               duration: 0.14
               pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
               slowMotion:
                 enabled: 0
                 timeScale: 0.35
                 duration: 0.08
                 delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5

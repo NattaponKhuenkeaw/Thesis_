@@ -208,7 +208,7 @@ MonoBehaviour:
     resourceCounterId: main.shadow.cached_cuts
     resourceCost: 1
     commitsDash: 0
-    requiresEnemyTarget: 1
+    requiresEnemyTarget: 0
     reselectOnAttackInput: 1
     targetRadius: 15
     context: 2
@@ -1758,7 +1758,7 @@ MonoBehaviour:
             angleRange: {x: 0, y: 180}
             fullScreenAngle: 104
             revealFrames: {x: 1, y: 3}
-            decayFrames: {x: 16, y: 37}
+            decayFrames: {x: 16, y: 48}
             pixelsPerUnit: 26.25
             seed: 0
             impactDistortion:
@@ -3808,9 +3808,9 @@ MonoBehaviour:
         reactionKind: 2
         impactFreezeFrames: 0
         knockbackFrames: 19
-        knockupFrames: 15
+        knockupFrames: 30
         knockfallFrames: 12
-        recoveryFrames: 11
+        recoveryFrames: 30
         horizontalSpeed: 3
         launchSpeed: 4
         useSnapToAnchor: 0
