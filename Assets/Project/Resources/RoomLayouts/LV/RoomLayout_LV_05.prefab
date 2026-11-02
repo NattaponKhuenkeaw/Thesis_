@@ -981,7 +981,7 @@ MonoBehaviour:
     - {fileID: 9069160753501352487}
     - {fileID: 8761391472074157952}
   corridorPadding: 6
-  drawSceneGuides: 1
+  drawSceneGuides: 0
   gizmoHeight: 8
 --- !u!1 &1250563598624344346
 GameObject:
