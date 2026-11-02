@@ -35,8 +35,13 @@ MonoBehaviour:
       \u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E1E\u0E32\u0E22\u0E38\u0E41\u0E25\u0E30\u0E01\u0E23\u0E30\u0E41\u0E2A\u0E25\u0E21
       \u0E17\u0E35\u0E48\u0E04\u0E21\u0E01\u0E23\u0E34\u0E1A\u0E40\u0E2B\u0E21\u0E37\u0E2D\u0E19\u0E43\u0E1A\u0E21\u0E35\u0E14
       \u0E21\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E01\u0E0F\u0E15\u0E31\u0E27\u0E43\u0E19\u0E0A\u0E38\u0E14\u0E41\u0E21\u0E48\u0E0A\u0E35\u0E17\u0E35\u0E48\u0E14\u0E39\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E15\u0E48\u0E41\u0E1D\u0E07\u0E44\u0E1B\u0E14\u0E49\u0E27\u0E22\u0E04\u0E27\u0E32\u0E21\u0E42\u0E2B\u0E14\u0E40\u0E2B\u0E35\u0E49\u0E22\u0E21\u0E15\u0E32\u0E21\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E2A\u0E32\u0E27\u0E01\u0E42\u0E2D\u0E42\u0E23\u0E08\u0E34"
+    icon: {fileID: 0}
     portrait: {fileID: 21300000, guid: a46bfd9a10ea71648a6b27d01472a600, type: 3}
     animatorController: {fileID: 9100000, guid: efb84dc297f28b2448da06b6d95f9b3b, type: 2}
+  potentialArtwork:
+    skill: {fileID: 0}
+    ultimate: {fileID: 0}
+    passive: {fileID: 0}
   auraEnergyRate: 2
   audioData: {fileID: 11400000, guid: 59862e682f48ee94498de7b7a51bd3a0, type: 2}
   movementProfile: {fileID: 11400000, guid: 475fcb4220eff1746b3aa7806eb8c0a1, type: 2}
@@ -52,6 +57,7 @@ MonoBehaviour:
     maxHpPerLevel: 79.5
   _dashData:
     animationClip: {fileID: 7400000, guid: a84ff45c3f3eb5047be611bbaa8bb3e9, type: 2}
+    icon: {fileID: 0}
     startupFrames: 7
     activeFrames: 14
     recoveryFrames: 29
@@ -84,6 +90,7 @@ MonoBehaviour:
       description: 
     baseSkillNode:
       meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
@@ -100,6 +107,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 2
@@ -111,6 +120,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -142,6 +152,7 @@ MonoBehaviour:
       unlockedByDefault: 1
     baseUltimateNode:
       meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
@@ -158,6 +169,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 2
@@ -169,6 +182,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -199,6 +213,7 @@ MonoBehaviour:
       unlockedByDefault: 1
     basePassiveNode:
       meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -224,6 +239,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         evasionChance: 0.35
         grantsDamageImmunity: 0
         grantsDebuffImmunity: 0
@@ -242,6 +258,7 @@ MonoBehaviour:
       unlockedByDefault: 1
     potentialNodes:
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -261,6 +278,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -417,6 +435,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -436,6 +455,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -593,6 +613,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
@@ -609,6 +630,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 3
         damageMultiplierValue: 4.5
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -620,6 +643,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -652,6 +676,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
@@ -668,6 +693,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -679,6 +706,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -713,6 +741,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -732,6 +761,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -886,6 +916,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
@@ -902,6 +933,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 3
         damageMultiplierValue: 10
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -913,6 +946,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -949,6 +983,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
@@ -967,6 +1002,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -978,6 +1015,7 @@ MonoBehaviour:
         energyCostOperation: 3
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -999,6 +1037,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: goenitz_followup_ultimate_window
         addTag: 1
         duration: 20
@@ -1034,6 +1073,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -1052,6 +1092,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: goenitz_ultimate_state
         addTag: 1
         duration: 99999
@@ -1070,6 +1111,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: goenitz_ultimate_state
         addTag: 0
         duration: 0
@@ -1089,6 +1131,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_ultimate_state
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1348,6 +1391,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1648,6 +1692,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_ultimate_state
+          requireManualOnFieldActionStart: 0
         evasionChance: 0
         grantsDamageImmunity: 1
         grantsDebuffImmunity: 1
@@ -1677,6 +1722,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -1696,6 +1742,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1850,6 +1897,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -1874,6 +1922,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         chance: 1
         internalCooldown: 0
         criticalHitRequirement: 0
@@ -1922,6 +1971,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
@@ -1940,6 +1990,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -1951,6 +2003,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -1972,6 +2025,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: goenitz_after_dash_bonus_action
         addTag: 1
         duration: 10
@@ -1990,6 +2044,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: goenitz_after_dash_basic_depth4
         addTag: 1
         duration: 10
@@ -2008,6 +2063,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_after_dash_basic_depth4
+          requireManualOnFieldActionStart: 0
         tag: goenitz_after_dash_basic_depth4
         addTag: 0
         duration: 0
@@ -2031,6 +2087,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_after_dash_bonus_action
+          requireManualOnFieldActionStart: 0
         chance: 1
         internalCooldown: 0
         criticalHitRequirement: 0
@@ -2078,6 +2135,7 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -2103,6 +2161,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         evasionChance: 0.65
         grantsDamageImmunity: 0
         grantsDebuffImmunity: 0
@@ -2135,4 +2194,87 @@ MonoBehaviour:
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
+  qteSwap:
+    enabled: 0
+    triggerActionIds: []
+    introActionKey: 
+    introStepName: 
+    introComboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: -2
+    entryMode: 0
+    plunge:
+      targetStartOffset: {x: 1, y: 5}
+      prefab: {fileID: 0}
+      visuals:
+        scale: 1
+        impactScale: 2.5
+        coreWidth: 0.08
+        envelopeWidth: 0.3
+        groundSpread: 3.3
+        impactHeight: 2.5
+        branches: 11
+        aboveScreenPadding: 2
+        minimumBoltLength: 14
+        boltJitter: 0.12
+        glowWidth: 3.8
+        coreColor: {r: 1.7, g: 1.25, b: 2.4, a: 1}
+        violetColor: {r: 0.32, g: 0.018, b: 0.7, a: 0.88}
+        blueColor: {r: 0.26, g: 0.06, b: 0.65, a: 0.6}
+        shadowColor: {r: 0.035, g: 0.008, b: 0.085, a: 0.95}
+        auraColor: {r: 0.11, g: 0.006, b: 0.25, a: 0.42}
+        glowColor: {r: 0.45, g: 0.045, b: 1.4, a: 0.22}
+        impactLightIntensity: 0.8
+        impactLightRadius: 7
+        impactHoldFrames: 18
+        columnFadeFrames: 54
+        lightFadeFrames: 36
+        flashFrames: 10
+        burstFrames: 90
+        windFrames: 108
+        residualFrames: 118
+        exitDelayFrames: 12
+        exitFrames: 78
+        exitScatter: 0.65
+        stormLift: 0.6
+        groundShockwaveEnabled: 1
+        fallingArcCount: 6
+        impactArcCount: 9
+        electricalSpread: 1
+        electricalArcLength: 0.8
+        electricalWidth: 0.028
+        electricalGlow: 1.2
+        electricalColor: {r: 0.95, g: 0.28, b: 2.4, a: 1}
+        fallingSparkCount: 8
+        sparkCount: 36
+        debrisCount: 18
+        residualCount: 15
+        sortingLayer: WorldUI
+        sortingOrder: 995
+        seed: 0
+        impactDistortion:
+          enabled: 0
+          startFrame: 0
+          durationFrames: 12
+          waveWidth: 0.04
+          refractionPixels: 4
+          chromaticPixels: 0
+          blurPixels: 0
+          referenceHeight: 270
+        suppressChromaticAberration: 1
+    entryOffset: 1
+    readySfx: {fileID: 0}
+    entryGrantTag: 
+    entryGrantCounterId: 
+    entryGrantAmount: 0
+    entryGrantConsumeActionId: 
+  combatRules:
+    meterGainRules: []
   actionResolverTable: {fileID: 11400000, guid: edfb0345aff2c904bae95d737bd41ce1, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

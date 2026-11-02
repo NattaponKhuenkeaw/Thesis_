@@ -210,25 +210,33 @@ public class ShadowMeterTests
     }
 
     [Test]
-    public void SkillFourVulnerabilityReplacesBaseInsteadOfStackingToFiftyFive()
+    public void SkillThreeVulnerabilityReplacesTwentyInsteadOfStackingToSixty()
     {
         var receiver = owner.AddComponent<RuntimeEffectReceiver>();
-        RuntimeEffectRecipe baseRecipe = character.kitDefinition.baseSkillNode.runtimeEffects.Single().recipe;
-        RuntimeEffectRecipe enhanced = character.kitDefinition.GetNodeById("main.skill.lv4").runtimeEffects
+        Assert.That(character.kitDefinition.baseSkillNode.runtimeEffects, Is.Empty);
+        RuntimeEffectRecipe baseRecipe = character.kitDefinition.GetNodeById("main.skill.lv1").runtimeEffects.Single().recipe;
+        RuntimeEffectRecipe enhanced = character.kitDefinition.GetNodeById("main.skill.lv3").runtimeEffects
             .Single(e => e.recipe.policy.appliesOn == RuntimeEffectApplyTarget.Enemy).recipe;
+        receiver.ApplyEffect(baseRecipe, character, character.stats);
+        Assert.That(receiver.ModifyIncomingDamage(new RuntimeEffectDamageContext(), 100f), Is.EqualTo(120f).Within(.01f));
         for (int hit = 0; hit < 3; hit++)
         {
             receiver.ApplyEffect(baseRecipe, character, character.stats);
             receiver.ApplyEffect(enhanced, character, character.stats);
             Assert.That(receiver.ModifyIncomingDamage(new RuntimeEffectDamageContext(), 100f), Is.EqualTo(140f).Within(0.01f));
             Assert.That(receiver.ActiveEffects.Count, Is.EqualTo(1));
+            Assert.That(receiver.ActiveEffects.Single().remainingSeconds, Is.EqualTo(17f));
         }
+        typeof(RuntimeEffectReceiver).GetMethod("Tick", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(receiver, new object[] { 17.01f });
+        Assert.That(receiver.ModifyIncomingDamage(new RuntimeEffectDamageContext(), 100f), Is.EqualTo(100f));
     }
 
     [Test]
-    public void SkillHitsRefreshAlliesCritForSevenSecondsWithoutStacking()
+    public void SkillHitsSnapshotMainsAttackForAlliesMasteryAndRefreshWithoutStacking()
     {
         progression.SetPotentialLevel(character, PotentialTrack.Skill, 4);
+        character.stats.attack = 80f;
         PlayerRunInventory inventory = CreateIsolatedTeamInventory();
         for (int hit = 0; hit < 3; hit++)
             passive.NotifyHitDealt(AttackCategory.Skill, "main.skill.dark_chain", "Dark Chain",
@@ -237,14 +245,62 @@ public class ShadowMeterTests
         {
             RuntimeEffectInstance instance = inventory.GetActiveRuntimeEffects(member).Single();
             Assert.That(instance.recipe.policy.appliesOn, Is.EqualTo(RuntimeEffectApplyTarget.Allies));
-            var stats = new CharacterStats { critRate = 5f };
-            instance.definition.ModifyStats(new RuntimeEffectContext { instance = instance }, stats);
-            Assert.That(stats.critRate, Is.EqualTo(20f));
-            Assert.That(instance.remainingSeconds, Is.EqualTo(7f));
+            CharacterStats stats = inventory.GetCharacterStats(member);
+            Assert.That(stats.dotMastery, Is.EqualTo(10f));
+            Assert.That(stats.additionalDamageIncrease, Is.EqualTo(10f));
+            Assert.That(stats.critRate, Is.EqualTo(5f), "The old crit buff has been replaced.");
+            Assert.That(instance.sourceCharacter, Is.SameAs(character));
+            Assert.That(instance.remainingSeconds, Is.EqualTo(17f));
         }
-        inventory.TickRuntimeEffects(7.01f);
+        inventory.TickRuntimeEffects(10f);
+        character.stats.attack = 164f;
+        Assert.That(inventory.GetCharacterStats(testAlly).dotMastery, Is.EqualTo(10f), "ATK is snapshotted, not read continuously.");
+        passive.NotifyHitDealt(AttackCategory.Skill, "main.skill.dark_chain", "Dark Chain",
+            new AttackStepData { stepName = "Skill" }, null, ElementType.None, false, 100f, false);
+        foreach (CharacterObject member in new[] { character, testAlly })
+        {
+            Assert.That(inventory.GetActiveRuntimeEffects(member).Count, Is.EqualTo(1));
+            Assert.That(inventory.GetCharacterStats(member).dotMastery, Is.EqualTo(20.5f));
+            Assert.That(inventory.GetCharacterStats(member).additionalDamageIncrease, Is.EqualTo(20.5f));
+            Assert.That(inventory.GetActiveRuntimeEffects(member).Single().remainingSeconds, Is.EqualTo(17f));
+        }
+        inventory.TickRuntimeEffects(17.01f);
         Assert.That(inventory.GetActiveRuntimeEffects(character), Is.Empty);
         Assert.That(inventory.GetActiveRuntimeEffects(testAlly), Is.Empty);
+    }
+
+    [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)]
+    public void SkillPotentialLevelsResolveTheNewProgression(int level)
+    {
+        progression.SetPotentialLevel(character, PotentialTrack.Skill, level);
+        Assert.That(passive.ModifyAuraEnergyReward(AttackCategory.Skill, "main.skill.dark_chain", "Dark Chain", 10f),
+            Is.EqualTo(level > 0 ? 15f : 10f));
+        Assert.That(character.kitDefinition.GetNodeById("main.skill.lv3").actionModifiers, Is.Empty);
+        Assert.That(passive.ModifyActionDamageMultiplier(AttackCategory.Skill, "main.skill.dark_chain", "Dark Chain", 3.5f), Is.EqualTo(3.5f));
+        ProjectileData upgraded = character.kitDefinition.GetNodeById("main.skill.lv2").actionModifiers.Single().replacementProjectileData;
+        Assert.That(upgraded.magnetismSpeed, Is.GreaterThan(0f));
+        Assert.That(upgraded.maxHits, Is.EqualTo(5));
+        Assert.That(character.kitDefinition.GetNodeById("main.skill.lv4").runtimeEffects.Count, Is.EqualTo(1));
+        RuntimeEffectRecipe[] vulnerabilities = passive.GetActiveNodes().SelectMany(n => n.runtimeEffects)
+            .Select(e => e.recipe).Where(r => r.policy.stackKey == "main.skill.damage_taken").ToArray();
+        Assert.That(vulnerabilities.Length, Is.EqualTo(level == 0 ? 0 : level >= 3 ? 2 : 1));
+        if (level > 0)
+            Assert.That(vulnerabilities.Last().parameters.damageModifier.incomingDamageTakenPercentAdd,
+                Is.EqualTo(level >= 3 ? 40f : 20f));
+    }
+
+    [Test]
+    public void ReceiverStatBuffRefreshCapturesLatestSourceSnapshot()
+    {
+        var receiver = owner.AddComponent<RuntimeEffectReceiver>();
+        RuntimeEffectRecipe recipe = character.kitDefinition.GetNodeById("main.skill.lv4").runtimeEffects.Single().recipe;
+        RuntimeEffectInstance instance = receiver.ApplyEffect(recipe, character, new CharacterStats { attack = 80f });
+        receiver.ApplyEffect(recipe, character, new CharacterStats { attack = 164f });
+        var stats = new CharacterStats();
+        instance.definition.ModifyStats(new RuntimeEffectContext { instance = instance, sourceStats = instance.sourceStatsSnapshot }, stats);
+        Assert.That(stats.dotMastery, Is.EqualTo(20.5f));
+        Assert.That(stats.additionalDamageIncrease, Is.EqualTo(20.5f));
+        Assert.That(receiver.ActiveEffects.Count, Is.EqualTo(1));
     }
 
     [Test]

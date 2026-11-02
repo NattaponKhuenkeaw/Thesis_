@@ -8,6 +8,8 @@ public class DashData
     public AnimationClip animationClip;
     [Tooltip("Optional HUD icon for this character's Dash slot. The UI keeps its existing sprite when this is unassigned.")]
     public Sprite icon;
+    [Tooltip("Optional HUD icon while at least one full combat meter box is available to spend on Dash.")]
+    public Sprite meterReadyIcon;
 
     [Header("Frame Data (60 fps base)")]
     public int startupFrames = 5;

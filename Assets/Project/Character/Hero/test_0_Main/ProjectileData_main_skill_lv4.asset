@@ -31,7 +31,7 @@ MonoBehaviour:
   traversalMode: 0
   trackingReferencePointMode: 0
   anchorReferencePointMode: 2
-  homingTurnRate: 9999
+  homingTurnRate: 8
   trackDelaySeconds: 0
   trackingRadius: 0
   speed: 0
@@ -52,6 +52,8 @@ MonoBehaviour:
   stopOnImpact: 1
   destroyWhenHitsExhausted: 0
   destroyOnLifetimeExpire: 1
+  centerGrabbedTargets: 0
+  grabCenterOffset: {x: 0, y: 0}
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []
@@ -79,6 +81,8 @@ MonoBehaviour:
         activeFrames: 3
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 2.4}
         size: {x: 8, y: 8}
@@ -102,6 +106,8 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}

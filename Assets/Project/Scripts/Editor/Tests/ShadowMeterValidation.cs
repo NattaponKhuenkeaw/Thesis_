@@ -22,7 +22,20 @@ public static class ShadowMeterValidation
     [MenuItem("Tools/Project/Combat/Validate Main Potential")]
     public static void RunMainPotential()
     {
-        RunFixtures(new[] { "ShadowMeterTests", "CombatDamageTypeTests" }, "Temp/main-potential-tests.xml", false);
+        RunFixtures(new[] { "ShadowMeterTests", "MainSkillMagnetismTests", "EnemyPositionReactionTests", "CombatDamageTypeTests" }, "Temp/main-potential-tests.xml", false);
+    }
+
+    [MenuItem("Tools/Project/Combat/Validate Main Skill Revision")]
+    public static void RunMainSkillRevision()
+    {
+        RunFixtures(new[]
+        {
+            "MainSkillMagnetismTests", "EnemyPositionReactionTests", "CombatDamageTypeTests",
+            "ShadowMeterTests.SkillThreeVulnerabilityReplacesTwentyInsteadOfStackingToSixty",
+            "ShadowMeterTests.SkillHitsSnapshotMainsAttackForAlliesMasteryAndRefreshWithoutStacking",
+            "ShadowMeterTests.SkillPotentialLevelsResolveTheNewProgression",
+            "ShadowMeterTests.ReceiverStatBuffRefreshCapturesLatestSourceSnapshot"
+        }, "Temp/main-skill-revision-tests.xml", false);
     }
 
     private static void RunFixtures(string[] fixtures, string resultPath, bool capturePreviews)

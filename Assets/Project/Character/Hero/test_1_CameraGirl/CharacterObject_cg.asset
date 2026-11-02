@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
   characterId: char-1-camera_girl
   characterType: 0
-  characterRole: 3
+  characterRole: 0
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 973
@@ -34,6 +34,10 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 42d3f8943fe694546a553aeea3671ff2, type: 3}
     portrait: {fileID: 21300000, guid: 07ac22505236389428e62791d6c70652, type: 3}
     animatorController: {fileID: 9100000, guid: 18ac1726ca931af428ba33088aee69e9, type: 2}
+  potentialArtwork:
+    skill: {fileID: 21300000, guid: 1707dc988f293a640a67328439f06cda, type: 3}
+    ultimate: {fileID: 21300000, guid: 64adf9b1f70fa1d4da55794f9ca20dde, type: 3}
+    passive: {fileID: 21300000, guid: e892c29c8c27ca24f953b2abb4ab020e, type: 3}
   auraEnergyRate: 1
   audioData: {fileID: 11400000, guid: 90cabbe834c759d42ba7ddcae9fdb6fb, type: 2}
   movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
@@ -49,7 +53,8 @@ MonoBehaviour:
     maxHpPerLevel: 83
   _dashData:
     animationClip: {fileID: 7400000, guid: fa372523c264ac241bbda4f3e01c1c3f, type: 2}
-    icon: {fileID: -4070627722582034578, guid: 4185668ee7484be49aca99f95f6e49e2, type: 3}
+    icon: {fileID: 21300000, guid: 4185668ee7484be49aca99f95f6e49e2, type: 3}
+    meterReadyIcon: {fileID: 0}
     startupFrames: 4
     activeFrames: 13
     recoveryFrames: 14
@@ -68,17 +73,17 @@ MonoBehaviour:
     skill:
       abilityId: 
       abilityName: 
-      icon: {fileID: -8106061018650876297, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
+      icon: {fileID: 21300000, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
       description: 
     ultimate:
       abilityId: 
       abilityName: 
-      icon: {fileID: 8054154319732370559, guid: f29a60c7b0bbd7a4ab8ce62ca53ad960, type: 3}
+      icon: {fileID: 21300000, guid: f29a60c7b0bbd7a4ab8ce62ca53ad960, type: 3}
       description: 
     passive:
       abilityId: 
       abilityName: 
-      icon: {fileID: -1158885218331417445, guid: 9de65cad6d263e3408c125be34b9d009, type: 3}
+      icon: {fileID: 21300000, guid: 9de65cad6d263e3408c125be34b9d009, type: 3}
       description: 
     baseSkillNode:
       meterCapacityModifiers: []
@@ -2495,6 +2500,7 @@ MonoBehaviour:
     entryGrantCounterId: 
     entryGrantAmount: 0
     entryGrantConsumeActionId: 
+    entryAuraEnergyPerAlly: 7
   combatRules:
     meterGainRules: []
   actionResolverTable: {fileID: 11400000, guid: 90f3f5c1e3c9d334a90282b1605414b6, type: 2}

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Displays resolver action icons/windows, cooldowns and committed normal-attack feedback.
+/// Displays resolver action icons/windows, cooldowns and committed action feedback.
 ///
 /// Per-slot elements (Skill and Ultimate each have their own set):
 ///   CooldownOverlay  — fillAmount 1→0 while cooling down;
@@ -178,6 +178,8 @@ public class AbilityUIManager : MonoBehaviour
         {
             teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
             teamLoader.OnCharacterAuraEnergyUpdated += HandleCharacterAuraEnergyUpdated;
+            teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
+            teamLoader.OnCurrentCharacterChanged += HandleCurrentCharacterChanged;
         }
         RefreshWithoutReadyFeedback();
     }
@@ -187,7 +189,10 @@ public class AbilityUIManager : MonoBehaviour
         UnbindPlayer();
         ClearWindowEffects();
         if (teamLoader != null)
+        {
             teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
+            teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
+        }
     }
 
     private void OnDestroy()
@@ -366,8 +371,18 @@ public class AbilityUIManager : MonoBehaviour
     private void UpdateDashUI()
     {
         PlayerMovement movement = playerCharacter != null ? playerCharacter.Movement : null;
-        CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
-        UpdateActionIcon(dashIcon, character != null && character.DashData != null ? character.DashData.icon : null);
+        CharacterObject character = teamLoader != null ? teamLoader.CurrentCharacter : null;
+        if (character == null && playerCharacter != null)
+            character = playerCharacter.characterObject;
+        DashData dash = character?.DashData;
+        Sprite icon = dash?.icon;
+        CharacterPassiveController passive = playerCharacter != null ? playerCharacter.PassiveController : null;
+        CombatMeterDefinition meter = passive != null ? passive.CombatMeter : null;
+        if (dash?.meterReadyIcon != null && passive != null && passive.playerCharacter?.characterObject == character
+            && meter != null && meter.IsConfigured
+            && passive.RuntimeState.GetCounter(meter.counterId) >= Mathf.Max(1, meter.pointsPerBox))
+            icon = dash.meterReadyIcon;
+        UpdateActionIcon(dashIcon, icon);
         float remaining = movement != null ? movement.DashCooldownRemaining : 0f;
         float duration = movement != null ? movement.DashCooldownDuration : 0f;
         bool coolingDown = remaining > 0f;
@@ -392,11 +407,14 @@ public class AbilityUIManager : MonoBehaviour
     }
 
     public void PlayNormalAttackCommittedFeedback()
+        => PlayAbilityCommittedFeedback(AbilityType.NormalAttack);
+
+    public void PlayAbilityCommittedFeedback(AbilityType type)
     {
-        if (!isActiveAndEnabled || normalAttackFeedbackRoot == null
-            || !normalAttackFeedbackRoot.gameObject.activeInHierarchy) return;
+        RectTransform target = ResolveFeedbackRoot(type);
+        if (!isActiveAndEnabled || target == null || !target.gameObject.activeInHierarchy) return;
         EnsureFeedbackDriver();
-        feedbackDriver.PlayPulse(normalAttackFeedbackRoot, readyPulseScale, readyFeedbackDuration);
+        feedbackDriver.PlayPulse(target, readyPulseScale, readyFeedbackDuration);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -743,7 +761,17 @@ public class AbilityUIManager : MonoBehaviour
                 action.actionName,
                 out float remainingSeconds,
                 out float durationSeconds))
+        {
+            // Resource-backed standalone actions can be selected by the Normal
+            // resolver without a timed tag window (for example Main's cached
+            // Dimension Cut). Keep the opportunity ring visible while that
+            // action is actually available; resolver availability already
+            // checks its counter, context, target and other action conditions.
+            if (category == AttackCategory.Normal && display.available
+                && action is StandaloneAction && action.resourceCost > 0)
+                state.active = true;
             return state;
+        }
 
         if (remainingSeconds <= 0.01f || durationSeconds <= 0.01f)
             return state;
@@ -870,6 +898,8 @@ public class AbilityUIManager : MonoBehaviour
             {
                 teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
                 teamLoader.OnCharacterAuraEnergyUpdated += HandleCharacterAuraEnergyUpdated;
+                teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
+                teamLoader.OnCurrentCharacterChanged += HandleCurrentCharacterChanged;
             }
         }
 
@@ -894,6 +924,15 @@ public class AbilityUIManager : MonoBehaviour
             if (gained && !readyNow)
                 PlayAuraEnergyGainFeedback();
         }
+    }
+
+    private void HandleCurrentCharacterChanged()
+    {
+        if (teamLoader != null && teamLoader.playerCharacter != null)
+            playerCharacter = teamLoader.playerCharacter;
+
+        RebindPlayer();
+        RefreshWithoutReadyFeedback();
     }
 
     private void RebindPlayer()

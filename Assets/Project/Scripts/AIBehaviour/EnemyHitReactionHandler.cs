@@ -61,6 +61,10 @@ public class EnemyHitReactionHandler : MonoBehaviour
     private int landingStateEnteredFrame = -1;
     private Vector3 impactFreezeAnchorPosition;
     private bool hasResolvedAirborneLanding;
+    private bool _hasFieldPull;
+    private float _fieldPullCenterX;
+    private float _fieldPullSpeed;
+    private ProjectileRuntime _fieldPullSource;
 
     private readonly RaycastHit2D[] groundHits = new RaycastHit2D[4];
     private readonly RaycastHit2D[] bindingHits = new RaycastHit2D[32];
@@ -124,6 +128,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     void OnDisable()
     {
+        _hasFieldPull = false;
         if (controller != null)
         {
             controller.OnDied -= HandleDeath;
@@ -403,6 +408,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     void FixedUpdate()
     {
+        ApplyPendingFieldPull();
         if (currentState == EnemyReactionState.None)
         {
             return;
@@ -442,6 +448,39 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 UpdateImpactFreezeShake();
             }
         }
+    }
+
+    public void RequestFieldPull(ProjectileRuntime source, float centerX, float speed)
+    {
+        // Overlapping fields use the strongest pull instead of multiplying displacement.
+        if (!_hasFieldPull || speed > _fieldPullSpeed)
+        {
+            _fieldPullCenterX = centerX;
+            _fieldPullSpeed = Mathf.Max(0f, speed);
+            _fieldPullSource = source;
+        }
+        _hasFieldPull = true;
+    }
+
+    private void ApplyPendingFieldPull()
+    {
+        if (!_hasFieldPull) return;
+        _hasFieldPull = false;
+        if (_fieldPullSource == null || !_fieldPullSource.IsMagnetismActive
+            || controller == null || !controller.IsGameplayActive || controller.ignoreHitReactions
+            || controller.IsArmored || rb == null || !rb.simulated || bodyCollider == null
+            || currentState == EnemyReactionState.ImpactFreeze
+            || (IsInReaction && currentReaction.reactionKind == EnemyReactionKind.Grab))
+            return;
+
+        float centerX = bodyCollider.bounds.center.x;
+        float deltaX = Mathf.MoveTowards(centerX, _fieldPullCenterX, _fieldPullSpeed * Time.fixedDeltaTime) - centerX;
+        var filter = new ContactFilter2D();
+        filter.SetLayerMask(groundLayers);
+        filter.useTriggers = false;
+        Vector2 delta = PositionReactionMotion.ClipTerrainMove(rb, bodyCollider, filter, bindingHits, new Vector2(deltaX, 0f));
+        // Translate before the reaction motor computes its next step, preserving its trajectory and gravity.
+        rb.position += delta;
     }
 
     private void ProcessReactionFrame()

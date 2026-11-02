@@ -2210,6 +2210,9 @@ namespace Project.ShopSystem
                 }
                 else if (resolvedRefreshDuration)
                 {
+                    // A refreshed stat buff snapshots this application, including changes to its source's ATK.
+                    if (effectDefinition is StatRuntimeEffectDefinition)
+                        instance.Rebind(recipe, sourceCharacter, resolvedSourceStats);
                     instance.Refresh(durationOverride);
                     effectDefinition.OnReapplied(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
                 }

@@ -264,6 +264,12 @@ namespace CombatEditor.UI
                     data.hitIntervalFrames = value;
                     MarkDirty();
                 });
+                AddFloatField(body, "Magnetism Speed", data.magnetismSpeed, value =>
+                {
+                    RecordUndo("Edit Magnetism Speed");
+                    data.magnetismSpeed = Mathf.Max(0f, value);
+                    MarkDirty();
+                });
                 AddToggle(body, "Stop on Impact", data.stopOnImpact, value =>
                 {
                     RecordUndo("Toggle Stop on Impact");
@@ -2737,6 +2743,12 @@ namespace CombatEditor.UI
                 {
                     RecordUndo("Edit Dash Icon");
                     dash.icon = value as Sprite;
+                    MarkDirty();
+                });
+                AddObjectField(body, "Meter Ready Dash Icon", dash.meterReadyIcon, value =>
+                {
+                    RecordUndo("Edit Meter Ready Dash Icon");
+                    dash.meterReadyIcon = value as Sprite;
                     MarkDirty();
                 });
 

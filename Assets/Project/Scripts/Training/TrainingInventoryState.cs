@@ -23,6 +23,7 @@ namespace Project.Training
             foreach (var item in entries)
             {
                 if (item is CharacterItem character && character.characterObjectData != null
+                    && character.availableInShop
                     && !string.IsNullOrWhiteSpace(character.characterObjectData.characterId)
                     && characters.Add(character.characterObjectData.characterId))
                 {
@@ -30,8 +31,10 @@ namespace Project.Training
                     GetOrCreateRunCharacterState(character.characterObjectData);
                 }
                 else if (item is ArtifactDefinition definition && !string.IsNullOrWhiteSpace(definition.id)
-                    && artifacts.Add(definition.id))
-                    TryAcquireArtifact(definition, out _, biomeIndexOverride: 0);
+                    && artifacts.Add(definition.id)
+                    && TryAcquireArtifact(definition, out var instance, biomeIndexOverride: 0)
+                    && instance != null)
+                    instance.rolls.Clear();
             }
             BuildItemIndices();
             foreach (var item in entries)

@@ -244,6 +244,10 @@ public class ProjectileData : ScriptableObject
     [Tooltip("Projectile-local point where the grabbed enemy's body center should be held.")]
     public Vector2 grabCenterOffset = Vector2.zero;
 
+    [Header("Magnetism")]
+    [Tooltip("Horizontal pull speed toward the routine hitbox center. Zero disables pull. Independent of damage ticks and hit quota.")]
+    [Min(0f)] public float magnetismSpeed;
+
     [Header("Area Effects")]
     public bool trackAreaOccupants = false;
     [Min(0.05f)] public float areaEffectRefreshInterval = 0.25f;

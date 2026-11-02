@@ -184,6 +184,9 @@ public class ProjectileRuntime : MonoBehaviour
     internal int hitCooldownFramesRemaining;
 
     public ProjectileData ProjectileData { get; private set; }
+    public bool IsMagnetismActive => isActiveAndEnabled && !isExpired && currentState is UpdatingState
+        && ProjectileData != null && ProjectileData.magnetismSpeed > 0f
+        && triggerCollider != null && triggerCollider.enabled;
     public Vector2 CurrentDirection => currentDirection.sqrMagnitude > 0.001f ? currentDirection.normalized : Vector2.right;
     public Transform AttackerTransform => spawnContext.casterTransform;
     public Vector2 AttackerPosition => spawnContext.casterTransform != null ? (Vector2)spawnContext.casterTransform.position : (Vector2)transform.position;
@@ -277,6 +280,18 @@ public class ProjectileRuntime : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         currentState?.HandleTrigger(other);
+    }
+
+    private void FixedUpdate()
+    {
+        if (!IsMagnetismActive) return;
+
+        float centerX = triggerCollider.bounds.center.x;
+        foreach (EnemyController enemy in trackedEnemies)
+        {
+            if (enemy != null && enemy.IsGameplayActive && IsEnemyTouchingTrigger(enemy))
+                enemy.hitReactionHandler?.RequestFieldPull(this, centerX, ProjectileData.magnetismSpeed);
+        }
     }
 
     private void OnTriggerStay2D(Collider2D other)

@@ -176,6 +176,9 @@ public sealed class QteTeamSwapController : MonoBehaviour
     }
 
     private bool TryPlaceForTarget(CharacterObject incoming, EnemyController target, out QteEntryPlacement placement)
+        => TryPlaceAtPosition(incoming, target.transform.position, out placement);
+
+    private bool TryPlaceAtPosition(CharacterObject incoming, Vector2 targetPosition, out QteEntryPlacement placement)
     {
         placement = default;
         PlayerCharacter player = _team.playerCharacter;
@@ -183,15 +186,19 @@ public sealed class QteTeamSwapController : MonoBehaviour
         {
             QtePlungeSettings plunge = incoming.qteSwap.plunge;
             if (plunge == null || plunge.prefab == null || !player.Movement.TryFindQtePlungePlacement(
-                target.transform.position, plunge.targetStartOffset, player.Movement.FacingDirection, out placement)) return false;
+                targetPosition, plunge.targetStartOffset, player.Movement.FacingDirection, out placement)) return false;
+            if (Mathf.Abs(targetPosition.x - placement.landingBodyPosition.x) <= 0.001f)
+                placement = new QteEntryPlacement(placement.startBodyPosition, placement.landingBodyPosition,
+                    placement.surfacePoint, placement.surfaceNormal, placement.capturedEnemyPosition,
+                    placement.support, placement.approachFacing, player.Movement.FacingDirection);
         }
         else
         {
             if (!TryPlace(incoming, out Vector2 position)) return false;
-            float delta = target.transform.position.x - position.x;
+            float delta = targetPosition.x - position.x;
             int facing = Mathf.Abs(delta) > 0.001f ? (delta > 0f ? 1 : -1) : player.Movement.FacingDirection;
             placement = new QteEntryPlacement(position, position, position, Vector2.up,
-                target.transform.position, null, player.Movement.FacingDirection, facing);
+                targetPosition, null, player.Movement.FacingDirection, facing);
         }
         return true;
     }
@@ -214,7 +221,8 @@ public sealed class QteTeamSwapController : MonoBehaviour
         placement = default;
         PlayerCharacter player = _team.playerCharacter;
         float radius = action.GetTargetSearchRadius();
-        if (IsValidTarget(_target, player.transform.position, radius)
+        bool hasLiveTarget = IsValidTarget(_target, player.transform.position, radius);
+        if (hasLiveTarget
             && TryPlaceForTarget(incoming, _target, out placement))
         {
             target = _target;
@@ -230,6 +238,7 @@ public sealed class QteTeamSwapController : MonoBehaviour
         {
             EnemyController candidate = _targetHits[i] != null ? _targetHits[i].GetComponentInParent<EnemyController>() : null;
             if (!IsValidTarget(candidate, player.transform.position, radius)) continue;
+            hasLiveTarget = true;
             Vector2 delta = candidate.transform.position - player.transform.position;
             float score = delta.sqrMagnitude;
             if (delta.x * player.Movement.FacingDirection < 0f) score += radius * radius;
@@ -240,7 +249,9 @@ public sealed class QteTeamSwapController : MonoBehaviour
             target = candidate;
             placement = candidatePlacement;
         }
-        return target != null;
+        if (target != null) return true;
+        // Readiness belongs to the confirmed hit, so losing its victim must not cancel the intro.
+        return !hasLiveTarget && TryPlaceAtPosition(incoming, player.transform.position, out placement);
     }
 
     private bool TryPlace(CharacterObject incoming, out Vector2 position)
