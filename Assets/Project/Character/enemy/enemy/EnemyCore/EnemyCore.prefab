@@ -700,7 +700,7 @@ MonoBehaviour:
   groundCheckDistance: 0.08
   groundNormalMinY: 0.25
   grabCenterAdjustment: {x: 0, y: 0}
-  usePositionReactions: 1
+  usePositionReactions: 0
   maximumReactionTravel: 1.8
   comboHitTravel: 1
   mediumHitTravel: 1.7

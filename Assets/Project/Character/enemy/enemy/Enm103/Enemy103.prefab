@@ -192,6 +192,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: usePositionReactions
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: grabCenterAdjustment.x
       value: -0.083716
       objectReference: {fileID: 0}
