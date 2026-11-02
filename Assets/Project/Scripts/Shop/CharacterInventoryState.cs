@@ -1164,14 +1164,24 @@ namespace Project.ShopSystem
                 return false;
             }
 
-            ReleaseCharacterDefeat(item.characterObjectData);
-            if (TryAddItem(item))
+            // Main's default ownership must not race the explicit repurchase.
+            bool previousAutoBootstrapSuppression = suppressAutoBootstrap;
+            suppressAutoBootstrap = true;
+            try
             {
-                return true;
-            }
+                ReleaseCharacterDefeat(item.characterObjectData);
+                if (TryAddItem(item))
+                {
+                    return true;
+                }
 
-            RecordCharacterDefeat(item.characterObjectData);
-            return false;
+                RecordCharacterDefeat(item.characterObjectData);
+                return false;
+            }
+            finally
+            {
+                suppressAutoBootstrap = previousAutoBootstrapSuppression;
+            }
         }
 
         private bool CannotAcquireCharacter(CharacterObject character)
