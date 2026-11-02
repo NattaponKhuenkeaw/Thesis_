@@ -8,6 +8,49 @@ using Object = UnityEngine.Object;
 
 public class EnemyColorVariantTests
 {
+    [TestCase('a', "Idle")] [TestCase('b', "Idle")] [TestCase('c', "Idle")]
+    [TestCase('a', "Walk")] [TestCase('b', "Walk")] [TestCase('c', "Walk")]
+    public void Enemy101GroundColliderMatchesVisibleSpriteBase(char color, string pose)
+    {
+        var root = PrefabUtility.LoadPrefabContents(EnemyColorVariantAuthoring.PrefabPath(101));
+        var texture = EnemyColorVariantAuthoring.ReadTexture(EnemyColorVariantAuthoring.VariantSheetPath(101, color));
+        try
+        {
+            var body = root.GetComponent<EnemyController>().bodyCollider as BoxCollider2D;
+            Assert.That(body, Is.Not.Null);
+            Assert.That(body.transform, Is.SameAs(root.transform));
+            Assert.That(body.size, Is.EqualTo(new Vector2(2.2f, 1.81f)));
+            Assert.That(root.transform.localScale, Is.EqualTo(Vector3.one));
+            Assert.That(root.GetComponent<EnemyHitReactionHandler>().UsesPositionReactions, Is.True);
+            float colliderBottom = body.offset.y - body.size.y * .5f;
+            var pixels = texture.GetPixels32();
+            var frames = AssetDatabase.LoadAllAssetsAtPath(EnemyColorVariantAuthoring.VariantSheetPath(101, color))
+                .OfType<Sprite>().Where(sprite => sprite.name.StartsWith("Gif_" + pose + "_")).ToArray();
+            Assert.That(frames.Length, Is.EqualTo(6));
+            foreach (var sprite in frames)
+            {
+                int bottom = -1;
+                var rect = new RectInt(Mathf.RoundToInt(sprite.rect.x), Mathf.RoundToInt(sprite.rect.y),
+                    Mathf.RoundToInt(sprite.rect.width), Mathf.RoundToInt(sprite.rect.height));
+                for (int y = rect.yMin; y < rect.yMax && bottom < 0; y++)
+                    for (int x = rect.xMin; x < rect.xMax; x++)
+                        if (pixels[y * texture.width + x].a > 16)
+                        {
+                            bottom = y - rect.yMin;
+                            break;
+                        }
+                Assert.That(bottom, Is.GreaterThanOrEqualTo(0), sprite.name);
+                float visibleBottom = (bottom - sprite.pivot.y) / sprite.pixelsPerUnit;
+                Assert.That(colliderBottom, Is.EqualTo(visibleBottom).Within(.001f), sprite.name);
+            }
+        }
+        finally
+        {
+            Object.DestroyImmediate(texture);
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+    }
+
     [TestCase(101)] [TestCase(102)] [TestCase(103)] [TestCase(111)]
     public void ThreeNewAppearancesRollIndependentlyWithoutChangingEnemyData(int id)
     {
