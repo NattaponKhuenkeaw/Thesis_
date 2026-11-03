@@ -147,7 +147,7 @@ MonoBehaviour:
     inputTrigger: 0
     holdDuration: 0.35
     allowUltimateInterrupt: 1
-    energyCost: 65
+    energyCost: 70
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}

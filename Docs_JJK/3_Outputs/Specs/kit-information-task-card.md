@@ -68,3 +68,4 @@ Authorized directly by the user's follow-up on 2026-11-03. Workflow remains `/im
 - Verify Main's Dimension Slash is absent below Passive 4, both legacy/new root-level associations, and native wide/4:3 rendering.
 - Completed follow-up: removed generated damage-scaling prose from rich-text copy and restored the existing authored Potential descriptions; the builder no longer injects a damage-scaling sentence.
 - Completed follow-up: removed auto-generated activation and conditional-upgrade sentences; authored activation copy remains supported.
+- Completed follow-up: section order is Skill, Ultimate, Passive, Special, QTE for migrated character data and newly generated presentations.

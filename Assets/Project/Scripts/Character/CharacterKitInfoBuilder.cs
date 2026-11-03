@@ -295,11 +295,11 @@ public static class CharacterKitInfoBuilder
     public static CharacterKitPresentationDefinition CreateLegacyPresentation(CharacterObject character)
     {
         var result = new CharacterKitPresentationDefinition();
-        string[] ids = { "skill", "ultimate", "qte", "special", "passive" };
-        string[] titles = { "Skill", "Ultimate", "QTE", "Special", "Passive" };
+        string[] ids = { "skill", "ultimate", "passive", "special", "qte" };
+        string[] titles = { "Skill", "Ultimate", "Passive", "Special", "QTE" };
         for (int i = 0; i < ids.Length; i++) result.sections.Add(new CharacterKitPresentationDefinition.Section
-        { sectionId = ids[i], title = titles[i], order = i, showPotentialLevel = i == 0 || i == 1 || i == 4,
-            potentialTrack = i == 4 ? PotentialTrack.Passive : i == 1 ? PotentialTrack.Ultimate : PotentialTrack.Skill });
+        { sectionId = ids[i], title = titles[i], order = i, showPotentialLevel = i == 0 || i == 1 || i == 2,
+            potentialTrack = i == 2 ? PotentialTrack.Passive : i == 1 ? PotentialTrack.Ultimate : PotentialTrack.Skill });
         var table = character.actionResolverTable;
         if (table != null)
         {

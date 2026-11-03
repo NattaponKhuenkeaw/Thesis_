@@ -75,31 +75,31 @@ MonoBehaviour:
         showPotentialLevel: 1
         potentialTrack: 0
         summary: 
-        order: 1
+        order: 0
       - sectionId: ultimate
         title: Ultimate
         showPotentialLevel: 1
         potentialTrack: 1
         summary: 
-        order: 2
+        order: 1
       - sectionId: qte
         title: QTE
         showPotentialLevel: 0
         potentialTrack: 0
         summary: 
-        order: 3
+        order: 4
       - sectionId: special
         title: Special
         showPotentialLevel: 0
         potentialTrack: 0
         summary: 
-        order: 4
+        order: 3
       - sectionId: passive
         title: Passive
         showPotentialLevel: 1
         potentialTrack: 2
         summary: 
-        order: 5
+        order: 2
       entries:
       - entryId: char-0-main.basic.0
         sectionId: basic
@@ -365,9 +365,9 @@ MonoBehaviour:
         noteId: 
         priority: 0
         appendNote: 0
-        description: Everytime successful actions will gain Shadow. When Dash will
-          spend 20 Shadows and next Normal Attack will perform <b><color=#a382ed>Dimension
-          Cut</color></b>
+        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
+          2 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
+          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
       track: 2
       level: 0
       fragmentCost: 0
@@ -1485,6 +1485,44 @@ MonoBehaviour:
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.passive.lv1
+      nodeName: Chain Release
+      description: Shadow Meter stores 3 boxes. Unlock Basic Attack stages 4-6.
+      skillPanelDescriptionOverride: Successful actions generate different amounts
+        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
+        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
+        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
+        Unlocks NA 4-6.
+      kitInfoPatches:
+      - entryId: passive
+        noteId: 
+        priority: 1
+        appendNote: 0
+        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
+          3 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
+          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
+      track: 2
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
     - meterCapacityModifiers:
       - counterId: main.shadow
         additionalBoxes: 1
@@ -1538,7 +1576,7 @@ MonoBehaviour:
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
-      nodeId: main.passive.lv1
+      nodeId: main.passive.lv2
       nodeName: Shadow Edge
       description: Shadow Meter capacity +1. Dimension Cut gains +15% CRIT RATE and
         its critical hits ignore enemy Defense.
@@ -1549,51 +1587,18 @@ MonoBehaviour:
       kitInfoPatches:
       - entryId: passive
         noteId: 
-        priority: 1
-        appendNote: 0
-        description: Successful actions generate different amounts of Shadow Meter;
-          Execution Breakdown grants 5 per hit. Dash spends a full box to cache Dimension
-          Cut; Normal Attack spends cached cuts. Stores 3 boxes. Dimension Cut has
-          +15% CRIT RATE; its critical hits ignore enemy Defense.
-      track: 2
-      level: 1
-      fragmentCost: 1
-      unlockedByDefault: 0
-    - meterCapacityModifiers: []
-      counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects: []
-      runtimeEffects: []
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      coordinatedActionEffects: []
-      passiveHookTypeName: 
-      nodeId: main.passive.lv2
-      nodeName: Chain Release
-      description: Shadow Meter stores 3 boxes. Unlock Basic Attack stages 4-6.
-      skillPanelDescriptionOverride: Successful actions generate different amounts
-        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
-        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
-        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
-        Unlocks NA 4-6.
-      kitInfoPatches:
-      - entryId: passive
-        noteId: 
         priority: 2
         appendNote: 0
-        description: Successful actions generate different amounts of Shadow Meter;
-          Execution Breakdown grants 5 per hit. Dash spends a full box to cache Dimension
-          Cut; Normal Attack spends cached cuts. Stores 3 boxes. Dimension Cut has
-          +15% CRIT RATE; its critical hits ignore enemy Defense. Unlocks NA 4-6.
+        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
+          4 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
+          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
+      - entryId: main.dash.dimension_cut
+        noteId: main.dash.dimension_cut.lv-2
+        priority: 1
+        appendNote: 0
+        description: Dash through the target with a perfect cut, Inflict <b><color=#a382ed>350%</color></b>
+          of own ATK, <b><color=#a382ed>+15%</color></b> CRIT Rate and when Critically
+          Hit, <b><color=#a382ed>Ignore Defense</color></b>
       track: 2
       level: 2
       fragmentCost: 1
@@ -1613,12 +1618,12 @@ MonoBehaviour:
       dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects:
-      - trigger: 3
+      - trigger: 2
         filter:
           filterByCategory: 1
-          category: 0
+          category: 2
           filterByActionId: 1
-          actionId: main.dash.dimension_cut
+          actionId: main.ultimate.execution_breakdown
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -1635,8 +1640,8 @@ MonoBehaviour:
         chance: 1
         effectType: 0
         scope: 0
-        valueMode: 1
-        valueSource: 0
+        valueMode: 0
+        valueSource: 9
         valueRatio: 0.08
         flatValue: 0
         runtimeTag: waive_next_ultimate_cost
@@ -1650,7 +1655,8 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: main.passive.lv3
       nodeName: Shadow Restoration
-      description: Dimension Cut heals Main for 8% of its damage dealt.
+      description: Unlock Execution Breakdown, When Using said action will grant
+        enormous of Shadow Meter and Regenerate own 8% of Max HP
       skillPanelDescriptionOverride: Successful actions generate different amounts
         of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
         box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
@@ -1661,11 +1667,9 @@ MonoBehaviour:
         noteId: 
         priority: 3
         appendNote: 0
-        description: Successful actions generate different amounts of Shadow Meter;
-          Execution Breakdown grants 5 per hit. Dash spends a full box to cache Dimension
-          Cut; Normal Attack spends cached cuts. Stores 3 boxes. Dimension Cut has
-          +15% CRIT RATE; its critical hits ignore enemy Defense. Unlocks NA 4-6.
-          Dimension Cut heals Main for 8% of damage dealt.
+        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
+          4 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
+          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
       track: 2
       level: 3
       fragmentCost: 1
@@ -1881,7 +1885,7 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: main.passive.lv4
       nodeName: Shadow Domain
-      description: Shadow Meter capacity +2, reaching 5 boxes. Main gains 2x Shadow
+      description: Shadow Meter capacity +1, reaching 5 boxes. Main gains 2x Shadow
         Meter while inside Void Area. Perform 5 paid Dimension Cuts to open a 5s
         Skill follow-up for Judgment Cut.
       skillPanelDescriptionOverride: Successful actions generate different amounts
@@ -1896,13 +1900,19 @@ MonoBehaviour:
         noteId: 
         priority: 4
         appendNote: 0
-        description: Successful actions generate different amounts of Shadow Meter;
-          Execution Breakdown grants 5 per hit. Dash spends a full box to cache Dimension
-          Cut; Normal Attack spends cached cuts. Stores 5 boxes. Dimension Cut has
-          +15% CRIT RATE; its critical hits ignore enemy Defense. Unlocks NA 4-6.
-          Dimension Cut heals Main for 8% of damage dealt. Shadow Meter gain is doubled
-          while Main is inside Void Area. Perform 5 paid Dimension Cuts to open a
-          5s Skill follow-up for Judgment Cut.
+        description: 'Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
+          5 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
+          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
+
+
+
+          <size=19><color=#787878>While
+          self within <b><color=#a382ed>Void Area</color></b> will Increase Shadow
+          Meter Gain Rate</color></size>
+
+          <size=19><color=#787878>When
+          Consumed Dimension Cut, will unlock a 5 seconds of <b><color=#a382ed>Dimension
+          Slash</color></b></color></size>'
       track: 2
       level: 4
       fragmentCost: 1

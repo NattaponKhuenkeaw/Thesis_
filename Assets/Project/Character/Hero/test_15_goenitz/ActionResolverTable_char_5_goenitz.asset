@@ -16,7 +16,7 @@ MonoBehaviour:
   - actionId: goenitz.basic.ground
     actionName: Ground
     description: Perform Ground.
-    activationDescription:
+    activationDescription: 
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -40,7 +40,7 @@ MonoBehaviour:
   - actionId: goenitz.basic.air
     actionName: Air
     description: Perform Air.
-    activationDescription:
+    activationDescription: 
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -64,10 +64,9 @@ MonoBehaviour:
   skillActions:
   - actionId: goenitz.skill.yonokaze
     actionName: Yonokaze
-    description: 'Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
-      DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
-      damage dealt</color> '
-    activationDescription:
+    description: 'Summon Tornado, Inflict  DMG <b><color=#00FFED>350%</color></b>
+      of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical damage dealt</color> '
+    activationDescription: 
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -94,7 +93,7 @@ MonoBehaviour:
     actionName: Yamidokoku
     description: Inflict <b><color=#00FFED>Echo</color></b> DMG 800%+300% of own
       ATK
-    activationDescription:
+    activationDescription: 
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -131,7 +130,7 @@ MonoBehaviour:
   - actionId: goenitz.ultimate2.shin.yaotome
     actionName: 'Shin Yaotome : Jissokoku'
     description: 'Perform Shin Yaotome : Jissokoku.'
-    activationDescription:
+    activationDescription: 
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -145,6 +144,7 @@ MonoBehaviour:
     priority: 10
     conditions:
     - rid: 3612912846363689063
+    - rid: 5456672870199459960
     damageSourceStat: 0
     actionDamageMultiplier: 8.5
     auraEnergyReward: 0
@@ -204,9 +204,10 @@ MonoBehaviour:
           - audio
           - hitbox
           - events
-        routes: []
+        routes:
+        - rid: 5456672870199459967
         defaultNext:
-          rid: 1588256048081535107
+          rid: 5456672870199459968
         onGrabSuccessNode:
           rid: -2
     - rid: 1588256048081535102
@@ -282,8 +283,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.55962616, y: 2.224654}
-        size: {x: 1, y: 0.8}
+        offset: {x: 0.8643532, y: 2.286985}
+        size: {x: 1.9141839, y: 1.3956048}
         damageRatio: 0.055
         impactTier: 0
         useDeterministicReaction: 1
@@ -321,8 +322,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.54870015, y: 1.7111288}
-        size: {x: 1, y: 1.0403736}
+        offset: {x: 0.7426176, y: 2.0334353}
+        size: {x: 1.858778, y: 1.8575993}
         damageRatio: 0.04
         impactTier: 0
         useDeterministicReaction: 1
@@ -359,7 +360,7 @@ MonoBehaviour:
           recoveryFrames: 12
           cancelWindowStartFrame: 43
           loopActivePhase: 0
-          stepName: Attack2
+          stepName: Attack2-2
           animationClip: {fileID: 7400000, guid: 694f8e50d53d3ca47b241fd5f0664c4c, type: 2}
           syncAnimationToActionFrames: 0
           lockAirPosition: 1
@@ -422,8 +423,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.1777005, y: 1.7123238}
-        size: {x: 1.4165428, y: 1.0354373}
+        offset: {x: 1.5056634, y: 1.8245217}
+        size: {x: 2.0724688, y: 1.2598331}
         damageRatio: 0.03
         impactTier: 1
         useDeterministicReaction: 1
@@ -461,8 +462,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.5589739, y: 1.667979}
-        size: {x: 1.5399754, y: 1.0606937}
+        offset: {x: 1.8696756, y: 1.797438}
+        size: {x: 2.1613789, y: 1.3196118}
         damageRatio: 0.07
         impactTier: 0
         useDeterministicReaction: 1
@@ -561,8 +562,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.6363741, y: 2.4763553}
-        size: {x: 1.3272519, y: 1.8607463}
+        offset: {x: 0.91255325, y: 2.8906243}
+        size: {x: 1.9831775, y: 2.6892838}
         damageRatio: 0.15
         impactTier: 3
         useDeterministicReaction: 1
@@ -696,8 +697,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: -0.3484751, y: 2.3600645}
-        size: {x: 1.3573036, y: 0.8}
+        offset: {x: -0.43451786, y: 2.5859256}
+        size: {x: 2.1747065, y: 1.2517223}
         damageRatio: 0.01
         impactTier: 0
         useDeterministicReaction: 1
@@ -735,8 +736,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.50700116, y: 2.2171428}
-        size: {x: 2.1564097, y: 1.249182}
+        offset: {x: 0.259629, y: 2.3999834}
+        size: {x: 2.651154, y: 1.6148624}
         damageRatio: 0.02
         impactTier: 0
         useDeterministicReaction: 1
@@ -774,8 +775,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.3614767, y: 1.4519806}
-        size: {x: 0.9591657, y: 1.9851809}
+        offset: {x: 1.3614762, y: 1.4627361}
+        size: {x: 2.0777173, y: 3.082221}
         damageRatio: 0.02
         impactTier: 0
         useDeterministicReaction: 1
@@ -813,8 +814,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.7225633, y: 0.96830124}
-        size: {x: 1.1994475, y: 1.8697412}
+        offset: {x: 0.34612727, y: 1.5168216}
+        size: {x: 2.5976367, y: 2.966782}
         damageRatio: 0.05
         impactTier: 0
         useDeterministicReaction: 1
@@ -852,8 +853,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: -0.010522366, y: 1.5199299}
-        size: {x: 2.209425, y: 0.9894409}
+        offset: {x: -0.35469258, y: 1.6597488}
+        size: {x: 2.8977654, y: 1.2690787}
         damageRatio: 0.01
         impactTier: 0
         useDeterministicReaction: 1
@@ -891,8 +892,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.7403507, y: 1.1611063}
-        size: {x: 1.7498999, y: 2.5450845}
+        offset: {x: 0.5575105, y: 1.1611063}
+        size: {x: 2.1155803, y: 2.5450845}
         damageRatio: 0.02
         impactTier: 0
         useDeterministicReaction: 1
@@ -930,8 +931,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.1089149, y: 1.4459796}
-        size: {x: 2.2896729, y: 1.467691}
+        offset: {x: 1.1089149, y: 1.3814479}
+        size: {x: 2.2896729, y: 2.0269663}
         damageRatio: 0.02
         impactTier: 0
         useDeterministicReaction: 1
@@ -969,8 +970,8 @@ MonoBehaviour:
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.9078615, y: 1.9151957}
-        size: {x: 2.3253684, y: 1.2794119}
+        offset: {x: 1.1122122, y: 2.2916312}
+        size: {x: 2.7340698, y: 2.032283}
         damageRatio: 0.05
         impactTier: 1
         useDeterministicReaction: 1
@@ -5287,3 +5288,143 @@ MonoBehaviour:
             showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
+    - rid: 5456672870199459960
+      type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        track: 1
+        comparison: 3
+        level: 3
+    - rid: 5456672870199459967
+      type: {class: ComboRoute, ns: , asm: Assembly-CSharp}
+      data:
+        direction: 1
+        requireGrounded: 0
+        requireAirborne: 0
+        requireGrabbedEnemy: 0
+        requiredPreviousState: 0
+        conditions:
+        - rid: 5456672870199459973
+        targetNode:
+          rid: 1588256048081535107
+        priority: 0
+        allowImmediateInterrupt: 0
+    - rid: 5456672870199459968
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 15
+          activeFrames: 15
+          recoveryFrames: 12
+          cancelWindowStartFrame: 39
+          loopActivePhase: 0
+          stepName: Attack2-1
+          animationClip: {fileID: 7400000, guid: aac4c85585efd414f8e093c5dc51fe5d, type: 2}
+          syncAnimationToActionFrames: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 5456672870199459969
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 5456672870199459970
+          hitData:
+            rid: 5456672870199459971
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 5456672870199459969
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        followSlowMotion: 1
+        keyframes:
+        - startFrame: 5
+          endFrame: 12
+          taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
+          easing: 1
+          position: {x: 0.25, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 5456672870199459970
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 0fcd724935fceb54fb44ff7241cb9814, type: 3}
+          triggerFrame: 17
+          duration: 20
+          channel: 2
+          volume: 1
+          pitchVariation: 1
+          slowMotionAware: 0
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 5456672870199459971
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 5456672870199459972
+    - rid: 5456672870199459972
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 5
+        activeFrames: 3
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.7224262, y: 1.3862927}
+        size: {x: 2.1746845, y: 2.7725854}
+        damageRatio: 0.115
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 4
+        knockbackFrames: 30
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 10
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 0
+    - rid: 5456672870199459973
+      type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        tagType: 0
+        tag: goenitz.limit-break
+        shouldExist: 1
+        applyOnActionStart: 0

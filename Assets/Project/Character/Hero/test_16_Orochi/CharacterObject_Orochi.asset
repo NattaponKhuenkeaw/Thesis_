@@ -71,31 +71,31 @@ MonoBehaviour:
         showPotentialLevel: 1
         potentialTrack: 0
         summary:
-        order: 1
+        order: 0
       - sectionId: ultimate
         title: Ultimate
         showPotentialLevel: 1
         potentialTrack: 1
         summary:
-        order: 2
+        order: 1
       - sectionId: qte
         title: QTE
         showPotentialLevel: 0
         potentialTrack: 0
         summary:
-        order: 3
+        order: 4
       - sectionId: special
         title: Special
         showPotentialLevel: 0
         potentialTrack: 0
         summary:
-        order: 4
+        order: 3
       - sectionId: passive
         title: Passive
         showPotentialLevel: 1
         potentialTrack: 2
         summary:
-        order: 5
+        order: 2
       entries:
       - entryId: basic.combo
         sectionId: basic

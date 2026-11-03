@@ -35,6 +35,20 @@ public static class MainDimensionSlashAuthoring
         Debug.Log("Dimension Slash: Passive4 / five paid cuts / 5s Skill window authored.");
     }
 
+    [MenuItem("Tools/Project/Combat/Set Dimension Slash Hit Feedback")]
+    public static void SetHitFeedback()
+    {
+        var table = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(MainPath + "ActionResolverTable_main.asset");
+        var action = table?.skillActions?.Find(a => a != null && a.actionId == ActionId);
+        if (action?.comboTree?.rootNode == null) throw new InvalidOperationException("Main Dimension Slash action is missing.");
+        var sound = AssetDatabase.LoadAssetAtPath<AudioClip>(MainPath + "main_SFX/SFX_Slash_1.mp3");
+        if (sound == null) throw new InvalidOperationException("Existing slash hit sound is missing.");
+        int count = ConfigureSlashHitFeedback(action.comboTree.rootNode, sound, new HashSet<ComboNode>());
+        EditorUtility.SetDirty(table);
+        AssetDatabase.SaveAssetIfDirty(table);
+        Debug.Log($"Dimension Slash hit feedback configured on {count} normal hitbox(es).");
+    }
+
     // screenSpanningCount was introduced for this action. Strip the field's
     // former initializer value from Main's existing steps before authoring its
     // explicit five full-screen accents, so unrelated slash fields stay local.
@@ -168,8 +182,38 @@ public static class MainDimensionSlashAuthoring
             table.skillActions.Add(skill);
         }
         skill.actionType = CombatActionType.Ultimate;
+        ConfigureSlashHitFeedback(skill.comboTree?.rootNode,
+            AssetDatabase.LoadAssetAtPath<AudioClip>(MainPath + "main_SFX/SFX_Slash_1.mp3"), new HashSet<ComboNode>());
         table.ultimateActions.RemoveAll(a => a != null && a.actionId == ActionId);
         ExecutionBreakdownAuthoring.Configure(character);
+    }
+
+    private static int ConfigureSlashHitFeedback(ComboNode node, AudioClip sound, HashSet<ComboNode> visited)
+    {
+        if (node == null || !visited.Add(node)) return 0;
+        int count = 0;
+        var step = node.stepData;
+        if ((step?.stepName == "DimensionSlash" || step?.stepName == "DimensionSlashFinalCut")
+            && step.hitData?.hitboxes != null)
+        {
+            foreach (var hitbox in step.hitData.hitboxes)
+            {
+                if (hitbox is not NormalHitbox normal) continue;
+                normal.elementType = ElementType.None;
+                normal.suppressContactVfx = false;
+                normal.hitVFXType = VFXType.HitSpark_og_Slash;
+                normal.hitVFXPrefab = null;
+                normal.hitSFX = sound;
+                count++;
+            }
+        }
+        count += ConfigureSlashHitFeedback(node.defaultNext, sound, visited);
+        count += ConfigureSlashHitFeedback(node.onGrabSuccessNode, sound, visited);
+        if (node.routes != null)
+            foreach (var route in node.routes) count += ConfigureSlashHitFeedback(route?.targetNode, sound, visited);
+        if (step?.triggerWindows != null)
+            foreach (var trigger in step.triggerWindows) count += ConfigureSlashHitFeedback(trigger?.targetNode, sound, visited);
+        return count;
     }
 
     private static PassiveTriggerFilter ManualCutFilter() => new PassiveTriggerFilter
@@ -195,10 +239,12 @@ public static class MainDimensionSlashAuthoring
             step.hitData.hitboxes.Add(new NormalHitbox
             {
                 startFrameOffset = 24 + i * 3 - step.ActivePhaseStart, activeFrames = 2,
-                elementType = ElementType.Darkness,
+                elementType = ElementType.None,
                 offset = new Vector2(4f, 1.6f), size = new Vector2(12f, 6f),
                 damageRatio = 0.58f / 19f, impactFreezeFrames = 0, impactTier = DamageImpactTier.Low,
-                suppressImpactFeedback = true, suppressContactVfx = true,
+                suppressImpactFeedback = true, suppressContactVfx = false,
+                hitVFXType = VFXType.HitSpark_og_Slash,
+                hitSFX = AssetDatabase.LoadAssetAtPath<AudioClip>(MainPath + "main_SFX/SFX_Slash_1.mp3"),
                 horizontalSpeed = 0f, launchSpeed = 0f, knockbackFrames = 2, recoveryFrames = 1,
                 flashColor = new Color(0.7f, 0.35f, 1f), flashFrames = 1
             });

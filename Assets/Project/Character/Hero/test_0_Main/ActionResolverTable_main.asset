@@ -90,7 +90,8 @@ MonoBehaviour:
     cooldown: 16
   - actionId: main.skill.dimension_slash
     actionName: Judgment Cut
-    description: Perform Judgment Cut.
+    description: Perform a ultimate screen cut which deal damage to all enemies in
+      radius, Inflict <b><color=#a382ed>650%</color></b></color></size> of own ATK
     activationDescription: 
     icon: {fileID: 21300000, guid: 6b053e9e957f26c488b6caf4bec1b96a, type: 3}
     actionType: 3
@@ -157,7 +158,8 @@ MonoBehaviour:
   - actionId: main.ultimate.execution_breakdown
     actionName: Execution Breakdown
     description: Lunge a Heavy Hit toward then execute a lightspeed slash, Inflict
-      DMG <b><color=#a382ed>1000%</color></b> of ATK
+      DMG <b><color=#a382ed>1000%</color></b> of ATK, This action will grant enormous
+      of Shadow Meter and <b><color=#52f22e>Regenrate 8% of own Max HP</color></b></color></size>
     activationDescription: 
     icon: {fileID: 21300000, guid: 9ef1f814da0fabf428383fc49cca0531, type: 3}
     actionType: 0
@@ -170,7 +172,8 @@ MonoBehaviour:
     context: 0
     outputContext: 1
     priority: 0
-    conditions: []
+    conditions:
+    - rid: 5456672870199459961
     damageSourceStat: 0
     actionDamageMultiplier: 10
     auraEnergyReward: 0
@@ -1774,7 +1777,7 @@ MonoBehaviour:
             seamCount: 12
             firstFrame: 0
             intervalFrames: 3
-            endFrame: 104
+            endFrame: 76
             lengthRange: {x: 3, y: 46}
             widthRange: {x: 0.08, y: 1.8}
             angleRange: {x: 0, y: 180}
@@ -2256,10 +2259,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 5
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.0513954, y: 9.209899}
         size: {x: 42.8332, y: 22.531849}
@@ -2282,10 +2285,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2295,10 +2298,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 8
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.1169968, y: 9.537912}
         size: {x: 42.9644, y: 21.875824}
@@ -2321,10 +2324,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2334,10 +2337,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 11
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -3.5442924, y: 10.521951}
         size: {x: 55.95371, y: 23.8439}
@@ -2360,10 +2363,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2373,10 +2376,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 14
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.0513954, y: 9.669117}
         size: {x: 44.932484, y: 22.138233}
@@ -2399,10 +2402,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2412,10 +2415,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 17
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.39536667, y: 10.062732}
         size: {x: 44.145256, y: 22.925465}
@@ -2438,10 +2441,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2451,10 +2454,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 20
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.98579025, y: 9.865925}
         size: {x: 44.801277, y: 22.531849}
@@ -2477,10 +2480,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2490,10 +2493,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 23
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.1169968, y: 9.997129}
         size: {x: 49.26225, y: 22.794258}
@@ -2516,10 +2519,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2529,10 +2532,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 26
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.1825981, y: 10.456348}
         size: {x: 46.506947, y: 23.712696}
@@ -2555,10 +2558,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2568,10 +2571,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 29
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.1826, y: 9.931527}
         size: {x: 45.982124, y: 22.663054}
@@ -2594,10 +2597,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2607,10 +2610,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 32
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.7889824, y: 10.193936}
         size: {x: 45.98213, y: 23.187874}
@@ -2633,10 +2636,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2646,10 +2649,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 35
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.6577778, y: 10.325142}
         size: {x: 45.71972, y: 23.450283}
@@ -2672,10 +2675,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2685,10 +2688,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 38
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.1826, y: 9.931527}
         size: {x: 45.71972, y: 22.663054}
@@ -2711,10 +2714,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2724,10 +2727,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 41
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.5265751, y: 9.865924}
         size: {x: 45.71971, y: 22.531849}
@@ -2750,10 +2753,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2763,10 +2766,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 44
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.85458565, y: 9.669116}
         size: {x: 43.226814, y: 22.138233}
@@ -2789,10 +2792,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2802,10 +2805,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 47
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.98579216, y: 10.390744}
         size: {x: 48.737427, y: 23.581488}
@@ -2828,10 +2831,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2841,10 +2844,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 50
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.59217644, y: 10.193937}
         size: {x: 44.53887, y: 23.187874}
@@ -2867,10 +2870,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2880,10 +2883,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 53
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.0513935, y: 9.9971285}
         size: {x: 45.194893, y: 22.794258}
@@ -2906,10 +2909,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2919,10 +2922,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 56
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.0513935, y: 10.062732}
         size: {x: 44.40767, y: 22.925463}
@@ -2945,10 +2948,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2958,10 +2961,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 59
         activeFrames: 2
-        elementType: 3
+        elementType: 0
         damageTags: 0
         suppressImpactFeedback: 1
-        suppressContactVfx: 1
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.0513935, y: 9.9971285}
         size: {x: 44.145256, y: 22.794258}
@@ -2984,10 +2987,10 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 0.7, g: 0.35, b: 1, a: 1}
         flashFrames: 1
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.5
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -6556,6 +6559,12 @@ MonoBehaviour:
         track: 2
         comparison: 3
         level: 2
+    - rid: 5456672870199459961
+      type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        track: 2
+        comparison: 3
+        level: 3
     - rid: 7900270000000000001
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -9639,10 +9648,10 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 8300000, guid: b43a3703a8a56b143a6c65c8329ccdbd, type: 3}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 12
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
