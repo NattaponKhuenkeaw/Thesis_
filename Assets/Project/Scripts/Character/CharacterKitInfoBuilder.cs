@@ -185,8 +185,7 @@ public static class CharacterKitInfoBuilder
                 }
             }
         if (locked) metadata.Insert(0, "Locked / replaced");
-        string activation = !string.IsNullOrWhiteSpace(definition.activationDescription)
-            ? definition.activationDescription : definition.qte ? null : action.activationDescription;
+        string activation = definition.activationDescription;
         if (!string.IsNullOrWhiteSpace(activation)) notes.Insert(0, activation);
         string description = action.description;
         if (string.IsNullOrWhiteSpace(description) && IsPrimary(character.actionResolverTable, action))

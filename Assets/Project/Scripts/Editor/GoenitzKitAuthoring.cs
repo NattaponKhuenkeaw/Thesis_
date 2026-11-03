@@ -79,7 +79,6 @@ public static class GoenitzKitAuthoring
         ex.requiresSkillHold = true; ex.skillHoldDuration = .35f;
         ex.context = CombatActionContext.Ground; ex.actionDamageMultiplier = 2.5f; ex.cooldown = 7f;
         ex.conditions = new List<ActionConditionBase> { Potential(PotentialTrack.Skill, 1) };
-        ex.activationDescription = "Hold Skill";
         ex.description = "Homing red tornado, 10-second lifespan, {multiplierPercent} ATK over its hits. Each critical hit deals 70% ATK additional Bleed damage and grants 5 AE outside Blood Frenzy.";
         AnimationClip exClip = Load<AnimationClip>(Folder + "Animation/goe_ex-skill.anim");
         int exFrames = Mathf.CeilToInt(exClip.length * CombatCore.FrameDataConstants.LOGIC_FPS);

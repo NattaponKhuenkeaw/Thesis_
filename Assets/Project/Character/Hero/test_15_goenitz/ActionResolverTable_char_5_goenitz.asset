@@ -92,10 +92,11 @@ MonoBehaviour:
     cooldown: 3
   - actionId: goenitz.skill.ex_yonokaze
     actionName: EX Yonokaze
-    description: Homing red tornado, 10-second lifespan, {multiplierPercent} ATK
-      over its hits. Each critical hit deals 70% ATK additional Bleed damage and
-      grants 5 AE outside Blood Frenzy.
-    activationDescription: Hold Skill
+    description: Summon a Red Tornado Which have last for 10 seconds, Inflict DMG
+      <b><color=#00FFED>250% </color></b> of own ATK. <color=#C0C0C0>Each critical
+      hit deals <color=#ff0004>Additional Bleed DMG</color> <b><color=#00FFED>70%</color></b>
+      of own ATK and grants 5 AE</color>
+    activationDescription: 
     icon: {fileID: 21300000, guid: cedf5b663bb21aa4fb6d414953f976aa, type: 3}
     actionType: 2
     resourceCounterId: 
