@@ -1695,7 +1695,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 1
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 3.7470016, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -1705,7 +1705,7 @@ BoxCollider2D:
     drawMode: 2
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 235.20001, y: 4.44}
+  m_Size: {x: 242.69402, y: 4.44}
   m_EdgeRadius: 0
 --- !u!212 &3110612785243371971
 SpriteRenderer:
@@ -7201,13 +7201,13 @@ CompositeCollider2D:
   m_ColliderPaths:
   - m_Collider: {fileID: 8444650249109473303}
     m_ColliderPaths:
-    - - X: 1911059968
+    - - X: 1986000000
         Y: 0
       - X: -440940096
         Y: 0
       - X: -440940096
         Y: -44400000
-      - X: 1911059968
+      - X: 1986000000
         Y: -44400000
   - m_Collider: {fileID: 2111788896407835849}
     m_ColliderPaths:
@@ -7241,8 +7241,8 @@ CompositeCollider2D:
         Y: 76000000
   m_CompositePaths:
     m_Paths:
-    - - {x: 191.10483, y: -4.44}
-      - {x: 191.10483, y: 0}
+    - - {x: 198.59883, y: -4.44}
+      - {x: 198.59883, y: 0}
       - {x: 146.2, y: 0.0011715}
       - {x: 146.19882, y: 7.6}
       - {x: 141.65, y: 7.6011715}
