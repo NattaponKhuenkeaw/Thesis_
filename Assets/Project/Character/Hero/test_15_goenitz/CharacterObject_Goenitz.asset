@@ -2514,10 +2514,11 @@ MonoBehaviour:
       fragmentCost: 1
       unlockedByDefault: 0
   qteSwap:
-    enabled: 0
-    triggerActionIds: []
-    introActionKey: 
-    introStepName: 
+    enabled: 1
+    triggerActionIds:
+    - 
+    introActionKey: goenitz.qte
+    introStepName: Kamidokoku
     introComboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -2583,7 +2584,7 @@ MonoBehaviour:
           blurPixels: 0
           referenceHeight: 270
         suppressChromaticAberration: 1
-    entryOffset: 1
+    entryOffset: 2
     readySfx: {fileID: 0}
     entryGrantTag: 
     entryGrantCounterId: 

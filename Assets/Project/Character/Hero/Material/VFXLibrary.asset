@@ -251,13 +251,13 @@ MonoBehaviour:
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
-    - type: 115
-      clip: {fileID: 7400000, guid: 01812369ec9facd4a9bd1fb5f94a39be, type: 2}
-      localScale: {x: 2, y: 2, z: 2}
+    - type: 137
+      clip: {fileID: 7400000, guid: 0687bfed7ee39294d883400b825bfbdc, type: 2}
+      localScale: {x: 2, y: 2, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
-      isLocalSpace: 1
-      obeyHitstop: 1
+      isLocalSpace: 0
+      obeyHitstop: 0
   - categoryName: char-Main
     entries:
     - type: 115

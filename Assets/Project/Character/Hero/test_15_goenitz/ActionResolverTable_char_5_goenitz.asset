@@ -129,7 +129,7 @@ MonoBehaviour:
     useDashAfterImage: 1
   - actionId: goenitz.ultimate2.shin.yaotome
     actionName: 'Shin Yaotome : Jissokoku'
-    description: 'Perform Shin Yaotome : Jissokoku.'
+    description: 'Perform Shin Yaotome : Jissokoku'
     activationDescription: 
     icon: {fileID: 0}
     actionType: 0
@@ -166,7 +166,31 @@ MonoBehaviour:
     activationSFXVolume: 1
     voiceDelay: 0.1
     useDashAfterImage: 0
-  qteActions: []
+  qteActions:
+  - actionId: goenitz.qte
+    actionName: Kami
+    description: 
+    activationDescription: 
+    icon: {fileID: 0}
+    actionType: 0
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 0
+    context: 0
+    outputContext: 0
+    priority: 0
+    conditions: []
+    damageSourceStat: 0
+    actionDamageMultiplier: 2
+    auraEnergyReward: 0
+    comboTree:
+      treeName: 
+      comboResetDelay: 0
+      rootNode:
+        rid: 5456672870199459975
   standaloneActions: []
   references:
     version: 2
@@ -233,7 +257,7 @@ MonoBehaviour:
           targetAnchorOffset: {x: 0, y: 0}
           faceTargetOnArrival: 1
           easing: 1
-          position: {x: 0.5, y: 0, z: 0}
+          position: {x: 0.7, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 17
@@ -248,7 +272,7 @@ MonoBehaviour:
           targetAnchorOffset: {x: 0, y: 0}
           faceTargetOnArrival: 1
           easing: 1
-          position: {x: 0.5, y: 0, z: 0}
+          position: {x: 0.7, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588256048081535104
@@ -5312,10 +5336,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 15
+          startupFrames: 6
           activeFrames: 15
-          recoveryFrames: 12
-          cancelWindowStartFrame: 39
+          recoveryFrames: 20
+          cancelWindowStartFrame: 38
           loopActivePhase: 0
           stepName: Attack2-1
           animationClip: {fileID: 7400000, guid: aac4c85585efd414f8e093c5dc51fe5d, type: 2}
@@ -5332,7 +5356,7 @@ MonoBehaviour:
           hitData:
             rid: 5456672870199459971
           eventData:
-            rid: -2
+            rid: 5456672870199459974
           componentOrder:
           - motion
           - vfx
@@ -5349,8 +5373,8 @@ MonoBehaviour:
       data:
         followSlowMotion: 1
         keyframes:
-        - startFrame: 5
-          endFrame: 12
+        - startFrame: 1
+          endFrame: 5
           taskType: 0
           targetRadius: 8
           passThroughDistance: 1.2
@@ -5361,7 +5385,7 @@ MonoBehaviour:
           targetAnchorOffset: {x: 0, y: 0}
           faceTargetOnArrival: 1
           easing: 1
-          position: {x: 0.25, y: 0, z: 0}
+          position: {x: 0.7, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 5456672870199459970
@@ -5370,7 +5394,7 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 0fcd724935fceb54fb44ff7241cb9814, type: 3}
-          triggerFrame: 17
+          triggerFrame: 5
           duration: 20
           channel: 2
           volume: 1
@@ -5385,7 +5409,7 @@ MonoBehaviour:
     - rid: 5456672870199459972
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 5
+        startFrameOffset: 1
         activeFrames: 3
         elementType: 0
         damageTags: 0
@@ -5395,15 +5419,15 @@ MonoBehaviour:
         offset: {x: 0.7224262, y: 1.3862927}
         size: {x: 2.1746845, y: 2.7725854}
         damageRatio: 0.115
-        impactTier: 0
+        impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 4
-        knockbackFrames: 30
+        impactFreezeFrames: 0
+        knockbackFrames: 29
         knockupFrames: 12
         knockfallFrames: 10
         recoveryFrames: 9
-        horizontalSpeed: 10
+        horizontalSpeed: 2
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
@@ -5428,3 +5452,274 @@ MonoBehaviour:
         tag: goenitz.limit-break
         shouldExist: 1
         applyOnActionStart: 0
+    - rid: 5456672870199459974
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          activationSFXVolume: 1
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 5456672870199459975
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 13
+          activeFrames: 23
+          recoveryFrames: 10
+          cancelWindowStartFrame: 39
+          loopActivePhase: 0
+          stepName: Kamidokoku
+          animationClip: {fileID: 7400000, guid: 694f8e50d53d3ca47b241fd5f0664c4c, type: 2}
+          syncAnimationToActionFrames: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 5456672870199459977
+          vfxData:
+            rid: 5456672870199459978
+          audioData:
+            rid: 5456672870199459979
+          hitData:
+            rid: 5456672870199459980
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 5456672870199459977
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        followSlowMotion: 1
+        keyframes:
+        - startFrame: 1
+          endFrame: 16
+          taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
+          easing: 33
+          position: {x: 4, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 5456672870199459978
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 137
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 0
+          duration: 4
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0, y: 0, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 1
+          adjustLayer: 0
+          fitScreenSize: 0
+          impactDistortion:
+            enabled: 1
+            startFrame: 0
+            durationFrames: 18
+            waveWidth: 0.08
+            refractionPixels: 6
+            chromaticPixels: 0
+            blurPixels: 1
+            referenceHeight: 270
+    - rid: 5456672870199459979
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 0}
+          triggerFrame: 0
+          duration: 4
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          slowMotionAware: 0
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 5456672870199459980
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 5456672870199459981
+    - rid: 5456672870199459981
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 3
+        activeFrames: 9
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.6201353, y: 2.8388197}
+        size: {x: 3.6762295, y: 5.6776395}
+        damageRatio: 1
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 4
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 1
+        snapOffset: {x: 2, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: c60709c4b93ec9b42968c77bfd5a58f0, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 13
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 1
