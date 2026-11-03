@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
   projectileType: 0
   projectilePrefab: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
-  spawnClip: {fileID: 7400000, guid: b32b1af21e17f3d499440095188f9e31, type: 2}
-  loopClip: {fileID: 7400000, guid: b32b1af21e17f3d499440095188f9e31, type: 2}
+  spawnClip: {fileID: 7400000, guid: 08876eb013856614295076fc0cb1e710, type: 2}
+  loopClip: {fileID: 7400000, guid: a352c7f45fc379a46b37a65ea6491447, type: 2}
   spawnOffset: {x: 5, y: 0}
   spawnPositionMode: 2
   spawnReferencePointMode: 0
-  playSpawnAnimation: 0
-  spawnDuration: 0
+  playSpawnAnimation: 1
+  spawnDuration: 1
   inheritFacingDirection: 0
   applyOffsetToTarget: 1
   spawningHitbox:
@@ -48,12 +48,13 @@ MonoBehaviour:
   enemyLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
-  hitIntervalFrames: 35
+  hitIntervalFrames: 60
   stopOnImpact: 0
   destroyWhenHitsExhausted: 1
   destroyOnLifetimeExpire: 1
   centerGrabbedTargets: 0
   grabCenterOffset: {x: 0, y: 0}
+  magnetismSpeed: 0
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []
@@ -67,7 +68,7 @@ MonoBehaviour:
     vfxClip: {fileID: 0}
     audio: {fileID: 0}
     offset: {x: 0, y: 0}
-  impactVFXType: 120
+  impactVFXType: 0
   impactAudio: {fileID: 0}
   references:
     version: 2
@@ -81,6 +82,8 @@ MonoBehaviour:
         activeFrames: 12
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8, y: 2.3}
         size: {x: 15, y: 7.5}
@@ -103,8 +106,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
-        hitVFXType: 111
+        hitSFX: {fileID: 8300000, guid: 610237169a625df4698d1f0b25965862, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0

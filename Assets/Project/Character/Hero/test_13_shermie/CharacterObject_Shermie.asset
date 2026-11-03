@@ -51,13 +51,118 @@ MonoBehaviour:
     maxHpPerLevel: 95
   _dashData:
     animationClip: {fileID: 7400000, guid: a58bc557533fb294eb5db9217ac6de3d, type: 2}
-    startupFrames: 7
+    startupFrames: 0
     activeFrames: 43
     recoveryFrames: 20
-    cancelWindowStartFrame: 60
+    cancelWindowStartFrame: 53
     dashSpeed: 6
     cooldownFrames: 24
   kitDefinition:
+    presentation:
+      sections:
+      - sectionId: basic
+        title: Basic Attack
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 0
+      - sectionId: skill
+        title: Skill
+        showPotentialLevel: 1
+        potentialTrack: 0
+        summary:
+        order: 1
+      - sectionId: ultimate
+        title: Ultimate
+        showPotentialLevel: 1
+        potentialTrack: 1
+        summary:
+        order: 2
+      - sectionId: qte
+        title: QTE
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 3
+      - sectionId: special
+        title: Special
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 4
+      - sectionId: passive
+        title: Passive
+        showPotentialLevel: 1
+        potentialTrack: 2
+        summary:
+        order: 5
+      entries:
+      - entryId: char_3_shermie.basic.0
+        sectionId: basic
+        actionId: char_3_shermie.basic.0
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: char_3_shermie.basic.1
+        sectionId: basic
+        actionId: char_3_shermie.basic.1
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription:
+      - entryId: shermie.skill
+        sectionId: skill
+        actionId: shermie.skill
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: shermie.skill.ex
+        sectionId: skill
+        actionId: shermie.skill.ex
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription:
+      - entryId: shermie.ultimate
+        sectionId: ultimate
+        actionId: shermie.ultimate
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 1
+        order: 0
+        activationDescription:
+      - entryId: passive
+        sectionId: passive
+        actionId:
+        passive: 1
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
     skill:
       abilityId: shermie.skill
       abilityName: Diamod Dust
@@ -360,6 +465,12 @@ MonoBehaviour:
         550% of ATK,<size=20><color=#C0C0C0> Increase own <b>DEF</b> +50% for 20
         seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b> DMG
         taken +30% for 20 seconds</color></size>
+      kitInfoPatches:
+      - entryId: shermie.skill
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG 550% of ATK,<size=20><color=#C0C0C0> Increase own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b> DMG taken +30% for 20 seconds</color></size>"
       track: 0
       level: 0
       fragmentCost: 0
@@ -519,6 +630,12 @@ MonoBehaviour:
       description: Inflict Echo 850% of ATK. Increase own Max HP by 50% for 20 seconds.
       skillPanelDescriptionOverride: Inflict <b><color=#00FFED>Echo</color></b> DMG
         850% of ATK,<size=20><color=#C0C0C0> Increase own Max HP +50% for 20 seconds</color></size>
+      kitInfoPatches:
+      - entryId: shermie.ultimate
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG 850% of ATK,<size=20><color=#C0C0C0> Increase own Max HP +50% for 20 seconds</color></size>"
       track: 1
       level: 0
       fragmentCost: 0
@@ -543,6 +660,12 @@ MonoBehaviour:
       nodeName: Shermie Love
       description: When self is in Grab Session, gain Super Armor.
       skillPanelDescriptionOverride: When self is in Grab Session, gain Super Armor.
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "When self is in Grab Session, gain Super Armor."
       track: 2
       level: 0
       fragmentCost: 0
@@ -598,6 +721,12 @@ MonoBehaviour:
         <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
         own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b>
         DMG taken +30% for 20 seconds</color></size>
+      kitInfoPatches:
+      - entryId: shermie.skill
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b> DMG taken +30% for 20 seconds</color></size>"
       track: 0
       level: 1
       fragmentCost: 1
@@ -788,6 +917,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         "Diamond Dust" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b>
         equal to 20% of Shermie Max HP for 20 seconds</color></size>'
+      kitInfoPatches:
+      - entryId: shermie.skill
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b> DMG taken +30% for 20 seconds</color></size>\n\n\n<size=20><color=#C0C0C0>- \"Diamond Dust\" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b> equal to 20% of Shermie Max HP for 20 seconds</color></size>"
       track: 0
       level: 2
       fragmentCost: 1
@@ -949,6 +1084,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         "Diamond Dust" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b>
         equal to <b><color=#FFA500>20%</color></b> of Shermie Max HP for 20 seconds</color></size>'
+      kitInfoPatches:
+      - entryId: shermie.skill
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b> DMG taken <b><color=#FFA500>+30%</color></b> for 20 seconds</color></size>\n\n\n<size=20><color=#C0C0C0>- \"Diamond Dust\" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b> equal to <b><color=#FFA500>20%</color></b> of Shermie Max HP for 20 seconds</color></size>"
       track: 0
       level: 3
       fragmentCost: 1
@@ -1110,6 +1251,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         "Diamond Dust" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b>
         equal to <b><color=#FFA500>40%</color></b> of Shermie Max HP for 20 seconds</color></size>'
+      kitInfoPatches:
+      - entryId: shermie.skill
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b> DMG taken <b><color=#FFA500>+50%</color></b> for 20 seconds</color></size>\n\n\n<size=20><color=#C0C0C0>- \"Diamond Dust\" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b> equal to <b><color=#FFA500>40%</color></b> of Shermie Max HP for 20 seconds</color></size>"
       track: 0
       level: 4
       fragmentCost: 1
@@ -1269,6 +1416,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>-
         If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>'
+      kitInfoPatches:
+      - entryId: shermie.ultimate
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>850%</color></b> of ATK,<size=20><color=#C0C0C0> Increase own Max HP +50% for 20 seconds</color></size>\n\n\n<size=20><color=#C0C0C0>- If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>"
       track: 1
       level: 1
       fragmentCost: 1
@@ -1327,6 +1480,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>-
         If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>'
+      kitInfoPatches:
+      - entryId: shermie.ultimate
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>1000%</color></b> of ATK,<size=20><color=#C0C0C0> Increase own Max HP +50% for 20 seconds</color></size>\n\n\n<size=20><color=#C0C0C0>- If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>"
       track: 1
       level: 2
       fragmentCost: 1
@@ -1408,6 +1567,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         Inflict additional <b><color=#00FFED>Echo</color></b> DMG equal to 20% of
         own Max HP</color></size>'
+      kitInfoPatches:
+      - entryId: shermie.ultimate
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>1000%</color></b> of ATK,<size=20><color=#C0C0C0> Increase own Max HP +50% for 20 seconds</color></size>\n\n\n<size=20><color=#C0C0C0>- If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>\n<size=20><color=#C0C0C0>- Inflict additional <b><color=#00FFED>Echo</color></b> DMG equal to 20% of own Max HP</color></size>"
       track: 1
       level: 3
       fragmentCost: 1
@@ -1594,6 +1759,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>- On successful
         hit, after ult end there is a 60% chance that enemy will <b>Stun</b> for
         15 seconds</color></size>'
+      kitInfoPatches:
+      - entryId: shermie.ultimate
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>1000%</color></b> of ATK,<size=20><color=#C0C0C0> Increase own Max HP +50% for 20 seconds</color></size>\n\n\n<size=20><color=#C0C0C0>- If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>\n<size=20><color=#C0C0C0>- Inflict additional <b><color=#00FFED>Echo</color></b> DMG equal to 20% of own Max HP</color></size>\n<size=20><color=#C0C0C0>- On successful hit, after ult end there is a 60% chance that enemy will <b>Stun</b> for 15 seconds</color></size>"
       track: 1
       level: 4
       fragmentCost: 1
@@ -1667,6 +1838,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b>
         DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)<i></color></size>'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "When self is in Grab Session, gain Super Armor\n\n\n<size=20><color=#C0C0C0>- Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b> DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)<i></color></size>"
       track: 2
       level: 1
       fragmentCost: 1
@@ -1716,6 +1893,12 @@ MonoBehaviour:
         Increase own DOT Mastery by 1% for every 100 Max HP self has
 
         </color></size>'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "When self is in Grab Session, gain Super Armor\n\n\n<size=20><color=#C0C0C0>- Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b> DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>\n<size=20><color=#C0C0C0>- Increase own DOT Mastery by 1% for every 100 Max HP self has\n</color></size>"
       track: 2
       level: 2
       fragmentCost: 1
@@ -2001,6 +2184,12 @@ MonoBehaviour:
         Everytime self successful grab enemy will able to Skill follow-up \u201CShermie
         Cute\u201D that deal additional 12% of own Max HP and Grant allies a <b>Shield</b>
         equal to 12% of Shermie Max HP for 30 seconds</color></size>"
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "When self is in Grab Session, gain Super Armor\r\n\r\n<size=20><color=#C0C0C0>- Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b> DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>\r\n<size=20><color=#C0C0C0>- Increase own DOT Mastery by 1% for every 100 Max HP self has</color></size>\r\n<size=20><color=#C0C0C0>- Everytime self successful grab enemy will able to Skill follow-up \u201cShermie Cute\u201d that deal additional 12% of own Max HP and Grant allies a <b>Shield</b> equal to 12% of Shermie Max HP for 30 seconds</color></size>"
       track: 2
       level: 3
       fragmentCost: 1
@@ -2222,6 +2411,12 @@ MonoBehaviour:
         40% of own Max HP to all allies</color></b> and Grant Increase <b>Shermie
         Love</b> to allies for 30 seconds<i>(Cooldown 180 seconds)</i></color></size>\r\n<size=19><color=#00ffff>
         \u2022  Shermie Love: Increase Basic Stat +20%</color></size>"
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "When self is in Grab Session, gain Super Armor\r\n\r\n<size=20><color=#C0C0C0>- Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b> DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>\r\n<size=20><color=#C0C0C0>- Increase own DOT Mastery by 1% for every 100 Max HP self has</color></size>\r\n<size=20><color=#C0C0C0>- Everytime self successful grab enemy will able to Skill follow-up \u201cShermie Cute\u201d that deal additional 12% of own Max HP and Grant allies a <b>Shield</b> equal to 12% of Shermie Max HP for 30 seconds</color></size>\r\n<size=20><color=#C0C0C0>- When own HP below 30% After being damaged, will Immediately <b><color=#74C365>Regenerate 40% of own Max HP to all allies</color></b> and Grant Increase <b>Shermie Love</b> to allies for 30 seconds<i>(Cooldown 180 seconds)</i></color></size>\r\n<size=19><color=#00ffff> \u2022  Shermie Love: Increase Basic Stat +20%</color></size>"
       track: 2
       level: 4
       fragmentCost: 1

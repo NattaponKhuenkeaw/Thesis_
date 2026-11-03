@@ -1,0 +1,88 @@
+{
+  "approved_tuning_checks_passed": 12,
+  "failed": 0,
+  "exactly_preserved_assets": 11,
+  "concurrent_changes_preserved": [
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_15_goenitz\\CharacterObject_Goenitz.asset",
+      "field": "_dashData.dashSpeed",
+      "baseline": 30,
+      "current": 35,
+      "action": "Preserved the concurrently changed working-tree value; this task only wrote startup/cancel fields."
+    }
+  ],
+  "checks": [
+    {
+      "asset": "Assets\\Project\\Resources\\MovementSO\\MovementProfile_Fast.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "858f191a2468d12c217f96eed3adf1b7a47b0d4d23c48ce70b80300797792926"
+    },
+    {
+      "asset": "Assets\\Project\\Resources\\MovementSO\\MovementProfile_Sample.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "134977950c66bc9bf9bb1f37431662f7c9978e38b43a591a56bb61b81a05efda"
+    },
+    {
+      "asset": "Assets\\Project\\Resources\\MovementSO\\MovementProfile_Slow.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "49053359dd0df9194e48d4d06af3c5cf9c52fb5d374fb2cba5957836e2262ce7"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_0_Main\\CharacterObject_main.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "2fae09ccbb5b0315ced469bcb93d580847dfba6dca09b25ebc8939db23df99a4"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_10_kyo\\CharacterObject_Kyo.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "dd01928aa63bcb2f047af8660387316483201042f1a15f66cb9002f891fa1135"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_11_rugal\\CharacterObject_Rugal.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "fe8bb164a2f4714b8e57e4bf06a9887caaad12852ed6dc4eeaba07a7cf6722fe"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_13_shermie\\CharacterObject_Shermie.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "6f01583b0460111fccb1cda0a0ab0133b85ff23eb7c00afec58dd515e6f49839"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_14_krizalid\\CharacterObject_Krizalid.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "55302b28c7bae4beb0ecdd2df17b60a0984ec23ae12584f72d57d9f24ffd597d"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_15_goenitz\\CharacterObject_Goenitz.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": false,
+      "sha256": "08e02a4cc87d94f7c5b785c0f8800c3b382d2b10379867cc691d118820672055"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_16_Orochi\\CharacterObject_Orochi.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "50c706165758e1213bd43638523409cae5683374493c094b54bbdde25d37e024"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_17_kula\\CharacterObject_Kula.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "e795fbfe17a7759204d37e625dbcee676e45b9112c113006b433526e87d00294"
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_1_CameraGirl\\CharacterObject_cg.asset",
+      "approved_tuning_passed": true,
+      "exact_outside_approved_fields": true,
+      "sha256": "29297e389e0bda229ccc7a5345ca84f66ee4b7982e7e307334e45c3569736b8c"
+    }
+  ]
+}

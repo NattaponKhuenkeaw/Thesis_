@@ -12,13 +12,13 @@ public class DashData
     public Sprite meterReadyIcon;
 
     [Header("Frame Data (60 fps base)")]
-    public int startupFrames = 5;
+    public int startupFrames = 0;
     public int activeFrames = 12;
     public int recoveryFrames = 12;
 
     [Tooltip("Absolute frame where the cancel window opens during recovery. " +
              "Set to 0 to disable cancel window.")]
-    public int cancelWindowStartFrame = 25;
+    public int cancelWindowStartFrame = 20;
 
     [Header("Dash Settings")]
     public float dashSpeed = 20f;

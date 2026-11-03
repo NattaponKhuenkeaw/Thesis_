@@ -1138,6 +1138,8 @@ public class PotentialNodeDefinition : CharacterEffectSetDefinition
     [TextArea]
     [Tooltip("Optional rich-text copy used by CharacterSkillPanel when this node is unlocked. Leave empty to keep the base skill/ultimate/passive description.")]
     public string skillPanelDescriptionOverride;
+    [Tooltip("Kit entry changes. Target an entry ID, independently of this node's Potential track.")]
+    public List<CharacterKitPresentationDefinition.Patch> kitInfoPatches = new List<CharacterKitPresentationDefinition.Patch>();
     public PotentialTrack track = PotentialTrack.Passive;
     [Range(0, CharacterKitDefinition.MaxPotentialLevel)] public int level = 1;
     [Min(0)] public int fragmentCost = 1;
@@ -1161,6 +1163,8 @@ public class CharacterAbilityDefinition
 [Serializable]
 public class CharacterKitDefinition : ISerializationCallbackReceiver
 {
+    [Header("Kit Information")]
+    public CharacterKitPresentationDefinition presentation = new CharacterKitPresentationDefinition();
     public CombatMeterDefinition combatMeter = new CombatMeterDefinition();
     public const int MaxPotentialLevel = 4;
 

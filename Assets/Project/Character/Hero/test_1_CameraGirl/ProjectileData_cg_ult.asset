@@ -43,7 +43,7 @@ MonoBehaviour:
     decrementsMaxHits: 1
     hitbox:
       rid: 8312694097921704032
-  travelColliderSize: {x: 5, y: 5}
+  travelColliderSize: {x: 15, y: 7.5}
   travelColliderOffset: {x: 0, y: 0}
   enemyLayerMask:
     serializedVersion: 2
@@ -54,6 +54,7 @@ MonoBehaviour:
   destroyOnLifetimeExpire: 1
   centerGrabbedTargets: 0
   grabCenterOffset: {x: 0, y: 0}
+  magnetismSpeed: 3
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []
@@ -67,7 +68,7 @@ MonoBehaviour:
     vfxClip: {fileID: 0}
     audio: {fileID: 0}
     offset: {x: 0, y: 0}
-  impactVFXType: 120
+  impactVFXType: 0
   impactAudio: {fileID: 0}
   references:
     version: 2
@@ -85,7 +86,7 @@ MonoBehaviour:
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8, y: 2.3}
-        size: {x: 5, y: 5}
+        size: {x: 15, y: 7.5}
         damageRatio: 0.06
         impactTier: 0
         useDeterministicReaction: 1
@@ -105,11 +106,11 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
+        hitSFX: {fileID: 8300000, guid: 610237169a625df4698d1f0b25965862, type: 3}
         hitSFXVolume: 1
-        hitSFXPitch: 1
-        hitVFXType: 10
+        hitSFXPitch: 3
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1

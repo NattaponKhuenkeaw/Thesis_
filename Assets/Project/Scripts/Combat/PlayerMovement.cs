@@ -100,7 +100,6 @@ public partial class PlayerMovement : MonoBehaviour
 
     private int landingFramesRemaining;
     private float lastAfterimageTime;
-    private float lastFacingChangeTime = -999f;
 
     // Visual offset layer runtime
     private float visualOffsetY;
@@ -201,10 +200,10 @@ public partial class PlayerMovement : MonoBehaviour
     // Computed State
     // =========================================================
     public bool IsDashing => fsm != null && fsm.CurrentStateId == PlayerStateId.Dashing;
-    public bool IsGroundDashLocomotionOpen =>
+    public bool IsDashLocomotionOpen =>
         fsm != null
         && fsm.CurrentState is PlayerDashState dashState
-        && dashState.IsCancelLocomotionOpen;
+        && dashState.IsLocomotionOpen;
     public bool IsJumpStarting => fsm != null
         && fsm.JumpState != null
         && fsm.CurrentState == fsm.JumpState
@@ -412,7 +411,7 @@ public partial class PlayerMovement : MonoBehaviour
         OnDashStart?.Invoke();
         lastAppliedMotionVelocityY = 0f;
         dashDir = GetDashDirection(inputX);
-        SetFacingDirection((int)dashDir, false);
+        SetFacingDirection((int)dashDir);
         lastAfterimageTime = Time.time - dashAfterimageSpawnInterval;
     }
 
@@ -454,12 +453,12 @@ public partial class PlayerMovement : MonoBehaviour
     public void ForceFaceDirectionFromInput(Vector2 input)
     {
         if (Mathf.Abs(input.x) < 0.1f) return;
-        SetFacingDirection(input.x > 0 ? 1 : -1, false);
+        SetFacingDirection(input.x > 0 ? 1 : -1);
     }
 
     public void SnapFacingDirection(int direction)
     {
-        SetFacingDirection(direction >= 0 ? 1 : -1, false);
+        SetFacingDirection(direction >= 0 ? 1 : -1);
     }
 
     public Vector3 TeleportHorizontally(float targetX)
@@ -772,6 +771,12 @@ public partial class PlayerMovement : MonoBehaviour
         {
             OnLand?.Invoke();
         }
+        // Feedback must publish before a buffered launch/dash so its landing
+        // animation cannot overwrite the next movement action in this tick.
+        if (fsm != null && fsm.CurrentState == fsm.LandingState)
+        {
+            fsm.LandingState.TryConsumeBufferedMovement();
+        }
     }
 
     private int GetGroundCheckMask() => LayerMask.GetMask(GroundLayerName, OneWayPlatformLayerName);
@@ -1052,7 +1057,8 @@ public partial class PlayerMovement : MonoBehaviour
     private float ClipHorizontalVelocity(float velocity)
     {
         float step = Mathf.Max(Time.fixedDeltaTime, attackMotionIgnoresSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
-        return ClipHorizontalTravel(velocity * step, isAttackMotionActive || IsDashing) / step;
+        return ClipHorizontalTravel(velocity * step,
+            isAttackMotionActive || (IsDashing && !IsDashLocomotionOpen)) / step;
     }
 
     private float ClipHorizontalTravel(float travel, bool stopAtSlopes = false)
@@ -1110,14 +1116,6 @@ public partial class PlayerMovement : MonoBehaviour
             return 0f;
         }
 
-        // Dash Active always clears vertical velocity. During its Recovery tail,
-        // neutral input keeps that gravity lock while raw A/D immediately
-        // releases normal falling without adding horizontal walk velocity.
-        if (IsInDashRecovery() && Mathf.Abs(horizontalInput) <= 0.01f)
-        {
-            return 0f;
-        }
-
         if (GroundState.IsEffectivelyGrounded && currentVelocity <= GroundedVerticalTolerance)
         {
             return 0f;
@@ -1145,7 +1143,7 @@ public partial class PlayerMovement : MonoBehaviour
         bool canFace = fsm != null && fsm.CurrentState != null
             && (fsm.CurrentState is FrameDataPlayerState fd ? fd.AllowsFacing() : !fsm.CurrentState.LocksFacing);
         // Facing responds to raw horizontal input above noise floor, bypassing dead zone
-        if (canFace) { if (horizontalInput > 0.01f) SetFacingDirection(1, true); else if (horizontalInput < -0.01f) SetFacingDirection(-1, true); }
+        if (canFace) { if (horizontalInput > 0.01f) SetFacingDirection(1); else if (horizontalInput < -0.01f) SetFacingDirection(-1); }
     }
 
     private void UpdateAttackFacingLockOnState()
@@ -1187,7 +1185,7 @@ public partial class PlayerMovement : MonoBehaviour
         if (target == null || !target.IsAlive) return false;
         float dx = target.transform.position.x - transform.position.x;
         if (Mathf.Abs(dx) <= AttackFacingCancelInputThreshold) return false;
-        SetFacingDirection(dx >= 0f ? 1 : -1, false); hasPerformedInitialLockOnForCurrentStep = true; return true;
+        SetFacingDirection(dx >= 0f ? 1 : -1); hasPerformedInitialLockOnForCurrentStep = true; return true;
     }
 
     private EnemyController GetAttackFacingLockOnTarget()
@@ -1208,12 +1206,11 @@ public partial class PlayerMovement : MonoBehaviour
         return fallbackEnemy != null && fallbackEnemy.IsAlive ? fallbackEnemy : null;
     }
 
-    private void SetFacingDirection(int dir, bool respectCD)
+    private void SetFacingDirection(int dir)
     {
-        if ((dir == 1 || dir == -1) && FacingDirection != dir && (!respectCD || Time.time - lastFacingChangeTime >= 0.2f))
+        if ((dir == 1 || dir == -1) && FacingDirection != dir)
         {
             transform.eulerAngles = new Vector3(0, dir == 1 ? 0 : 180, 0);
-            lastFacingChangeTime = Time.time;
         }
     }
 

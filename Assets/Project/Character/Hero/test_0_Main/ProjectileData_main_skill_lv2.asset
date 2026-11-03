@@ -106,10 +106,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitSFXVolume: 1
+        hitSFX: {fileID: 8300000, guid: fd68e61463416b94882f101778384a8f, type: 3}
+        hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0

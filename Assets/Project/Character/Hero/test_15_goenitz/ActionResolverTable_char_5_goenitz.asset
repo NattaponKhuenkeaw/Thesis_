@@ -15,6 +15,8 @@ MonoBehaviour:
   comboActions:
   - actionId: goenitz.basic.ground
     actionName: Ground
+    description: Perform Ground.
+    activationDescription:
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -37,6 +39,8 @@ MonoBehaviour:
         rid: 1588256048081535101
   - actionId: goenitz.basic.air
     actionName: Air
+    description: Perform Air.
+    activationDescription:
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -60,6 +64,10 @@ MonoBehaviour:
   skillActions:
   - actionId: goenitz.skill.yonokaze
     actionName: Yonokaze
+    description: 'Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
+      DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
+      damage dealt</color> '
+    activationDescription:
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -84,6 +92,9 @@ MonoBehaviour:
   ultimateActions:
   - actionId: goenitz.ultimate.yamidokoku
     actionName: Yamidokoku
+    description: Inflict <b><color=#00FFED>Echo</color></b> DMG 800%+300% of own
+      ATK
+    activationDescription:
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -119,6 +130,8 @@ MonoBehaviour:
     useDashAfterImage: 1
   - actionId: goenitz.ultimate2.shin.yaotome
     actionName: 'Shin Yaotome : Jissokoku'
+    description: 'Perform Shin Yaotome : Jissokoku.'
+    activationDescription:
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -643,7 +656,7 @@ MonoBehaviour:
           targetAnchorOffset: {x: 0, y: 0}
           faceTargetOnArrival: 1
           easing: 1
-          position: {x: 2.5, y: 0, z: 0}
+          position: {x: 3, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 32

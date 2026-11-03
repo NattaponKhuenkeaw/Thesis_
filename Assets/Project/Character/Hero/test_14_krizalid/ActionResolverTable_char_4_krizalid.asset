@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: ActionResolverTable_char_4_krizalid
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionId: 
+  - actionId: char_4_krizalid.basic.0
     actionName: 
+    description: Perform a basic attack.
+    activationDescription:
     context: 0
     priority: 0
     conditions: []
@@ -27,8 +29,10 @@ MonoBehaviour:
       rootNode:
         rid: 3251577402691944653
   skillActions:
-  - actionId: 
+  - actionId: char_4_krizalid.skill.0
     actionName: Dark Grab
+    description: Perform Dark Grab.
+    activationDescription:
     context: 0
     priority: 0
     conditions: []

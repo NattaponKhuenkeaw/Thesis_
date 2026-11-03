@@ -1,0 +1,95 @@
+{
+  "assets": [
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_0_Main\\ActionResolverTable_main.asset",
+      "original_lines_removed": 2,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_0_Main\\CharacterObject_main.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_10_kyo\\ActionResolverTable_char_1_kyo.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_10_kyo\\CharacterObject_Kyo.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_11_rugal\\ActionResolverTable_Char_2_Rugal.asset",
+      "original_lines_removed": 2,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_11_rugal\\CharacterObject_Rugal.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_13_shermie\\ActionResolverTable_char_3_shermie.asset",
+      "original_lines_removed": 2,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_13_shermie\\CharacterObject_Shermie.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_14_krizalid\\ActionResolverTable_char_4_krizalid.asset",
+      "original_lines_removed": 2,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_14_krizalid\\CharacterObject_Krizalid.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_15_goenitz\\ActionResolverTable_char_5_goenitz.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_15_goenitz\\CharacterObject_Goenitz.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_16_Orochi\\ActionResolverTable_Orochi.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_16_Orochi\\CharacterObject_Orochi.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_17_kula\\ActionResolverTable_char_7_kula.asset",
+      "original_lines_removed": 1,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_17_kula\\CharacterObject_Kula.asset",
+      "original_lines_removed": 0,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_1_CameraGirl\\ActionResolverTable_cg.asset",
+      "original_lines_removed": 2,
+      "unexpected_execution_changes": 0
+    },
+    {
+      "asset": "Assets\\Project\\Character\\Hero\\test_1_CameraGirl\\CharacterObject_cg.asset",
+      "original_lines_removed": 1,
+      "unexpected_execution_changes": 0
+    }
+  ],
+  "result": "Only missing action IDs, legacy standalone first-field indentation, and equivalent CameraGirl QTE key migration replace original lines; all other existing asset fields retained."
+}

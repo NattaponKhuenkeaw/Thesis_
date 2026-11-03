@@ -18,6 +18,9 @@ namespace Project.Combat
         HitSpark_Burn = 16,
         HitSpark_Explosion = 17,
         HitSpark_Slam = 18,
+        HitSpark_og_Slash = 19,
+        HitSpark_og_Heavy = 20,
+        HitSpark_og_Yellow = 21,
 
         
         // --- Movement ---

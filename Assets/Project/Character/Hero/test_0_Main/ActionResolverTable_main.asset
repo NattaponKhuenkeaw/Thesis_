@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: ActionResolverTable_main
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionId: 
+  - actionId: char-0-main.basic.0
     actionName: Ground
+    description: Attack 3 Stages, Last Hit will knock enemies up
+    activationDescription: 
     icon: {fileID: 21300000, guid: 524c655e96b778c4c878479759e8910d, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -35,8 +37,10 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256136747024573
-  - actionId: 
+  - actionId: char-0-main.basic.1
     actionName: Air
+    description: Perform Air.
+    activationDescription: 
     icon: {fileID: -6529263099619069835, guid: 524c655e96b778c4c878479759e8910d, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -60,6 +64,9 @@ MonoBehaviour:
   skillActions:
   - actionId: main.skill.dark_chain
     actionName: Dark Chain
+    description: Unleash a chain across the field, Inflict DMG <b><color=#a382ed>350%</color></b>
+      of ATK
+    activationDescription: 
     icon: {fileID: 21300000, guid: 7ee4ee77719136f42b9aedb077eb0098, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -83,6 +90,8 @@ MonoBehaviour:
     cooldown: 16
   - actionId: main.skill.dimension_slash
     actionName: Judgment Cut
+    description: Perform Judgment Cut.
+    activationDescription: 
     icon: {fileID: 21300000, guid: 6b053e9e957f26c488b6caf4bec1b96a, type: 3}
     actionType: 3
     resourceCounterId: 
@@ -109,6 +118,9 @@ MonoBehaviour:
   ultimateActions:
   - actionId: main.ultimate.jailbreak_punisher
     actionName: Jailbreak Punisher
+    description: Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG <b><color=#a382ed>500%</color></b>
+      of ATK
+    activationDescription: 
     icon: {fileID: 21300000, guid: 9ef1f814da0fabf428383fc49cca0531, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -144,7 +156,10 @@ MonoBehaviour:
     useDashAfterImage: 0
   - actionId: main.ultimate.execution_breakdown
     actionName: Execution Breakdown
-    icon: {fileID: 0}
+    description: Lunge a Heavy Hit toward then execute a lightspeed slash, Inflict
+      DMG <b><color=#a382ed>1000%</color></b> of ATK
+    activationDescription: 
+    icon: {fileID: 21300000, guid: 9ef1f814da0fabf428383fc49cca0531, type: 3}
     actionType: 0
     resourceCounterId: 
     resourceCost: 0
@@ -152,7 +167,7 @@ MonoBehaviour:
     requiresEnemyTarget: 0
     reselectOnAttackInput: 0
     targetRadius: 15
-    context: 2
+    context: 0
     outputContext: 1
     priority: 0
     conditions: []
@@ -164,11 +179,11 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 8000281000000000003
-    cooldown: 0
+    cooldown: 15
     inputTrigger: 1
     holdDuration: 0.35
     allowUltimateInterrupt: 1
-    energyCost: 0
+    energyCost: 60
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}
@@ -180,6 +195,10 @@ MonoBehaviour:
   qteActions:
   - actionId: main.qte.lightning_plunge
     actionName: Lightning Plunge
+    description: Enter with a lightning and strike on landing, Inflict DMG <b><color=#a382ed>200%</color></b>
+      of own ATK, and next Normal Attack will perform <b><color=#a382ed>Dimension
+      Cut</color></b>
+    activationDescription: 
     icon: {fileID: 0}
     actionType: 0
     resourceCounterId: 
@@ -203,6 +222,9 @@ MonoBehaviour:
   standaloneActions:
   - actionId: main.dash.dimension_cut
     actionName: Dimension Cut
+    description: Dash through the target with a perfect cut, Inflict <b><color=#a382ed>350%</color></b>
+      of own ATK
+    activationDescription: 
     icon: {fileID: 21300000, guid: 96429a2799e4b0d47839b3cc3ac49192, type: 3}
     actionType: 2
     resourceCounterId: main.shadow.cached_cuts
@@ -301,7 +323,7 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitSFX: {fileID: 8300000, guid: fd68e61463416b94882f101778384a8f, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 15
@@ -340,7 +362,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 15
@@ -379,7 +401,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 15
@@ -694,13 +716,13 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 7
         hitSFX: {fileID: 8300000, guid: 2fec9413e1a2b724f9c5a37c4882c8ae, type: 3}
-        hitSFXVolume: 0.8
+        hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 10
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093193736847458
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -732,7 +754,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
         hitVFXType: 0
@@ -1184,7 +1206,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: b43a3703a8a56b143a6c65c8329ccdbd, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 12
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1220,14 +1242,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.85, g: 0.7, b: 1, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 10
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093219165340296
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1259,14 +1281,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.85, g: 0.7, b: 1, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093219165340297
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1298,14 +1320,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.85, g: 0.7, b: 1, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093219165340298
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1337,14 +1359,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.85, g: 0.7, b: 1, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093219165340299
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1376,14 +1398,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.85, g: 0.7, b: 1, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093219165340300
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1415,14 +1437,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 0.85, g: 0.7, b: 1, a: 1}
         flashFrames: 16
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093219165340301
       type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -3483,14 +3505,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093243849867403
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -3522,14 +3544,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093243849867404
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -3561,14 +3583,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093243849867405
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -3600,14 +3622,14 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093243849867406
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -3646,7 +3668,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093243849867407
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -3678,14 +3700,14 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093243849867408
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -3720,11 +3742,11 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 10359e0a649311843a38c0cd72de07a0, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 12
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093243849867409
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -3803,7 +3825,7 @@ MonoBehaviour:
         offset: {x: 4.4041758, y: 6.08351}
         size: {x: 29.9698, y: 12.96618}
         damageRatio: 1
-        impactTier: 0
+        impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 0
@@ -3821,14 +3843,14 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: b43a3703a8a56b143a6c65c8329ccdbd, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1267093284620075178
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -3949,7 +3971,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
         hitVFXType: 0
@@ -4179,7 +4201,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 3
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
         hitVFXType: 0
@@ -4700,7 +4722,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 16
-        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 15
@@ -4745,10 +4767,10 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 8300000, guid: c60709c4b93ec9b42968c77bfd5a58f0, type: 3}
+        hitSFX: {fileID: 8300000, guid: 52e5fed5e1447d241a7b4ccb8954db82, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 1
@@ -4809,10 +4831,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -4854,10 +4876,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: fd68e61463416b94882f101778384a8f, type: 3}
         hitSFXVolume: 0.8
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -5860,11 +5882,11 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: d9b852d5a8a5aa04584fa7a7d1953648, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 12
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 1
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1588256193077838076
       type: {class: WaitActionCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -5976,7 +5998,7 @@ MonoBehaviour:
       data:
         entries:
         - label: SFX
-          clip: {fileID: 8300000, guid: 9c626de2a9d03444cb898404238a5ed8, type: 3}
+          clip: {fileID: 8300000, guid: 9bf1812c7c3a442428b39c91f41f538d, type: 3}
           triggerFrame: 9
           duration: 49
           channel: 1
@@ -6641,7 +6663,7 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 10
@@ -9656,7 +9678,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 15
@@ -9683,7 +9705,7 @@ MonoBehaviour:
         recoveryFrames: 8
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 8
-        hitSFX: {fileID: 8300000, guid: be42944712cebd14a9f9a6b13cb00fe6, type: 3}
+        hitSFX: {fileID: 8300000, guid: 610237169a625df4698d1f0b25965862, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 14

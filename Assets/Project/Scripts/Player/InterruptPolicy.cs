@@ -95,8 +95,8 @@ public struct InterruptPolicy
     };
 
     /// <summary>
-    /// Dash: Recovery permits action interrupts but keeps movement/facing
-    /// locked. Cancel permits every action supported by the shared policy.
+    /// Dash: Recovery returns movement/facing and permits action interrupts.
+    /// Cancel permits every action supported by the shared policy.
     /// </summary>
     public static readonly InterruptPolicy Dash = new InterruptPolicy
     {
@@ -107,8 +107,7 @@ public struct InterruptPolicy
         cancel   = ActionCategory.All & ~ActionCategory.Switch,
         startupGate  = InputGate.None,
         activeGate   = InputGate.None,
-        // Recovery accepts action cancels but never walking/facing input.
-        recoveryGate = InputGate.None,
+        recoveryGate = InputGate.AllowAll,
         cancelGate   = InputGate.AllowAll
     };
 

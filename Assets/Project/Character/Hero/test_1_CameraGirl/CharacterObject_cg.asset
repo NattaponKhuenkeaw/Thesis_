@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
   characterId: char-1-camera_girl
   characterType: 0
-  characterRole: 0
+  characterRole: 6
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 973
@@ -27,12 +27,12 @@ MonoBehaviour:
     damageIncrease: 0
     additionalDamageIncrease: 0
     auraEnergyRecharge: 0
-    speed: 9.5
+    speed: 10.5
   metaData:
     displayName: Yureka Rei
     description: 
-    icon: {fileID: 21300000, guid: 42d3f8943fe694546a553aeea3671ff2, type: 3}
-    portrait: {fileID: 21300000, guid: 07ac22505236389428e62791d6c70652, type: 3}
+    icon: {fileID: 21300000, guid: 59754b49b75a34b44a4188ec77bc0c73, type: 3}
+    portrait: {fileID: 21300000, guid: a516ac6afd048eb469ebb79c3b33a520, type: 3}
     animatorController: {fileID: 9100000, guid: 18ac1726ca931af428ba33088aee69e9, type: 2}
   potentialArtwork:
     skill: {fileID: 21300000, guid: 1707dc988f293a640a67328439f06cda, type: 3}
@@ -55,13 +55,143 @@ MonoBehaviour:
     animationClip: {fileID: 7400000, guid: fa372523c264ac241bbda4f3e01c1c3f, type: 2}
     icon: {fileID: 21300000, guid: 4185668ee7484be49aca99f95f6e49e2, type: 3}
     meterReadyIcon: {fileID: 0}
-    startupFrames: 4
+    startupFrames: 0
     activeFrames: 13
     recoveryFrames: 14
-    cancelWindowStartFrame: 29
+    cancelWindowStartFrame: 25
     dashSpeed: 25
     cooldownFrames: 24
   kitDefinition:
+    presentation:
+      sections:
+      - sectionId: basic
+        title: Basic Attack
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary: 
+        order: 0
+      - sectionId: skill
+        title: Skill
+        showPotentialLevel: 1
+        potentialTrack: 0
+        summary: 
+        order: 1
+      - sectionId: ultimate
+        title: Ultimate
+        showPotentialLevel: 1
+        potentialTrack: 1
+        summary: 
+        order: 2
+      - sectionId: qte
+        title: QTE
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary: 
+        order: 3
+      - sectionId: special
+        title: Special
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary: 
+        order: 4
+      - sectionId: passive
+        title: Passive
+        showPotentialLevel: 1
+        potentialTrack: 2
+        summary: 
+        order: 5
+      entries:
+      - entryId: char-1-camera_girl.basic.0
+        sectionId: basic
+        actionId: char-1-camera_girl.basic.0
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 0
+        unlockTrack: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription: 
+      - entryId: char-1-camera_girl.basic.1
+        sectionId: basic
+        actionId: char-1-camera_girl.basic.1
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 0
+        unlockTrack: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription: 
+      - entryId: cg.skill
+        sectionId: skill
+        actionId: cg.skill
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 0
+        unlockTrack: 0
+        showPotentialLevel: 1
+        potentialTrack: 0
+        order: 0
+        activationDescription: 
+      - entryId: cg.skill.ex
+        sectionId: skill
+        actionId: cg.skill.ex
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 1
+        unlockTrack: 1
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription: 
+      - entryId: cg.ult
+        sectionId: ultimate
+        actionId: cg.ult
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 0
+        unlockTrack: 0
+        showPotentialLevel: 1
+        potentialTrack: 1
+        order: 0
+        activationDescription: 
+      - entryId: qte.char-1-camera_girl.basic.0
+        sectionId: qte
+        actionId: char-1-camera_girl.basic.0
+        passive: 0
+        qte: 1
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 0
+        unlockTrack: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription: 
+      - entryId: passive
+        sectionId: passive
+        actionId: 
+        passive: 1
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 0
+        unlockTrack: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription: 
     combatMeter:
       counterId: 
       cachedCounterId: 
@@ -466,10 +596,22 @@ MonoBehaviour:
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
-      nodeId: base.skill
-      nodeName: Base Skill
+      nodeId: cg.skill
+      nodeName: Capture Da Soul
       description: 
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: Inflict DMG <b><color=#ffd000>350%</color></b>
+        of ATK, Randomly grant Increase Critical Rate by <b><color=#ffd000>13%</color></b>
+        or Increase Critical Damage by <b><color=#ffd000>23%</color></b> for <b><color=#ffd000>10
+        seconds</color></b>
+      kitInfoPatches:
+      - entryId: cg.skill
+        noteId: 
+        priority: 0
+        appendNote: 0
+        description: Inflict DMG <b><color=#ffd000>350%</color></b> of ATK, Randomly
+          grant Increase Critical Rate by <b><color=#ffd000>13%</color></b> or Increase
+          Critical Damage by <b><color=#ffd000>23%</color></b> for <b><color=#ffd000>10
+          seconds</color></b>
       track: 0
       level: 0
       fragmentCost: 0
@@ -496,7 +638,17 @@ MonoBehaviour:
       nodeId: base.ultimate
       nodeName: Base Ultimate
       description: 
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: Create Photo-Capturism Area and Inflict DMG
+        <b><color=#ffd000>40%</color></b> of ATK every <b><color=#ffd000>1 second</color></b>
+        <color=#787878>(duration 20 seconds)</color>
+      kitInfoPatches:
+      - entryId: cg.ult
+        noteId: 
+        priority: 0
+        appendNote: 0
+        description: Create Photo-Capturism Area and Inflict DMG <b><color=#ffd000>40%</color></b>
+          of ATK every <b><color=#ffd000>1 second</color></b> <color=#787878>(duration
+          20 seconds)</color>
       track: 1
       level: 0
       fragmentCost: 0
@@ -669,9 +821,17 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: base.passive
-      nodeName: Base Passive
+      nodeName: Begone! Baptism!
       description: 
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: When Rei attacking Normal Attack through Stage3
+        will grant Increase allies ATK based on <b><color=#ffd000>20% of own ATK</color></b>
+      kitInfoPatches:
+      - entryId: passive
+        noteId: 
+        priority: 0
+        appendNote: 0
+        description: When Rei attacking Normal Attack through Stage3 will grant Increase
+          allies ATK based on <b><color=#ffd000>20% of own ATK</color></b>
       track: 2
       level: 0
       fragmentCost: 0
@@ -997,6 +1157,7 @@ MonoBehaviour:
         both Critical Rate (+13%) and Critical Damage (+23%) buffs to teammates for
         10s.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 0
       level: 1
       fragmentCost: 1
@@ -1320,6 +1481,7 @@ MonoBehaviour:
       description: Enhances buffs granted by Capture Da Soul; Critical Rate increased
         to +17% and Critical Damage increased to +43%.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 0
       level: 2
       fragmentCost: 1
@@ -1643,6 +1805,7 @@ MonoBehaviour:
       description: Capture Da Soul now applies its Critical Rate and Critical Damage
         buffs to all allies, including Camera Girl herself.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 0
       level: 3
       fragmentCost: 1
@@ -1688,6 +1851,7 @@ MonoBehaviour:
       description: Hits dealt by Capture Da Soul have a 40% chance to Stun the enemy
         for 2.5 seconds.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 0
       level: 4
       fragmentCost: 1
@@ -1752,6 +1916,7 @@ MonoBehaviour:
         attack dealing skill damage before vanishing (max 1 active, triggers even
         off-field).
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 1
       level: 1
       fragmentCost: 1
@@ -1814,6 +1979,7 @@ MonoBehaviour:
       description: Shadow Attack trigger chance during the assist window increases
         to 100%, and its damage dealt increases to 400% of Camera Girl's ATK.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 1
       level: 2
       fragmentCost: 1
@@ -1874,6 +2040,7 @@ MonoBehaviour:
       description: The projectile radius and hitbox size of Send Da Btch are increased
         by 1.5x.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 1
       level: 3
       fragmentCost: 1
@@ -1937,6 +2104,7 @@ MonoBehaviour:
         hits an enemy, Camera Girl recovers +3 Aura Energy (maximum 3 points per
         shadow attack).
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 1
       level: 4
       fragmentCost: 1
@@ -2107,6 +2275,7 @@ MonoBehaviour:
       description: Hitting an enemy with the 3rd normal attack (Attack3) reduces
         their DEF by -20% for 10 seconds.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 2
       level: 1
       fragmentCost: 1
@@ -2277,6 +2446,7 @@ MonoBehaviour:
       description: Hitting an enemy with the 3rd normal attack (Attack3) reduces
         their DEF by -40% for 10 seconds.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 2
       level: 2
       fragmentCost: 1
@@ -2337,6 +2507,7 @@ MonoBehaviour:
       description: The hitbox size of the 3rd normal attack (Attack3) is expanded
         by 1.5x.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 2
       level: 3
       fragmentCost: 1
@@ -2418,6 +2589,7 @@ MonoBehaviour:
       description: After Capture Da Soul ends, opens a 10-second follow-up window
         that unlocks Skill.super.ex.
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 2
       level: 4
       fragmentCost: 1
@@ -2427,7 +2599,7 @@ MonoBehaviour:
     triggerActionIds:
     - cg.skill
     - cg.skill.ex
-    introActionKey: Ground
+    introActionKey: char-1-camera_girl.basic.0
     introStepName: Attack4
     introComboTree:
       treeName: Combo

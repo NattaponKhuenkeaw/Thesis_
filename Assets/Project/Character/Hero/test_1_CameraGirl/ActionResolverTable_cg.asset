@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: ActionResolverTable_cg
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionId: 
+  - actionId: char-1-camera_girl.basic.0
     actionName: Ground
+    description: Perform Ground.
+    activationDescription: 
     icon: {fileID: 21300000, guid: 5a4c40ea0e904e44abf0f388ba51be84, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -28,15 +30,17 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 3.5
+    actionDamageMultiplier: 4.5
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256136747024573
-  - actionId: 
+  - actionId: char-1-camera_girl.basic.1
     actionName: Air
+    description: Perform Air.
+    activationDescription: 
     icon: {fileID: 21300000, guid: 5a4c40ea0e904e44abf0f388ba51be84, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -50,7 +54,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 1.5
+    actionDamageMultiplier: 2
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -60,6 +64,11 @@ MonoBehaviour:
   skillActions:
   - actionId: cg.skill
     actionName: Capture Da Soul
+    description: Inflict DMG <b><color=#ffd000>350%</color></b> of ATK, Randomly
+      grant Increase Critical Rate by <b><color=#ffd000>13%</color></b> or Increase
+      Critical Damage by <b><color=#ffd000>23%</color></b> for <b><color=#ffd000>10
+      seconds</color></b>
+    activationDescription: 
     icon: {fileID: 21300000, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -73,7 +82,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 2.5
+    actionDamageMultiplier: 3.5
     auraEnergyReward: 15
     comboTree:
       treeName: Combo
@@ -83,6 +92,8 @@ MonoBehaviour:
     cooldown: 7
   - actionId: cg.skill.ex
     actionName: Shadow Attack
+    description: Perform Shadow Attack.
+    activationDescription: 
     icon: {fileID: 21300000, guid: 1707dc988f293a640a67328439f06cda, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -108,6 +119,10 @@ MonoBehaviour:
   ultimateActions:
   - actionId: cg.ult
     actionName: Send Da Btch
+    description: Create Photo-Capturism Area and Inflict DMG <b><color=#ffd000>40%</color></b>
+      of ATK every <b><color=#ffd000>1 second</color></b> <color=#787878>(duration
+      20 seconds)</color>
+    activationDescription: 
     icon: {fileID: 21300000, guid: f29a60c7b0bbd7a4ab8ce62ca53ad960, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -121,7 +136,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 4.5
+    actionDamageMultiplier: 5
     auraEnergyReward: 3
     comboTree:
       treeName: Combo
@@ -235,10 +250,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 12
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -246,7 +261,7 @@ MonoBehaviour:
     - rid: 1267093284620075253
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 5
+        startFrameOffset: 15
         activeFrames: 2
         elementType: 0
         damageTags: 0
@@ -274,7 +289,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 0
@@ -285,7 +300,7 @@ MonoBehaviour:
     - rid: 1267093284620075254
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 10
+        startFrameOffset: 30
         activeFrames: 2
         elementType: 0
         damageTags: 0
@@ -313,7 +328,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 0
@@ -416,7 +431,7 @@ MonoBehaviour:
         hitSFX: {fileID: 0}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -497,7 +512,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 194c6bfebe7f2a64aa0d7d214fc3d43c, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 12
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -597,7 +612,7 @@ MonoBehaviour:
         hitSFX: {fileID: 0}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -751,9 +766,9 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 3
-          activeFrames: 37
-          recoveryFrames: 11
-          cancelWindowStartFrame: 49
+          activeFrames: 47
+          recoveryFrames: 1
+          cancelWindowStartFrame: 50
           loopActivePhase: 0
           stepName: Send Da Btch
           animationClip: {fileID: 7400000, guid: 24b523414923418418e1068c62660af5, type: 2}
@@ -892,7 +907,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -962,7 +977,7 @@ MonoBehaviour:
         hitSFX: {fileID: 0}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 0
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1006,7 +1021,7 @@ MonoBehaviour:
         hitSFX: {fileID: 0}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 12
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1045,7 +1060,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 332041b5ca70b034dad992b18618a489, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1444,7 +1459,7 @@ MonoBehaviour:
       data:
         entries:
         - label: SFX
-          clip: {fileID: 8300000, guid: 427ed399f93a6cb4ba0fc95813b7f3e3, type: 3}
+          clip: {fileID: 8300000, guid: 194c6bfebe7f2a64aa0d7d214fc3d43c, type: 3}
           triggerFrame: 3
           duration: 5
           channel: 1
@@ -1472,6 +1487,45 @@ MonoBehaviour:
         track: 2
         comparison: 3
         level: 2
+    - rid: 5456672852075348052
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 45
+        activeFrames: 2
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 4.330721, y: 2.520928}
+        size: {x: 11.105595, y: 5.041856}
+        damageRatio: 0.08
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 0
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: 8deecd67aefdcdc4bb93cd585b1f3d29, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 0
     - rid: 7060639382869639287
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -1710,7 +1764,7 @@ MonoBehaviour:
         hitSFX: {fileID: 0}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1776,7 +1830,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1815,7 +1869,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1854,7 +1908,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1893,7 +1947,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1932,7 +1986,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 11
+        hitVFXType: 21
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2101,7 +2155,7 @@ MonoBehaviour:
         hitSFX: {fileID: 8300000, guid: b1470e36aa93aed4782bad8e2663c2b8, type: 3}
         hitSFXVolume: 1
         hitSFXPitch: 1
-        hitVFXType: 12
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -2164,6 +2218,7 @@ MonoBehaviour:
         - rid: 1267093284620075252
         - rid: 1267093284620075253
         - rid: 1267093284620075254
+        - rid: 5456672852075348052
     - rid: 8312694097921704031
       type: {class: ProjectileSpawnHitbox, ns: , asm: Assembly-CSharp}
       data:

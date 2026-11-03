@@ -25,9 +25,7 @@ public sealed class PlayerJumpState : PlayerState
     public override bool AcceptsAttackInput => hasLaunched;
     public override bool AcceptsSkillInput => hasLaunched;
     public override bool AcceptsUltimateInput => hasLaunched;
-    // Startup is the authored jump commitment window. Directional input may
-    // keep buffering, but the motor must hold position until launch so ground
-    // and double jumps have the same readable, punchy anticipation.
+    // Profiles may still author anticipation; zero startup never holds the motor.
     public override bool LocksMovement => !hasLaunched;
 
     public override void Enter()
@@ -43,7 +41,7 @@ public sealed class PlayerJumpState : PlayerState
         }
 
         BeginJump();
-        if (launchImmediately)
+        if (launchImmediately && !hasLaunched)
         {
             CommitJumpLaunch();
         }
@@ -161,10 +159,14 @@ public sealed class PlayerJumpState : PlayerState
         player.Movement.PrepareJumpStartup();
 
         totalStartupFrames = player.Movement.profile != null
-            ? Mathf.Max(1, player.Movement.profile.jumpStartupFrames)
-            : 1;
+            ? Mathf.Max(0, player.Movement.profile.jumpStartupFrames)
+            : 0;
         startupFrame = 0;
         hasLaunched = false;
+        if (totalStartupFrames == 0)
+        {
+            CommitJumpLaunch();
+        }
     }
 
     private void CommitJumpLaunch()

@@ -765,14 +765,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Manager
       objectReference: {fileID: 0}
-    - target: {fileID: 822730165316854140, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8115039195715863570, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
-      propertyPath: sfxVolume
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 8850677962514263319, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3405,7 +3397,7 @@ PrefabInstance:
     - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
+      objectReference: {fileID: 9100000, guid: efb84dc297f28b2448da06b6d95f9b3b, type: 2}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: Player
@@ -3416,7 +3408,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7900271300000000001, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: introSlowMotionSeconds
-      value: 0.15
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 7900271300000000001, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: introCameraImpactFrames
@@ -3424,7 +3416,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7900271300000000001, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: introCameraSizeReduction
-      value: 0.55
+      value: 0.75
       objectReference: {fileID: 0}
     - target: {fileID: 8528783629480161128, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: cameraShake
@@ -3988,6 +3980,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 330550517057683680, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
+      propertyPath: m_Color.b
+      value: 0.5801887
+      objectReference: {fileID: 0}
+    - target: {fileID: 330550517057683680, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
+      propertyPath: m_Color.g
+      value: 0.88352317
+      objectReference: {fileID: 0}
+    - target: {fileID: 330550517057683680, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 447525645325701048, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -7391,6 +7395,17 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -18, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2080294829 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3871082261461579384, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
+  m_PrefabInstance: {fileID: 4123050586773883339}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &2091320175
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7559,6 +7574,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4051397292885703, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 246667152815074626, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -7695,6 +7714,14 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 4e90cdf0fc173114ba6fe110a06849d3, type: 3}
+    - target: {fileID: 6367576389322775931, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
+      propertyPath: m_fontSize
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 6367576389322775931, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 40
+      objectReference: {fileID: 0}
     - target: {fileID: 6594149371391454482, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -7702,6 +7729,14 @@ PrefabInstance:
     - target: {fileID: 6594149371391454482, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6693868088512106135, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
+      propertyPath: levelText
+      value: 
+      objectReference: {fileID: 2080294829}
+    - target: {fileID: 6823838410943391483, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
+      propertyPath: m_Name
+      value: levelLabel
       objectReference: {fileID: 0}
     - target: {fileID: 7934284041589301730, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
       propertyPath: m_AnchorMax.y
@@ -7755,11 +7790,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.5
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8.35
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 1596864833993384329, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_Name
@@ -7819,7 +7854,7 @@ PrefabInstance:
       objectReference: {fileID: 2100287460612552604}
     - target: {fileID: 7003089252169759538, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: orthographic size
-      value: 12
+      value: 5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

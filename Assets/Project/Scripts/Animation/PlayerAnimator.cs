@@ -83,9 +83,10 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetBool(isGroundedHash, movement.GroundState.IsEffectivelyGrounded);
         anim.SetBool(isLandingHash, movement.IsLanding);
 
-        // Dash remains animation-authoritative through Recovery. Ground Dash
-        // returns visible locomotion together with control at Cancel.
-        if (movement.IsDashing && !movement.IsGroundDashLocomotionOpen)
+        // Returning control does not discard an unfinished neutral dash clip.
+        // Presentation can outlive the gameplay dash without owning its motor.
+        if ((movement.IsDashing && !movement.IsDashLocomotionOpen)
+            || ShouldPreserveDashAnimation())
         {
             anim.SetFloat(speedHash, 0f);
             anim.SetFloat(verticalVelocityHash, 0f);
@@ -113,6 +114,17 @@ public class PlayerAnimator : MonoBehaviour
             return;
         }
 
+        if (anim.GetCurrentAnimatorStateInfo(0).shortNameHash == dashHash
+            && (!movement.IsDashing || movement.IsDashLocomotionOpen))
+        {
+            if (movement.GroundState.IsEffectivelyGrounded)
+                TriggerGrounded();
+            else
+                RestoreAirborneState();
+            wasFalling = !movement.GroundState.IsEffectivelyGrounded && rb.linearVelocity.y < -0.1f;
+            return;
+        }
+
         bool suppressFallAnimation = (combat != null && combat.ShouldSuppressLandingFeedback());
         bool isFalling = !suppressFallAnimation && !movement.GroundState.IsEffectivelyGrounded && rb.linearVelocity.y < -0.1f && !movement.IsLanding && !movement.IsJumpStarting;
         
@@ -122,6 +134,19 @@ public class PlayerAnimator : MonoBehaviour
         }
         
         wasFalling = isFalling;
+    }
+
+    private bool ShouldPreserveDashAnimation()
+    {
+        if (anim == null || movement == null
+            || Mathf.Abs(movement.HorizontalInput) > 0.01f
+            || (combat != null && combat.IsActiveCombat()))
+        {
+            return false;
+        }
+
+        AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(0);
+        return state.shortNameHash == dashHash && state.normalizedTime < 1f;
     }
 
     private void OnEnable()
@@ -173,6 +198,9 @@ public class PlayerAnimator : MonoBehaviour
 
     public void TriggerGrounded()
     {
+        if (ShouldPreserveDashAnimation())
+            return;
+
         if (anim != null)
         {
             var stateInfo = anim.GetCurrentAnimatorStateInfo(0);
@@ -300,7 +328,10 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null || movement == null || rb == null)
             return;
 
-        if (movement.IsDashing)
+        if (ShouldPreserveDashAnimation())
+            return;
+
+        if (movement.IsDashing && !movement.IsDashLocomotionOpen)
             return;
 
         // If we are already in jump/fall states and not significantly into the animation,

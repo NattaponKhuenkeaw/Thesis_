@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: ActionResolverTable_Char_2_Rugal
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionId: 
+  - actionId: Char_2_Rugal.basic.0
     actionName: Ground Combo
+    description: "Perform Ground Combo."
+    activationDescription: ""
     context: 0
     outputContext: 0
     priority: 0
@@ -27,8 +29,10 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706479932
-  - actionId: 
+  - actionId: Char_2_Rugal.basic.1
     actionName: Air Combo
+    description: "Perform Air Combo."
+    activationDescription: ""
     context: 1
     outputContext: 0
     priority: 1
@@ -44,6 +48,8 @@ MonoBehaviour:
   skillActions:
   - actionId: rugal.skill
     actionName: Genocide Cutter
+    description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG 350% of own ATK"
+    activationDescription: ""
     context: 2
     outputContext: 0
     priority: 0
@@ -59,6 +65,8 @@ MonoBehaviour:
     cooldown: 2
   - actionId: rugal.skill.ex
     actionName: Genocide Cutter (EX)
+    description: "Perform Genocide Cutter (EX)."
+    activationDescription: ""
     context: 2
     outputContext: 0
     priority: 10
@@ -76,6 +84,8 @@ MonoBehaviour:
   ultimateActions:
   - actionId: rugal.ultimate
     actionName: Gigantic Pressure
+    description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG 800% of own ATK"
+    activationDescription: ""
     context: 0
     outputContext: 0
     priority: 0

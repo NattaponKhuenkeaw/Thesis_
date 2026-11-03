@@ -51,13 +51,120 @@ MonoBehaviour:
     maxHpPerLevel: 82.85
   _dashData:
     animationClip: {fileID: 7400000, guid: 3e950a7b365be294c97ddb9271fb0efe, type: 2}
-    startupFrames: 8
+    startupFrames: 0
     activeFrames: 22
     recoveryFrames: 10
-    cancelWindowStartFrame: 37
+    cancelWindowStartFrame: 29
     dashSpeed: 15
     cooldownFrames: 24
   kitDefinition:
+    presentation:
+      sections:
+      - sectionId: basic
+        title: Basic Attack
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 0
+      - sectionId: skill
+        title: Skill
+        showPotentialLevel: 1
+        potentialTrack: 0
+        summary:
+        order: 1
+      - sectionId: ultimate
+        title: Ultimate
+        showPotentialLevel: 1
+        potentialTrack: 1
+        summary:
+        order: 2
+      - sectionId: qte
+        title: QTE
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 3
+      - sectionId: special
+        title: Special
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 4
+      - sectionId: passive
+        title: Passive
+        showPotentialLevel: 1
+        potentialTrack: 2
+        summary:
+        order: 5
+      entries:
+      - entryId: Char_2_Rugal.basic.0
+        sectionId: basic
+        actionId: Char_2_Rugal.basic.0
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: Char_2_Rugal.basic.1
+        sectionId: basic
+        actionId: Char_2_Rugal.basic.1
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription:
+      - entryId: rugal.skill
+        sectionId: skill
+        actionId: rugal.skill
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: rugal.skill.ex
+        sectionId: skill
+        actionId: rugal.skill.ex
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 4
+        unlockTrack: 2
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription:
+      - entryId: rugal.ultimate
+        sectionId: ultimate
+        actionId: rugal.ultimate
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 1
+        order: 0
+        activationDescription:
+      - entryId: passive
+        sectionId: passive
+        actionId:
+        passive: 1
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
     skill:
       abilityId: rugal.skill
       abilityName: Genocide Cutter
@@ -94,6 +201,12 @@ MonoBehaviour:
       description: 
       skillPanelDescriptionOverride: Inflict <b><color=#FFEF39>Memory</color></b>
         DMG 350% of own ATK
+      kitInfoPatches:
+      - entryId: rugal.skill
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG 350% of own ATK"
       track: 0
       level: 0
       fragmentCost: 0
@@ -119,6 +232,12 @@ MonoBehaviour:
       description: 
       skillPanelDescriptionOverride: Inflict <b><color=#FFEF39>Memory</color></b>
         DMG 800% of own ATK
+      kitInfoPatches:
+      - entryId: rugal.ultimate
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG 800% of own ATK"
       track: 1
       level: 0
       fragmentCost: 0
@@ -185,6 +304,12 @@ MonoBehaviour:
       nodeName: Omega Mode
       description: Increase Basic Stats by +20%
       skillPanelDescriptionOverride: Increase <b>Basic Stats</b> by +20%
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Increase <b>Basic Stats</b> by +20%"
       track: 2
       level: 0
       fragmentCost: 0
@@ -349,6 +474,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>- Increase own ATK
         by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>'
+      kitInfoPatches:
+      - entryId: rugal.skill
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG 350% of own ATK\n\n\n<size=20><color=#C0C0C0>- Increase own ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>"
       track: 0
       level: 1
       fragmentCost: 1
@@ -406,6 +537,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>-
         Increase own ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>'
+      kitInfoPatches:
+      - entryId: rugal.skill
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG <b><color=#FFA500>450%</color></b> of own ATK\n\n\n<size=20><color=#C0C0C0>- Increase own ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>"
       track: 0
       level: 2
       fragmentCost: 1
@@ -570,6 +707,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         Increase <b><color=#FFA500>Allies</color></b> ATK by 7% for 10 seconds<i>(Max
         5 Stackable)</i></color></size>'
+      kitInfoPatches:
+      - entryId: rugal.skill
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG <b><color=#FFA500>450%</color></b> of own ATK\n\n\n<size=20><color=#C0C0C0>- Increase <b><color=#FFA500>Allies</color></b> ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>"
       track: 0
       level: 3
       fragmentCost: 1
@@ -628,6 +771,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         Increase <b><color=#FFA500>Allies</color></b> ATK by 7% for 10 seconds<i>(Max
         5 Stackable)</i></color></size>'
+      kitInfoPatches:
+      - entryId: rugal.skill
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG <b><color=#FFA500>550%</color></b> of own ATK\n\n\n<size=20><color=#C0C0C0>- Increase <b><color=#FFA500>Allies</color></b> ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>"
       track: 0
       level: 4
       fragmentCost: 1
@@ -688,6 +837,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>- Ultimate deals additional
         <b><color=#FFEF39>Memory</color></b> DMG equal to 8% of enemy Max HP<i>(Capped
         at 500% of own ATK)</i></color></size>'
+      kitInfoPatches:
+      - entryId: rugal.ultimate
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG 800% of own ATK\n\n\n<size=20><color=#C0C0C0>- Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal to 8% of enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>"
       track: 1
       level: 1
       fragmentCost: 1
@@ -746,6 +901,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal
         to 8% of enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>'
+      kitInfoPatches:
+      - entryId: rugal.ultimate
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG <b><color=#FFA500>1000%</color></b> of own ATK\n\n\n<size=20><color=#C0C0C0>- Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal to 8% of enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>"
       track: 1
       level: 2
       fragmentCost: 1
@@ -813,6 +974,12 @@ MonoBehaviour:
         Regenerates HP equal to 50% of damage dealt, doubled if below 30% HP
 
         </color></b></size>'
+      kitInfoPatches:
+      - entryId: rugal.ultimate
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG <b><color=#FFA500>1000%</color></b> of own ATK\n\n\n<size=20><color=#C0C0C0>- Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal to 8% of enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>\n<size=20><b><color=#74C365>- Regenerates HP equal to 50% of damage dealt, doubled if below 30% HP\n</color></b></size>"
       track: 1
       level: 3
       fragmentCost: 1
@@ -876,6 +1043,12 @@ MonoBehaviour:
         Regenerates HP equal to 50% of damage dealt, doubled if below 30% HP
 
         </color></b></size>'
+      kitInfoPatches:
+      - entryId: rugal.ultimate
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Inflict <b><color=#FFEF39>Memory</color></b> DMG <b><color=#FFA500>1300%</color></b> of own ATK\n\n\n<size=20><color=#C0C0C0>- Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal to 8% of enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>\n<size=20><b><color=#74C365>- Regenerates HP equal to 50% of damage dealt, doubled if below 30% HP\n</color></b></size>"
       track: 1
       level: 4
       fragmentCost: 1
@@ -1033,6 +1206,12 @@ MonoBehaviour:
 
         -
         <size=20><color=#C0C0C0>Every own attack will <n>Ignore enemy Defense</b></color></size>'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Increase <b>Basic Stats</b> by +20%\n\n\n- <size=20><color=#C0C0C0>Every own attack will <n>Ignore enemy Defense</b></color></size>"
       track: 2
       level: 1
       fragmentCost: 1
@@ -1097,6 +1276,12 @@ MonoBehaviour:
         Genocide Cutter has a 35% chance to reset its cooldown when used</color></size>
 
 '
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Increase <b>Basic Stats</b> by +20%\n\n\n<size=20><color=#C0C0C0>- Every own attack will <b>Ignore enemy Defense</b></color></size>\n<size=20><color=#C0C0C0>- Genocide Cutter has a 35% chance to reset its cooldown when used</color></size>\n"
       track: 2
       level: 2
       fragmentCost: 1
@@ -1145,6 +1330,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>-
         Increase own ATK based on 50% of own DEF</color></size>'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Increase <b>Basic Stats</b> by +20%\n\n\n<size=20><color=#C0C0C0>- Every own attack will <b>Ignore enemy Defense</b></color></size>\n<size=20><color=#C0C0C0>- Genocide Cutter has a 35% chance to reset its cooldown when used</color></size>\n<size=20><color=#C0C0C0>- Increase own ATK based on 50% of own DEF</color></size>"
       track: 2
       level: 3
       fragmentCost: 1
@@ -1759,6 +1950,12 @@ MonoBehaviour:
         Omega Mode: Increase ATK and DEF by +20% and own attack will <b>Ignore Enemy
         RES</b>, Unlock EX Action Follow-up. Once used EX Action, Omega Mode will
         be removed</color></size>"
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Increase <b>Basic Stats</b> by +20%\r\n\r\n<size=20><color=#C0C0C0>- Every own attack will <b>Ignore enemy Defense</b></color></size>\r\n<size=20><color=#C0C0C0>- Genocide Cutter has a 35% chance to reset its cooldown when used</color></size>\r\n<size=20><color=#C0C0C0>- Increase own ATK based on 50% of own DEF</color></size>\r\n<size=20><color=#C0C0C0>- After used 'Skill' or 'Ultimate' 5 times will enter \"Omega Mode\"</color></size>\r\n<size=19><color=#00ffff>\u2022 Omega Mode: Increase ATK and DEF by +20% and own attack will <b>Ignore Enemy RES</b>, Unlock EX Action Follow-up. Once used EX Action, Omega Mode will be removed</color></size>"
       track: 2
       level: 4
       fragmentCost: 1

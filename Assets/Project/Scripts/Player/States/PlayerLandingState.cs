@@ -17,7 +17,7 @@ public class PlayerLandingState : PlayerState
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
-    public override bool LocksMovement => true;
+    public override bool LocksMovement => player.Movement != null && player.Movement.IsLanding;
 
     public override void Update()
     {
@@ -34,6 +34,11 @@ public class PlayerLandingState : PlayerState
         }
 
         if (player.Movement.IsLanding)
+        {
+            return;
+        }
+
+        if (TryConsumeBufferedMovement())
         {
             return;
         }
@@ -58,5 +63,31 @@ public class PlayerLandingState : PlayerState
         // RouteAttackInput has already buffered it. Landing commits first, then
         // Update starts the action from an unambiguous grounded context.
         return true;
+    }
+
+    public bool TryConsumeBufferedMovement()
+    {
+        if (player.Movement == null || player.Movement.IsLanding
+            || fsm.IsAirborneContext || fsm.InputBuffer == null)
+        {
+            return false;
+        }
+
+        // Resolve only after the landing context/resource reset has committed.
+        // Jump keeps the existing grounded priority over another queued action.
+        if (fsm.InputBuffer.HasJumpBuffer && player.Movement.CanJump())
+        {
+            fsm.RouteJumpInput();
+            return fsm.CurrentState != this;
+        }
+
+        if (fsm.InputBuffer.HasDashBuffer && player.Movement.CanDash()
+            && fsm.InputBuffer.ConsumeDash(out float direction))
+        {
+            fsm.RouteDashInput(direction);
+            return fsm.CurrentState != this;
+        }
+
+        return false;
     }
 }

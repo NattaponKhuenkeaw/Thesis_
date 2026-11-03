@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: ActionResolverTable_char_3_shermie
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionId: 
+  - actionId: char_3_shermie.basic.0
     actionName: Ground Combo
+    description: Perform Ground Combo.
+    activationDescription:
     context: 0
     outputContext: 1
     priority: 0
@@ -27,8 +29,10 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706479861
-  - actionId: 
+  - actionId: char_3_shermie.basic.1
     actionName: Air Combo
+    description: Perform Air Combo.
+    activationDescription:
     context: 1
     outputContext: 2
     priority: 0
@@ -44,6 +48,10 @@ MonoBehaviour:
   skillActions:
   - actionId: shermie.skill
     actionName: Diamod Dust
+    description: Inflict <b><color=#00FFED>Echo</color></b> DMG 550% of ATK,<size=20><color=#C0C0C0>
+      Increase own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b>
+      DMG taken +30% for 20 seconds</color></size>
+    activationDescription:
     context: 0
     outputContext: 0
     priority: 0
@@ -59,6 +67,8 @@ MonoBehaviour:
     cooldown: 13
   - actionId: shermie.skill.ex
     actionName: Shermie Crush
+    description: Perform Shermie Crush.
+    activationDescription:
     context: 0
     outputContext: 0
     priority: 0
@@ -76,6 +86,9 @@ MonoBehaviour:
   ultimateActions:
   - actionId: shermie.ultimate
     actionName: Shermie Carnival
+    description: Inflict <b><color=#00FFED>Echo</color></b> DMG 850% of ATK,<size=20><color=#C0C0C0>
+      Increase own Max HP +50% for 20 seconds</color></size>
+    activationDescription:
     context: 0
     outputContext: 1
     priority: 0

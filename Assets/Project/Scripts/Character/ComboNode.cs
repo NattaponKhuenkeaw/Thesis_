@@ -43,6 +43,12 @@ public abstract class CombatAction
     public string actionId;
     public string actionName = "New Action";
 
+    [Header("Kit Information")]
+    [TextArea, Tooltip("Reference copy. Bind live values with {cooldown}, {energyCost}, {multiplierPercent}, or {sourceStat}.")]
+    public string description;
+    [TextArea, Tooltip("Player-facing explanation of when/how this action can be used.")]
+    public string activationDescription;
+
     [Tooltip("Cooldown HUD icon while this action is selected on its input. Uses the slot's default artwork when unassigned.")]
     public Sprite icon;
 

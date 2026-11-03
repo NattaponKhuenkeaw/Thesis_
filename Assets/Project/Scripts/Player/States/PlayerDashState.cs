@@ -3,8 +3,8 @@ using UnityEngine;
 /// <summary>
 /// Dash state: player is dashing (ground or air).
 /// Inherits FrameDataPlayerState for automatic phase tracking.
-/// Recovery accepts actions while keeping locomotion locked; Cancel opens
-/// the complete shared action window.
+/// Recovery returns locomotion while retaining the dash's resource/cooldown
+/// timeline; Cancel opens the complete shared action window.
 /// </summary>
 public class PlayerDashState : FrameDataPlayerState
 {
@@ -14,8 +14,7 @@ public class PlayerDashState : FrameDataPlayerState
     public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
 
     // =========================================================
-    // Capabilities — Startup/Active own the dash burst. A dash that started
-    // grounded returns normal locomotion control at its Cancel boundary.
+    // Startup/Active own the burst; ground and air control return together afterward.
     // =========================================================
     public override bool AcceptsMoveInput => true;
     public override bool AcceptsDashInput => false;
@@ -23,17 +22,14 @@ public class PlayerDashState : FrameDataPlayerState
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
-    public override bool LocksMovement => !IsCancelLocomotionOpen;
-    public override bool LocksFacing => !IsCancelLocomotionOpen;
+    public override bool LocksMovement => !IsLocomotionOpen;
+    public override bool LocksFacing => !IsLocomotionOpen;
 
     private bool dashStarted;
     private bool exitHandled;
-    private bool startedGrounded;
 
-    // Ground Dash keeps locomotion authority locked through Recovery even
-    // though that phase may accept action interrupts.
-    public bool IsCancelLocomotionOpen =>
-        startedGrounded && currentPhase == ActionPhase.Cancel;
+    public bool IsLocomotionOpen =>
+        currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel;
 
     // =========================================================
     // FrameDataPlayerState — provide frame data from DashData
@@ -60,8 +56,14 @@ public class PlayerDashState : FrameDataPlayerState
     {
         dashStarted = false;
         exitHandled = false;
-        startedGrounded = fsm.IsGroundedContext;
         base.Enter(context);
+        if (player.Movement?.dashData != null && player.Movement.dashData.startupFrames <= 0)
+        {
+            // The motor can tick before the FSM. Publish the burst on entry so
+            // its first physics update cannot observe a locked None phase.
+            currentFrame = 0;
+            currentPhase = ActionPhase.Active;
+        }
     }
 
     public override void Exit()
@@ -87,8 +89,7 @@ public class PlayerDashState : FrameDataPlayerState
 
     protected override void HandleInputDuringRecovery()
     {
-        // Recovery intentionally consumes only action buffers allowed by the
-        // Dash policy; InputGate continues to reject walk/facing control.
+        // Discrete action permissions remain separate from continuous locomotion.
         TryConsumeAllowedBuffers();
     }
 

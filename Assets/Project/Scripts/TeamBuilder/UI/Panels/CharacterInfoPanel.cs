@@ -90,7 +90,7 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (levelText != null)
             {
-                levelText.text = $"Lv.{globalLevel}/{globalMaxLevel}";
+                levelText.text = $"{globalLevel}/{globalMaxLevel}";
             }
 
             // The dedicated individual EXP page is no longer an active route.

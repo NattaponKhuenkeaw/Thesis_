@@ -15,6 +15,8 @@ MonoBehaviour:
   comboActions:
   - actionId: kyo.basic.ground
     actionName: Ground
+    description: "Perform Ground."
+    activationDescription: ""
     context: 0
     outputContext: 1
     priority: 0
@@ -29,6 +31,8 @@ MonoBehaviour:
         rid: 3251577252092051566
   - actionId: kyo.basic.air
     actionName: Air
+    description: "Perform Air."
+    activationDescription: ""
     context: 1
     outputContext: 2
     priority: 0
@@ -44,6 +48,8 @@ MonoBehaviour:
   skillActions:
   - actionId: kyo.skill.ground
     actionName: Flame Gather
+    description: "Inflict <b><color=#FF0000>Ash</color></b> DMG 350% of own ATK and apply the configured Ash DOT."
+    activationDescription: ""
     context: 0
     outputContext: 1
     priority: 1
@@ -59,6 +65,8 @@ MonoBehaviour:
     cooldown: 7
   - actionId: kyo.skill.air
     actionName: Fireball
+    description: "Perform Fireball."
+    activationDescription: ""
     context: 1
     outputContext: 2
     priority: 1
@@ -75,6 +83,8 @@ MonoBehaviour:
   ultimateActions:
   - actionId: kyo.ultimate
     actionName: "108 Shiki \u2022 Yami Barai"
+    description: "Inflict <b><color=#FF0000>Ash</color></b> DMG 700% of own ATK"
+    activationDescription: ""
     context: 0
     outputContext: 1
     priority: 1
@@ -98,6 +108,8 @@ MonoBehaviour:
     useDashAfterImage: 1
   - actionId: kyo.ultimate.ex
     actionName: 182 Shiki
+    description: "Perform 182 Shiki."
+    activationDescription: ""
     context: 0
     outputContext: 1
     priority: 10

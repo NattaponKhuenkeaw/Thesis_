@@ -17,11 +17,23 @@ MonoBehaviour:
   - sourceItemId: char-0-main
     displayName: Asura Shin Fragment
     fragmentType: 0
-    quantity: 84
+    quantity: 79
+  - sourceItemId: char-1-camera_girl
+    displayName: Yureka Rei Fragment
+    fragmentType: 0
+    quantity: 81
+  - sourceItemId: char_5_goenitz
+    displayName: Goenitz Fragment
+    fragmentType: 0
+    quantity: 99
   characterPotentials:
   - characterId: char-0-main
-    skillLevel: 0
-    ultimateLevel: 0
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char-1-camera_girl
+    skillLevel: 4
+    ultimateLevel: 4
     passiveLevel: 4
   unlockedCharacterIds: []
   permanentItems: []

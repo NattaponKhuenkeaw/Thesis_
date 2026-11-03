@@ -53,13 +53,74 @@ MonoBehaviour:
     maxHpPerLevel: 0
   _dashData:
     animationClip: {fileID: 0}
-    startupFrames: 5
+    startupFrames: 0
     activeFrames: 12
     recoveryFrames: 12
-    cancelWindowStartFrame: 25
+    cancelWindowStartFrame: 20
     dashSpeed: 20
     cooldownFrames: 24
   kitDefinition:
+    presentation:
+      sections:
+      - sectionId: basic
+        title: Basic Attack
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 0
+      - sectionId: skill
+        title: Skill
+        showPotentialLevel: 1
+        potentialTrack: 0
+        summary:
+        order: 1
+      - sectionId: ultimate
+        title: Ultimate
+        showPotentialLevel: 1
+        potentialTrack: 1
+        summary:
+        order: 2
+      - sectionId: qte
+        title: QTE
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 3
+      - sectionId: special
+        title: Special
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 4
+      - sectionId: passive
+        title: Passive
+        showPotentialLevel: 1
+        potentialTrack: 2
+        summary:
+        order: 5
+      entries:
+      - entryId: char_7_kula.special.0
+        sectionId: special
+        actionId: char_7_kula.special.0
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: passive
+        sectionId: passive
+        actionId:
+        passive: 1
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
     skill:
       abilityId: 
       abilityName: Skill
@@ -95,6 +156,7 @@ MonoBehaviour:
       nodeName: Base Skill
       description: 
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 0
       level: 0
       fragmentCost: 0
@@ -119,6 +181,7 @@ MonoBehaviour:
       nodeName: Base Ultimate
       description: 
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 1
       level: 0
       fragmentCost: 0
@@ -143,6 +206,7 @@ MonoBehaviour:
       nodeName: Base Passive
       description: 
       skillPanelDescriptionOverride: 
+      kitInfoPatches: []
       track: 2
       level: 0
       fragmentCost: 0

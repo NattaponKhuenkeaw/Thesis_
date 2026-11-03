@@ -1,0 +1,19 @@
+{
+    "timestamp": "2026-11-03T03:57:19.3969426Z",
+    "passed": [
+        "Immediate ground/double launch and one resource/event per press",
+        "Authored nonzero jump startup remains supported",
+        "Immediate movement, stop, and rapid facing reversal",
+        "Ground dash handoff and cooldown authority",
+        "Air dash handoff without neutral-input hover",
+        "Buffered landing jump uses refreshed ground resources",
+        "Buffered landing dash starts without a movement lock",
+        "Coyote jump remains a ground jump",
+        "All movement profiles use responsive startup/landing tuning",
+        "Goenitz movement interrupts dash presentation immediately"
+    ],
+    "failed": [
+        "Goenitz neutral dash animation survives Recovery and gameplay exit: System.InvalidOperationException: Neutral Recovery cannot force Grounded\r\n  at ResponsiveMovementFlowValidation.ValidateDashAnimationTail () [0x00014] in C:\\Users\\Apricha\\Documents\\GitHub\\Thesis_\\Assets\\Project\\Scripts\\Editor\\Tests\\ResponsiveMovementFlowValidation.cs:284 \r\n  at ResponsiveMovementFlowValidation.Check (ResponsiveMovementFlowValidation+Report report, System.String name, System.Action action) [0x00000] in C:\\Users\\Apricha\\Documents\\GitHub\\Thesis_\\Assets\\Project\\Scripts\\Editor\\Tests\\ResponsiveMovementFlowValidation.cs:122 ",
+        "Goenitz neutral air dash retains animation without holding gravity: System.InvalidOperationException: Neutral falling cannot cut the dash tail\r\n  at ResponsiveMovementFlowValidation.ValidateDashAnimationInput (System.Boolean airborne) [0x0005e] in C:\\Users\\Apricha\\Documents\\GitHub\\Thesis_\\Assets\\Project\\Scripts\\Editor\\Tests\\ResponsiveMovementFlowValidation.cs:310 \r\n  at ResponsiveMovementFlowValidation+<>c.<Run>b__7_5 () [0x00000] in C:\\Users\\Apricha\\Documents\\GitHub\\Thesis_\\Assets\\Project\\Scripts\\Editor\\Tests\\ResponsiveMovementFlowValidation.cs:113 \r\n  at ResponsiveMovementFlowValidation.Check (ResponsiveMovementFlowValidation+Report report, System.String name, System.Action action) [0x00000] in C:\\Users\\Apricha\\Documents\\GitHub\\Thesis_\\Assets\\Project\\Scripts\\Editor\\Tests\\ResponsiveMovementFlowValidation.cs:122 "
+    ]
+}

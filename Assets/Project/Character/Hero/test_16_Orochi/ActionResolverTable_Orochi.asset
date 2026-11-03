@@ -15,6 +15,8 @@ MonoBehaviour:
   comboActions:
   - actionId: basic.combo
     actionName: New Combo
+    description: Perform New Combo.
+    activationDescription:
     context: 0
     outputContext: 0
     priority: 0
@@ -29,6 +31,8 @@ MonoBehaviour:
         rid: 3612912955328561307
   - actionId: air.combo
     actionName: Blowback Attack
+    description: Perform Blowback Attack.
+    activationDescription:
     context: 1
     outputContext: 0
     priority: 0
@@ -44,6 +48,9 @@ MonoBehaviour:
   skillActions:
   - actionId: orochi.skill
     actionName: Exorcism of Untouchable
+    description: Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK,
+      <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>
+    activationDescription:
     context: 2
     outputContext: 0
     priority: 0
@@ -59,6 +66,8 @@ MonoBehaviour:
     cooldown: 29
   - actionId: orochi.skill.ex
     actionName: Revelo Omnino (Mid)
+    description: Perform Revelo Omnino (Mid).
+    activationDescription:
     context: 2
     outputContext: 0
     priority: 10
@@ -76,6 +85,8 @@ MonoBehaviour:
     cooldown: 0
   - actionId: orochi.skill.super.ex
     actionName: Trial of Sky Fire EX
+    description: Perform Trial of Sky Fire EX.
+    activationDescription:
     context: 0
     outputContext: 0
     priority: 20
@@ -93,6 +104,8 @@ MonoBehaviour:
   ultimateActions:
   - actionId: orochi.ultimate
     actionName: Emcompassing Chaos
+    description: Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK
+    activationDescription:
     context: 2
     outputContext: 0
     priority: 0
@@ -116,6 +129,8 @@ MonoBehaviour:
     useDashAfterImage: 0
   - actionId: orochi.ultimate.ex
     actionName: Supreme Divinity
+    description: Perform Supreme Divinity.
+    activationDescription:
     context: 2
     outputContext: 0
     priority: 30

@@ -146,7 +146,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomChoiceDirector
   mapData: {fileID: 0}
   offerCount: 3
-  biomeTemplate: 0000000000000000010000000000000002000000000000000300000004000000
+  biomeTemplate: 0400000000000000000000000100000000000000020000000000000003000000
   actIndex: 0
   pendingPostBossRest: 0
   biomeHadShop: 0
@@ -326,12 +326,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameAudioManager
   initialPoolSize: 10
   masterVolume: 1
-  sfxVolume: 0.5
+  sfxVolume: 1
   voiceVolume: 0.8
   bgmVolume: 0.6
   sfxMixerGroup: {fileID: 0}
   voiceMixerGroup: {fileID: 0}
   bgmMixerGroup: {fileID: 0}
+  musicZoneState: {fileID: 0}
+  musicFadeDuration: 0.65
+  ambienceFadeDuration: 0.65
   maxSameClipPerFrame: 2
   duplicateClipDampenFactor: 0.6
 --- !u!1 &4013156128408032732

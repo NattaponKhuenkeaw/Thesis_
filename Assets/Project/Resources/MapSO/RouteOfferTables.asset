@@ -70,12 +70,12 @@ MonoBehaviour:
     - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
       weight: 2
   artifactPool:
-  - {fileID: 11400000, guid: 8dae9784a4112a44691459c99d1d3a64, type: 2}
-  - {fileID: 11400000, guid: 04606c51be389b14d93cef0d791fd30c, type: 2}
-  - {fileID: 11400000, guid: b1bb8bdcaab9a4c4c86350394a06d0ef, type: 2}
-  - {fileID: 11400000, guid: 0c19cb6fb2abbe346b6d4dc429d2e4d0, type: 2}
-  - {fileID: 11400000, guid: ebf8bba8c93cfd14290bddaa7dce2736, type: 2}
-  - {fileID: 11400000, guid: 68ba37ce923f66e48a0239356de067a9, type: 2}
-  - {fileID: 11400000, guid: 2d59be04fc8886642a4770b2b0971bee, type: 2}
-  - {fileID: 11400000, guid: 1b1c3cc942c0d6e44bc6bb3ae5ef3414, type: 2}
-  - {fileID: 11400000, guid: 1145849e0b6d2e440a771231cf407ddb, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}

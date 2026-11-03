@@ -23,7 +23,10 @@ MonoBehaviour:
     rootNode:
       rid: -2
   standaloneActions:
-  - direction: 5
+  - actionId: char_7_kula.special.0
+    description: Perform New Action.
+    activationDescription:
+    direction: 5
     requireGrounded: 0
     requireAirborne: 1
     requiredPreviousState: 0

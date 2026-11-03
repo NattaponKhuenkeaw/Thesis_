@@ -701,6 +701,21 @@ namespace CombatEditor.UI
                     MarkDirty();
                 });
 
+                AddTextField(body, "Action ID", action.actionId, value => {
+                    RecordUndo("Edit Action ID"); action.actionId = value; MarkDirty();
+                });
+                var kitCopy = new TextField("Kit Description") { multiline = true, value = action.description ?? string.Empty };
+                kitCopy.RegisterValueChangedCallback(evt => {
+                    RecordUndo("Edit Kit Description"); action.description = evt.newValue; MarkDirty();
+                });
+                body.Add(kitCopy);
+                var activationCopy = new TextField("Activation Explanation") { multiline = true, value = action.activationDescription ?? string.Empty };
+                activationCopy.RegisterValueChangedCallback(evt => {
+                    RecordUndo("Edit Activation Explanation"); action.activationDescription = evt.newValue; MarkDirty();
+                });
+                body.Add(activationCopy);
+                body.Add(new HelpBox("Kit bindings: {cooldown}, {energyCost}, {multiplierPercent}, {sourceStat}. Action scaling is not guaranteed total damage. Kit sections and targeted Potential patches are authored on CharacterObject.", HelpBoxMessageType.Info));
+
                 AddEnumField(body, "Action Type", action.actionType, value => {
                     RecordUndo("Edit Action Type");
                     action.actionType = (CombatActionType)value;

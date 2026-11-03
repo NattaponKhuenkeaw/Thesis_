@@ -52,13 +52,129 @@ MonoBehaviour:
     maxHpPerLevel: 80
   _dashData:
     animationClip: {fileID: 7400000, guid: 1170a54f57116384b8506475803c25eb, type: 2}
-    startupFrames: 5
+    startupFrames: 0
     activeFrames: 27
     recoveryFrames: 13
-    cancelWindowStartFrame: 32
+    cancelWindowStartFrame: 27
     dashSpeed: 15
     cooldownFrames: 24
   kitDefinition:
+    presentation:
+      sections:
+      - sectionId: basic
+        title: Basic Attack
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 0
+      - sectionId: skill
+        title: Skill
+        showPotentialLevel: 1
+        potentialTrack: 0
+        summary:
+        order: 1
+      - sectionId: ultimate
+        title: Ultimate
+        showPotentialLevel: 1
+        potentialTrack: 1
+        summary:
+        order: 2
+      - sectionId: qte
+        title: QTE
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 3
+      - sectionId: special
+        title: Special
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 4
+      - sectionId: passive
+        title: Passive
+        showPotentialLevel: 1
+        potentialTrack: 2
+        summary:
+        order: 5
+      entries:
+      - entryId: kyo.basic.ground
+        sectionId: basic
+        actionId: kyo.basic.ground
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: kyo.basic.air
+        sectionId: basic
+        actionId: kyo.basic.air
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription:
+      - entryId: kyo.skill.ground
+        sectionId: skill
+        actionId: kyo.skill.ground
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: kyo.skill.air
+        sectionId: skill
+        actionId: kyo.skill.air
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription:
+      - entryId: kyo.ultimate
+        sectionId: ultimate
+        actionId: kyo.ultimate
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 1
+        order: 0
+        activationDescription:
+      - entryId: kyo.ultimate.ex
+        sectionId: ultimate
+        actionId: kyo.ultimate.ex
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 1
+        order: 1
+        activationDescription:
+      - entryId: passive
+        sectionId: passive
+        actionId:
+        passive: 1
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
     skill:
       abilityId: kyo.skill
       abilityName: Skill
@@ -109,6 +225,12 @@ MonoBehaviour:
       description: 
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
         350% of own ATK and apply the configured Ash DOT.
+      kitInfoPatches:
+      - entryId: kyo.skill.ground
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG 350% of own ATK and apply the configured Ash DOT."
       track: 0
       level: 0
       fragmentCost: 0
@@ -134,6 +256,12 @@ MonoBehaviour:
       description: 
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
         700% of own ATK
+      kitInfoPatches:
+      - entryId: kyo.ultimate
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG 700% of own ATK"
       track: 1
       level: 0
       fragmentCost: 0
@@ -301,6 +429,12 @@ MonoBehaviour:
       description: Increase all allies damage by 15%.
       skillPanelDescriptionOverride: Increase <b><color=#FF0000>All Allies</color></b>
         DMG by 15%
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Increase <b><color=#FF0000>All Allies</color></b> DMG by 15%"
       track: 2
       level: 0
       fragmentCost: 0
@@ -357,6 +491,12 @@ MonoBehaviour:
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
         <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash
         DOT.
+      kitInfoPatches:
+      - entryId: kyo.skill.ground
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT."
       track: 0
       level: 1
       fragmentCost: 1
@@ -382,6 +522,12 @@ MonoBehaviour:
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
         <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash
         DOT.
+      kitInfoPatches:
+      - entryId: kyo.skill.ground
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT."
       track: 0
       level: 2
       fragmentCost: 1
@@ -435,6 +581,12 @@ MonoBehaviour:
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
         <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash
         DOT. <size=20><color=#C0C0C0>- Increase Skill AE reward by 1</color></size>
+      kitInfoPatches:
+      - entryId: kyo.skill.ground
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT. <size=20><color=#C0C0C0>- Increase Skill AE reward by 1</color></size>"
       track: 0
       level: 3
       fragmentCost: 1
@@ -498,6 +650,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>Upon
         Use,<b><color=#74C365>Regenerate all allies for 10% of Kyo ATK</color></b></color></size>'
+      kitInfoPatches:
+      - entryId: kyo.skill.ground
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.\n\n\n<size=20><color=#C0C0C0>- Increase Skill AE reward by 1</color></size>\n<size=20><color=#C0C0C0>Upon Use,<b><color=#74C365>Regenerate all allies for 10% of Kyo ATK</color></b></color></size>"
       track: 0
       level: 4
       fragmentCost: 1
@@ -877,6 +1035,12 @@ MonoBehaviour:
         \u2022 Kusanagi Blessing: Increase own ATK based on 20% Kyo ATK, Every time
         land a dmg will deal additional <b><color=#FF0000>Ash</color></b> dmg to
         4% of Kyo Max HP<color=#C0C0C0>(cooldown 2 sc)</color> 20 seconds</color></size>"
+      kitInfoPatches:
+      - entryId: kyo.ultimate
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG 700% of own ATK\r\n\r\n<size=20><color=#C0C0C0>- After Ultimate ends, self gains <b><color=#FF0000>Kusanagi Blessing</color></b> for 20 seconds</color></size>\r\n<size=19><color=#00ffff> \u2022 Kusanagi Blessing: Increase own ATK based on 20% Kyo ATK, Every time land a dmg will deal additional <b><color=#FF0000>Ash</color></b> dmg to 4% of Kyo Max HP<color=#C0C0C0>(cooldown 2 sc)</color> 20 seconds</color></size>"
       track: 1
       level: 1
       fragmentCost: 1
@@ -934,6 +1098,12 @@ MonoBehaviour:
         Blessing: Increase own ATK based on 20% Kyo ATK, Every time land a dmg will
         deal additional <b><color=#FF0000>Ash</color></b> dmg to 4% of Kyo Max HP<color=#C0C0C0>(cooldown
         2 sc)</color> 20 seconds</color></size>"
+      kitInfoPatches:
+      - entryId: kyo.ultimate
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG <b><color=#FFA500>800%</color></b> of own ATK\r\n\r\n<size=20><color=#C0C0C0>- After Ultimate ends, self gains <b><color=#FF0000>Kusanagi Blessing</color></b> for 20 seconds</color></size>\r\n<size=19><color=#00ffff> \u2022 Kusanagi Blessing: Increase own ATK based on 20% Kyo ATK, Every time land a dmg will deal additional <b><color=#FF0000>Ash</color></b> dmg to 4% of Kyo Max HP<color=#C0C0C0>(cooldown 2 sc)</color> 20 seconds</color></size>"
       track: 1
       level: 2
       fragmentCost: 1
@@ -1365,6 +1535,12 @@ MonoBehaviour:
         20 seconds</color></size>\r\n<size=19><color=#00ffff>\u2022 Yamata Orochi:
         Increase <b><color=#FF0000>Ash</color></b> Allies DMG by +20%, <b><color=#74C365>Regenerate
         Allies HP based on 40% of Kyo ATK every 4 seconds</color></b></color></size>"
+      kitInfoPatches:
+      - entryId: kyo.ultimate
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG <b><color=#FFA500>800%</color></b> of own ATK\r\n\r\n<size=20><color=#C0C0C0>- After Ultimate ends, self gains <b><color=#FF0000>Kusanagi Blessing</color></b> for 20 seconds</color></size>\r\n<size=20><color=#C0C0C0>- After Ultimate ends, Self can perform a Follow-up Attack(within 20 second TIME WINDOW) a CLICK will perform \"ESAKA\" that can do constructive 3 follow-up and Final EX \"Serpant Wave\" and a HOLD \"Orochiyagi\" After Follow-up Ultimate ends, All allies gain <b><color=#FF0000>Yamata Orochi</color> for 20 seconds</b></color></size>\r\n\r\n<size=19><color=#00ffff> \u2022 Kusanagi Blessing: Increase own ATK based on 20% Kyo ATK, Every time land a dmg will deal additional <b><color=#FF0000>Ash</color></b> dmg to 4% of Max HP(Capped 500% of own ATK)<color=#C0C0C0>(cooldown 2 sc)</color> 20 seconds</color></size>\r\n<size=19><color=#00ffff>\u2022 Yamata Orochi: Increase <b><color=#FF0000>Ash</color></b> Allies DMG by +20%, <b><color=#74C365>Regenerate Allies HP based on 40% of Kyo ATK every 4 seconds</color></b></color></size>"
       track: 1
       level: 3
       fragmentCost: 1
@@ -1753,6 +1929,12 @@ MonoBehaviour:
         20 seconds</color></size>\r\n<size=19><color=#00ffff>\u2022 Yamata Orochi:
         Increase <b><color=#FF0000>Ash</color></b> Allies DMG by +20%, <b><color=#74C365>Regenerate
         Allies HP based on 40% of Kyo ATK</color></b></color></size>"
+      kitInfoPatches:
+      - entryId: kyo.ultimate
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Inflict <b><color=#FF0000>Ash</color></b> DMG <b><color=#FFA500>800%</color></b> of own ATK\r\n\r\n<size=20><color=#C0C0C0>- After Ultimate ends, <b><color=#FFA500>Allies</color></b> gains <b><color=#FF0000>Kusanagi Blessing</color></b> for 20 seconds</color></size>\r\n<size=20><color=#C0C0C0>- After Ultimate ends, Self can perform a Follow-up Attack(within 20 second TIME WINDOW) a CLICK will perform \"ESAKA\" that can do constructive 3 follow-up and Final EX \"Serpant Wave\" and a HOLD \"Orochiyagi\" After Follow-up Ultimate ends, All allies gain <b><color=#FF0000>Yamata Orochi</color> for 20 seconds</b></color></size>\r\n\r\n<size=19><color=#00ffff> \u2022 Kusanagi Blessing: Increase own ATK based on 20% Kyo ATK, Every time land a dmg will deal additional <b><color=#FF0000>Ash</color></b> dmg to 4% of Max HP(Capped 500% of own ATK)<color=#C0C0C0>(cooldown 2 sc)</color> 20 seconds</color></size>\r\n<size=19><color=#00ffff>\u2022 Yamata Orochi: Increase <b><color=#FF0000>Ash</color></b> Allies DMG by +20%, <b><color=#74C365>Regenerate Allies HP based on 40% of Kyo ATK</color></b></color></size>"
       track: 1
       level: 4
       fragmentCost: 1
@@ -1815,6 +1997,12 @@ MonoBehaviour:
         20% of own ATK.
 
         </color></size>'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Increase <b><color=#FF0000>All Allies</color></b> DMG by 15%\n\n\n<size=20><color=#C0C0C0>- When dealing damage, 20% chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based on 20% of own ATK.\n</color></size>"
       track: 2
       level: 1
       fragmentCost: 1
@@ -1850,6 +2038,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>-
         Unlock <i>State3</i> on Basic Attack</color></size>'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Increase <b><color=#FF0000>All Allies</color></b> DMG by 15%\n\n\n<size=20><color=#C0C0C0>- When dealing damage, 20% chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based on 20% of own ATK.\n</color></size>\n<size=20><color=#C0C0C0>- Unlock <i>State3</i> on Basic Attack</color></size>"
       track: 2
       level: 2
       fragmentCost: 1
@@ -2117,6 +2311,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>- When HP
         is above 70%, own AE Recharge increases by 25%</color></size>'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Increase <b><color=#FF0000>All Allies</color></b> DMG by 15%\n\n\n<size=20><color=#C0C0C0>- When dealing damage, 20% chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based on 20% of own ATK</color></size>\n<size=20><color=#C0C0C0>- Unlock <i>State3</i> on Basic Attack</color></size>\n<size=20><color=#C0C0C0>- When HP is above 70%, own AE Recharge increases by 25%</color></size>"
       track: 2
       level: 3
       fragmentCost: 1
@@ -2304,6 +2504,12 @@ MonoBehaviour:
         <size=20><color=#C0C0C0>-
         Increase <b><color=#FF0000>Ash</color></b> allies ATK based on 20% of Kyo
         ATK</color></size>'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Increase <b><color=#FF0000>All Allies</color></b> DMG by 15%\n\n\n<size=20><color=#C0C0C0>- When dealing damage, 20% chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based on 20% of own ATK</color></size>\n<size=20><color=#C0C0C0>- Unlock <i>State3</i> on Basic Attack</color></size>\n<size=20><color=#C0C0C0>- When HP is above 70%, own AE Recharge increases by 25%</color></size>\n<size=20><color=#C0C0C0>- Increase <b><color=#FF0000>Ash</color></b> allies ATK based on 20% of Kyo ATK</color></size>"
       track: 2
       level: 4
       fragmentCost: 1

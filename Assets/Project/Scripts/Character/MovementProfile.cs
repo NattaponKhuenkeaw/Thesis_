@@ -39,9 +39,10 @@ public class MovementProfile : ScriptableObject
     [Min(0)]
     public int coyoteFrames = 7;
 
-    [Min(1)]
-    public int jumpStartupFrames = 3;
+    [Min(0)]
+    [Tooltip("Zero launches immediately while preserving horizontal control.")]
+    public int jumpStartupFrames = 0;
 
     [Min(0)]
-    public int landingRecoveryFrames = 6;
+    public int landingRecoveryFrames = 0;
 }

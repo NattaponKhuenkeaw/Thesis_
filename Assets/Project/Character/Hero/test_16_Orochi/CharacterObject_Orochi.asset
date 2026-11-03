@@ -51,13 +51,140 @@ MonoBehaviour:
     maxHpPerLevel: 69.7
   _dashData:
     animationClip: {fileID: 7400000, guid: 883925680ecfbfe4797ba369c4566ff4, type: 2}
-    startupFrames: 17
+    startupFrames: 0
     activeFrames: 22
     recoveryFrames: 25
-    cancelWindowStartFrame: 53
+    cancelWindowStartFrame: 36
     dashSpeed: 15
     cooldownFrames: 24
   kitDefinition:
+    presentation:
+      sections:
+      - sectionId: basic
+        title: Basic Attack
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 0
+      - sectionId: skill
+        title: Skill
+        showPotentialLevel: 1
+        potentialTrack: 0
+        summary:
+        order: 1
+      - sectionId: ultimate
+        title: Ultimate
+        showPotentialLevel: 1
+        potentialTrack: 1
+        summary:
+        order: 2
+      - sectionId: qte
+        title: QTE
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 3
+      - sectionId: special
+        title: Special
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 4
+      - sectionId: passive
+        title: Passive
+        showPotentialLevel: 1
+        potentialTrack: 2
+        summary:
+        order: 5
+      entries:
+      - entryId: basic.combo
+        sectionId: basic
+        actionId: basic.combo
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: air.combo
+        sectionId: basic
+        actionId: air.combo
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription:
+      - entryId: orochi.skill
+        sectionId: skill
+        actionId: orochi.skill
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: orochi.skill.ex
+        sectionId: skill
+        actionId: orochi.skill.ex
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 1
+        activationDescription:
+      - entryId: orochi.skill.super.ex
+        sectionId: skill
+        actionId: orochi.skill.super.ex
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 2
+        activationDescription:
+      - entryId: orochi.ultimate
+        sectionId: ultimate
+        actionId: orochi.ultimate
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 1
+        order: 0
+        activationDescription:
+      - entryId: orochi.ultimate.ex
+        sectionId: ultimate
+        actionId: orochi.ultimate.ex
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 1
+        order: 1
+        activationDescription:
+      - entryId: passive
+        sectionId: passive
+        actionId:
+        passive: 1
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
     skill:
       abilityId: orochi.skill
       abilityName: Prejudice
@@ -123,6 +250,12 @@ MonoBehaviour:
       description: Inflict Void DMG 300% of own ATK. This attack ignores DEF.
       skillPanelDescriptionOverride: Inflict <b><color=#8B3DFF>Void</color></b> DMG
         300% of own ATK, <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>
+      kitInfoPatches:
+      - entryId: orochi.skill
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK, <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>"
       track: 0
       level: 0
       fragmentCost: 0
@@ -148,6 +281,12 @@ MonoBehaviour:
       description: Inflict Void DMG 300% of own ATK.
       skillPanelDescriptionOverride: Inflict <b><color=#8B3DFF>Void</color></b> DMG
         300% of own ATK
+      kitInfoPatches:
+      - entryId: orochi.ultimate
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK"
       track: 1
       level: 0
       fragmentCost: 0
@@ -317,6 +456,12 @@ MonoBehaviour:
       skillPanelDescriptionOverride: "Self Gain <b><color=#8B3DFF>Serpent on Earth</color></b>\r\n<size=19><color=#00ffff>
         \u2022 Serpent on Earth: Void attacks deal additional Void DMG equal to 150%
         of own ATK<color=#C0C0C0><i>(Cooldown 2 seconds)</i></color></color></size>"
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 0
+        appendNote: 0
+        description: "Self Gain <b><color=#8B3DFF>Serpent on Earth</color></b>\r\n<size=19><color=#00ffff> \u2022 Serpent on Earth: Void attacks deal additional Void DMG equal to 150% of own ATK<color=#C0C0C0><i>(Cooldown 2 seconds)</i></color></color></size>"
       track: 2
       level: 0
       fragmentCost: 0
@@ -716,6 +861,12 @@ MonoBehaviour:
         stacks</color></size>\n<size=19><color=#00ffff> \u2022  Dark Matter: Increases
         ATK and DOT Mastery by 5%. After dash, while self have Dark Matter will able
         to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max 2 stackable)</color></size>"
+      kitInfoPatches:
+      - entryId: orochi.skill
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK, <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>\r\n\r\n<size=20><color=#C0C0C0>- using 'Exorcism of Untouchable' grants 2 <b><color=#8B3DFF>Dark Matter</color></b> stacks</color></size>\n<size=19><color=#00ffff> \u2022  Dark Matter: Increases ATK and DOT Mastery by 5%. After dash, while self have Dark Matter will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max 2 stackable)</color></size>"
       track: 0
       level: 1
       fragmentCost: 0
@@ -810,6 +961,12 @@ MonoBehaviour:
         Increases ATK and DOT Mastery by 5%. After dash, while self have Dark Matter
         will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max
         2 stackable)</color></size>"
+      kitInfoPatches:
+      - entryId: orochi.skill
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK, <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>\r\n\r\n<size=20><color=#C0C0C0>- using 'Exorcism of Untouchable' grants 2 <b><color=#8B3DFF>Dark Matter</color></b> stacks</color></size>\r\n<size=20><color=#C0C0C0>- using 'Revelo Omnino (Mid)' heals 2% of own Max HP and reduces 'Exorcism of Untouchable' cooldown by 1 second</color></size>\r\n<size=19><color=#00ffff> \u2022  Dark Matter: Increases ATK and DOT Mastery by 5%. After dash, while self have Dark Matter will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max 2 stackable)</color></size>"
       track: 0
       level: 2
       fragmentCost: 0
@@ -1065,6 +1222,12 @@ MonoBehaviour:
         Increases ATK and DOT Mastery by 5%. After dash, while self have Dark Matter
         will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max
         <b><color=#FFA500>4</color></b> stackable)</color></size>"
+      kitInfoPatches:
+      - entryId: orochi.skill
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK, <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>\r\n\r\n<size=20><color=#C0C0C0>- using 'Exorcism of Untouchable' grants 2 <b><color=#8B3DFF>Dark Matter</color></b> stacks</color></size>\r\n<size=20><color=#C0C0C0>- using 'Revelo Omnino (Mid)' heals 2% of own Max HP and reduces 'Exorcism of Untouchable' cooldown by 1 second</color></size>\r\n<size=19><color=#00ffff> \u2022  Dark Matter: Increases ATK and DOT Mastery by 5%. After dash, while self have Dark Matter will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max <b><color=#FFA500>4</color></b> stackable)</color></size>"
       track: 0
       level: 3
       fragmentCost: 0
@@ -1267,6 +1430,12 @@ MonoBehaviour:
         \u2022  Dark Matter: Increases ATK and DOT Mastery by 5%. After dash, while
         self have Dark Matter will able to 'Revelo Omnino (Mid)' follow-up, using
         it consumes 1 stack(Max <b><color=#FFA500>4</color></b> stackable)</color></size></size>"
+      kitInfoPatches:
+      - entryId: orochi.skill
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK, <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>\r\n\r\n<size=20><color=#C0C0C0>- using 'Exorcism of Untouchable' grants 2 <b><color=#8B3DFF>Dark Matter</color></b> stacks</color></size>\r\n<size=20><color=#C0C0C0>- using 'Revelo Omnino (Mid)' <b><color=#74C365>Regenerate 2% of own Max HP</color></b> and reduces 'Exorcism of Untouchable' cooldown by 1 second</color></size>\r\n<size=20><color=#C0C0C0>- After using 'Revelo Omnino (Mid)' 5 times, will able to perform 'Tiral of Sky Fire EX' follow-up for 20 seconds. 'Tiral of Sky Fire EX' will <b><color=#74C365>Regenerate 20% of damage dealt </color></b> and do additional <b><color=#8B3DFF>Void</color></b> DMG equal to 40% ATK on each non-critical hit</color>\r\n<size=19><color=#00ffff> \u2022  Dark Matter: Increases ATK and DOT Mastery by 5%. After dash, while self have Dark Matter will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max <b><color=#FFA500>4</color></b> stackable)</color></size></size>"
       track: 0
       level: 4
       fragmentCost: 0
@@ -1457,6 +1626,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>- After Ultimate ends,
         each enemy hit has a 50% chance to be stunned for 5 seconds</color></size>'
+      kitInfoPatches:
+      - entryId: orochi.ultimate
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK\n\n\n<size=20><color=#C0C0C0>- After Ultimate ends, each enemy hit has a 50% chance to be stunned for 5 seconds</color></size>"
       track: 1
       level: 1
       fragmentCost: 0
@@ -1520,6 +1695,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>-
         After Ultimate ends, reset the cooldown of "Exorcism of Untounchable"</color></size>'
+      kitInfoPatches:
+      - entryId: orochi.ultimate
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG 300% of own ATK\n\n\n<size=20><color=#C0C0C0>- After Ultimate ends, each enemy hit has a 50% chance to be stunned for 5 seconds</color></size>\n<size=20><color=#C0C0C0>- After Ultimate ends, reset the cooldown of \"Exorcism of Untounchable\"</color></size>"
       track: 1
       level: 2
       fragmentCost: 0
@@ -1583,6 +1764,12 @@ MonoBehaviour:
 
         <size=20><color=#C0C0C0>- After Ultimate
         ends, reset the cooldown of "Exorcism of Untounchable"</color></size>'
+      kitInfoPatches:
+      - entryId: orochi.ultimate
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "\nInflict <b><color=#8B3DFF>Void</color></b> DMG <b><color=#FFA500>500%</color></b> of own ATK\n\n\n<size=20><color=#C0C0C0>- After Ultimate ends, each enemy hit has a 50% chance to be stunned for 5 seconds</color></size>\n<size=20><color=#C0C0C0>- After Ultimate ends, reset the cooldown of \"Exorcism of Untounchable\"</color></size>"
       track: 1
       level: 3
       fragmentCost: 0
@@ -2076,6 +2263,12 @@ MonoBehaviour:
         Orochimaru: +200% DOT Mastery, Decrease -100% DEF and -30% ATK, When hitting
         enemy with <b><color=#8B3DFF>Void</color></b> DMG apply <b><color=#8B3DFF>Sacrifice
         Mark</color></b>, up to 10 per enemy</color></size> "
+      kitInfoPatches:
+      - entryId: orochi.ultimate
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Inflict <b><color=#8B3DFF>Void</color></b> DMG <b><color=#FFA500>500%</color></b> of own ATK\r\n\r\n<size=20><color=#C0C0C0>- After Ultimate ends, each enemy hit has a 50% chance to be stunned for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>- After Ultimate ends, reset the cooldown of \"Exorcism of Untounchable\"</color></size>\r\n<size=20><color=#C0C0C0>- Gain 2 <b><color=#8B3DFF>Dark Matter</color></b> before Ultimate. At 10 stacks, will gain <b><color=#8B3DFF>Orochimaru</color></b> for 20 seconds.</color></size>\r\n<size=19><color=#00ffff>\u2022 Orochimaru: +200% DOT Mastery, Decrease -100% DEF and -30% ATK, When hitting enemy with <b><color=#8B3DFF>Void</color></b> DMG apply <b><color=#8B3DFF>Sacrifice Mark</color></b>, up to 10 per enemy</color></size> "
       track: 1
       level: 4
       fragmentCost: 0
@@ -2247,6 +2440,12 @@ MonoBehaviour:
         Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent
         on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by
         25% of own ATK</color></size>"
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 1
+        appendNote: 0
+        description: "Self Gain <b><color=#8B3DFF>Serpent on Earth</color></b>\r\n<size=19><color=#00ffff> \u2022 Serpent on Earth: Void attacks deal additional Void DMG equal to 150% of own ATK<color=#C0C0C0><i>(Cooldown 2 seconds)</i></color></color></size>\r\n\r\n<size=20><color=#C0C0C0>- Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by 25% of own ATK</color></size>"
       track: 2
       level: 1
       fragmentCost: 0
@@ -2418,6 +2617,12 @@ MonoBehaviour:
         on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by
         25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain
         1 Movement Speed for 5 seconds</color></size>"
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 2
+        appendNote: 0
+        description: "Self Gain <b><color=#8B3DFF>Serpent on Earth</color></b>\r\n<size=19><color=#00ffff> \u2022 Serpent on Earth: Void attacks deal additional Void DMG equal to 150% of own ATK<color=#C0C0C0><i>(Cooldown 2 seconds)</i></color></color></size>\r\n\r\n<size=20><color=#C0C0C0>- Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by 25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain 1 Movement Speed for 5 seconds</color></size>"
       track: 2
       level: 2
       fragmentCost: 0
@@ -2590,6 +2795,12 @@ MonoBehaviour:
         on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by
         25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain
         1 Movement Speed for 5 seconds</color></size>"
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 3
+        appendNote: 0
+        description: "Self Gain <b><color=#8B3DFF>Serpent on Earth</color></b>\r\n<size=19><color=#00ffff> \u2022 Serpent on Earth: Void attacks deal additional Void DMG equal to <b><color=#FFA500>200%</color></b> of own ATK<color=#C0C0C0><i>(Cooldown 2 seconds)</i></color></color></size>\r\n\r\n<size=20><color=#C0C0C0>- Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by 25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain 1 Movement Speed for 5 seconds</color></size>"
       track: 2
       level: 3
       fragmentCost: 0
@@ -2843,6 +3054,12 @@ MonoBehaviour:
         While Orochimaru is active, unlock 'Supreme Divinity' ult follow-up. when
         use, consumes each target's Sacrifice stacks, dealing additional <b><color=#8B3DFF>Void</color></b>
         DMG equal to 250% of own ATK per stack. then remove Orochimaru</color></size>"
+      kitInfoPatches:
+      - entryId: passive
+        noteId: ""
+        priority: 4
+        appendNote: 0
+        description: "Self Gain <b><color=#8B3DFF>Serpent on Earth</color></b>\r\n<size=19><color=#00ffff> \u2022 Serpent on Earth: Void attacks deal additional Void DMG equal to <b><color=#FFA500>200%</color></b> of own ATK<color=#C0C0C0><i>(Cooldown 2 seconds)</i></color></color></size>\r\n\r\n<size=20><color=#C0C0C0>- Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by 25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain 1 Movement Speed for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>- While Orochimaru is active, unlock 'Supreme Divinity' ult follow-up. when use, consumes each target's Sacrifice stacks, dealing additional <b><color=#8B3DFF>Void</color></b> DMG equal to 250% of own ATK per stack. then remove Orochimaru</color></size>"
       track: 2
       level: 4
       fragmentCost: 0

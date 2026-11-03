@@ -366,52 +366,14 @@ public class CharacterPassiveController : MonoBehaviour
 
     public float ModifyCooldown(AttackCategory category, string actionId, string actionName, float baseValue)
     {
-        float result = baseValue;
-        foreach (PotentialNodeDefinition node in GetActiveNodes())
-        {
-            result = ApplyCooldownModifiers(node, category, actionId, actionName, result);
-
-            List<PassiveActionModifierDefinition> actionModifiers = node != null ? node.actionModifiers : null;
-            if (actionModifiers == null)
-            {
-                continue;
-            }
-
-            for (int i = 0; i < actionModifiers.Count; i++)
-            {
-                PassiveActionModifierDefinition modifier = actionModifiers[i];
-                if (modifier != null && modifier.Matches(category, actionId, actionName, runtimeState))
-                {
-                    result = ApplyValueModifier(result, modifier.cooldownOperation, modifier.cooldownValue);
-                }
-            }
-        }
-
-        return Mathf.Max(0.05f, result);
+        return ActionModifierEvaluation.Evaluate(GetActiveNodes(), ActionModifierEvaluation.Value.Cooldown,
+            category, actionId, actionName, baseValue, runtimeState);
     }
 
     public float ModifyActionDamageMultiplier(AttackCategory category, string actionId, string actionName, float baseValue)
     {
-        float result = baseValue;
-        foreach (PotentialNodeDefinition node in GetActiveNodes())
-        {
-            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
-            if (modifiers == null)
-            {
-                continue;
-            }
-
-            for (int i = 0; i < modifiers.Count; i++)
-            {
-                PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier != null && modifier.Matches(category, actionId, actionName, runtimeState))
-                {
-                    result = ApplyValueModifier(result, modifier.damageMultiplierOperation, modifier.damageMultiplierValue);
-                }
-            }
-        }
-
-        return Mathf.Max(0f, result);
+        return ActionModifierEvaluation.Evaluate(GetActiveNodes(), ActionModifierEvaluation.Value.DamageMultiplier,
+            category, actionId, actionName, baseValue, runtimeState);
     }
 
     public float ModifyActionCriticalRate(AttackCategory category, string actionId, string actionName, string stepName, float baseValue)
@@ -627,26 +589,8 @@ public class CharacterPassiveController : MonoBehaviour
 
     public float ModifyUltimateEnergyCost(string actionId, string actionName, float baseValue)
     {
-        float result = baseValue;
-        foreach (PotentialNodeDefinition node in GetActiveNodes())
-        {
-            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
-            if (modifiers == null)
-            {
-                continue;
-            }
-
-            for (int i = 0; i < modifiers.Count; i++)
-            {
-                PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier != null && modifier.Matches(AttackCategory.Ultimate, actionId, actionName, runtimeState))
-                {
-                    result = ApplyValueModifier(result, modifier.energyCostOperation, modifier.energyCostValue);
-                }
-            }
-        }
-
-        return Mathf.Max(0f, result);
+        return ActionModifierEvaluation.Evaluate(GetActiveNodes(), ActionModifierEvaluation.Value.EnergyCost,
+            AttackCategory.Ultimate, actionId, actionName, baseValue, runtimeState);
     }
 
     public bool IsActionUnlocked(string actionName)
@@ -2628,57 +2572,9 @@ public class CharacterPassiveController : MonoBehaviour
         };
     }
 
-    private static float ApplyCooldownModifiers(
-        PotentialNodeDefinition node,
-        AttackCategory category,
-        string actionId,
-        string actionName,
-        float value)
-    {
-        List<PassiveCooldownModifierDefinition> modifiers = node != null ? node.cooldownModifiers : null;
-        if (modifiers == null)
-        {
-            return value;
-        }
-
-        float result = value;
-        for (int i = 0; i < modifiers.Count; i++)
-        {
-            PassiveCooldownModifierDefinition modifier = modifiers[i];
-            if (modifier == null || modifier.category != category)
-            {
-                continue;
-            }
-
-            bool hasId = !string.IsNullOrWhiteSpace(modifier.actionId);
-            bool hasName = !string.IsNullOrWhiteSpace(modifier.actionName);
-            if (hasId && !string.Equals(modifier.actionId, actionId, StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            if (!hasId && hasName && !string.Equals(modifier.actionName, actionName, StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            result = modifier.operation == PassiveNumericOperation.Add
-                ? result + modifier.value
-                : result * modifier.value;
-        }
-
-        return result;
-    }
-
     private static float ApplyValueModifier(float baseValue, PassiveValueModifierOperation operation, float value)
     {
-        return operation switch
-        {
-            PassiveValueModifierOperation.Add => baseValue + value,
-            PassiveValueModifierOperation.Multiply => baseValue * value,
-            PassiveValueModifierOperation.Override => value,
-            _ => baseValue
-        };
+        return ActionModifierEvaluation.Apply(baseValue, operation, value);
     }
 
     private static void AddAdditionalDamageEffects(

@@ -52,13 +52,85 @@ MonoBehaviour:
     maxHpPerLevel: 0
   _dashData:
     animationClip: {fileID: 7400000, guid: b4e91660a55d73945bae810564ac86d4, type: 2}
-    startupFrames: 10
+    startupFrames: 0
     activeFrames: 18
     recoveryFrames: 17
-    cancelWindowStartFrame: 38
+    cancelWindowStartFrame: 28
     dashSpeed: 70
     cooldownFrames: 24
   kitDefinition:
+    presentation:
+      sections:
+      - sectionId: basic
+        title: Basic Attack
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 0
+      - sectionId: skill
+        title: Skill
+        showPotentialLevel: 1
+        potentialTrack: 0
+        summary:
+        order: 1
+      - sectionId: ultimate
+        title: Ultimate
+        showPotentialLevel: 1
+        potentialTrack: 1
+        summary:
+        order: 2
+      - sectionId: qte
+        title: QTE
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 3
+      - sectionId: special
+        title: Special
+        showPotentialLevel: 0
+        potentialTrack: 0
+        summary:
+        order: 4
+      - sectionId: passive
+        title: Passive
+        showPotentialLevel: 1
+        potentialTrack: 2
+        summary:
+        order: 5
+      entries:
+      - entryId: char_4_krizalid.basic.0
+        sectionId: basic
+        actionId: char_4_krizalid.basic.0
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: char_4_krizalid.skill.0
+        sectionId: skill
+        actionId: char_4_krizalid.skill.0
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 1
+        potentialTrack: 0
+        order: 0
+        activationDescription:
+      - entryId: passive
+        sectionId: passive
+        actionId:
+        passive: 1
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 0
+        activationDescription:
     skill:
       abilityId: 
       abilityName: Skill

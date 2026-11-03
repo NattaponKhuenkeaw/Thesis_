@@ -1,0 +1,25 @@
+{
+    "passed": [
+        "Independent Ultimates and verified bindings",
+        "Cross-track upgrades and ordered dedicated cooldown modifiers",
+        "Unknown positive and negative combat requirements stay conditional",
+        "Step-only upgrades cannot inflate whole-action scaling",
+        "Per-entry patches across tracks and tier changes",
+        "Conflicts and invalid bindings produce authoring diagnostics",
+        "QTE reuses an ordinary action without inventing a track",
+        "Standalone action placement is independent of combat category",
+        "Permanent locks and replacement state follow gameplay modifiers",
+        "Base actions at tier zero are not labeled inactive",
+        "Missing action/section and duplicate action IDs are diagnosed",
+        "Inspection never changes authored action or character data",
+        "Migration is repeatable and preserves execution values",
+        "Runtime controller uses shared values with existing clamps",
+        "Potential-gated actions appear at the exact unlock level and survive runtime inactivity",
+        "Root levels cover zero through four without repeating on children",
+        "Normal Attack is excluded even when explicitly authored while its QTE reuse remains",
+        "Ground Airborne Both and cooldown live in structured header tags",
+        "All authored characters at every Potential tier",
+        "Nested cards render at wide and 4:3 sizes without clipped text"
+    ],
+    "failed": []
+}

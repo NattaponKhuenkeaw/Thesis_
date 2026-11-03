@@ -1,0 +1,2345 @@
+{
+  "authority": "shipped artifact; static extraction, not runtime telemetry",
+  "assembly_sha256": "93dccc21e9f046974a3729be256aa775b53daa711e99d5dcdd167a0fceefca38",
+  "player_data": {
+    "file": "sharedassets1.assets",
+    "path_id": 646,
+    "type": "MonoBehaviour",
+    "data": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 230
+      },
+      "m_Enabled": 1,
+      "m_Script": {
+        "m_FileID": 1,
+        "m_PathID": 538
+      },
+      "m_Name": "",
+      "<maxHealth>k__BackingField": 100.0,
+      "speed": 10.0,
+      "atk": 0.0,
+      "<boxSize>k__BackingField": {
+        "x": 0.6299999952316284,
+        "y": 0.05000000074505806
+      },
+      "<boxOffsetY>k__BackingField": -1.8600000143051147,
+      "<groundLayer>k__BackingField": {
+        "m_Bits": 8
+      },
+      "<coyoteTime>k__BackingField": 0.10000000149011612,
+      "<damagedBoxPos>k__BackingField": {
+        "m_FileID": 0,
+        "m_PathID": 377
+      },
+      "<baseGravityScale>k__BackingField": 6.0,
+      "vulnerablePercentage": 0.0,
+      "<hurtBoxManager>k__BackingField": {
+        "m_FileID": 0,
+        "m_PathID": 619
+      },
+      "maxMana": 100,
+      "<minAtkCharge>k__BackingField": 0.20000000298023224,
+      "<baseMaxHealthUpgradePercentage>k__BackingField": 0.0,
+      "<maxHealthUpgradePercentage>k__BackingField": 0.0,
+      "<currentMaxHealth>k__BackingField": 0.0,
+      "dashForce": 30.0,
+      "dashCoolDown": 0.5,
+      "maxDashCounter": 1,
+      "jumpForce": 25.0,
+      "maxAirJump": 1,
+      "runAcceleration": 8.0,
+      "runAccelAmount": 40.0,
+      "runDecceleration": 8.0,
+      "runDeccelAmount": 40.0,
+      "accelInAir": 1.0,
+      "deccelInAir": 1.0,
+      "doConserveMomentum": 1,
+      "curCharacter": {
+        "m_FileID": 0,
+        "m_PathID": 595
+      },
+      "<stundelay>k__BackingField": 0.15000000596046448,
+      "<groundMat>k__BackingField": {
+        "m_FileID": 0,
+        "m_PathID": 44
+      },
+      "<airMat>k__BackingField": {
+        "m_FileID": 0,
+        "m_PathID": 43
+      },
+      "<combatStats>k__BackingField": {
+        "m_FileID": 0,
+        "m_PathID": 653
+      },
+      "<modifierManager>k__BackingField": {
+        "m_FileID": 0,
+        "m_PathID": 744
+      },
+      "<vfxSpawnPos>k__BackingField": {
+        "m_FileID": 0,
+        "m_PathID": 359
+      }
+    },
+    "script": "PlayerData"
+  },
+  "character": {
+    "file": "sharedassets1.assets",
+    "path_id": 595,
+    "type": "MonoBehaviour",
+    "data": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "m_Enabled": 1,
+      "m_Script": {
+        "m_FileID": 1,
+        "m_PathID": 774
+      },
+      "m_Name": "FirstChar",
+      "MaxHealthUpgrade": 0.0,
+      "ATK": 10.0,
+      "Speed": 11.0,
+      "PotionAmount": 10
+    },
+    "script": "CharacterStatSO"
+  },
+  "rigidbody": {
+    "file": "sharedassets1.assets",
+    "path_id": 401,
+    "type": "Rigidbody2D",
+    "data": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 230
+      },
+      "m_BodyType": 0,
+      "m_Simulated": true,
+      "m_UseFullKinematicContacts": false,
+      "m_UseAutoMass": false,
+      "m_Mass": 1.0,
+      "m_LinearDamping": 1.0,
+      "m_AngularDamping": 0.05000000074505806,
+      "m_GravityScale": 2.0,
+      "m_Material": {
+        "m_FileID": 0,
+        "m_PathID": 44
+      },
+      "m_IncludeLayers": {
+        "m_Bits": 0
+      },
+      "m_ExcludeLayers": {
+        "m_Bits": 0
+      },
+      "m_Interpolate": 1,
+      "m_SleepingMode": 1,
+      "m_CollisionDetection": 1,
+      "m_Constraints": 4
+    }
+  },
+  "physics": {
+    "file": "globalgamemanagers",
+    "path_id": 15,
+    "type": "Physics2DSettings",
+    "data": {
+      "m_Gravity": {
+        "x": 0.0,
+        "y": -9.8100004196167
+      },
+      "m_DefaultMaterial": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "m_VelocityIterations": 8,
+      "m_PositionIterations": 3,
+      "m_BounceThreshold": 1.0,
+      "m_MaxLinearCorrection": 0.20000000298023224,
+      "m_MaxAngularCorrection": 8.0,
+      "m_MaxTranslationSpeed": 100.0,
+      "m_MaxRotationSpeed": 360.0,
+      "m_BaumgarteScale": 0.20000000298023224,
+      "m_BaumgarteTimeOfImpactScale": 0.75,
+      "m_TimeToSleep": 0.5,
+      "m_LinearSleepTolerance": 0.009999999776482582,
+      "m_AngularSleepTolerance": 2.0,
+      "m_DefaultContactOffset": 0.009999999776482582,
+      "m_ContactThreshold": 0.0,
+      "m_JobOptions": {
+        "useMultithreading": false,
+        "useConsistencySorting": false,
+        "m_InterpolationPosesPerJob": 100,
+        "m_NewContactsPerJob": 30,
+        "m_CollideContactsPerJob": 100,
+        "m_ClearFlagsPerJob": 200,
+        "m_ClearBodyForcesPerJob": 200,
+        "m_SyncDiscreteFixturesPerJob": 50,
+        "m_SyncContinuousFixturesPerJob": 50,
+        "m_FindNearestContactsPerJob": 100,
+        "m_UpdateTriggerContactsPerJob": 100,
+        "m_IslandSolverCostThreshold": 100,
+        "m_IslandSolverBodyCostScale": 1,
+        "m_IslandSolverContactCostScale": 10,
+        "m_IslandSolverJointCostScale": 10,
+        "m_IslandSolverBodiesPerJob": 50,
+        "m_IslandSolverContactsPerJob": 50
+      },
+      "m_SimulationMode": 0,
+      "m_SimulationLayers": {
+        "m_Bits": 4294967295
+      },
+      "m_MaxSubStepCount": 4,
+      "m_MinSubStepFPS": 30.0,
+      "m_UseSubStepping": false,
+      "m_UseSubStepContacts": false,
+      "m_QueriesHitTriggers": true,
+      "m_QueriesStartInColliders": true,
+      "m_CallbacksOnDisable": true,
+      "m_ReuseCollisionCallbacks": true,
+      "m_AutoSyncTransforms": false,
+      "m_LayerCollisionMatrix": [
+        4294966271,
+        4294966271,
+        4294966271,
+        4294966263,
+        4294966271,
+        4294966271,
+        3221223231,
+        3221223359,
+        3221224447,
+        4294966271,
+        3221223616,
+        3221219135,
+        4294965247,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294963775,
+        4294967295
+      ],
+      "m_PhysicsLowLevelSettings": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      }
+    }
+  },
+  "time": {
+    "file": "globalgamemanagers",
+    "path_id": 8,
+    "type": "TimeManager",
+    "data": {
+      "Fixed Timestep": {
+        "m_Count": 2352000,
+        "m_Rate": {
+          "m_Denominator": 1,
+          "m_Numerator": 141120000
+        }
+      },
+      "Maximum Allowed Timestep": 0.3333333432674408,
+      "m_TimeScale": 1.0,
+      "Maximum Particle Timestep": 0.029999999329447746
+    }
+  },
+  "materials": [
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 42,
+      "type": "PhysicsMaterial2D",
+      "data": {
+        "m_Name": "EnemyFriction",
+        "friction": 1.0,
+        "bounciness": 0.0,
+        "m_FrictionCombine": 1,
+        "m_BounceCombine": 4
+      }
+    },
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 43,
+      "type": "PhysicsMaterial2D",
+      "data": {
+        "m_Name": "PlayerAirMat",
+        "friction": 0.0,
+        "bounciness": 0.0,
+        "m_FrictionCombine": 1,
+        "m_BounceCombine": 4
+      }
+    },
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 44,
+      "type": "PhysicsMaterial2D",
+      "data": {
+        "m_Name": "PlayerGroundMat",
+        "friction": 0.5,
+        "bounciness": 0.0,
+        "m_FrictionCombine": 1,
+        "m_BounceCombine": 4
+      }
+    }
+  ],
+  "states": [
+    {
+      "file": "resources.assets",
+      "path_id": 2106,
+      "script": "PState_AirJump",
+      "settings": {
+        "m_Name": "P_State_AirJump",
+        "canRepeat": 1,
+        "<stateName>k__BackingField": 3,
+        "animName": "AirJump",
+        "animExitTime": 0.0,
+        "canCancleOtherAnimation": 1,
+        "jumpAudio": {
+          "m_FileID": 0,
+          "m_PathID": 102
+        },
+        "stateDuration": 0.4000000059604645,
+        "decreaseRate": 5.0,
+        "canJumpCut": 0,
+        "cancleStartFrame": 0.0,
+        "cancleDuration": 99.0,
+        "airJumpReducer": 0.800000011920929,
+        "transitions": [
+          "Falling",
+          "AirJump",
+          "Dash",
+          "AirAttack1",
+          "AirPlunge",
+          "InstantDrop",
+          "Idle",
+          "UpperAttack",
+          "UseSkill",
+          "Move"
+        ]
+      }
+    },
+    {
+      "file": "resources.assets",
+      "path_id": 2109,
+      "script": "PState_Falling",
+      "settings": {
+        "m_Name": "P_State_Falling",
+        "canRepeat": 0,
+        "<stateName>k__BackingField": 4,
+        "animName": "Falling",
+        "animExitTime": 0.0,
+        "canCancleOtherAnimation": 0,
+        "baseGravityScale": 6.0,
+        "maxGravityScale": 9.0,
+        "gravityCurve": {
+          "m_Curve": [
+            {
+              "time": 0.0,
+              "value": 0.0,
+              "inSlope": 0.0,
+              "outSlope": 0.0,
+              "weightedMode": 0,
+              "inWeight": 0.0,
+              "outWeight": 0.0
+            },
+            {
+              "time": 0.482715904712677,
+              "value": 0.7350701093673706,
+              "inSlope": 1.163079023361206,
+              "outSlope": 1.163079023361206,
+              "weightedMode": 0,
+              "inWeight": 0.3333333432674408,
+              "outWeight": 0.3333333432674408
+            },
+            {
+              "time": 0.7456781268119812,
+              "value": 0.9878968000411987,
+              "inSlope": 0.46400514245033264,
+              "outSlope": 0.46400514245033264,
+              "weightedMode": 0,
+              "inWeight": 0.3333333432674408,
+              "outWeight": 1.0
+            },
+            {
+              "time": 0.7773032784461975,
+              "value": 0.9992542266845703,
+              "inSlope": 0.2911880910396576,
+              "outSlope": 0.2911880910396576,
+              "weightedMode": 0,
+              "inWeight": 0.3333333432674408,
+              "outWeight": 0.3333333432674408
+            },
+            {
+              "time": 0.870015561580658,
+              "value": 1.0016332864761353,
+              "inSlope": 0.12010463327169418,
+              "outSlope": 0.12010463327169418,
+              "weightedMode": 0,
+              "inWeight": 0.3333333432674408,
+              "outWeight": 0.22630417346954346
+            },
+            {
+              "time": 0.9550644159317017,
+              "value": 1.0005059242248535,
+              "inSlope": 0.03142804279923439,
+              "outSlope": 0.03142804279923439,
+              "weightedMode": 0,
+              "inWeight": 0.3333333432674408,
+              "outWeight": 0.7991559505462646
+            },
+            {
+              "time": 1.0031766891479492,
+              "value": 1.0020723342895508,
+              "inSlope": -0.161006897687912,
+              "outSlope": -0.161006897687912,
+              "weightedMode": 0,
+              "inWeight": 0.38798588514328003,
+              "outWeight": 0.0
+            }
+          ],
+          "m_PreInfinity": 2,
+          "m_PostInfinity": 2,
+          "m_RotationOrder": 4
+        },
+        "gravityDuration": 0.5,
+        "transitions": [
+          "Idle",
+          "AirJump",
+          "Dash",
+          "SlowFalling",
+          "AirAttack1",
+          "AirPlunge",
+          "InstantDrop",
+          "UpperAttack",
+          "UseSkill",
+          "Move"
+        ]
+      }
+    },
+    {
+      "file": "resources.assets",
+      "path_id": 2110,
+      "script": "PState_Idle",
+      "settings": {
+        "m_Name": "P_State_Idle",
+        "canRepeat": 0,
+        "<stateName>k__BackingField": 0,
+        "animName": "Idle",
+        "animExitTime": 0.0,
+        "canCancleOtherAnimation": 0,
+        "animDelayDura": 0.0,
+        "randomOffset": {
+          "x": 13.0,
+          "y": 15.0
+        },
+        "spAnimName": "BeginSpecialIdle",
+        "endSpAnimName": "EndSpecialIdle",
+        "transitions": [
+          "Jump",
+          "Move",
+          "Dash",
+          "Falling",
+          "Crouch",
+          "BasicAttack1",
+          "UpperAttack",
+          "ChargeAttack",
+          "DrinkPotion",
+          "UseSkill",
+          "DownAttack",
+          "VeinStackConsuming"
+        ]
+      }
+    },
+    {
+      "file": "resources.assets",
+      "path_id": 2112,
+      "script": "PState_Jump",
+      "settings": {
+        "m_Name": "P_State_Jump",
+        "canRepeat": 0,
+        "<stateName>k__BackingField": 2,
+        "animName": "Jump",
+        "animExitTime": 0.0,
+        "canCancleOtherAnimation": 1,
+        "jumpAudio": {
+          "m_FileID": 0,
+          "m_PathID": 102
+        },
+        "stateDuration": 0.4000000059604645,
+        "decreaseRate": 200.0,
+        "canJumpCut": 0,
+        "cancleStartFrame": 0.0,
+        "cancleDuration": 99.0,
+        "transitions": [
+          "Falling",
+          "AirJump",
+          "Dash",
+          "AirAttack1",
+          "AirPlunge",
+          "InstantDrop",
+          "Idle",
+          "UpperAttack",
+          "UseSkill",
+          "Move"
+        ]
+      }
+    },
+    {
+      "file": "resources.assets",
+      "path_id": 2113,
+      "script": "PState_Move",
+      "settings": {
+        "m_Name": "P_State_Move",
+        "canRepeat": 0,
+        "<stateName>k__BackingField": 1,
+        "animName": "Running",
+        "animExitTime": 0.0,
+        "canCancleOtherAnimation": 1,
+        "footstepLeafAudioList": [
+          {
+            "m_FileID": 0,
+            "m_PathID": 89
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 93
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 100
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 99
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 106
+          }
+        ],
+        "footstepStoneAudioList": [
+          {
+            "m_FileID": 0,
+            "m_PathID": 85
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 76
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 74
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 101
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 78
+          }
+        ],
+        "footstepWoodAudioList": [
+          {
+            "m_FileID": 0,
+            "m_PathID": 82
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 90
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 86
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 87
+          },
+          {
+            "m_FileID": 0,
+            "m_PathID": 91
+          }
+        ],
+        "transitions": [
+          "Jump",
+          "Idle",
+          "Dash",
+          "Falling",
+          "Crouch",
+          "BasicAttack1",
+          "UpperAttack",
+          "ChargeAttack",
+          "DrinkPotion",
+          "Move",
+          "UseSkill",
+          "DownAttack",
+          "VeinStackConsuming"
+        ]
+      }
+    },
+    {
+      "file": "resources.assets",
+      "path_id": 2114,
+      "script": "PState_SlowFalling",
+      "settings": {
+        "m_Name": "P_State_Slowfall",
+        "canRepeat": 0,
+        "<stateName>k__BackingField": 5,
+        "animName": "BeginSlowFalling",
+        "animExitTime": 0.0,
+        "canCancleOtherAnimation": 1,
+        "slowFallingAudio": {
+          "m_FileID": 0,
+          "m_PathID": 107
+        },
+        "delay": 0.0,
+        "slowedGravityScale": 0.6000000238418579,
+        "slowMoveMulti": 0.20000000298023224,
+        "transitions": [
+          "Idle",
+          "Falling",
+          "Dash",
+          "AirAttack1",
+          "AirPlunge",
+          "UpperAttack",
+          "Move"
+        ]
+      }
+    }
+  ],
+  "input_source": {
+    "file": "globalgamemanagers.assets",
+    "path_id": 2770
+  },
+  "bindings": [
+    {
+      "m_Name": "",
+      "m_Path": "<Keyboard>/space",
+      "m_Action": "Jump",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 0
+    },
+    {
+      "m_Name": "",
+      "m_Path": "<Keyboard>/z",
+      "m_Action": "Jump",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 0
+    },
+    {
+      "m_Name": "",
+      "m_Path": "<Gamepad>/buttonSouth",
+      "m_Action": "Jump",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 0
+    },
+    {
+      "m_Name": "AD 2D Vector",
+      "m_Path": "2DVector",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 4
+    },
+    {
+      "m_Name": "left",
+      "m_Path": "<Keyboard>/a",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 8
+    },
+    {
+      "m_Name": "right",
+      "m_Path": "<Keyboard>/d",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 8
+    },
+    {
+      "m_Name": "Arrow 2D Vector",
+      "m_Path": "2DVector",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 4
+    },
+    {
+      "m_Name": "left",
+      "m_Path": "<Keyboard>/leftArrow",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 8
+    },
+    {
+      "m_Name": "right",
+      "m_Path": "<Keyboard>/rightArrow",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 8
+    },
+    {
+      "m_Name": "Blank Keyboard 2D Vector",
+      "m_Path": "2DVector",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 4
+    },
+    {
+      "m_Name": "Left Stick 2D Vector",
+      "m_Path": "2DVector",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 4
+    },
+    {
+      "m_Name": "left",
+      "m_Path": "<Gamepad>/leftStick/left",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 8
+    },
+    {
+      "m_Name": "right",
+      "m_Path": "<Gamepad>/leftStick/right",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 8
+    },
+    {
+      "m_Name": "D Pad 2D Vector",
+      "m_Path": "2DVector",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 4
+    },
+    {
+      "m_Name": "left",
+      "m_Path": "<Gamepad>/dpad/left",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 8
+    },
+    {
+      "m_Name": "right",
+      "m_Path": "<Gamepad>/dpad/right",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 8
+    },
+    {
+      "m_Name": "Blank Gamepad 2D Vector",
+      "m_Path": "2DVector",
+      "m_Action": "Move",
+      "m_Processors": "",
+      "m_Interactions": "",
+      "m_Flags": 4
+    }
+  ],
+  "animations": [
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 64,
+      "name": "AirJump",
+      "duration": 0.3500000238418579,
+      "loop": false,
+      "sample_rate": 60.0,
+      "sprite_keys": [
+        {
+          "time": 0.06666667014360428,
+          "curve": 0,
+          "sprite_mapping_index": 1
+        },
+        {
+          "time": 0.13333334028720856,
+          "curve": 0,
+          "sprite_mapping_index": 2
+        },
+        {
+          "time": 0.20000000298023224,
+          "curve": 0,
+          "sprite_mapping_index": 3
+        },
+        {
+          "time": 0.3333333432674408,
+          "curve": 0,
+          "sprite_mapping_index": 4
+        }
+      ],
+      "sprite_mapping": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 100
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 204
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 101
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 129
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 129
+        }
+      ],
+      "events": []
+    },
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 65,
+      "name": "BeginSlowFalling",
+      "duration": 0.28333336114883423,
+      "loop": true,
+      "sample_rate": 60.0,
+      "sprite_keys": [
+        {
+          "time": 0.06666667014360428,
+          "curve": 0,
+          "sprite_mapping_index": 1
+        },
+        {
+          "time": 0.13333334028720856,
+          "curve": 0,
+          "sprite_mapping_index": 2
+        },
+        {
+          "time": 0.20000000298023224,
+          "curve": 0,
+          "sprite_mapping_index": 3
+        },
+        {
+          "time": 0.2666666805744171,
+          "curve": 0,
+          "sprite_mapping_index": 4
+        }
+      ],
+      "sprite_mapping": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 181
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 111
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 190
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 214
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 214
+        }
+      ],
+      "events": []
+    },
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 69,
+      "name": "Falling",
+      "duration": 0.21666666865348816,
+      "loop": true,
+      "sample_rate": 60.0,
+      "sprite_keys": [
+        {
+          "time": 0.10000000149011612,
+          "curve": 0,
+          "sprite_mapping_index": 1
+        },
+        {
+          "time": 0.20000000298023224,
+          "curve": 0,
+          "sprite_mapping_index": 2
+        }
+      ],
+      "sprite_mapping": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 105
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 185
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 185
+        }
+      ],
+      "events": []
+    },
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 70,
+      "name": "Falling_OnGround",
+      "duration": 0.21666666865348816,
+      "loop": false,
+      "sample_rate": 60.0,
+      "sprite_keys": [
+        {
+          "time": 0.06666667014360428,
+          "curve": 0,
+          "sprite_mapping_index": 1
+        },
+        {
+          "time": 0.13333334028720856,
+          "curve": 0,
+          "sprite_mapping_index": 2
+        },
+        {
+          "time": 0.20000000298023224,
+          "curve": 0,
+          "sprite_mapping_index": 3
+        }
+      ],
+      "sprite_mapping": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 223
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 178
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 142
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 142
+        }
+      ],
+      "events": []
+    },
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 71,
+      "name": "Jump",
+      "duration": 0.31666669249534607,
+      "loop": false,
+      "sample_rate": 60.0,
+      "sprite_keys": [
+        {
+          "time": 0.20000000298023224,
+          "curve": 0,
+          "sprite_mapping_index": 1
+        },
+        {
+          "time": 0.30000001192092896,
+          "curve": 0,
+          "sprite_mapping_index": 2
+        }
+      ],
+      "sprite_mapping": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 100
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 129
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 129
+        }
+      ],
+      "events": []
+    },
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 72,
+      "name": "Running",
+      "duration": 0.6833333373069763,
+      "loop": true,
+      "sample_rate": 60.0,
+      "sprite_keys": [
+        {
+          "time": 0.06666667014360428,
+          "curve": 0,
+          "sprite_mapping_index": 1
+        },
+        {
+          "time": 0.13333334028720856,
+          "curve": 0,
+          "sprite_mapping_index": 2
+        },
+        {
+          "time": 0.20000000298023224,
+          "curve": 0,
+          "sprite_mapping_index": 3
+        },
+        {
+          "time": 0.2666666805744171,
+          "curve": 0,
+          "sprite_mapping_index": 4
+        },
+        {
+          "time": 0.3333333432674408,
+          "curve": 0,
+          "sprite_mapping_index": 5
+        },
+        {
+          "time": 0.4000000059604645,
+          "curve": 0,
+          "sprite_mapping_index": 6
+        },
+        {
+          "time": 0.46666666865348816,
+          "curve": 0,
+          "sprite_mapping_index": 7
+        },
+        {
+          "time": 0.5333333611488342,
+          "curve": 0,
+          "sprite_mapping_index": 8
+        },
+        {
+          "time": 0.6000000238418579,
+          "curve": 0,
+          "sprite_mapping_index": 9
+        },
+        {
+          "time": 0.6666666865348816,
+          "curve": 0,
+          "sprite_mapping_index": 10
+        }
+      ],
+      "sprite_mapping": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 205
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 148
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 164
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 218
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 177
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 134
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 117
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 224
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 200
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 106
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 106
+        }
+      ],
+      "events": []
+    },
+    {
+      "file": "sharedassets1.assets",
+      "path_id": 73,
+      "name": "SlowFalling",
+      "duration": 0.8166666626930237,
+      "loop": true,
+      "sample_rate": 60.0,
+      "sprite_keys": [
+        {
+          "time": 0.20000000298023224,
+          "curve": 0,
+          "sprite_mapping_index": 1
+        },
+        {
+          "time": 0.4000000059604645,
+          "curve": 0,
+          "sprite_mapping_index": 2
+        },
+        {
+          "time": 0.6000000238418579,
+          "curve": 0,
+          "sprite_mapping_index": 3
+        },
+        {
+          "time": 0.800000011920929,
+          "curve": 0,
+          "sprite_mapping_index": 4
+        }
+      ],
+      "sprite_mapping": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 215
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 188
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 95
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 188
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": 215
+        }
+      ],
+      "events": []
+    }
+  ],
+  "animator": {
+    "file": "sharedassets1.assets",
+    "path_id": 431,
+    "type": "Animator",
+    "data": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 242
+      },
+      "m_Enabled": 1,
+      "m_Avatar": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "m_Controller": {
+        "m_FileID": 0,
+        "m_PathID": 88
+      },
+      "m_CullingMode": 0,
+      "m_UpdateMode": 0,
+      "m_ApplyRootMotion": false,
+      "m_LinearVelocityBlending": false,
+      "m_StabilizeFeet": false,
+      "m_AnimatePhysics": false,
+      "m_HasTransformHierarchy": true,
+      "m_AllowConstantClipSamplingOptimization": true,
+      "m_KeepAnimatorStateOnDisable": false,
+      "m_WriteDefaultValuesOnDisable": false
+    }
+  },
+  "camera_composers": [
+    {
+      "file": "level1",
+      "path_id": 533,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 82
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    },
+    {
+      "file": "level2",
+      "path_id": 359,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 58
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    },
+    {
+      "file": "level3",
+      "path_id": 459,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 103
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    },
+    {
+      "file": "level4",
+      "path_id": 201,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 33
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    },
+    {
+      "file": "level5",
+      "path_id": 364,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 58
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    },
+    {
+      "file": "level6",
+      "path_id": 209,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 34
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    },
+    {
+      "file": "level7",
+      "path_id": 209,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 34
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    },
+    {
+      "file": "level8",
+      "path_id": 202,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 32
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    },
+    {
+      "file": "level9",
+      "path_id": 558,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 146
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 1511
+        },
+        "m_Name": "",
+        "CameraDistance": 13.0,
+        "DeadZoneDepth": 0.0,
+        "Composition": {
+          "ScreenPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "DeadZone": {
+            "Enabled": 1,
+            "Size": {
+              "x": 0.009999999776482582,
+              "y": 0.004999999888241291
+            }
+          },
+          "HardLimits": {
+            "Enabled": 0,
+            "Size": {
+              "x": 0.800000011920929,
+              "y": 0.800000011920929
+            },
+            "Offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        "CenterOnActivate": 1,
+        "TargetOffset": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "Damping": {
+          "x": 1.5,
+          "y": 0.75,
+          "z": 1.0
+        },
+        "Lookahead": {
+          "Enabled": 1,
+          "Time": 0.4000000059604645,
+          "Smoothing": 0.20000000298023224,
+          "IgnoreY": 1
+        }
+      },
+      "script": "CinemachinePositionComposer"
+    }
+  ],
+  "cameras": [
+    {
+      "file": "level1",
+      "path_id": 537,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 82
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    },
+    {
+      "file": "level2",
+      "path_id": 364,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 58
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    },
+    {
+      "file": "level3",
+      "path_id": 463,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 103
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    },
+    {
+      "file": "level4",
+      "path_id": 203,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 33
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    },
+    {
+      "file": "level5",
+      "path_id": 369,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 58
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    },
+    {
+      "file": "level6",
+      "path_id": 211,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 34
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    },
+    {
+      "file": "level7",
+      "path_id": 211,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 34
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    },
+    {
+      "file": "level8",
+      "path_id": 204,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 32
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    },
+    {
+      "file": "level9",
+      "path_id": 563,
+      "type": "MonoBehaviour",
+      "data": {
+        "m_GameObject": {
+          "m_FileID": 0,
+          "m_PathID": 146
+        },
+        "m_Enabled": 1,
+        "m_Script": {
+          "m_FileID": 1,
+          "m_PathID": 2692
+        },
+        "m_Name": "",
+        "Priority": {
+          "Enabled": 1,
+          "m_Value": 15
+        },
+        "OutputChannel": 1,
+        "StandbyUpdate": 2,
+        "m_StreamingVersion": 20241001,
+        "m_LegacyPriority": 0,
+        "Target": {
+          "TrackingTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "LookAtTarget": {
+            "m_FileID": 0,
+            "m_PathID": 0
+          },
+          "CustomLookAtTarget": 0
+        },
+        "Lens": {
+          "FieldOfView": 60.0,
+          "OrthographicSize": 8.0,
+          "NearClipPlane": 0.30000001192092896,
+          "FarClipPlane": 70.0,
+          "Dutch": 0.0,
+          "ModeOverride": 0,
+          "PhysicalProperties": {
+            "GateFit": 2,
+            "SensorSize": {
+              "x": 21.945999145507812,
+              "y": 16.00200080871582
+            },
+            "LensShift": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "FocusDistance": 10.0,
+            "Iso": 200,
+            "ShutterSpeed": 0.004999999888241291,
+            "Aperture": 16.0,
+            "BladeCount": 5,
+            "Curvature": {
+              "x": 2.0,
+              "y": 11.0
+            },
+            "BarrelClipping": 0.25,
+            "Anamorphism": 0.0
+          }
+        },
+        "BlendHint": 0
+      },
+      "script": "CinemachineCamera"
+    }
+  ],
+  "coverage": {
+    "selected_object_reads": 6319,
+    "selected_object_errors": [],
+    "note": "Unselected MonoBehaviours and other object types are outside extraction scope."
+  }
+}

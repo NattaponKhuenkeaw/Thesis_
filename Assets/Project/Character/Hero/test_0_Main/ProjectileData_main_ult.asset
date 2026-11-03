@@ -54,6 +54,7 @@ MonoBehaviour:
   destroyOnLifetimeExpire: 1
   centerGrabbedTargets: 1
   grabCenterOffset: {x: 0.06, y: 2.61}
+  magnetismSpeed: 0
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []
@@ -67,8 +68,8 @@ MonoBehaviour:
     vfxClip: {fileID: 7400000, guid: afe8147dda1b702479c521a01e64dd12, type: 2}
     audio: {fileID: 0}
     offset: {x: 0, y: 0}
-  impactVFXType: 15
-  impactAudio: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+  impactVFXType: 0
+  impactAudio: {fileID: 0}
   references:
     version: 2
     RefIds:
@@ -105,9 +106,11 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
-        hitVFXType: 15
+        hitSFX: {fileID: 8300000, guid: 5a9d268dd65176146a0066f495be3107, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 19
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
