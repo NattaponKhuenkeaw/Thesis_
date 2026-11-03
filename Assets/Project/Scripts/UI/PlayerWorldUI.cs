@@ -39,7 +39,6 @@ public class PlayerWorldUI : MonoBehaviour
         player.OnHealed += ShowHeal;
         player.OnShieldGained += ShowShieldGain;
         player.OnShieldAbsorbed += ShowShieldAbsorb;
-        player.OnDamageMissed += ShowMissed;
     }
 
     private void OnDisable()
@@ -53,7 +52,6 @@ public class PlayerWorldUI : MonoBehaviour
         player.OnHealed -= ShowHeal;
         player.OnShieldGained -= ShowShieldGain;
         player.OnShieldAbsorbed -= ShowShieldAbsorb;
-        player.OnDamageMissed -= ShowMissed;
     }
 
     private void LateUpdate()
@@ -79,11 +77,6 @@ public class PlayerWorldUI : MonoBehaviour
     private void ShowShieldAbsorb(float amount)
     {
         Show(WorldTextType.Shield, amount, Mathf.CeilToInt(amount).ToString());
-    }
-
-    private void ShowMissed()
-    {
-        Show(WorldTextType.Missed, 0f, "Missed");
     }
 
     private void Show(WorldTextType type, float amount, string text = null)

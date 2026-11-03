@@ -120,7 +120,7 @@ public sealed class QteTeamSwapController : MonoBehaviour
 
         execution.ConfirmHit();
         QteSwapDefinition profile = hit.sourceCharacter.qteSwap;
-        if (profile == null || !profile.MatchesTrigger(hit.actionId)) return;
+        if (profile == null || !profile.MatchesTrigger(hit.actionId, hit.isCriticalHit)) return;
         bool wasReady = _source == hit.sourceCharacter && Time.time < _expiresAt;
         if (_source != hit.sourceCharacter || _windowTeam == null)
         {

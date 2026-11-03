@@ -46,8 +46,6 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     private bool deathEventRaised;
     private float damageInvulnerableUntil = -999f;
 
-    public bool IsUltimateInvulnerable { get; set; } = false;
-    public bool HasSuperArmor { get; set; } = false;
 
     // =========================================================
     // HP Events
@@ -301,7 +299,9 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     /// </summary>
     public bool IsImmuneToIncomingAttack(IncomingAttackContext attackContext)
     {
-        if (IsDamageInvulnerable || IsUltimateInvulnerable)
+        // The current state owns immunity from entry until the next transition.
+        if (IsDamageInvulnerable ||
+            StateMachine?.CurrentStateId is PlayerStateId.Ultimate or PlayerStateId.QteIntro)
             return true;
 
         bool hasDodgeFrames = Movement != null && Movement.IsInvincible();

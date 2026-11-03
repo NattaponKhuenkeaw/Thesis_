@@ -64,8 +64,8 @@ MonoBehaviour:
   skillActions:
   - actionId: goenitz.skill.yonokaze
     actionName: Yonokaze
-    description: Summon a tornado dealing {multiplierPercent} ATK over its hits.
-      Critical hits deal 150% of their normally resolved critical damage.
+    description: Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b> of
+      own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage dealt</color>
     activationDescription: 
     icon: {fileID: 21300000, guid: cedf5b663bb21aa4fb6d414953f976aa, type: 3}
     actionType: 2
@@ -124,8 +124,8 @@ MonoBehaviour:
   ultimateActions:
   - actionId: goenitz.ultimate.yamidokoku
     actionName: Yamidokoku
-    description: Yamidokoku deals 800% + 300% ATK Physical damage. Critical hits
-      deal 150% of their normally resolved critical damage.
+    description: Teleport to grab closest target, Inflict DMG <b><color=#00FFED>800%+300%</color></b>
+      of own ATK, <color=#C0C0C0>When CRIT land will do 150% of critical damage dealt</color>
     activationDescription: 
     icon: {fileID: 21300000, guid: 0f7effec793cdc64fad3f7e6b2b2d961, type: 3}
     actionType: 0
@@ -164,10 +164,10 @@ MonoBehaviour:
     useDashAfterImage: 1
   - actionId: goenitz.ultimate2.shin.yaotome
     actionName: 'Shin Yaotome : Jissokoku'
-    description: 'Shin: Yaotome deals {multiplierPercent} ATK Physical damage and
-      500% ATK additional Bleed damage. Critical hits deal 150% of their normally
-      resolved critical damage.'
-    activationDescription: Press Ultimate during Blood Frenzy; consumes Blood Frenzy.
+    description: Lunge and Grab enemies, Inflict DMG <b><color=#00FFED>850%</color></b>
+      of own ATK, and deal <color=#ff0004>Additional Bleed DMG</color> <b><color=#00FFED>500%</color></b>
+      of own ATK, <color=#C0C0C0>When CRIT land will do 150% of critical damage dealt</color>
+    activationDescription: 
     icon: {fileID: 21300000, guid: 0f7effec793cdc64fad3f7e6b2b2d961, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -207,10 +207,12 @@ MonoBehaviour:
     useDashAfterImage: 0
   - actionId: goenitz.ultimate.blood_frenzy
     actionName: Blood Frenzy
-    description: Consume 3 AE per second, including off-field. Blood Frenzy grants
-      DI/DM/ADI +25% and attacks deal 50% ATK additional Bleed damage. Ordinary AE
-      gains are blocked; qualifying kills restore 6 AE at Ultimate Lv.4.
-    activationDescription: Hold Ultimate with positive AE; no entry cost.
+    description: "Activate <b><color=#00FFED>Blood Frenzy</color></b> make AE gauge
+      become a duration, <b><color=#C0C0C0>While in this state will not able to generate
+      AE</color></b>\r\n\r\n<size=19><color=#00ffff> \u2022 Blood Frenzy : Increase
+      DI/DM/ADI +25% and all attack deal <color=#ff0004>Additional Bleed DMG</color>
+      of 50% own ATK</color></size>"
+    activationDescription: 
     icon: {fileID: 21300000, guid: 0f7effec793cdc64fad3f7e6b2b2d961, type: 3}
     actionType: 0
     resourceCounterId: 
@@ -251,10 +253,11 @@ MonoBehaviour:
     useDashAfterImage: 0
   qteActions:
   - actionId: goenitz.qte
-    actionName: Kami
-    description: 
+    actionName: Uranagi
+    description: Lunge in toward enemies, Inflict DMG <b><color=#00FFED>350%</color></b>
+      of own ATK
     activationDescription: 
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: d66810670e0f3774d8294f14609f6f52, type: 3}
     actionType: 0
     resourceCounterId: 
     resourceCost: 0
@@ -5079,7 +5082,7 @@ MonoBehaviour:
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 1
-          duration: 500
+          duration: 250
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
           transformKeys:
           - frame: 0
@@ -5458,7 +5461,7 @@ MonoBehaviour:
           targetAnchorOffset: {x: 0, y: 0}
           faceTargetOnArrival: 1
           easing: 1
-          position: {x: 0.7, y: 0, z: 0}
+          position: {x: 1.7, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 5456672870199459970

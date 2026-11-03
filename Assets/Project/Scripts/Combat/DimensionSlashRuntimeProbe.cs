@@ -79,7 +79,6 @@ public sealed class DimensionSlashRuntimeProbe : MonoBehaviour
         public string error;
         public bool pausePreservedWindow;
         public bool expiredWindowFallsBack;
-        public bool startupDamageReleasesCamera;
         public bool hiddenActorRestoredOnDisable;
         public bool executionWindowOpened;
         public bool executionRecoveryNaAdvanced;
@@ -266,12 +265,6 @@ public sealed class DimensionSlashRuntimeProbe : MonoBehaviour
         fallback.ResolveInitial(new InputContext { isGrounded = true, passiveController = player.PassiveController,
             runtimeState = gateState, actionAvailabilityProvider = player }, _character.actionResolverTable, AttackCategory.Skill);
         _report.expiredWindowFallsBack = !gateState.HasTag(Ready) && fallback.ActiveCombatAction?.actionId == "main.skill.dark_chain";
-        player.Combat.ResetCombo(); player.StateMachine.ChangeState(player.StateMachine.IdleState);
-        gateState.SetTag(Ready, 1.5f); player.StateMachine.RouteSkillInput();
-        yield return new WaitForFixedUpdate();
-        player.TakeDamage(1f, IncomingAttackContext.FromEnemy(target, EnemyAttackProperty.Normal));
-        _report.startupDamageReleasesCamera = player.StateMachine.CurrentState == player.StateMachine.HitstunState
-            && (CameraManager.instance == null || !CameraManager.instance.HasActionCamera);
         player.Combat.ResetCombo(); player.StateMachine.ChangeState(player.StateMachine.IdleState);
         gateState.SetTag(Ready, 1.5f); player.StateMachine.RouteSkillInput();
         float stopAt = Time.realtimeSinceStartup + 3f;

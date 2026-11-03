@@ -7,6 +7,8 @@ using UnityEngine.Serialization;
 public sealed class QteSwapDefinition
 {
     public bool enabled;
+    [Tooltip("Any critical primary hit by this outgoing character prepares teammates.")]
+    public bool triggerOnCriticalHit;
     [Tooltip("Outgoing actions whose accepted primary hits prepare teammates.")]
     public string[] triggerActionIds = Array.Empty<string>();
     [Tooltip("QTE entry action in the resolver table. Existing ordinary actions can also be referenced by id or name.")]
@@ -34,9 +36,11 @@ public sealed class QteSwapDefinition
     [NonSerialized] private CombatAction _cachedAction;
     [NonSerialized] private AttackStepData _cachedStep;
 
-    public bool MatchesTrigger(string actionId)
+    public bool MatchesTrigger(string actionId, bool isCriticalHit = false)
     {
-        if (!enabled || string.IsNullOrEmpty(actionId) || triggerActionIds == null) return false;
+        if (!enabled) return false;
+        if (triggerOnCriticalHit && isCriticalHit) return true;
+        if (string.IsNullOrEmpty(actionId) || triggerActionIds == null) return false;
         foreach (string candidate in triggerActionIds)
             if (string.Equals(candidate, actionId, StringComparison.Ordinal)) return true;
         return false;

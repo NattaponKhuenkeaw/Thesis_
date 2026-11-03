@@ -134,26 +134,9 @@ public abstract class FrameDataPlayerState : PlayerState
     }
 
     /// <summary>
-    /// Frame-data action pseudo super armor:
-    /// An action can only be interrupted by damage during its starting frame / startup phase.
-    /// During all subsequent frames (Active, Recovery, Cancel), pseudo super armor prevents hitstun.
+    /// Committed frame-data actions take damage without entering hitstun, including during startup.
     /// </summary>
-    public override bool CanBeInterruptedByDamage(IncomingAttackContext attackContext)
-    {
-        if (player != null && player.HasSuperArmor)
-            return false;
-
-        return IsInInterruptibleStartingWindow();
-    }
-
-    /// <summary>
-    /// Returns whether the action is currently in its interruptible starting window.
-    /// True during the Startup phase (or frame <= 1 for 0-startup actions); false once Active.
-    /// </summary>
-    public virtual bool IsInInterruptibleStartingWindow()
-    {
-        return currentPhase == ActionPhase.Startup || currentFrame <= 1;
-    }
+    public override bool CanBeInterruptedByDamage(IncomingAttackContext attackContext) => false;
 
     // =========================================================
     // InputGate — Per-phase continuous input control

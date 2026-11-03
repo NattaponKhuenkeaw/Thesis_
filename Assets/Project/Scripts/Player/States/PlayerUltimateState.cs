@@ -45,22 +45,12 @@ public class PlayerUltimateState : CombatPlayerState
         activeUltimateAction = null;
         energyConsumed = false;
         activeUltimateInputHeld = false;
-        if (player != null)
-        {
-            player.HasSuperArmor = false;
-            player.IsUltimateInvulnerable = false;
-        }
     }
 
     public override void Exit()
     {
         base.Exit();
         activeUltimateAction = null;
-        if (player != null)
-        {
-            player.HasSuperArmor = false;
-            player.IsUltimateInvulnerable = false;
-        }
     }
 
     protected override void HandleInputDuringRecovery()
@@ -225,24 +215,11 @@ public class PlayerUltimateState : CombatPlayerState
         activeUltimateAction = action as UltimateAction;
     }
 
-    protected override void OnStartupBegin()
-    {
-        base.OnStartupBegin();
-        if (player != null)
-        {
-            player.IsUltimateInvulnerable = false;
-            player.HasSuperArmor = false;
-        }
-    }
-
     protected override void OnActiveBegin()
     {
         base.OnActiveBegin();
         if (player != null)
         {
-            player.IsUltimateInvulnerable = true;
-            player.HasSuperArmor = true;
-            
             if (!energyConsumed)
             {
                 energyConsumed = true;
@@ -260,15 +237,4 @@ public class PlayerUltimateState : CombatPlayerState
             }
         }
     }
-
-    protected override void OnRecoveryBegin()
-    {
-        base.OnRecoveryBegin();
-        if (player != null)
-        {
-            player.IsUltimateInvulnerable = false;
-            player.HasSuperArmor = false;
-        }
-    }
-
 }

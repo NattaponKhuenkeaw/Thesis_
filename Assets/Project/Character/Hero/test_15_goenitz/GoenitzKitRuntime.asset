@@ -30,7 +30,7 @@ MonoBehaviour:
       displayName: Blood Frenzy
       showRemainingTime: 1
       icon: {fileID: 21300000, guid: cfbe1f8648c517a4eb260aec9461e30e, type: 3}
-      fieldVisualPrefab: {fileID: 0}
+      fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
     policy:
       kind: 0
       appliesOn: 0
@@ -259,8 +259,8 @@ MonoBehaviour:
     presentation:
       effectId: goenitz.blizzard
       displayName: Blizzard
-      showRemainingTime: 1
-      icon: {fileID: 21300000, guid: cf5b4bf12bc47c44e9773030ca408416, type: 3}
+      showRemainingTime: 0
+      icon: {fileID: 21300000, guid: 11e7ebc9373ece1418115847ee8964a6, type: 3}
       fieldVisualPrefab: {fileID: 0}
     policy:
       kind: 0
@@ -537,7 +537,7 @@ MonoBehaviour:
       displayName: Damage Taken +15%
       showRemainingTime: 1
       icon: {fileID: 21300000, guid: cfbe1f8648c517a4eb260aec9461e30e, type: 3}
-      fieldVisualPrefab: {fileID: 0}
+      fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
     policy:
       kind: 1
       appliesOn: 1

@@ -632,10 +632,10 @@ MonoBehaviour:
         of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
         dealt</color>
 
-        
 
-        <size=19><color=#787878>Increase CRIT
-        Rate by <b><color=#00FFED>17%</color></b> for <b><color=#00FFED>5 seconds</color></b>'
+
+        <size=19><color=#787878>Increase CRIT Rate by <b><color=#00FFED>17%</color></b>
+        for <b><color=#00FFED>5 seconds</color></b>'
       kitInfoPatches:
       - entryId: goenitz.skill.yonokaze
         noteId: 
@@ -645,11 +645,10 @@ MonoBehaviour:
           of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
           dealt</color>
 
-          
 
-          <size=19><color=#787878>Increase
-          CRIT Rate by <b><color=#00FFED>17%</color></b> for <b><color=#00FFED>5
-          seconds</color></b>'
+
+          <size=19><color=#787878>Increase CRIT Rate by
+          <b><color=#00FFED>17%</color></b> for <b><color=#00FFED>5 seconds</color></b>'
       track: 0
       level: 2
       fragmentCost: 1
@@ -831,11 +830,11 @@ MonoBehaviour:
         of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
         dealt</color>
 
-        
 
-        <size=19><color=#787878>Increase CRIT
-        Rate by <b><color=#00FFED>17%</color></b> AND CRIT Damage by <b><color=#00FFED>43%</color></b>
-        after Yonokaze for <b><color=#00FFED>5 seconds</color></b></color></size>'
+
+        <size=19><color=#787878>Increase CRIT Rate by <b><color=#00FFED>17%</color></b>
+        AND CRIT Damage by <b><color=#00FFED>43%</color></b> after Yonokaze for <b><color=#00FFED>5
+        seconds</color></b></color></size>'
       kitInfoPatches:
       - entryId: goenitz.skill.yonokaze
         noteId: 
@@ -845,10 +844,10 @@ MonoBehaviour:
           of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
           dealt</color>
 
-          
 
-          <size=19><color=#787878>Increase
-          CRIT Rate by <b><color=#00FFED>17%</color></b> AND CRIT Damage by <b><color=#00FFED>43%</color></b>
+
+          <size=19><color=#787878>Increase CRIT Rate by
+          <b><color=#00FFED>17%</color></b> AND CRIT Damage by <b><color=#00FFED>43%</color></b>
           after Yonokaze for <b><color=#00FFED>5 seconds</color></b></color></size>'
       track: 0
       level: 3
@@ -964,7 +963,7 @@ MonoBehaviour:
           DMG <b><color=#00FFED>350%</color></b> of own ATK,<color=#C0C0C0>When CRIT
           land will do 150% of critical damage dealt</color>
 
-          
+
 
           <size=19><color=#787878>Increase
           CRIT Rate by <b><color=#00FFED>17%</color></b> AND CRIT Damage by <b><color=#00FFED>43%</color></b>
@@ -1469,8 +1468,8 @@ MonoBehaviour:
       unlockedByDefault: 0
   qteSwap:
     enabled: 1
-    triggerActionIds:
-    - 
+    triggerOnCriticalHit: 1
+    triggerActionIds: []
     introActionKey: goenitz.qte
     introStepName: Kamidokoku
     introComboTree:
