@@ -97,6 +97,23 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private readonly List<CharacterObject> staleRuntimeStatCharacters =
         new List<CharacterObject>();
 
+    private CharacterKitRuntimeHost _kitRuntimes;
+    private FrenzySpriteFeedback _frenzySprite;
+
+    private void LateUpdate()
+    {
+        CharacterObject actor = playerCharacter != null ? playerCharacter.characterObject : null;
+        bool show = _kitRuntimes?.Find(actor)?.BlocksOrdinaryAuraEnergyGain == true;
+        if (show) _frenzySprite ??= new FrenzySpriteFeedback();
+        _frenzySprite?.Tick(show ? playerCharacter.Movement?.SpriteRenderer : null);
+    }
+    public CharacterKitRuntimeHost KitRuntimes => _kitRuntimes;
+    private void ResetKitRuntimes()
+    {
+        _kitRuntimes?.Dispose();
+        _kitRuntimes = null;
+    }
+
     public CombatRuntimeState GetCharacterCombatRuntimeState(CharacterObject character)
     {
         if (character == null) return null;
@@ -153,6 +170,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void OnDisable()
     {
+        _frenzySprite?.Dispose();
+        _frenzySprite = null;
+        ResetKitRuntimes();
         UnbindPlayerCharacter();
         UnbindRunInventoryEvents();
         UnbindMetaProgressionEvents();
@@ -177,7 +197,13 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void Update()
     {
-        runInventory?.TickRuntimeEffects(Time.deltaTime);
+        if (runInventory != null)
+        {
+            _kitRuntimes ??= new CharacterKitRuntimeHost(this);
+            _kitRuntimes.Reconcile(teamSnapshot);
+            _kitRuntimes.Tick(Time.deltaTime);
+            runInventory.TickRuntimeEffects(Time.deltaTime);
+        }
     }
 
     public CharacterObject[] GetTeamSnapshot()
@@ -749,6 +775,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex, ArtifactInstanceRef[][] artifactData = null,
         bool resetHealthForNewRun = false)
     {
+        ResetKitRuntimes();
         characterCombatRuntimeStates.Clear();
         ultimateWindowModifiers.Clear();
         defaultUnlockedPotentialNodes.Clear();
@@ -889,6 +916,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public void RefreshRuntimeState()
     {
+        ResetKitRuntimes();
         characterCombatRuntimeStates.Clear();
         ultimateWindowModifiers.Clear();
         defaultUnlockedPotentialNodes.Clear();
@@ -1161,7 +1189,12 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
 
     public void AddCharacterAE(CharacterObject character, float amount)
+        => AddCharacterAE(character, amount, AuraEnergyChangeReason.Ordinary);
+
+    public void AddCharacterAE(CharacterObject character, float amount, AuraEnergyChangeReason reason)
     {
+        if (amount > 0f && reason == AuraEnergyChangeReason.Ordinary
+            && _kitRuntimes?.Find(character)?.BlocksOrdinaryAuraEnergyGain == true) return;
         if (character == null)
         {
             return;

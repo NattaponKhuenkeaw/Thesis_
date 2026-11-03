@@ -36,6 +36,7 @@ MonoBehaviour:
   trackingRadius: 20
   speed: 0.1
   lifetime: 1.5
+  hitIntervalSeconds: 0.1
   maxHits: 10
   hitCountMode: 1
   routineHitbox:
@@ -52,6 +53,9 @@ MonoBehaviour:
   stopOnImpact: 1
   destroyWhenHitsExhausted: 1
   destroyOnLifetimeExpire: 1
+  centerGrabbedTargets: 0
+  grabCenterOffset: {x: 0, y: 0}
+  magnetismSpeed: 0
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []
@@ -78,10 +82,13 @@ MonoBehaviour:
         startFrameOffset: 1
         activeFrames: 3
         elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 5}
         size: {x: 2.2, y: 12}
-        damageRatio: 0.06
+        damageRatio: 0.044195637
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -101,7 +108,10 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0

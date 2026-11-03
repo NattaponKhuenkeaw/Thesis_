@@ -9,7 +9,7 @@ using UnityEngine;
 
 public static class ComboRouter
 {
-    public static ComboRoute FindMatchedRoute(ComboNode node, StateContext ctx)
+    public static ComboRoute FindMatchedRoute(ComboNode node, StateContext ctx, bool initial = false)
     {
         if (node == null || node.routes == null || node.routes.Count == 0)
             return null;
@@ -18,7 +18,7 @@ public static class ComboRouter
         for (int i = 0; i < node.routes.Count; i++)
         {
             ComboRoute route = node.routes[i];
-            if (route?.targetNode == null) continue;
+            if (route?.targetNode == null || (initial && route.followUpOnly)) continue;
 
             if (RouteMatches(route, ctx))
             {

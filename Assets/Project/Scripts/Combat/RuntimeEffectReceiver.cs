@@ -33,6 +33,15 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     public IReadOnlyList<RuntimeEffectInstance> ActiveEffects => activeEffects;
 
+    public float GetEvasionChanceAdd()
+    {
+        float value = 0f;
+        for (int i = 0; i < activeEffects.Count; i++)
+            if (activeEffects[i]?.definition != null)
+                value += activeEffects[i].definition.GetEvasionChanceAdd(activeEffects[i]);
+        return value;
+    }
+
     public RuntimeEffectInstance GetEffectByChannel(RuntimeEffectStateChannel channel)
     {
         return RuntimeEffectRuntimeUtility.FindByStateChannel(activeEffects, channel);

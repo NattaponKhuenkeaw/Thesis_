@@ -17,6 +17,8 @@ public class ActionInputBuffer
     private float skillBufferedUntil  = -999f;
     private float ultimateBufferedUntil = -999f;
     private bool ultimateInputHeld;
+    private bool skillInputHeld;
+    private bool skillHoldSustained;
     private bool ultimateHoldSustained;
     private float switchBufferedUntil = -999f;
 
@@ -46,7 +48,8 @@ public class ActionInputBuffer
     public bool HasAttackBuffer => Time.time <= attackBufferedUntil;
     public bool HasDashBuffer   => Time.time <= dashBufferedUntil;
     public bool HasJumpBuffer   => Time.time <= jumpBufferedUntil;
-    public bool HasSkillBuffer  => Time.time <= skillBufferedUntil;
+    public bool HasSkillBuffer  => skillHoldSustained || Time.time <= skillBufferedUntil;
+    public bool SkillInputHeld => HasSkillBuffer && skillInputHeld;
     public bool HasUltimateBuffer => ultimateHoldSustained || Time.time <= ultimateBufferedUntil;
     public bool UltimateInputHeld => HasUltimateBuffer && ultimateInputHeld;
     public bool HasSwitchBuffer => Time.time <= switchBufferedUntil;
@@ -82,10 +85,26 @@ public class ActionInputBuffer
     }
 
     /// <summary>Buffers a skill input for the specified duration.</summary>
-    public void BufferSkill(float duration = DEFAULT_BUFFER_DURATION)
+    public void BufferSkill(float duration = DEFAULT_BUFFER_DURATION, bool held = false)
     {
+        skillInputHeld = held;
+        skillHoldSustained = false;
         skillBufferedUntil = Time.time + duration;
         Log($"Buffered <b>Skill</b> for {duration}s");
+    }
+
+    public void SustainSkillHold() { if (SkillInputHeld) skillHoldSustained = true; }
+    public void ReleaseSkillHold()
+    {
+        if (!skillHoldSustained) return;
+        skillHoldSustained = false;
+        skillBufferedUntil = Time.time + DEFAULT_BUFFER_DURATION;
+    }
+    public void ClearSkill()
+    {
+        skillBufferedUntil = -999f;
+        skillInputHeld = false;
+        skillHoldSustained = false;
     }
 
     /// <summary>Buffers an ultimate input and its resolved tap/hold gesture.</summary>
@@ -203,7 +222,7 @@ public class ActionInputBuffer
         attackBufferedUntil = -999f;
         dashBufferedUntil   = -999f;
         jumpBufferedUntil   = -999f;
-        skillBufferedUntil  = -999f;
+        ClearSkill();
         ClearUltimate();
         switchBufferedUntil = -999f;
         dashInputX = 0f;

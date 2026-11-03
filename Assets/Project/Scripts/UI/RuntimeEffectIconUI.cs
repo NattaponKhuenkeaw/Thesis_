@@ -40,6 +40,8 @@ public class RuntimeEffectIconUI : MonoBehaviour
         RefreshPresentation();
     }
 
+    private void Update() { if (RequiresTimerRefresh) RefreshPresentation(); }
+
     public void RefreshPresentation()
     {
         if (boundEffect == null || boundEffect.definition == null)
@@ -57,12 +59,19 @@ public class RuntimeEffectIconUI : MonoBehaviour
 
         bool showStackCount = boundStackCount > 1;
 
-        RequiresTimerRefresh = false;
-
+        float remaining = 0f;
+        bool showTime = boundEffect.recipe?.presentation?.showRemainingTime == true;
+        bool hasModeTime = TeamLoader.Instance?.KitRuntimes?.Find(boundEffect.sourceCharacter)
+            ?.TryGetEffectRemaining(boundEffect, out remaining) == true;
+        if (!hasModeTime && boundEffect.UsesTimer) remaining = boundEffect.remainingSeconds;
+        showTime &= hasModeTime || boundEffect.UsesTimer;
+        RequiresTimerRefresh = showTime;
         if (stackText != null)
         {
-            stackText.gameObject.SetActive(showStackCount);
-            stackText.text = showStackCount ? $"x{boundStackCount}" : string.Empty;
+            stackText.gameObject.SetActive(showStackCount || showTime);
+            string stacks = showStackCount ? $"x{boundStackCount}" : string.Empty;
+            string timing = showTime ? Mathf.Max(0, Mathf.CeilToInt(remaining)).ToString() + "s" : string.Empty;
+            stackText.text = showStackCount && showTime ? stacks + " " + timing : stacks + timing;
         }
     }
 

@@ -2010,6 +2010,18 @@ namespace Project.ShopSystem
                 : null;
         }
 
+        public float GetEvasionChanceAdd(CharacterObject character)
+        {
+            var state = GetRunCharacter(character);
+            if (state == null) return 0f;
+            float value = 0f;
+            var effects = state.ActiveEffects;
+            for (int i = 0; i < effects.Count; i++)
+                if (effects[i]?.definition != null)
+                    value += effects[i].definition.GetEvasionChanceAdd(effects[i]);
+            return value;
+        }
+
         public int GetRuntimeEffectStackCount(CharacterObject character, string effectIdOrStackKey)
         {
             RunCharacterState state = GetRunCharacter(character);

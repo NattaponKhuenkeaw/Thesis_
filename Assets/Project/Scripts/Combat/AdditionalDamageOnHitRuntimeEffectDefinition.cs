@@ -122,6 +122,10 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         DamageRequest request = new DamageRequest
         {
             target = context.targetEnemy,
+            execution = context.execution,
+            provenance = context.provenance,
+            hasExplicitProcPolicy = parameters.applyNativeDot,
+            procPolicy = DamageProcPolicy.PublishResolvedEvent | DamageProcPolicy.PublishKillEvent | DamageProcPolicy.ApplyElementDot,
             sourceCharacter = context.sourceCharacter,
             sourceStats = formulaSourceStats,
             baseDamage = damageInput.baseDamage,

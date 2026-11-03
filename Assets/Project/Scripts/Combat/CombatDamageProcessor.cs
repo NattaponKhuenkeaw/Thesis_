@@ -234,6 +234,8 @@ public static class CombatDamageProcessor
         if (damageDealt > 0f)
         {
             bool killedEnemy = !request.target.IsAlive;
+            if (result.Descriptor.delivery == DamageDelivery.Primary)
+                TeamLoader.Instance?.KitRuntimes?.OnPositivePrimaryHit(request, result, damageDealt);
             if ((policy & DamageProcPolicy.TriggerOrdinaryOnHit) != 0)
             {
                 request.sourcePassiveController?.NotifyHitDealt(
@@ -251,6 +253,7 @@ public static class CombatDamageProcessor
                 {
                     RuntimeEffectDamageContext hitContext = new RuntimeEffectDamageContext
                     {
+                        execution = request.execution, provenance = request.provenance,
                         sourceCharacter = request.sourceCharacter,
                         sourceStats = request.sourceStats,
                         targetEnemy = request.target,

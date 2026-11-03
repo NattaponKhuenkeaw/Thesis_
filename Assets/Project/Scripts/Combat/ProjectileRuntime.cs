@@ -182,6 +182,7 @@ public class ProjectileRuntime : MonoBehaviour
     private bool hitOccurredInCurrentBatch;
     private Transform trackedTargetTransform;
     internal int hitCooldownFramesRemaining;
+    private float _hitCooldownSeconds;
 
     public ProjectileData ProjectileData { get; private set; }
     public bool IsMagnetismActive => isActiveAndEnabled && !isExpired && currentState is UpdatingState
@@ -206,6 +207,7 @@ public class ProjectileRuntime : MonoBehaviour
         currentDirection = context.direction.sqrMagnitude > 0.001f ? context.direction.normalized : Vector2.right;
         lifeTimer = projectileData != null ? projectileData.lifetime : 0f;
         hitCooldownFramesRemaining = 0;
+        _hitCooldownSeconds = 0f;
         currentHitConsumesMaxHits = true;
         releaseQueued = false;
         isExpired = false;
@@ -245,6 +247,7 @@ public class ProjectileRuntime : MonoBehaviour
         isExpired = false;
         releaseQueued = false;
         hitCooldownFramesRemaining = 0;
+        _hitCooldownSeconds = 0f;
         currentHitConsumesMaxHits = true;
         processedHitsThisFrame = false;
         hitOccurredInCurrentBatch = false;
@@ -273,6 +276,7 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
+        if (ProjectileData != null && ProjectileData.hitIntervalSeconds > 0f && Time.deltaTime <= 0f) return;
         processedHitsThisFrame = false;
         currentState?.Tick(Time.deltaTime);
     }
@@ -476,6 +480,12 @@ public class ProjectileRuntime : MonoBehaviour
 
     private void UpdateHitCooldown()
     {
+        if (ProjectileData.hitIntervalSeconds > 0f)
+        {
+            _hitCooldownSeconds = Mathf.Max(-Time.deltaTime, _hitCooldownSeconds - Time.deltaTime);
+            hitCooldownFramesRemaining = _hitCooldownSeconds > 0.00001f ? 1 : 0;
+            return;
+        }
         if (hitCooldownFramesRemaining > 0)
         {
             hitCooldownFramesRemaining--;
@@ -601,7 +611,8 @@ public class ProjectileRuntime : MonoBehaviour
 
     private void ProcessTrackedEnemiesIfReady()
     {
-        if (processedHitsThisFrame || ProjectileData == null || isExpired || hitboxModule == null)
+        if (processedHitsThisFrame || ProjectileData == null || isExpired || hitboxModule == null
+            || (ProjectileData.hitIntervalSeconds > 0f && Time.deltaTime <= 0f))
         {
             return;
         }
@@ -659,7 +670,12 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
-        hitCooldownFramesRemaining = Mathf.Max(hitCooldownFramesRemaining, Mathf.Max(0, ProjectileData.hitIntervalFrames));
+        if (ProjectileData.hitIntervalSeconds > 0f)
+        {
+            _hitCooldownSeconds = Mathf.Max(-Time.deltaTime, _hitCooldownSeconds) + ProjectileData.hitIntervalSeconds;
+            hitCooldownFramesRemaining = 1;
+        }
+        else hitCooldownFramesRemaining = Mathf.Max(hitCooldownFramesRemaining, Mathf.Max(0, ProjectileData.hitIntervalFrames));
 
         if (ProjectileData.UsesSharedHitCount()
             && ProjectileData.destroyWhenHitsExhausted

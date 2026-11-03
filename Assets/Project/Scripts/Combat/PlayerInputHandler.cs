@@ -21,6 +21,11 @@ public class InputHandler_Player : MonoBehaviour
     public float dashBufferTime = 0.12f;
 
     private Vector2 moveInput;
+    private bool skillPressed;
+    private bool skillPending;
+    private float skillPressedAt;
+    private float skillHoldDuration;
+    private CharacterObject skillInputCharacter;
     private bool ultimatePressed;
     private bool ultimatePending;
     private float ultimatePressedAt;
@@ -45,6 +50,7 @@ public class InputHandler_Player : MonoBehaviour
 
     void OnDisable()
     {
+        CancelSkillGesture();
         CancelUltimateGesture();
         UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
     }
@@ -76,12 +82,14 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked)
         {
             CancelUltimateGesture();
+            CancelSkillGesture();
             moveInput = Vector2.zero;
             stateMachine?.RouteMoveInput(Vector2.zero);
             return;
         }
 
         UpdateUltimateGesture();
+        UpdateSkillGesture();
 
         // Always update directional snapshot in the buffer
         if (stateMachine != null && stateMachine.InputBuffer != null)
@@ -159,17 +167,10 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnSkill(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-        if (value.isPressed)
-        {
-            if (IsPointerOverClickBlockedUI()) return;
-
-            if (!TryPrioritizeJumpBeforeCombatInput())
-                return;
-
-            stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
-            stateMachine?.RouteSkillInput();
-        }
+        if (Project.UI.InputLockManager.IsLocked) { CancelSkillGesture(); return; }
+        if (!value.isPressed) { ReleaseSkillGesture(); return; }
+        if (IsPointerOverClickBlockedUI() || !TryPrioritizeJumpBeforeCombatInput()) return;
+        BeginSkillGesture();
     }
 
     public void OnUltimate(InputValue value)
@@ -267,9 +268,89 @@ public class InputHandler_Player : MonoBehaviour
         ultimateInputCharacter = null;
     }
 
+    private void BeginSkillGesture()
+    {
+        if (skillPressed) return;
+        skillPressed = true;
+
+        PlayerCharacter actor = stateMachine != null ? stateMachine.playerCharacter : null;
+        skillInputCharacter = actor != null ? actor.characterObject : null;
+        // Resolve the hold candidate through the same authored conditions and
+        // locomotion context. Characters without one keep immediate press input.
+        if (actor != null && actor.TryResolveActionForContext(AttackCategory.Skill,
+                out CombatAction action, out _, skillInputHeld: true)
+            && action is SkillAction skill && skill.requiresSkillHold)
+        {
+            skillPending = true;
+            skillPressedAt = Time.unscaledTime;
+            skillHoldDuration = Mathf.Max(0.01f, skill.skillHoldDuration);
+            return;
+        }
+        DispatchSkillGesture(held: false);
+    }
+
+    private void UpdateSkillGesture()
+    {
+        if (!skillPressed) return;
+        if (!IsSkillGestureValid())
+        {
+            CancelSkillGesture();
+            return;
+        }
+        InputAction action = playerInput != null && playerInput.actions != null
+            ? playerInput.actions.FindAction("Skill", throwIfNotFound: false) : null;
+        if (action == null || !action.enabled)
+        {
+            CancelSkillGesture();
+            return;
+        }
+        if (!action.IsPressed())
+        {
+            ReleaseSkillGesture();
+            return;
+        }
+        if (skillPending && Time.unscaledTime - skillPressedAt >= skillHoldDuration)
+            DispatchSkillGesture(held: true);
+    }
+
+    private bool IsSkillGestureValid() => !Project.UI.InputLockManager.IsLocked
+        && !Project.UI.PauseMenuController.IsOpen && !InteractableWorldUI.IsPlayerInInteractableArea
+        && stateMachine != null && stateMachine.playerCharacter != null
+        && playerInput != null && playerInput.currentActionMap != null && playerInput.currentActionMap.enabled
+        && stateMachine.playerCharacter.characterObject == skillInputCharacter;
+
+    private void ReleaseSkillGesture()
+    {
+        if (!IsSkillGestureValid())
+        {
+            CancelSkillGesture();
+            return;
+        }
+        if (skillPending)
+            DispatchSkillGesture(Time.unscaledTime - skillPressedAt >= skillHoldDuration);
+        stateMachine?.InputBuffer?.ReleaseSkillHold();
+        CancelSkillGesture(clearBuffer: false);
+    }
+
+    private void DispatchSkillGesture(bool held)
+    {
+        skillPending = false;
+        stateMachine?.InputBuffer?.SetDirectionalInput(GetLatestMoveInput());
+        stateMachine?.RouteSkillInput(held);
+        if (held && skillPressed) stateMachine?.InputBuffer?.SustainSkillHold();
+    }
+
+    private void CancelSkillGesture(bool clearBuffer = true)
+    {
+        if (clearBuffer && skillPressed) stateMachine?.InputBuffer?.ClearSkill();
+        skillPressed = false;
+        skillPending = false;
+        skillInputCharacter = null;
+    }
+
     private void OnApplicationFocus(bool focused)
     {
-        if (!focused) CancelUltimateGesture();
+        if (!focused) { CancelUltimateGesture(); CancelSkillGesture(); }
     }
 
     private bool TryPrioritizeJumpBeforeCombatInput()

@@ -685,8 +685,13 @@ public class EnemyController : MonoBehaviour
         return animationFinished && vfxFinished;
     }
 
+    private static ulong _nextLifeIdentity;
+    private ulong _lifeIdentity;
+    public ulong LifeIdentity => _lifeIdentity != 0 ? _lifeIdentity : (_lifeIdentity = ++_nextLifeIdentity);
+
     internal void OnSpawnLifecycleEntered()
     {
+        _lifeIdentity = ++_nextLifeIdentity;
         if (locomotion == null)
             locomotion = GetComponent<EnemyLocomotion>();
         ShieldGuard?.EndGuard();

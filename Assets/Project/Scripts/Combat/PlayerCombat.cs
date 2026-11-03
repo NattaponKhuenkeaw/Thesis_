@@ -69,6 +69,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     [SerializeField, Min(0.01f)] private float auraEnergyChanceGrantWindowSeconds = 1f;
 
     private readonly Dictionary<CooldownKey, float> lastCategoryUseTime = new Dictionary<CooldownKey, float>();
+    private readonly Dictionary<CooldownKey, ulong> actionUseOrder = new Dictionary<CooldownKey, ulong>();
+    private ulong nextActionUseOrder;
     private readonly Dictionary<CooldownKey, float> lastActionUseTime = new Dictionary<CooldownKey, float>();
     private readonly Dictionary<CooldownKey, float> pendingCooldownReductions = new Dictionary<CooldownKey, float>();
     private readonly HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
@@ -96,6 +98,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public int FieldSession { get; private set; }
     public CombatExecutionContext CurrentExecution { get; private set; }
+    public CombatActionExecutionToken CurrentCast { get; private set; }
     public void InvalidateFieldExecutions() { FieldSession++; CurrentExecution = null; }
 
     public PlayerCharacter PlayerCharacter => playerCharacter;
@@ -220,7 +223,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         hadGrabAtStepStart = HasGrabbedEnemy();
         currentStepData = step;
-        CurrentExecution = new CombatExecutionContext(this, playerCharacter != null ? playerCharacter.characterObject : null, FieldSession, isQteIntro, currentResolvedCombatAction);
+        CurrentExecution = new CombatExecutionContext(this, playerCharacter != null ? playerCharacter.characterObject : null, FieldSession, isQteIntro, currentResolvedCombatAction, CurrentCast);
         comboDepth = depth;
         isAirCombo = airCombo;
         isExecutingAutoChainStep = isAutoChain;
@@ -367,6 +370,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         currentAttackFrame = frame;
         currentPhase = phase;
+        if (phase == ActionPhase.Active && CurrentCast != null && !CurrentCast.activeNotified)
+        {
+            CurrentCast.activeNotified = true;
+            TeamLoader.Instance?.KitRuntimes?.Find(CurrentCast.owner)?.OnActionActive(CurrentCast, CurrentCast.action);
+        }
 
         RestoreAnimatorSpeedIfNeeded();
 
@@ -523,6 +531,32 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         return Time.time < useTime + GetFinalCooldown(category, cooldown, actionName, actionId);
+    }
+
+    public SkillAction GetLatestCoolingAction(CharacterObject character, AttackCategory category)
+    {
+        var table = character?.actionResolverTable;
+        if (table == null) return null;
+        IReadOnlyList<SkillAction> actions = category switch
+        {
+            AttackCategory.Skill => table.skillActions,
+            AttackCategory.Ultimate => table.ultimateActions,
+            _ => null
+        };
+        if (actions == null) return null;
+
+        SkillAction latest = null;
+        ulong latestOrder = 0;
+        foreach (SkillAction action in actions)
+        {
+            if (action == null || action.cooldown <= 0f) continue;
+            var key = new CooldownKey(character, category, action.ActionKey);
+            if (!actionUseOrder.TryGetValue(key, out ulong order) || order <= latestOrder) continue;
+            if (GetRemainingCooldownForCharacter(character, category, action.cooldown, action.actionName, action.actionId) <= 0f) continue;
+            latest = action;
+            latestOrder = order;
+        }
+        return latest;
     }
 
     public float GetRemainingCooldown(AttackCategory category, float cooldown, string actionName = null, string actionId = null)
@@ -683,6 +717,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         if (beginsNewAction)
         {
             currentAuraEnergyRewardClaim = new AuraEnergyRewardClaim(currentAuraEnergyReward);
+            CurrentCast = new CombatActionExecutionToken(playerCharacter != null ? playerCharacter.characterObject : null, action);
+            TeamLoader.Instance?.KitRuntimes?.Find(CurrentCast.owner)?.OnCastAccepted(CurrentCast, action);
         }
     }
 
@@ -713,6 +749,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentActionDamageMultiplier = 0f;
         currentAuraEnergyReward = 0f;
         currentAuraEnergyRewardClaim = null;
+        CurrentCast = null;
         currentAdditionalDamageEffects = System.Array.Empty<AdditionalDamageEffectDefinition>();
         hitboxActiveCount = 0;
         // hitstop is now global
@@ -1920,6 +1957,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
         CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
         lastActionUseTime[actionKey] = useTime;
+        actionUseOrder[actionKey] = ++nextActionUseOrder;
         ApplyPendingCooldownReduction(actionKey, lastActionUseTime);
     }
 

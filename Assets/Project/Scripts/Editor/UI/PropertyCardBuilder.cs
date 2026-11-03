@@ -786,6 +786,11 @@ namespace CombatEditor.UI
 
                 if (action is SkillAction skill)
                 {
+                    if (!(action is UltimateAction))
+                    {
+                        AddToggle(body, "Hold Skill", skill.requiresSkillHold, value => { RecordUndo("Edit Skill Gesture"); skill.requiresSkillHold = value; MarkDirty(); });
+                        AddFloatField(body, "Skill Hold Seconds", skill.skillHoldDuration, value => { RecordUndo("Edit Skill Hold"); skill.skillHoldDuration = Mathf.Max(.01f, value); MarkDirty(); });
+                    }
                     AddSeparator(body, "Cooldown");
                     AddFloatField(body, "Cooldown", skill.cooldown, value => {
                         RecordUndo("Edit Cooldown");

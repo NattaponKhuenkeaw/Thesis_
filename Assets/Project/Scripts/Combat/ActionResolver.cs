@@ -162,7 +162,7 @@ public class ActionResolver
         currentNode = activeTree.rootNode;
         ComboRoute rootRoute = forceRootStep
             ? null
-            : ComboRouter.FindMatchedRoute(currentNode, ctx);
+            : ComboRouter.FindMatchedRoute(currentNode, ctx, initial: true);
 
         if (rootRoute != null)
         {
@@ -489,6 +489,9 @@ public class ActionResolver
             && (ultimate.inputTrigger == UltimateInputTrigger.Hold) != ctx.ultimateInputHeld)
             return false;
 
+        if (action is SkillAction skill && !(action is UltimateAction)
+            && skill.requiresSkillHold != ctx.skillInputHeld) return false;
+
         CombatRuntimeState counters = ctx.runtimeState ?? ctx.passiveController?.RuntimeState;
         if (action.resourceCost > 0 && (counters == null || string.IsNullOrWhiteSpace(action.resourceCounterId)
             || counters.GetCounter(action.resourceCounterId) < action.resourceCost)) return false;
@@ -555,6 +558,13 @@ public class ActionResolver
             return;
         }
 
+        string entryName = ctx.passiveController.GetStartingComboStepNameOverride(action.Category, action.actionId, action.actionName);
+        if (!string.IsNullOrEmpty(entryName))
+        {
+            var seen = new System.Collections.Generic.HashSet<ComboNode>();
+            ComboNode found = FindEntryStep(activeTree.rootNode, entryName, seen);
+            if (found != null) { currentNode = found; treeDepth = ctx.passiveController.GetStartingComboDepthOverride(action.Category, action.actionId, action.actionName); return; }
+        }
         int targetDepth = ctx.passiveController.GetStartingComboDepthOverride(
             action.Category,
             action.actionId,
@@ -575,6 +585,20 @@ public class ActionResolver
             currentNode = nextNode;
             treeDepth++;
         }
+    }
+
+    private static ComboNode FindEntryStep(ComboNode node, string name, System.Collections.Generic.HashSet<ComboNode> seen)
+    {
+        if (node == null || !seen.Add(node)) return null;
+        if (node.stepData?.stepName == name) return node;
+        ComboNode found = FindEntryStep(node.defaultNext, name, seen) ?? FindEntryStep(node.onGrabSuccessNode, name, seen);
+        if (found != null) return found;
+        foreach (var route in node.routes)
+        {
+            found = FindEntryStep(route.targetNode, name, seen);
+            if (found != null) return found;
+        }
+        return null;
     }
 
     private ComboNode ResolveDepthOverrideNextNode(InputContext ctx)

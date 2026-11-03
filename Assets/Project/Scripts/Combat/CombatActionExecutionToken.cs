@@ -1,0 +1,25 @@
+using System.Collections.Generic;
+
+/// <summary>Cast identity survives step changes and off-field projectile delivery.</summary>
+public sealed class CombatActionExecutionToken
+{
+    public readonly CharacterObject owner;
+    public readonly CombatAction action;
+    public CharacterObject rememberedModeOwner;
+    public uint rememberedModeEpoch;
+    public bool modeEligibilityPending;
+    public bool activeNotified;
+    private HashSet<ulong> _payloadTargets;
+
+    public CombatActionExecutionToken(CharacterObject owner, CombatAction action)
+    {
+        this.owner = owner;
+        this.action = action;
+    }
+
+    public bool ClaimPayload(ulong enemyLife)
+    {
+        _payloadTargets ??= new HashSet<ulong>();
+        return _payloadTargets.Add(enemyLife);
+    }
+}

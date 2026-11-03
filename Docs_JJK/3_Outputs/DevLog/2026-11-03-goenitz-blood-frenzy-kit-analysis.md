@@ -31,3 +31,10 @@ blocked_by: []
 - Updated the approved design/task card and produced a concrete architecture plan plus proposed ADR-020; no gameplay edits made.
 - Found that native DOT from Additional Bleed needs an explicit proc-policy flag and that multi-step casts need shared cast identity distinct from per-step context.
 - Next: required architecture approval of the plan and ADR before implementation. No repeat design approval required.
+
+## Implementation and follow-up on 2026-11-04
+
+- Implemented the AE-funded runtime and authored Goenitz’s updated actions and recipes. The drain accumulator uses double precision after a 144 FPS check exposed a late tick.
+- EX tornadoes track along the horizontal launch plane. Attack2-2 follows Attack1 while Frenzy is active, with the separate post-dash Attack4 entry preserved.
+- The cooldown panel shows the most recently used action with time remaining. Blood Frenzy shares a slow white pulse between the AE gauge and Goenitz’s sprite.
+- Broader editor checks reported two kit-information failures and three Goenitz dash-recovery failures. These suites remain open for baseline comparison.

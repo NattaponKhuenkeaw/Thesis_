@@ -36,7 +36,8 @@ MonoBehaviour:
   trackingRadius: 20
   speed: 0.1
   lifetime: 1
-  maxHits: 10
+  hitIntervalSeconds: 0.13333334
+  maxHits: 8
   hitCountMode: 1
   routineHitbox:
     enabled: 1
@@ -87,7 +88,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 5}
         size: {x: 1.5, y: 10}
-        damageRatio: 0.13
+        damageRatio: 0.125
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2

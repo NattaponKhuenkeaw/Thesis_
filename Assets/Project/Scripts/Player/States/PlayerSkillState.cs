@@ -7,6 +7,8 @@ using UnityEngine;
 public class PlayerSkillState : CombatPlayerState
 {
     private SkillAction activeSkillAction;
+    private bool requestedSkillHold;
+    private bool activeSkillHold;
     private bool cooldownStartedForCurrentAction;
 
     public PlayerSkillState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
@@ -56,6 +58,7 @@ public class PlayerSkillState : CombatPlayerState
     public override void OnSkillInput()
     {
         if (currentPhase != ActionPhase.None && !CanBeInterruptedBy(ActionCategory.Skill)) return;
+        requestedSkillHold = Buffer != null && Buffer.SkillInputHeld;
         Buffer?.ConsumeSkill();
 
         if (player.Combat == null || resolverTable == null)
@@ -82,6 +85,13 @@ public class PlayerSkillState : CombatPlayerState
                 return;
             }
         }
+    }
+
+    protected override InputContext BuildInputContext(bool preserveActiveActionInput = true)
+    {
+        InputContext ctx = base.BuildInputContext(preserveActiveActionInput);
+        ctx.skillInputHeld = preserveActiveActionInput && activeSkillAction != null ? activeSkillHold : requestedSkillHold;
+        return ctx;
     }
 
     private bool TryResolveNextSkillStep(bool isAutoChain = false)
@@ -149,6 +159,7 @@ public class PlayerSkillState : CombatPlayerState
             return false;
         }
 
+        activeSkillHold = ctx.skillInputHeld;
         cooldownStartedForCurrentAction = false;
         if (!ExecuteCombatStep(step, ctx, false))
         {

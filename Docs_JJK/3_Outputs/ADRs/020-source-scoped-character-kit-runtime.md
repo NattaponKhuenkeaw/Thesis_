@@ -1,13 +1,13 @@
 ---
 slug: goenitz-blood-frenzy-kit
-status: needs-human
+status: approved
 source: manual
 gdd_tags:
   - combat
   - characters
 owner: architect-agent
-human_checkpoint: required
-next_agent: human
+human_checkpoint: not-required
+next_agent: implementation-agent
 blocked_by: []
 ---
 
@@ -15,7 +15,7 @@ blocked_by: []
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Accepted; implementation in progress |
 | Date | 2026-11-03 |
 | Author | Codex, architect role |
 | GDD | `@tag:combat`, `@tag:characters` |

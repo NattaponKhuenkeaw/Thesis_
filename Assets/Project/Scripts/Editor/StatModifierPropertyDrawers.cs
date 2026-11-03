@@ -458,6 +458,8 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
         EffectDrawerUtility.Draw(ref position, Prop(property, "replacementActionId"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "replacementActionName"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "startingComboDepthOverride"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "startingComboStepNameOverride"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "consumeRequiredTagsOnUse"));
         DrawValueModifier(ref position, property, "damageMultiplierOperation", "damageMultiplierValue");
         DrawValueModifier(ref position, property, "criticalRateOperation", "criticalRateValue");
         DrawValueModifier(ref position, property, "criticalDamageOperation", "criticalDamageValue");
@@ -494,6 +496,8 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "replacementActionId"))
             + EffectDrawerUtility.Height(Prop(property, "replacementActionName"))
             + EffectDrawerUtility.Height(Prop(property, "startingComboDepthOverride"))
+            + EffectDrawerUtility.Height(Prop(property, "startingComboStepNameOverride"))
+            + EffectDrawerUtility.Height(Prop(property, "consumeRequiredTagsOnUse"))
             + ValueModifierHeight(property, "damageMultiplierOperation", "damageMultiplierValue")
             + ValueModifierHeight(property, "criticalRateOperation", "criticalRateValue")
             + ValueModifierHeight(property, "criticalDamageOperation", "criticalDamageValue")

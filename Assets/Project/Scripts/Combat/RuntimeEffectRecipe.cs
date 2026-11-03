@@ -8,6 +8,7 @@ public class RuntimeEffectPresentation
 {
     public string effectId;
     public string displayName;
+    public bool showRemainingTime;
     public Sprite icon;
     public GameObject fieldVisualPrefab;
 }
@@ -106,6 +107,7 @@ public class RuntimeEffectLifestealParameters
 [Serializable]
 public class RuntimeEffectAdditionalDamageParameters
 {
+    public bool applyNativeDot;
     public RuntimeEffectDamageFilter filter = new RuntimeEffectDamageFilter();
     [Range(0f, 1f)] public float chance = 1f;
     [Min(0f)] public float internalCooldown = 0f;
@@ -141,6 +143,8 @@ public class RuntimeEffectShieldParameters
 [Serializable]
 public class RuntimeEffectParameterSet
 {
+    public bool overrideDefense;
+    [Range(0f, 1f)] public float evasionChanceAdd;
     public bool overrideStatModifiers;
     public List<RuntimeEffectStatModifier> statModifiers = new List<RuntimeEffectStatModifier>();
 
@@ -169,7 +173,8 @@ public class RuntimeEffectParameterSet
     public RuntimeEffectShieldParameters shield = new RuntimeEffectShieldParameters();
 
     public bool HasAnyOverride =>
-        overrideStatModifiers
+        overrideDefense
+        || overrideStatModifiers
         || overrideDamageModifier
         || overrideDamageInput
         || overridePeriodicHeal
@@ -187,6 +192,7 @@ public class RuntimeEffectParameterSet
         }
 
         StringBuilder builder = new StringBuilder();
+        if (overrideDefense) builder.Append("defense:").Append(evasionChanceAdd.ToString("R")).Append(';');
         if (overrideStatModifiers && statModifiers != null)
         {
             builder.Append("stat:");
@@ -276,7 +282,7 @@ public class RuntimeEffectParameterSet
 
         if (overrideAdditionalDamage && additionalDamage != null)
         {
-            builder.Append("add:")
+            builder.Append(additionalDamage.applyNativeDot ? "add-dot:" : "add:")
                 .Append(additionalDamage.filter != null && additionalDamage.filter.filterByElement ? '1' : '0')
                 .Append(',')
                 .Append(additionalDamage.filter != null ? (int)additionalDamage.filter.elementType : 0)

@@ -76,9 +76,11 @@ public sealed class PlayerJumpState : PlayerState
             return;
         }
 
-        if (fsm.InputBuffer.HasSkillBuffer && fsm.InputBuffer.ConsumeSkill())
+        if (fsm.InputBuffer.HasSkillBuffer)
         {
-            fsm.RouteSkillInput();
+            bool held = fsm.InputBuffer.SkillInputHeld;
+            fsm.InputBuffer.ConsumeSkill();
+            fsm.RouteSkillInput(held);
             return;
         }
 

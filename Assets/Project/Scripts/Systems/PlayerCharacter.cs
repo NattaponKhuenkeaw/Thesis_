@@ -414,7 +414,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         return TryResolveActionForContext(category, out _, out _);
     }
 
-    public bool TryResolveActionForContext(AttackCategory category, out CombatAction action, out AttackStepData step, bool requireAvailability = false, bool? ultimateInputHeld = null)
+    public bool TryResolveActionForContext(AttackCategory category, out CombatAction action, out AttackStepData step, bool requireAvailability = false, bool? ultimateInputHeld = null, bool? skillInputHeld = null)
     {
         action = null;
         step = null;
@@ -424,6 +424,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
         InputContext ctx = BuildActionInputContext(requireAvailability);
         if (ultimateInputHeld.HasValue) ctx.ultimateInputHeld = ultimateInputHeld.Value;
+        if (skillInputHeld.HasValue) ctx.skillInputHeld = skillInputHeld.Value;
 
         // Standard ActionResolver used for one-off validation
         ActionResolver resolver = new ActionResolver();
@@ -532,6 +533,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         {
             isGrounded = actionGrounded,
             ultimateInputHeld = StateMachine?.InputBuffer?.UltimateInputHeld == true,
+            skillInputHeld = StateMachine?.InputBuffer?.SkillInputHeld == true,
             directionalInput = StateMachine != null && StateMachine.InputBuffer != null
                 ? StateMachine.InputBuffer.DirectionalInput
                 : Vector2.zero,

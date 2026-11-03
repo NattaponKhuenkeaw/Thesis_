@@ -104,7 +104,7 @@ Animator:
   m_GameObject: {fileID: 340767069818909638}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
+  m_Controller: {fileID: 9100000, guid: efb84dc297f28b2448da06b6d95f9b3b, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1012,7 +1012,7 @@ MonoBehaviour:
   - {fileID: 0}
   playerCharacter: {fileID: 729008942358398209}
   metaProgression: {fileID: 11400000, guid: f3d0c0c5246b7f04093bf9b8106bccef, type: 2}
-  switchCooldownDuration: 0.7
+  switchCooldownDuration: 2
   defeatDeathAnimSeconds: 1.25
   defeatSwitchDelaySeconds: 0.35
   currentIndex: 0
@@ -1032,9 +1032,9 @@ MonoBehaviour:
   windowSeconds: 5
   reduceUiMotion: 0
   introTimeScale: 0.08
-  introSlowMotionSeconds: 0.5
-  introCameraSizeReduction: 0.5
-  introCameraImpactFrames: 45
+  introSlowMotionSeconds: 0.1
+  introCameraSizeReduction: 0.75
+  introCameraImpactFrames: 80
 --- !u!1 &7291009428317185000
 GameObject:
   m_ObjectHideFlags: 0
@@ -1368,6 +1368,8 @@ MonoBehaviour:
   profile: {fileID: 0}
   dashData:
     animationClip: {fileID: 0}
+    icon: {fileID: 0}
+    meterReadyIcon: {fileID: 0}
     startupFrames: 5
     activeFrames: 12
     recoveryFrames: 12

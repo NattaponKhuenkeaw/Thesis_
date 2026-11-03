@@ -880,6 +880,17 @@ public class CharacterPassiveController : MonoBehaviour
         return scale;
     }
 
+    public string GetStartingComboStepNameOverride(AttackCategory category, string actionId, string actionName)
+    {
+        foreach (var node in GetActiveNodes())
+            if (node?.actionModifiers != null)
+                foreach (var modifier in node.actionModifiers)
+                    if (modifier != null && !string.IsNullOrEmpty(modifier.startingComboStepNameOverride)
+                        && modifier.Matches(category, actionId, actionName, runtimeState))
+                        return modifier.startingComboStepNameOverride;
+        return null;
+    }
+
     public int GetStartingComboDepthOverride(AttackCategory category, string actionId, string actionName)
     {
         int result = 0;
@@ -1052,6 +1063,8 @@ public class CharacterPassiveController : MonoBehaviour
             }
         }
 
+        highestEvasionChance += TeamLoader.Instance?.RunInventory?.GetEvasionChanceAdd(playerCharacter.characterObject) ?? 0f;
+        highestEvasionChance += playerCharacter.RuntimeEffects?.GetEvasionChanceAdd() ?? 0f;
         return highestEvasionChance > 0f && UnityEngine.Random.value <= Mathf.Clamp01(highestEvasionChance);
     }
 
@@ -2492,6 +2505,7 @@ public class CharacterPassiveController : MonoBehaviour
         {
             PassiveActionModifierDefinition modifier = modifiers[i];
             if (modifier != null
+                && modifier.consumeRequiredTagsOnUse
                 && modifier.unlocked
                 && modifier.requiredTags != null
                 && modifier.requiredTags.Count > 0)

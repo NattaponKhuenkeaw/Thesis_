@@ -41,6 +41,7 @@ public class CharacterSwitchSlot : MonoBehaviour
     private int _exchangePhase;
     private float _exchangeElapsed;
 
+    private readonly FrenzyGaugeFeedback _frenzyGauge = new FrenzyGaugeFeedback();
     private string lastCooldownText = string.Empty;
     private bool isCooldownVisible;
     private bool _cooldownVisibilityKnown;
@@ -204,6 +205,7 @@ public class CharacterSwitchSlot : MonoBehaviour
         TeamLoader teamLoader = hudManager != null ? hudManager.teamLoader : null;
         if (teamLoader == null) return;
 
+        _frenzyGauge.Tick(aeOverlay, boundCharacter);
         bool isCurrent = teamLoader.CurrentCharacter == boundCharacter;
         RefreshQtePrompt(teamLoader, isCurrent);
 
@@ -240,16 +242,15 @@ public class CharacterSwitchSlot : MonoBehaviour
         {
             float ultRemaining = 0f;
             float ultDuration = 0f;
-            if (boundCharacter.actionResolverTable != null && boundCharacter.actionResolverTable.ultimateActions != null && boundCharacter.actionResolverTable.ultimateActions.Count > 0)
+            PlayerCombat combat = PlayerCharacter.Instance?.Combat;
+            SkillAction cooling = combat?.GetLatestCoolingAction(boundCharacter, AttackCategory.Ultimate);
+            if (cooling != null)
             {
-                var ultAction = boundCharacter.actionResolverTable.ultimateActions[0];
-                ultDuration = ultAction.cooldown;
-                if (PlayerCharacter.Instance != null && PlayerCharacter.Instance.Combat != null)
-                {
-                    ultRemaining = PlayerCharacter.Instance.Combat.GetRemainingCooldownForCharacter(boundCharacter, AttackCategory.Ultimate, ultDuration, ultAction.actionName, ultAction.actionId);
-                }
+                ultDuration = cooling.cooldown;
+                ultRemaining = combat.GetRemainingCooldownForCharacter(boundCharacter, AttackCategory.Ultimate,
+                    ultDuration, cooling.actionName, cooling.actionId);
             }
-            
+
             if (ultDuration > 0f && ultRemaining > 0f)
             {
                 cooldownOverlay.fillAmount = Mathf.Clamp01(ultRemaining / ultDuration);
@@ -398,6 +399,7 @@ public class CharacterSwitchSlot : MonoBehaviour
 
     private void OnDisable()
     {
+        _frenzyGauge.Restore();
         if (qteWindowEffect != null) qteWindowEffect.Clear();
         ResetPortraitMotion();
     }

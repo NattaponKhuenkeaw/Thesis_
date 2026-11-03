@@ -18,6 +18,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
     private AuraEnergyRewardClaim auraEnergyRewardClaim;
     private AdditionalDamageEffectDefinition[] additionalDamageEffects;
     private PlayerCombat sourceCombat;
+    private CombatExecutionContext sourceExecution;
     private CharacterObject sourceCharacter;
     private string sourceActionId;
     private string sourceActionName;
@@ -197,6 +198,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
         additionalDamageEffects = resolvedAdditionalDamageEffects
             ?? System.Array.Empty<AdditionalDamageEffectDefinition>();
         sourceCombat = resolvedSourceCombat;
+        sourceExecution = resolvedSourceCombat?.CurrentExecution;
         presentationActionType = resolvedSourceCombat?.CurrentExecution?.actionType ?? CombatActionType.FromInput;
         sourceCharacter = resolvedSourceCharacter;
         sourceActionId = resolvedSourceActionId;
@@ -688,7 +690,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
             sourceCombat,
             sourceCharacter,
             auraEnergyRewardClaim,
-            presentationType: presentationActionType);
+            sourceExecution: sourceExecution, presentationType: presentationActionType);
     }
 
     private static void IgnoreCollisionsWithPlayer(GameObject playerGo, List<Collider2D> cloneCols)

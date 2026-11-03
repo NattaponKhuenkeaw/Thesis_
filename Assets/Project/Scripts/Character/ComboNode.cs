@@ -158,6 +158,9 @@ public class ComboAction : CombatAction
 [System.Serializable]
 public class SkillAction : CombatAction
 {
+    [Header("Skill Gesture")]
+    public bool requiresSkillHold;
+    [Min(0.01f)] public float skillHoldDuration = 0.35f;
     public override AttackCategory Category => AttackCategory.Skill;
 
     [Header("Resource Cost")]
@@ -278,6 +281,9 @@ public class ComboRoute
     [Header("Environmental Trigger")]
     [Tooltip("If true, this route can be triggered immediately during the action's active phase (e.g. hitting a wall), interrupting the current step.")]
     public bool allowImmediateInterrupt = false;
+
+    [Tooltip("Evaluate this route after its source step has started.")]
+    public bool followUpOnly;
 
     public bool IsEnvironmental
     {

@@ -39,9 +39,9 @@ MonoBehaviour:
     portrait: {fileID: 21300000, guid: f700394eb02181c4986f7f91c18c1725, type: 3}
     animatorController: {fileID: 9100000, guid: efb84dc297f28b2448da06b6d95f9b3b, type: 2}
   potentialArtwork:
-    skill: {fileID: 0}
-    ultimate: {fileID: 0}
-    passive: {fileID: 0}
+    skill: {fileID: 21300000, guid: d970c5c7dd2f9e040a57e85746ab6487, type: 3}
+    ultimate: {fileID: 21300000, guid: 52e5912cef85d634382df18f0e3feded, type: 3}
+    passive: {fileID: 21300000, guid: e7af9be24b93ce84f86369c74602550f, type: 3}
   auraEnergyRate: 2
   audioData: {fileID: 11400000, guid: 59862e682f48ee94498de7b7a51bd3a0, type: 2}
   movementProfile: {fileID: 11400000, guid: 475fcb4220eff1746b3aa7806eb8c0a1, type: 2}
@@ -57,7 +57,7 @@ MonoBehaviour:
     maxHpPerLevel: 79.5
   _dashData:
     animationClip: {fileID: 7400000, guid: a84ff45c3f3eb5047be611bbaa8bb3e9, type: 2}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 676719e0a7f831043a78a94f6b027494, type: 3}
     meterReadyIcon: {fileID: 0}
     startupFrames: 2
     activeFrames: 12
@@ -66,6 +66,7 @@ MonoBehaviour:
     dashSpeed: 35
     cooldownFrames: 18
   kitDefinition:
+    runtimeDefinition: {fileID: 11400000, guid: a6a53a77bb61c184dbb39ccac3521485, type: 2}
     presentation:
       sections:
       - sectionId: basic
@@ -105,6 +106,10 @@ MonoBehaviour:
         summary: 
         order: 2
       entries:
+      - entryId: qte.goenitz.qte
+        sectionId: qte
+        actionId: goenitz.qte
+        qte: 1
       - entryId: goenitz.basic.ground
         sectionId: basic
         actionId: goenitz.basic.ground
@@ -164,8 +169,8 @@ MonoBehaviour:
         qte: 0
         hidden: 0
         hideWhenLocked: 0
-        minimumPotentialLevel: 0
-        unlockTrack: 0
+        minimumPotentialLevel: 3
+        unlockTrack: 1
         showPotentialLevel: 0
         potentialTrack: 1
         order: 1
@@ -183,6 +188,32 @@ MonoBehaviour:
         potentialTrack: 0
         order: 0
         activationDescription: 
+      - entryId: goenitz.skill.ex_yonokaze
+        sectionId: skill
+        actionId: goenitz.skill.ex_yonokaze
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 1
+        unlockTrack: 0
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 2
+        activationDescription: Hold Skill
+      - entryId: goenitz.ultimate.blood_frenzy
+        sectionId: ultimate
+        actionId: goenitz.ultimate.blood_frenzy
+        passive: 0
+        qte: 0
+        hidden: 0
+        hideWhenLocked: 0
+        minimumPotentialLevel: 1
+        unlockTrack: 1
+        showPotentialLevel: 0
+        potentialTrack: 0
+        order: 2
+        activationDescription: Hold Ultimate with positive AE; no entry cost.
     combatMeter:
       counterId: 
       cachedCounterId: 
@@ -194,17 +225,17 @@ MonoBehaviour:
     skill:
       abilityId: goenitz.skill.yonokaze
       abilityName: Yonokaze
-      icon: {fileID: 0}
+      icon: {fileID: 21300000, guid: cedf5b663bb21aa4fb6d414953f976aa, type: 3}
       description: 
     ultimate:
       abilityId: goenitz.ultimate.yamidokoku
       abilityName: Yamidokoku
-      icon: {fileID: 0}
+      icon: {fileID: 21300000, guid: 0f7effec793cdc64fad3f7e6b2b2d961, type: 3}
       description: 
     passive:
       abilityId: goenitz.passive
       abilityName: Passive
-      icon: {fileID: 0}
+      icon: {fileID: 21300000, guid: b3c222bd9eb5b2a4093a31c1cca4c8ab, type: 3}
       description: 
     baseSkillNode:
       meterCapacityModifiers: []
@@ -212,7 +243,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 1
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
         actionId: goenitz.skill.yonokaze
         actionName: 
         stepName: 
@@ -261,17 +294,9 @@ MonoBehaviour:
       nodeId: base.skill
       nodeName: Base Skill
       description: 
-      skillPanelDescriptionOverride: 'Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-        of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical damage
-        dealt</color> '
-      kitInfoPatches:
-      - entryId: goenitz.skill.yonokaze
-        noteId: 
-        priority: 0
-        appendNote: 0
-        description: Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-          of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
-          dealt</color>
+      skillPanelDescriptionOverride: 'Yonokaze: 350% ATK, 3-second cooldown. Critical
+        hits deal 150% of resolved critical damage.'
+      kitInfoPatches: []
       track: 0
       level: 0
       fragmentCost: 0
@@ -282,7 +307,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 2
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 2
         actionId: 
         actionName: 
         stepName: 
@@ -331,16 +358,9 @@ MonoBehaviour:
       nodeId: base.ultimate
       nodeName: Base Ultimate
       description: 
-      skillPanelDescriptionOverride: Teleport to grab closest target, Inflict DMG
-        <b><color=#00FFED>800%+300%</color></b> of own ATK
-      kitInfoPatches:
-      - entryId: goenitz.ultimate.yamidokoku
-        noteId: 
-        priority: 0
-        appendNote: 0
-        description: Teleport to grab closest target, Inflict DMG <b><color=#00FFED>800%+300%</color></b>
-          of own ATK, <color=#C0C0C0>When CRIT land will do 150% of critical damage
-          dealt</color>
+      skillPanelDescriptionOverride: 'Yamidokoku: 800% + 300% ATK, 18-second cooldown,
+        70 AE. Critical hits deal 150% of resolved critical damage.'
+      kitInfoPatches: []
       track: 1
       level: 0
       fragmentCost: 0
@@ -383,16 +403,9 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.passive.base
       nodeName: Wind God
-      description: Also grants 35% chance to evade incoming enemy attacks.
-      skillPanelDescriptionOverride: There 35% chance to <b>Evade</b> Incoming attack
-        from enemy
-      kitInfoPatches:
-      - entryId: passive
-        noteId: 
-        priority: 0
-        appendNote: 0
-        description: There <b><color=#00FFED>35%</color></b> chance to <b>Evade</b>
-          Incoming attack from enemy
+      description: 35% chance to evade incoming enemy attacks.
+      skillPanelDescriptionOverride: 35% chance to evade incoming enemy attacks.
+      kitInfoPatches: []
       track: 2
       level: 0
       fragmentCost: 0
@@ -404,155 +417,7 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
-      runtimeEffects:
-      - trigger: 1
-        filter:
-          filterByCategory: 1
-          category: 1
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: 
-          definition: {fileID: 11400000, guid: ad4fabc14e4967046a460f64619eaca3, type: 2}
-          presentation:
-            effectId: 
-            displayName: Increase CRIT Chance
-            icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 0
-            appliesOn: 0
-            durationType: 0
-            durationSeconds: 5
-            stackMode: 0
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 0
-            removeOnOwnerDamaged: 0
-            stackKey: 
-          parameters:
-            overrideStatModifiers: 1
-            statModifiers:
-            - target: 5
-              operation: 0
-              sourceStat: 5
-              statRatioValueSource: 0
-              value: 17
-            overrideDamageModifier: 0
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 0
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
+      runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -565,185 +430,40 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: goenitz.skill.lv1
-      nodeName: Yonokaze Focus
-      description: Increase CRIT Chance by 17% for 5 seconds after Yonokaze.
-      skillPanelDescriptionOverride: "Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
-        DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
-        damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>- Increase <b>CRIT Chance</b>
-        by 17% for 5 seconds</color></size>"
+      nodeName: Skill 1
+      description: Unlock EX Yonokaze with Hold Skill.
+      skillPanelDescriptionOverride: Unlock EX Yonokaze with Hold Skill.
       kitInfoPatches:
       - entryId: goenitz.skill.yonokaze
-        noteId: 
-        priority: 1
-        appendNote: 0
-        description: 'Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-          of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical damage
-          dealt</color>
-
-          
-
-          <size=19><color=#787878>Increase
-          CRIT Rate by <b><color=#00FFED>17%</color></b> for <b><color=#00FFED>5
-          seconds</color></b> after Yonokaze</color></size>'
+        noteId: goenitz.skill.lv1
+        priority: 0
+        appendNote: 1
+        description: Unlock EX Yonokaze with Hold Skill.
       track: 0
       level: 1
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
-      statModifiers: []
+      statModifiers:
+      - target: 12
+        operation: 0
+        valueSource: 0
+        value: 17
+        sourceStat: 0
+        statRatioValueSource: 0
+        scaleValueByCounter: 0
+        valueCounterId: 
+        maxCounterScale: 0
+        scope: 0
+        filterOutgoingDamageByCategory: 0
+        outgoingDamageCategory: 0
+        requiredTags: []
+        requiredCounters: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
-      runtimeEffects:
-      - trigger: 1
-        filter:
-          filterByCategory: 1
-          category: 1
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: 
-          definition: {fileID: 11400000, guid: 18cbcd66e506598448fbf7c3475802ae, type: 2}
-          presentation:
-            effectId: 
-            displayName: Increase CRIT Damage
-            icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 0
-            appliesOn: 0
-            durationType: 0
-            durationSeconds: 5
-            stackMode: 0
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 0
-            removeOnOwnerDamaged: 0
-            stackKey: 
-          parameters:
-            overrideStatModifiers: 1
-            statModifiers:
-            - target: 6
-              operation: 0
-              sourceStat: 6
-              statRatioValueSource: 0
-              value: 43
-            overrideDamageModifier: 0
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 0
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
+      runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -756,69 +476,41 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: goenitz.skill.lv2
-      nodeName: Yonokaze Edge
-      description: Increase CRIT Damage by 43% for 5 seconds after Yonokaze.
-      skillPanelDescriptionOverride: "Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
-        DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
-        damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>- Increase <b>CRIT Chance</b>
-        by 17% for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>- Increase
-        CRIT Damage by 43% for 5 seconds</color></size>"
+      nodeName: Skill 2
+      description: Increase CR by 17 percentage points.
+      skillPanelDescriptionOverride: 'Unlock EX Yonokaze with Hold Skill.
+
+        Increase
+        CR by 17 percentage points.'
       kitInfoPatches:
       - entryId: goenitz.skill.yonokaze
-        noteId: 
-        priority: 2
-        appendNote: 0
-        description: 'Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-          of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical damage
-          dealt</color>
-
-          
-
-          <size=19><color=#787878>Increase
-          CRIT Rate by <b><color=#00FFED>17%</color></b> AND CRIT Damage by <b><color=#00FFED>43%</color></b>
-          for <b><color=#00FFED>5 seconds</color></b> after Yonokaze</color></size>'
+        noteId: goenitz.skill.lv2
+        priority: 0
+        appendNote: 1
+        description: Increase CR by 17 percentage points.
       track: 0
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers:
-      - category: 1
-        actionId: goenitz.skill.yonokaze
-        actionName: 
-        stepName: 
-        unlocked: 1
-        priorityBonus: 0
-        replacementActionId: 
-        replacementActionName: 
-        startingComboDepthOverride: 0
+      statModifiers:
+      - target: 13
+        operation: 0
+        valueSource: 0
+        value: 43
+        sourceStat: 0
+        statRatioValueSource: 0
+        scaleValueByCounter: 0
+        valueCounterId: 
+        maxCounterScale: 0
+        scope: 0
+        filterOutgoingDamageByCategory: 0
+        outgoingDamageCategory: 0
         requiredTags: []
         requiredCounters: []
-        damageMultiplierOperation: 3
-        damageMultiplierValue: 4.5
-        criticalRateOperation: 0
-        criticalRateValue: 0
-        criticalDamageOperation: 0
-        criticalDamageValue: 0
-        finalDamageOperation: 0
-        finalDamageValue: 0
-        finalDamageRequiresCriticalHit: 0
-        auraEnergyRewardAdd: 0
-        cooldownOperation: 0
-        cooldownValue: 0
-        energyCostOperation: 0
-        energyCostValue: 0
-        ignoreDefense: 0
-        ignoreDefenseRequiresCriticalHit: 0
-        ignoreDamageResistance: 0
-        ignoreTypeReduction: 0
-        hitboxScaleMultiplier: 1
-        projectileScaleMultiplier: 1
-        replacementProjectileType: 0
-        replacementProjectileData: {fileID: 0}
+      cooldownModifiers: []
+      actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -833,23 +525,20 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: goenitz.skill.lv3
-      nodeName: Yonokaze Force
-      description: Increase Yonokaze damage multiplier to 450%.
-      skillPanelDescriptionOverride: "Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
-        DMG <b><color=#FFA500>450%</color></b> of own ATK,<color=#C0C0C0>When CRIT
-        land will do 250% of critical damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>-
-        Increase <b>CRIT Chance</b> by 17% for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
-        Increase CRIT Damage by 43% for 5 seconds</color></size>"
+      nodeName: Skill 3
+      description: Increase CD by 43 percentage points.
+      skillPanelDescriptionOverride: 'Unlock EX Yonokaze with Hold Skill.
+
+        Increase
+        CR by 17 percentage points.
+
+        Increase CD by 43 percentage points.'
       kitInfoPatches:
       - entryId: goenitz.skill.yonokaze
-        noteId: 
-        priority: 3
-        appendNote: 0
-        description: "Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
-          DMG <b><color=#FFA500>450%</color></b> of own ATK,<color=#C0C0C0>When CRIT
-          land will do 250% of critical damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>-
-          Increase <b>CRIT Chance</b> by 17% for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
-          Increase CRIT Damage by 43% for 5 seconds</color></size>"
+        noteId: goenitz.skill.lv3
+        priority: 0
+        appendNote: 1
+        description: Increase CD by 43 percentage points.
       track: 0
       level: 3
       fragmentCost: 1
@@ -859,7 +548,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 1
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
         actionId: goenitz.skill.yonokaze
         actionName: 
         stepName: 
@@ -890,240 +581,12 @@ MonoBehaviour:
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
         projectileScaleMultiplier: 1
-        replacementProjectileType: 31
+        replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: 4da94e08f5984dafaa9cad8105535e23, type: 2}
-      runtimeTagEffects: []
-      runtimeEffects: []
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      coordinatedActionEffects: []
-      passiveHookTypeName: 
-      nodeId: goenitz.skill.lv4
-      nodeName: Yonokaze Storm
-      description: Yonokaze uses the upgraded tornado projectile with bigger coverage,
-        longer lifespan, and more hits.
-      skillPanelDescriptionOverride: "Summon <b><color=#FFA500>Lethal</color></b>
-        Tornado hit <b><color=#FFA500>16</color></b> times, Inflict <b><color=#00FFED>Echo</color></b>
-        DMG <b><color=#FFA500>450%</color></b> of own ATK,<color=#C0C0C0>When CRIT
-        land will do 250% of critical damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>-
-        Increase <b>CRIT Chance</b> by 17% for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
-        Increase CRIT Damage by 43% for 5 seconds</color></size>"
-      kitInfoPatches:
-      - entryId: goenitz.skill.yonokaze
-        noteId: 
-        priority: 4
-        appendNote: 0
-        description: "Summon <b><color=#FFA500>Lethal</color></b> Tornado hit <b><color=#FFA500>16</color></b>
-          times, Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>450%</color></b>
-          of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical damage
-          dealt</color> \r\n\r\n<size=20><color=#C0C0C0>- Increase <b>CRIT Chance</b>
-          by 17% for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>- Increase
-          CRIT Damage by 43% for 5 seconds</color></size>"
-      track: 0
-      level: 4
-      fragmentCost: 1
-      unlockedByDefault: 0
-    - meterCapacityModifiers: []
-      counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects: []
-      runtimeEffects:
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: echo.resistance
-          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-          presentation:
-            effectId: 
-            displayName: Decrease Echo DMG Resistence
-            icon: {fileID: 0}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 1
-            appliesOn: 1
-            durationType: 0
-            durationSeconds: 10
-            stackMode: 1
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 1
-            removeOnOwnerDamaged: 0
-            stackKey: echo.resistance.2
-          parameters:
-            overrideStatModifiers: 0
-            statModifiers: []
-            overrideDamageModifier: 1
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 15
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 2
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      coordinatedActionEffects: []
-      passiveHookTypeName: 
-      nodeId: goenitz.ultimate.lv1
-      nodeName: Echo Rend
-      description: Yamidokoku hits reduce enemy Echo resistance by 15% for 10 seconds.
-      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
-        DMG 800%+300% of own ATK
-
-
-
-        <size=20><color=#C0C0C0>- When Hit, Decrease
-        Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance -15% for 10 seconds</color></size>'
-      kitInfoPatches:
-      - entryId: goenitz.ultimate.yamidokoku
-        noteId: 
-        priority: 1
-        appendNote: 0
-        description: 'Inflict <b><color=#00FFED>Echo</color></b> DMG 800%+300% of
-          own ATK
-
-
-
-          <size=20><color=#C0C0C0>- When Hit, Decrease Enemy
-          <b><color=#00FFED>Echo</color></b>DMG Resistance -15% for 10 seconds</color></size>'
-      track: 1
-      level: 1
-      fragmentCost: 1
-      unlockedByDefault: 0
-    - meterCapacityModifiers: []
-      counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers:
-      - category: 2
-        actionId: 
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
+        actionId: goenitz.skill.ex_yonokaze
         actionName: 
         stepName: 
         unlocked: 1
@@ -1133,8 +596,8 @@ MonoBehaviour:
         startingComboDepthOverride: 0
         requiredTags: []
         requiredCounters: []
-        damageMultiplierOperation: 3
-        damageMultiplierValue: 10
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
         criticalRateOperation: 0
         criticalRateValue: 0
         criticalDamageOperation: 0
@@ -1153,8 +616,8 @@ MonoBehaviour:
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
         projectileScaleMultiplier: 1
-        replacementProjectileType: 31
-        replacementProjectileData: {fileID: 0}
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 11400000, guid: 1b317e4588b80df4eb86740f33780315, type: 2}
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -1168,803 +631,27 @@ MonoBehaviour:
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
-      nodeId: goenitz.ultimate.lv2
-      nodeName: Yamidokoku Force
-      description: Increase Yamidokoku damage multiplier to 1000% and use the upgraded
-        500% secondary tornado package.
-      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
-        DMG <b><color=#FFA500>1000%</color></b>+300% of own ATK
+      nodeId: goenitz.skill.lv4
+      nodeName: Skill 4
+      description: Both tornado variants gain larger coverage, longer lifespan and
+        more hits.
+      skillPanelDescriptionOverride: 'Unlock EX Yonokaze with Hold Skill.
 
+        Increase
+        CR by 17 percentage points.
 
+        Increase CD by 43 percentage points.
 
-        <size=20><color=#C0C0C0>-
-        When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
-        -15% for 10 seconds</color></size>'
+        Both
+        tornado variants gain larger coverage, longer lifespan and more hits.'
       kitInfoPatches:
-      - entryId: goenitz.ultimate.yamidokoku
-        noteId: 
-        priority: 2
-        appendNote: 0
-        description: 'Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>1000%</color></b>+300%
-          of own ATK
-
-
-
-          <size=20><color=#C0C0C0>- When Hit, Decrease Enemy
-          <b><color=#00FFED>Echo</color></b>DMG Resistance -15% for 10 seconds</color></size>'
-      track: 1
-      level: 2
-      fragmentCost: 1
-      unlockedByDefault: 0
-    - meterCapacityModifiers: []
-      counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers:
-      - category: 2
-        actionId: goenitz.ultimate2.shin.yaotome
-        actionName: 
-        stepName: 
-        unlocked: 1
-        priorityBonus: 100
-        replacementActionId: 
-        replacementActionName: 
-        startingComboDepthOverride: 0
-        requiredTags:
-        - tag: goenitz_followup_ultimate_window
-          expectedValue: 1
-        requiredCounters: []
-        damageMultiplierOperation: 0
-        damageMultiplierValue: 0
-        criticalRateOperation: 0
-        criticalRateValue: 0
-        criticalDamageOperation: 0
-        criticalDamageValue: 0
-        finalDamageOperation: 0
-        finalDamageValue: 0
-        finalDamageRequiresCriticalHit: 0
-        auraEnergyRewardAdd: 0
-        cooldownOperation: 0
-        cooldownValue: 0
-        energyCostOperation: 3
-        energyCostValue: 0
-        ignoreDefense: 0
-        ignoreDefenseRequiresCriticalHit: 0
-        ignoreDamageResistance: 0
-        ignoreTypeReduction: 0
-        hitboxScaleMultiplier: 1
-        projectileScaleMultiplier: 1
-        replacementProjectileType: 0
-        replacementProjectileData: {fileID: 0}
-      runtimeTagEffects:
-      - trigger: 2
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionId: 1
-          actionId: goenitz.ultimate.yamidokoku
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        tag: goenitz_followup_ultimate_window
-        addTag: 1
-        duration: 20
-        rememberEnemyTarget: 0
-      runtimeEffects: []
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      coordinatedActionEffects: []
-      passiveHookTypeName: 
-      nodeId: goenitz.ultimate.lv3
-      nodeName: Jissokoku Window
-      description: 'After Yamidokoku, Self can perform a Follow-up "Shin : Yaotome"'
-      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
-        DMG <b><color=#FFA500>1000%</color></b>+300% of own ATK
-
-
-
-        <size=20><color=#C0C0C0>-
-        When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
-        -15% for 10 seconds</color></size>
-
-        <size=20><color=#C0C0C0>- After
-        Yamidokoku, Self can perform a Follow-up "Shin : Yaotome"</color></size>'
-      kitInfoPatches:
-      - entryId: goenitz.ultimate.yamidokoku
-        noteId: 
-        priority: 3
-        appendNote: 0
-        description: 'Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>1000%</color></b>+300%
-          of own ATK
-
-
-
-          <size=20><color=#C0C0C0>- When Hit, Decrease Enemy
-          <b><color=#00FFED>Echo</color></b>DMG Resistance -15% for 10 seconds</color></size>
-
-          <size=20><color=#C0C0C0>-
-          After Yamidokoku, Self can perform a Follow-up "Shin : Yaotome"</color></size>'
-      track: 1
-      level: 3
-      fragmentCost: 1
-      unlockedByDefault: 0
-    - meterCapacityModifiers: []
-      counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects:
-      - trigger: 1
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        tag: goenitz_ultimate_state
-        addTag: 1
-        duration: 99999
-        rememberEnemyTarget: 0
-      - trigger: 2
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        tag: goenitz_ultimate_state
-        addTag: 0
-        duration: 0
-        rememberEnemyTarget: 0
-      runtimeEffects:
-      - trigger: 5
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 1
-          runtimeTag: goenitz_ultimate_state
-          requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: 
-          definition: {fileID: 11400000, guid: 5f0e9114d9634764c88b13d6b1fabf92, type: 2}
-          presentation:
-            effectId: 
-            displayName: Wind Frenzy
-            icon: {fileID: 21300000, guid: a0f6e0c212e97ce499d022a0d26d1794, type: 3}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 0
-            appliesOn: 0
-            durationType: 1
-            durationSeconds: 1
-            stackMode: 0
-            stackLimit: 99
-            refreshDurationOnReapply: 1
-            stackable: 1
-            removeOnOwnerDamaged: 1
-            stackKey: 
-          parameters:
-            overrideStatModifiers: 0
-            statModifiers: []
-            overrideDamageModifier: 0
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes:
-          - recipeId: 
-            definition: {fileID: 11400000, guid: 360eb8d9c006c6040ad7e06eb679f8d9, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 1
-              durationSeconds: 1
-              stackMode: 0
-              stackLimit: 99
-              refreshDurationOnReapply: 0
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: 
-            parameters:
-              overrideStatModifiers: 1
-              statModifiers:
-              - target: 1
-                operation: 1
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 1.05
-              - target: 5
-                operation: 0
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 5
-              - target: 6
-                operation: 0
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 5
-              overrideDamageModifier: 0
-              damageModifier:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 0
-              overrideDamageInput: 0
-              damageInput:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                defenderDefensePercentAdd: 0
-                defenderDamageResistancePercentAdd: 0
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 0
-                valueRatio: 0
-                flatValue: 0
-                useSourceStats: 0
-                tickInterval: 0
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                damageDealtRatio: 0
-                lowHpThreshold: 0
-                lowHpMultiplier: 0
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                chance: 0
-                internalCooldown: 0
-                attackRatio: 0
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 0
-                targetMaxHpDamageCapRatio: 0
-                elementType: 0
-              overrideStatus: 0
-              status:
-                status: 0
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 0
-        stackMode: 0
-        stackLimit: 99
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
-      - trigger: 1
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: 
-          definition: {fileID: 11400000, guid: 67292c3f1e672744888738b073a6fd98, type: 2}
-          presentation:
-            effectId: 
-            displayName: Wind Frenzy
-            icon: {fileID: 21300000, guid: cfbe1f8648c517a4eb260aec9461e30e, type: 3}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 0
-            appliesOn: 0
-            durationType: 0
-            durationSeconds: 10
-            stackMode: 2
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 1
-            removeOnOwnerDamaged: 0
-            stackKey: 
-          parameters:
-            overrideStatModifiers: 0
-            statModifiers: []
-            overrideDamageModifier: 0
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes:
-          - recipeId: 
-            definition: {fileID: 11400000, guid: 1a1bf39f6486e4348abe73b5ac9287d6, type: 2}
-            presentation:
-              effectId: 
-              displayName: Blizzard
-              icon: {fileID: 21300000, guid: cf5b4bf12bc47c44e9773030ca408416, type: 3}
-              fieldVisualPrefab: {fileID: 0}
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 2
-              refreshDurationOnReapply: 1
-              stackable: 1
-              removeOnOwnerDamaged: 0
-              stackKey: blizzard.stack.key
-            parameters:
-              overrideStatModifiers: 1
-              statModifiers:
-              - target: 1
-                operation: 1
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 1.1
-              - target: 0
-                operation: 1
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 1.1
-              - target: 2
-                operation: 1
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 1.1
-              - target: 3
-                operation: 1
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 1.1
-              - target: 4
-                operation: 0
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 10
-              - target: 5
-                operation: 0
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 10
-              - target: 6
-                operation: 0
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 10
-              - target: 7
-                operation: 0
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 10
-              - target: 8
-                operation: 0
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 10
-              - target: 9
-                operation: 1
-                sourceStat: 0
-                statRatioValueSource: 0
-                value: 1.1
-              overrideDamageModifier: 0
-              damageModifier:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 0
-              overrideDamageInput: 0
-              damageInput:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                defenderDefensePercentAdd: 0
-                defenderDamageResistancePercentAdd: 0
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 0
-                valueRatio: 0
-                flatValue: 0
-                useSourceStats: 0
-                tickInterval: 0
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                damageDealtRatio: 0
-                lowHpThreshold: 0
-                lowHpMultiplier: 0
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                chance: 0
-                internalCooldown: 0
-                attackRatio: 0
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 0
-                targetMaxHpDamageCapRatio: 0
-                elementType: 0
-              overrideStatus: 0
-              status:
-                status: 0
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 0
-        stackMode: 0
-        stackLimit: 99
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects:
-      - filter:
-          filterByCategory: 0
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 1
-          runtimeTag: goenitz_ultimate_state
-          requireManualOnFieldActionStart: 0
-        evasionChance: 0
-        grantsDamageImmunity: 1
-        grantsDebuffImmunity: 1
-      resourceEffects: []
-      enemyElementModifiers: []
-      coordinatedActionEffects: []
-      passiveHookTypeName: 
-      nodeId: goenitz.ultimate.lv4
-      nodeName: Yamidokoku Ascension
-      description: During either Ultimate, self is immune to damage and debuffs.
-        Ultimate kills grant a stacking attack-related buff until hit.
-      skillPanelDescriptionOverride: "Inflict <b><color=#00FFED>Echo</color></b>
-        DMG <b><color=#FFA500>1000%</color></b>+300% of own ATK\r\n\r\n<size=20><color=#C0C0C0>-
-        When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
-        -15% for 10 seconds</color></size>\r\n<size=20><color=#C0C0C0>- After Yamidokoku,
-        Self can perform a Follow-up \"Shin : Yaotome\"</color></size>\r\n<size=20><color=#C0C0C0>-
-        When Ultimate, Grant <b><color=#00FFED>Blizzard</color></b> for 20 seconds<i><color=#C0C0C0>(Max
-        2 stackable)</color></i>. During Ultimate, self will become Immunity to all
-        Damage / Debuff, if Ultimate killed enemy, self will grant <b><color=#00FFED>Wind
-        Frenzy</color></b> 1 stack per kill</color></size>\r\n<size=19><color=#00ffff>\u2022
-        Blizzard: Increase All Stats +20%, When attack there 60% chance to spawn
-        a Thunder Projectile that Deal additional <b><color=#00FFED>Echo</color></b> 
-        DMG equal to 500% of own ATK</color></size>\r\n<size=19><color=#00ffff> \u2022
-        Wind Frenzy: Increase ATK-Related Stat by 7%, Remove if owner got damaged</color></size>"
-      kitInfoPatches:
-      - entryId: goenitz.ultimate.yamidokoku
-        noteId: 
-        priority: 4
-        appendNote: 0
-        description: "Inflict <b><color=#00FFED>Echo</color></b> DMG <b><color=#FFA500>1000%</color></b>+300%
-          of own ATK\r\n\r\n<size=20><color=#C0C0C0>- When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG
-          Resistance -15% for 10 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
-          After Yamidokoku, Self can perform a Follow-up \"Shin : Yaotome\"</color></size>\r\n<size=20><color=#C0C0C0>-
-          When Ultimate, Grant <b><color=#00FFED>Blizzard</color></b> for 20 seconds<i><color=#C0C0C0>(Max
-          2 stackable)</color></i>. During Ultimate, self will become Immunity to
-          all Damage / Debuff, if Ultimate killed enemy, self will grant <b><color=#00FFED>Wind
-          Frenzy</color></b> 1 stack per kill</color></size>\r\n<size=19><color=#00ffff>\u2022
-          Blizzard: Increase All Stats +20%, When attack there 60% chance to spawn
-          a Thunder Projectile that Deal additional <b><color=#00FFED>Echo</color></b>
-          DMG equal to 500% of own ATK</color></size>\r\n<size=19><color=#00ffff>
-          \u2022 Wind Frenzy: Increase ATK-Related Stat by 7%, Remove if owner got
-          damaged</color></size>"
-      track: 1
+      - entryId: goenitz.skill.yonokaze
+        noteId: goenitz.skill.lv4
+        priority: 0
+        appendNote: 1
+        description: Both tornado variants gain larger coverage, longer lifespan
+          and more hits.
+      track: 0
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
@@ -1974,150 +661,7 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
-      runtimeEffects:
-      - trigger: 4
-        filter:
-          filterByCategory: 0
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: 
-          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-          presentation:
-            effectId: 
-            displayName: Decrease Echo Resistance
-            icon: {fileID: 0}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 1
-            appliesOn: 1
-            durationType: 1
-            durationSeconds: 1
-            stackMode: 0
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 1
-            removeOnOwnerDamaged: 0
-            stackKey: echo.resistance
-          parameters:
-            overrideStatModifiers: 0
-            statModifiers: []
-            overrideDamageModifier: 1
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 15
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 2
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
+      runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -2129,29 +673,20 @@ MonoBehaviour:
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
-      nodeId: goenitz.passive.lv1
-      nodeName: Echo Scar
-      description: Critical hits reduce enemy Echo resistance by 15%
-      skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
-        from enemy
-
-
-
-        <size=20><color=#C0C0C0>- When self CRIT, Reduce Enemy
-        Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>'
+      nodeId: goenitz.ultimate.lv1
+      nodeName: Ultimate 1
+      description: Hold Ultimate unlocks Blood Frenzy, fueled by the existing AE
+        gauge.
+      skillPanelDescriptionOverride: Hold Ultimate unlocks Blood Frenzy, fueled by
+        the existing AE gauge.
       kitInfoPatches:
-      - entryId: passive
-        noteId: 
-        priority: 1
-        appendNote: 0
-        description: 'There 35% chance to <b>Evade</b> Incoming attack from enemy
-
-
-
-          <size=20><color=#C0C0C0>-
-          When self CRIT, Reduce Enemy Echo Resistance by -15%<i>(permanent)(not
-          stackable)</i></color></size>'
-      track: 2
+      - entryId: goenitz.ultimate.yamidokoku
+        noteId: goenitz.ultimate.lv1
+        priority: 0
+        appendNote: 1
+        description: Hold Ultimate unlocks Blood Frenzy, fueled by the existing AE
+          gauge.
+      track: 1
       level: 1
       fragmentCost: 1
       unlockedByDefault: 0
@@ -2167,81 +702,29 @@ MonoBehaviour:
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
-      dashThroughDamageEffects:
-      - filter:
-          filterByCategory: 0
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        chance: 1
-        internalCooldown: 0
-        criticalHitRequirement: 0
-        attackRatio: 2.5
-        sourceStatDamageSource: 0
-        sourceStatRatio: 0
-        targetMaxHpRatio: 0
-        targetRuntimeEffectStackKey: 
-        attackRatioPerTargetRuntimeEffectStack: 0
-        maxTargetRuntimeEffectStacks: 0
-        consumeTargetRuntimeEffectStacksOnTrigger: 0
-        capTargetMaxHpDamage: 0
-        targetMaxHpDamageCapSource: 0
-        targetMaxHpDamageCapRatio: 1
-        elementType: 0
-        consumeRuntimeTagOnTrigger: 0
-        overrideDetectionBox: 0
-        detectionBoxSize: {x: 10, y: 10}
-        startDelaySeconds: 0
-        activeSeconds: 0
-        scanIntervalSeconds: 0
-        requireDashInvulnerability: 0
-        hitEachEnemyOnce: 0
-        maxTargetsPerDash: 0
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
-      nodeId: goenitz.passive.lv2
-      nodeName: Dash Echo
-      description: Dashing through enemies inflicts Echo damage equal to 100% ATK.
-      skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
-        from enemy
+      nodeId: goenitz.ultimate.lv2
+      nodeName: Ultimate 2
+      description: Hits by any Blood Frenzy actor apply +15% damage taken for 20
+        seconds.
+      skillPanelDescriptionOverride: 'Hold Ultimate unlocks Blood Frenzy, fueled
+        by the existing AE gauge.
 
-
-
-        <size=20><color=#C0C0C0>- When self CRIT, Reduce Enemy
-        Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
-
-        <size=20><color=#C0C0C0>-
-        Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200%
-        of own ATK</color></size>'
+        Hits by any Blood Frenzy actor apply +15%
+        damage taken for 20 seconds.'
       kitInfoPatches:
-      - entryId: passive
-        noteId: 
-        priority: 2
-        appendNote: 0
-        description: 'There 35% chance to <b>Evade</b> Incoming attack from enemy
-
-
-
-          <size=20><color=#C0C0C0>-
-          When self CRIT, Reduce Enemy Echo Resistance by -15%<i>(permanent)(not
-          stackable)</i></color></size>
-
-          <size=20><color=#C0C0C0>- Dashing
-          through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200% of
-          own ATK</color></size>'
-      track: 2
+      - entryId: goenitz.ultimate.yamidokoku
+        noteId: goenitz.ultimate.lv2
+        priority: 0
+        appendNote: 1
+        description: Hits by any Blood Frenzy actor apply +15% damage taken for 20
+          seconds.
+      track: 1
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
@@ -2249,8 +732,135 @@ MonoBehaviour:
       counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: goenitz.ultimate.lv3
+      nodeName: Ultimate 3
+      description: 'Blood Frenzy unlocks Shin: Yaotome. Goenitz Ultimate/limit-break
+        use grants Blizzard, all-stat boost for 15 seconds; one refreshed stack,
+        including +10 ADI.'
+      skillPanelDescriptionOverride: 'Hold Ultimate unlocks Blood Frenzy, fueled
+        by the existing AE gauge.
+
+        Hits by any Blood Frenzy actor apply +15%
+        damage taken for 20 seconds.
+
+        Blood Frenzy unlocks Shin: Yaotome.
+        Goenitz Ultimate/limit-break use grants Blizzard, all-stat boost for 15 seconds;
+        one refreshed stack, including +10 ADI.'
+      kitInfoPatches:
+      - entryId: goenitz.ultimate.yamidokoku
+        noteId: goenitz.ultimate.lv3
+        priority: 0
+        appendNote: 1
+        description: 'Blood Frenzy unlocks Shin: Yaotome. Goenitz Ultimate/limit-break
+          use grants Blizzard, all-stat boost for 15 seconds; one refreshed stack,
+          including +10 ADI.'
+      track: 1
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: goenitz.ultimate.lv4
+      nodeName: Ultimate 4
+      description: Goenitz kills during Blood Frenzy grant +3% ATK, maximum 10 stacks,
+        until damaged; restore 6 AE even at the stack cap.
+      skillPanelDescriptionOverride: 'Hold Ultimate unlocks Blood Frenzy, fueled
+        by the existing AE gauge.
+
+        Hits by any Blood Frenzy actor apply +15%
+        damage taken for 20 seconds.
+
+        Blood Frenzy unlocks Shin: Yaotome.
+        Goenitz Ultimate/limit-break use grants Blizzard, all-stat boost for 15 seconds;
+        one refreshed stack, including +10 ADI.
+
+        Goenitz kills during Blood
+        Frenzy grant +3% ATK, maximum 10 stacks, until damaged; restore 6 AE even
+        at the stack cap.'
+      kitInfoPatches:
+      - entryId: goenitz.ultimate.yamidokoku
+        noteId: goenitz.ultimate.lv4
+        priority: 0
+        appendNote: 1
+        description: Goenitz kills during Blood Frenzy grant +3% ATK, maximum 10
+          stacks, until damaged; restore 6 AE even at the stack cap.
+      track: 1
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: goenitz.passive.lv1
+      nodeName: Passive 1
+      description: Critical hits permanently reduce enemy Physical resistance by
+        15 percentage points; does not stack.
+      skillPanelDescriptionOverride: Critical hits permanently reduce enemy Physical
+        resistance by 15 percentage points; does not stack.
+      kitInfoPatches:
+      - entryId: passive
+        noteId: goenitz.passive.lv1
+        priority: 0
+        appendNote: 1
+        description: Critical hits permanently reduce enemy Physical resistance by
+          15 percentage points; does not stack.
+      track: 2
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
       actionModifiers:
-      - category: 0
+      - consumeRequiredTagsOnUse: 0
+        startingComboStepNameOverride: Attack4
+        category: 0
         actionId: goenitz.basic.ground
         actionName: 
         stepName: 
@@ -2261,6 +871,8 @@ MonoBehaviour:
         startingComboDepthOverride: 4
         requiredTags:
         - tag: goenitz_after_dash_basic_depth4
+          expectedValue: 1
+        - tag: goenitz.blood_frenzy
           expectedValue: 1
         requiredCounters: []
         damageMultiplierOperation: 0
@@ -2298,8 +910,8 @@ MonoBehaviour:
           stepName: 
           filterByElement: 0
           elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
+          requireRuntimeTag: 1
+          runtimeTag: goenitz.blood_frenzy
           requireManualOnFieldActionStart: 0
         tag: goenitz_after_dash_bonus_action
         addTag: 1
@@ -2317,8 +929,8 @@ MonoBehaviour:
           stepName: 
           filterByElement: 0
           elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
+          requireRuntimeTag: 1
+          runtimeTag: goenitz.blood_frenzy
           requireManualOnFieldActionStart: 0
         tag: goenitz_after_dash_basic_depth4
         addTag: 1
@@ -2379,6 +991,86 @@ MonoBehaviour:
         targetMaxHpDamageCapRatio: 5
         elementType: 0
         consumeRuntimeTagOnTrigger: 1
+      dashThroughDamageEffects:
+      - filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 1
+          runtimeTag: goenitz.blood_frenzy
+          requireManualOnFieldActionStart: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 1
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+        overrideDetectionBox: 0
+        detectionBoxSize: {x: 10, y: 10}
+        startDelaySeconds: 0
+        activeSeconds: 0
+        scanIntervalSeconds: 0
+        requireDashInvulnerability: 0
+        hitEachEnemyOnce: 0
+        maxTargetsPerDash: 0
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: goenitz.passive.lv2
+      nodeName: Passive 2
+      description: During Blood Frenzy, unlock Attack2-2; dash through enemies for
+        100% ATK Physical damage. After dash, next damaging hit adds 4% enemy MaxHP
+        (cap 500% ATK); next normal begins at stage 4.
+      skillPanelDescriptionOverride: 'Critical hits permanently reduce enemy Physical
+        resistance by 15 percentage points; does not stack.
+
+        During Blood
+        Frenzy, unlock Attack2-2; dash through enemies for 100% ATK Physical damage.
+        After dash, next damaging hit adds 4% enemy MaxHP (cap 500% ATK); next normal
+        begins at stage 4.'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: goenitz.passive.lv2
+        priority: 0
+        appendNote: 1
+        description: During Blood Frenzy, unlock Attack2-2; dash through enemies
+          for 100% ATK Physical damage. After dash, next damaging hit adds 4% enemy
+          MaxHP (cap 500% ATK); next normal begins at stage 4.
+      track: 2
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
       dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
@@ -2386,46 +1078,26 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: goenitz.passive.lv3
-      nodeName: After Dash Echo
-      description: After dash, first damaging action deals additional Echo DMG equal
-        to 4% enemy Max HP.
-      skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
-        from enemy
+      nodeName: Passive 3
+      description: Share Blood Frenzy's DI/DM/ADI and Bleed attack effect with teammates
+        for Goenitz's remaining duration.
+      skillPanelDescriptionOverride: 'Critical hits permanently reduce enemy Physical
+        resistance by 15 percentage points; does not stack.
 
+        During Blood
+        Frenzy, unlock Attack2-2; dash through enemies for 100% ATK Physical damage.
+        After dash, next damaging hit adds 4% enemy MaxHP (cap 500% ATK); next normal
+        begins at stage 4.
 
-
-        <size=20><color=#C0C0C0>- When self CRIT, Reduce Enemy
-        Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
-
-        <size=20><color=#C0C0C0>-
-        Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200%
-        of own ATK</color></size>
-
-        <size=20><color=#C0C0C0>- After dash,
-        First damaging action deals additional <b><color=#00FFED>Echo</color></b>
-        DMG to 4% enemy Max HP(capped at 500% own ATK), and After dash self will
-        start basic attack at <i> State4</i></color></size>'
+        Share Blood Frenzy''s DI/DM/ADI and Bleed attack
+        effect with teammates for Goenitz''s remaining duration.'
       kitInfoPatches:
       - entryId: passive
-        noteId: 
-        priority: 3
-        appendNote: 0
-        description: 'There 35% chance to <b>Evade</b> Incoming attack from enemy
-
-
-
-          <size=20><color=#C0C0C0>-
-          When self CRIT, Reduce Enemy Echo Resistance by -15%<i>(permanent)(not
-          stackable)</i></color></size>
-
-          <size=20><color=#C0C0C0>- Dashing
-          through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200% of
-          own ATK</color></size>
-
-          <size=20><color=#C0C0C0>- After dash,
-          First damaging action deals additional <b><color=#00FFED>Echo</color></b>
-          DMG to 4% enemy Max HP(capped at 500% own ATK), and After dash self will
-          start basic attack at <i> State4</i></color></size>'
+        noteId: goenitz.passive.lv3
+        priority: 0
+        appendNote: 1
+        description: Share Blood Frenzy's DI/DM/ADI and Bleed attack effect with
+          teammates for Goenitz's remaining duration.
       track: 2
       level: 3
       fragmentCost: 1
@@ -2443,72 +1115,36 @@ MonoBehaviour:
       onHitStatusEffects: []
       additionalDamageEffects: []
       dashThroughDamageEffects: []
-      defensiveEffects:
-      - filter:
-          filterByCategory: 0
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        evasionChance: 0.65
-        grantsDamageImmunity: 0
-        grantsDebuffImmunity: 0
+      defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: goenitz.passive.lv4
-      nodeName: Wind Evasion Mastery
-      description: Increase evasion chance to 65%
-      skillPanelDescriptionOverride: 'There <b><color=#FFA500>65%</color></b> chance
-        to <b>Evade</b> Incoming attack from enemy
+      nodeName: Passive 4
+      description: Teammates sharing Blood Frenzy gain +35 percentage points evasion
+        for its remaining duration.
+      skillPanelDescriptionOverride: 'Critical hits permanently reduce enemy Physical
+        resistance by 15 percentage points; does not stack.
 
+        During Blood
+        Frenzy, unlock Attack2-2; dash through enemies for 100% ATK Physical damage.
+        After dash, next damaging hit adds 4% enemy MaxHP (cap 500% ATK); next normal
+        begins at stage 4.
 
+        Share Blood Frenzy''s DI/DM/ADI and Bleed attack
+        effect with teammates for Goenitz''s remaining duration.
 
-        <size=20><color=#C0C0C0>-
-        When self CRIT, Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
-
-        <size=20><color=#C0C0C0>-
-        Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200%
-        of own ATK</color></size>
-
-        <size=20><color=#C0C0C0>- After dash,
-        First damaging action deals additional <b><color=#00FFED>Echo</color></b>
-        DMG to 4% enemy Max HP(capped at 500% own ATK), and After dash self will
-        start basic attack at <i> State4</i></color></size>
-
-'
+        Teammates
+        sharing Blood Frenzy gain +35 percentage points evasion for its remaining
+        duration.'
       kitInfoPatches:
       - entryId: passive
-        noteId: 
-        priority: 4
-        appendNote: 0
-        description: 'There <b><color=#FFA500>65%</color></b> chance to <b>Evade</b>
-          Incoming attack from enemy
-
-
-
-          <size=20><color=#C0C0C0>- When
-          self CRIT, Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
-
-          <size=20><color=#C0C0C0>-
-          Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG
-          200% of own ATK</color></size>
-
-          <size=20><color=#C0C0C0>- After
-          dash, First damaging action deals additional <b><color=#00FFED>Echo</color></b>
-          DMG to 4% enemy Max HP(capped at 500% own ATK), and After dash self will
-          start basic attack at <i> State4</i></color></size>
-
-'
+        noteId: goenitz.passive.lv4
+        priority: 0
+        appendNote: 1
+        description: Teammates sharing Blood Frenzy gain +35 percentage points evasion
+          for its remaining duration.
       track: 2
       level: 4
       fragmentCost: 1

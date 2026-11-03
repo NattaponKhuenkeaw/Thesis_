@@ -64,7 +64,7 @@ MonoBehaviour:
   textRoot: {fileID: 0}
   defaultTextTemplate: {fileID: 2052835160874543342, guid: 81a1108083780be4b8207478c9c4f286, type: 3}
   maxTextInstances: 40
-  defaultSize: {x: 220, y: 64}
+  defaultSize: {x: 300, y: 75}
   runtimeCanvasScale: 0.01
   sortingOrder: 10000
   worldSortingLayerName: WorldUI
@@ -89,37 +89,37 @@ MonoBehaviour:
   maxDamageAmountScaleBonus: 0
   damageStyle:
     color: {r: 1, g: 1, b: 1, a: 1}
-    fontSize: 46
+    fontSize: 60
     fontStyle: 1
     scaleMultiplier: 1
     useElementColor: 1
   dotStyle:
     color: {r: 1, g: 0.55, b: 0.18, a: 1}
-    fontSize: 42
+    fontSize: 56
     fontStyle: 1
     scaleMultiplier: 0.85
     useElementColor: 1
   shieldStyle:
     color: {r: 0.65, g: 0.7, b: 0.78, a: 1}
-    fontSize: 44
+    fontSize: 58
     fontStyle: 1
     scaleMultiplier: 0.95
     useElementColor: 0
   missedStyle:
     color: {r: 0.85, g: 0.9, b: 1, a: 1}
-    fontSize: 42
+    fontSize: 56
     fontStyle: 2
     scaleMultiplier: 0.85
     useElementColor: 0
   healStyle:
     color: {r: 0.35, g: 1, b: 0.45, a: 1}
-    fontSize: 44
+    fontSize: 58
     fontStyle: 1
     scaleMultiplier: 0.95
     useElementColor: 0
   additionalStyle:
     color: {r: 0.78, g: 0.72, b: 1, a: 1}
-    fontSize: 55
+    fontSize: 69
     fontStyle: 1
     scaleMultiplier: 0.85
     useElementColor: 1

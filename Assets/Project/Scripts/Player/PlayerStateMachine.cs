@@ -617,7 +617,7 @@ public class PlayerStateMachine : MonoBehaviour
     /// <summary>
     /// Route skill pressed. State-first routing.
     /// </summary>
-    public void RouteSkillInput()
+    public void RouteSkillInput(bool held = false)
     {
         if (CurrentState == null || IsCinematicTraversal) return;
         using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
@@ -628,13 +628,13 @@ public class PlayerStateMachine : MonoBehaviour
 
             if (CurrentState == JumpState)
             {
-                RouteSkillInput();
+                RouteSkillInput(held);
             }
 
             return;
         }
 
-        InputBuffer.BufferSkill();
+        InputBuffer.BufferSkill(held: held);
 
         if (CurrentState is CombatPlayerState sourceSkill
             && sourceSkill.ActiveCombatAction?.EffectiveActionType == CombatActionType.Ultimate

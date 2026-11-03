@@ -1,0 +1,21 @@
+{
+    "passed": [
+        "Hold Skill is level gated and separates press from hold",
+        "Held Skill buffer lasts until release/consume and clears with other inputs",
+        "Discrete drain is frame independent and zero delta does not tick",
+        "AE drain catches up off-field and expires shared state",
+        "Ordinary gains are blocked but costs and classified extension work",
+        "Blizzard refreshes one stack and outlasts Frenzy",
+        "Any Goenitz kill grants ATK, cap 10 still extends; allies never reward",
+        "Kill events deduplicate by enemy life",
+        "Remembered first lethal hit resumes mode after full Ultimate cost",
+        "Remembered nonlethal hit cannot reward a later hit after exit",
+        "Shared primary hit applies one vulnerability and actor-owned Bleed plus native DOT",
+        "Physical shred changes Physical resistance rather than all damage taken",
+        "Frenzy-gated post-dash entry resolves actual Attack4 and preserves mode",
+        "Attack2-2 follows Attack1 only while Frenzy is active",
+        "Cooldown display selects the latest action with an active cooldown",
+        "Tornado hit budgets and Ultimate portions match authored totals"
+    ],
+    "failed": []
+}

@@ -332,6 +332,8 @@ public struct RuntimeEffectContext
 
 public sealed class RuntimeEffectDamageContext
 {
+    public CombatExecutionContext execution;
+    public DamageProvenance provenance;
     public RuntimeEffectInstance instance;
     public CharacterObject sourceCharacter;
     public CharacterStats sourceStats;
@@ -434,6 +436,7 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     public virtual float ModifyOutgoingDamage(RuntimeEffectDamageContext context, float currentDamage) => currentDamage;
     public virtual float ModifyIncomingDamage(RuntimeEffectDamageContext context, float currentDamage) => currentDamage;
     public virtual void OnHitDealt(RuntimeEffectDamageContext context) { }
+    public virtual float GetEvasionChanceAdd(RuntimeEffectInstance instance) => 0f;
 
     public static float GetStat(CharacterStats stats, RuntimeEffectStatTarget stat)
     {

@@ -13,7 +13,8 @@ public enum ProjectileTraversalMode
 {
     Linear,
     Homing,
-    Anchored
+    Anchored,
+    GroundHoming
 }
 
 public enum ProjectileReferencePointMode
@@ -219,6 +220,8 @@ public class ProjectileData : ScriptableObject
     public float trackingRadius = 0f;
     public float speed = 10f;
     public float lifetime = 2f;
+    [Tooltip("Opt into scaled-seconds cadence; zero preserves legacy frame interval.")]
+    [Min(0f)] public float hitIntervalSeconds;
     public int maxHits = 1;
     public ProjectileHitCountMode hitCountMode = ProjectileHitCountMode.Shared;
     public ProjectilePhaseHitboxData routineHitbox = new ProjectilePhaseHitboxData

@@ -154,7 +154,6 @@ public class PlayerAttackState : CombatPlayerState
             return;
         }
 
-        Buffer?.ConsumeSkill();
         fsm.ChangeState(fsm.SkillState);
         fsm.CurrentState.OnSkillInput();
     }

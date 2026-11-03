@@ -24,6 +24,7 @@ public struct InputContext
     public bool justLanded;
     public bool isAirCombo;
     public bool ultimateInputHeld;
+    public bool skillInputHeld;
     public CharacterPassiveController passiveController;
     public CombatRuntimeState runtimeState;
     public ICombatActionAvailabilityProvider actionAvailabilityProvider;

@@ -416,6 +416,10 @@ public class PassiveCooldownModifierDefinition
 [Serializable]
 public class PassiveActionModifierDefinition
 {
+    [Tooltip("Legacy action windows consume prerequisites. Persistent mode gates must disable this.")]
+    public bool consumeRequiredTagsOnUse = true;
+    [Tooltip("Optional exact entry step; avoids conditional routes shifting a depth-based entry.")]
+    public string startingComboStepNameOverride;
     public AttackCategory category = AttackCategory.Normal;
     public string actionId;
     public string actionName;
@@ -1163,6 +1167,8 @@ public class CharacterAbilityDefinition
 [Serializable]
 public class CharacterKitDefinition : ISerializationCallbackReceiver
 {
+    [Header("Custom Runtime")]
+    public CharacterKitRuntimeDefinition runtimeDefinition;
     [Header("Kit Information")]
     public CharacterKitPresentationDefinition presentation = new CharacterKitPresentationDefinition();
     public CombatMeterDefinition combatMeter = new CombatMeterDefinition();

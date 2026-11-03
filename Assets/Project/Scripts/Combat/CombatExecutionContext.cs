@@ -2,6 +2,7 @@
 public sealed class CombatExecutionContext
 {
     public readonly PlayerCombat owner;
+    public readonly CombatActionExecutionToken cast;
     public readonly CharacterObject character;
     public readonly int fieldSession;
     public readonly bool isQteIntro;
@@ -9,9 +10,10 @@ public sealed class CombatExecutionContext
     public readonly string actionKey;
     public bool HasConfirmedHit { get; private set; }
 
-    public CombatExecutionContext(PlayerCombat owner, CharacterObject character, int fieldSession, bool isQteIntro, CombatAction action = null)
+    public CombatExecutionContext(PlayerCombat owner, CharacterObject character, int fieldSession, bool isQteIntro, CombatAction action = null, CombatActionExecutionToken cast = null)
     {
         this.owner = owner;
+        this.cast = cast;
         this.character = character;
         this.fieldSession = fieldSession;
         this.isQteIntro = isQteIntro;

@@ -454,9 +454,11 @@ public abstract class FrameDataPlayerState : PlayerState
             fsm.RouteUltimateInput(held);
             return fsm.CurrentState != this || currentFrame == -1;
         }
-        if (buffer.HasSkillBuffer && CanBeInterruptedBy(ActionCategory.Skill) && buffer.ConsumeSkill())
+        if (buffer.HasSkillBuffer && CanBeInterruptedBy(ActionCategory.Skill))
         {
-            fsm.RouteSkillInput();
+            bool held = buffer.SkillInputHeld;
+            buffer.ConsumeSkill();
+            fsm.RouteSkillInput(held);
             return fsm.CurrentState != this || currentFrame == -1;
         }
         if ((allowed & ActionCategory.Dash) != 0)

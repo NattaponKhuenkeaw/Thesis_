@@ -21,6 +21,7 @@ using UnityEngine.UI;
 public class AbilityUIManager : MonoBehaviour
 {
     public static AbilityUIManager Instance;
+    private readonly FrenzyGaugeFeedback _frenzyGauge = new FrenzyGaugeFeedback();
 
     public enum AbilityType { Skill, Ultimate, Dash, NormalAttack }
 
@@ -186,6 +187,7 @@ public class AbilityUIManager : MonoBehaviour
 
     private void OnDisable()
     {
+        _frenzyGauge.Restore();
         UnbindPlayer();
         ClearWindowEffects();
         if (teamLoader != null)
@@ -230,6 +232,7 @@ public class AbilityUIManager : MonoBehaviour
         }
 
         RefreshActiveCharacterUI();
+        _frenzyGauge.Tick(ultAEOverlay, playerCharacter?.characterObject);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -435,7 +438,8 @@ public class AbilityUIManager : MonoBehaviour
         }
 
         // ── Cooldown ────────────────────────────────────────────────────────
-        SkillAction resolvedAction = (_skillDisplay.action
+        SkillAction resolvedAction = (playerCharacter?.Combat?.GetLatestCoolingAction(playerCharacter.characterObject, AttackCategory.Skill)
+            ?? _skillDisplay.action
             ?? ResolveDisplayedActionContextFree(AttackCategory.Skill)) as SkillAction;
         float remainingCooldown = resolvedAction != null
             && playerCharacter != null
@@ -447,10 +451,7 @@ public class AbilityUIManager : MonoBehaviour
                 resolvedAction.actionId)
             : 0f;
 
-        bool hasDisplayState = skillCooldowns.TryGetValue(characterKey, out CooldownDisplayState cd);
-        float cooldownMax = hasDisplayState && cd.max > 0f
-            ? cd.max
-            : resolvedAction != null && playerCharacter != null && playerCharacter.Combat != null
+        float cooldownMax = resolvedAction != null && playerCharacter != null && playerCharacter.Combat != null
                 ? playerCharacter.Combat.GetFinalCooldown(
                     AttackCategory.Skill,
                     resolvedAction.cooldown,
@@ -521,15 +522,16 @@ public class AbilityUIManager : MonoBehaviour
         float requiredAE       = resolvedAction != null
             ? teamLoader.GetUltimateCost(currentCharacter, resolvedAction)
             : teamLoader.GetUltimateCost(currentCharacter);
-        float resolvedCooldown = resolvedAction != null ? resolvedAction.cooldown : 0f;
-        float remainingCooldown = resolvedAction != null
+        SkillAction cooldownAction = playerCharacter.Combat?.GetLatestCoolingAction(currentCharacter, AttackCategory.Ultimate) ?? resolvedAction;
+        float resolvedCooldown = cooldownAction != null ? cooldownAction.cooldown : 0f;
+        float remainingCooldown = cooldownAction != null
             && playerCharacter != null
             && playerCharacter.Combat != null
             ? playerCharacter.Combat.GetRemainingCooldown(
                 AttackCategory.Ultimate,
-                resolvedAction.cooldown,
-                resolvedAction.actionName,
-                resolvedAction.actionId)
+                cooldownAction.cooldown,
+                cooldownAction.actionName,
+                cooldownAction.actionId)
             : 0f;
 
         bool cooldownBlocked = remainingCooldown > 0.01f;

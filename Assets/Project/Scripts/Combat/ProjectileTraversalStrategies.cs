@@ -15,6 +15,7 @@ public static class ProjectileTraversalStrategyFactory
     {
         switch (mode)
         {
+            case ProjectileTraversalMode.GroundHoming:
             case ProjectileTraversalMode.Homing:
                 return Homing;
 
@@ -41,6 +42,14 @@ public sealed class HomingProjectileTraversalStrategy : IProjectileTraversalStra
     {
         Vector2 aimPosition = runtime.ResolveTrackingAimPosition();
         Vector2 toTarget = aimPosition - (Vector2)runtime.transform.position;
+        if (data.traversalMode == ProjectileTraversalMode.GroundHoming)
+        {
+            if (Mathf.Abs(toTarget.x) > 0.01f)
+                runtime.SetCurrentDirection(new Vector2(Mathf.Sign(toTarget.x), 0f));
+            float step = Mathf.Max(0f, data.speed * deltaTime);
+            runtime.Translate(new Vector2(Mathf.Clamp(toTarget.x, -step, step), 0f));
+            return;
+        }
         if (toTarget.sqrMagnitude > 0.0001f)
         {
             Vector2 desiredDirection = toTarget.normalized;
