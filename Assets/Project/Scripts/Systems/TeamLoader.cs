@@ -104,8 +104,15 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         CharacterObject actor = playerCharacter != null ? playerCharacter.characterObject : null;
         bool show = _kitRuntimes?.Find(actor)?.BlocksOrdinaryAuraEnergyGain == true;
-        if (show) _frenzySprite ??= new FrenzySpriteFeedback();
-        _frenzySprite?.Tick(show ? playerCharacter.Movement?.SpriteRenderer : null);
+        var goenitz = actor != null ? actor.kitDefinition?.runtimeDefinition as GoenitzKitRuntimeDefinition : null;
+        PlayerCombat combat = playerCharacter != null ? playerCharacter.Combat : null;
+        // Shin spends Frenzy at cast acceptance, but keeps its transformed appearance through recovery.
+        bool shin = goenitz != null && combat != null && combat.IsActiveCombat()
+            && combat.CurrentCast?.owner == actor && combat.CurrentActionId == goenitz.finisherActionId;
+        bool visible = show || shin;
+        if (visible) _frenzySprite ??= new FrenzySpriteFeedback();
+        bool recolorGoenitz = goenitz != null && visible;
+        _frenzySprite?.Tick(visible ? playerCharacter.Movement?.SpriteRenderer : null, recolorGoenitz, show);
     }
     public CharacterKitRuntimeHost KitRuntimes => _kitRuntimes;
     private void ResetKitRuntimes()

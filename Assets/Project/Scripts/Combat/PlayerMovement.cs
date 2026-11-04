@@ -1284,6 +1284,8 @@ public partial class PlayerMovement : MonoBehaviour
         if (spriteRenderer == null) return;
         GameObject ghost = new GameObject("DashGhost"); ghost.transform.position = transform.position; ghost.transform.rotation = transform.rotation; ghost.transform.localScale = transform.localScale;
         SpriteRenderer sr = ghost.AddComponent<SpriteRenderer>(); sr.sprite = spriteRenderer.sprite; sr.color = dashAfterimageColor; sr.flipX = spriteRenderer.flipX; sr.flipY = spriteRenderer.flipY; sr.sortingLayerID = spriteRenderer.sortingLayerID; sr.sortingOrder = spriteRenderer.sortingOrder - 1;
+        // Capture the current appearance, including Goenitz's Frenzy palette, for the ghost's lifetime.
+        sr.sharedMaterial = spriteRenderer.sharedMaterial;
         StartCoroutine(FadeAndDestroyGhost(ghost, sr, dashAfterimageColor, dashAfterimageLifetime));
     }
 

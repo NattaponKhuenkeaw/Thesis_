@@ -1,0 +1,11 @@
+{
+    "passed": [
+        "Palette shader imports and compiles",
+        "All 21 source pairs render as their original red-palette targets",
+        "Palette lookup precedes renderer tint",
+        "Material restoration, reentry, swaps and teardown",
+        "Dash animation retains palette and authored visibility",
+        "Dash afterimages capture the current palette material"
+    ],
+    "failed": []
+}

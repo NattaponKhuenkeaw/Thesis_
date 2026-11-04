@@ -1,0 +1,22 @@
+index,group,source,target,evidence,normal_sprite_pixels,normal_sprite_files
+1,auxiliary highlights,#AAA0A5,#AAA091,Matching palette slot in original blue and red PNGs; appearance still needs review,13717,45
+2,auxiliary highlights,#DCD2D7,#D7C8B4,Matching palette slot in original blue and red PNGs; appearance still needs review,13876,59
+3,auxiliary highlights,#FAF0F5,#FAF0E6,Matching palette slot in original blue and red PNGs; appearance still needs review,7741,58
+4,hair,#F0B8C1,#E6DCA0,Matching palette slot in original blue and red PNGs; appearance still needs review,58690,261
+5,hair,#FFC8D3,#FFFAC8,Matching palette slot in original blue and red PNGs; appearance still needs review,27819,261
+6,hair,#FFF0F0,#FCFCF8,Matching palette slot in original blue and red PNGs; appearance still needs review,17850,261
+7,skin,#B98689,#B28687,Matching palette slot in original blue and red PNGs; appearance still needs review,20378,260
+8,skin,#C1949A,#9E7074,Matching palette slot in original blue and red PNGs; appearance still needs review,97106,260
+9,skin,#E6BBBE,#E4B8B9,Matching palette slot in original blue and red PNGs; appearance still needs review,30964,216
+10,skin,#FDE4E1,#FDDED9,Matching palette slot in original blue and red PNGs; appearance still needs review,25787,215
+12,clothing,#A9C5FF,#A0324B,Matching palette slot in original blue and red PNGs; appearance still needs review,28596,216
+13,clothing,#8CA0DC,#82141E,Matching palette slot in original blue and red PNGs; appearance still needs review,51298,216
+14,accent,#F86686,#F80000,Matching palette slot in original blue and red PNGs; appearance still needs review,388,155
+15,clothing,#5F71AA,#5A0A14,Matching palette slot in original blue and red PNGs; appearance still needs review,54135,216
+16,clothing,#09192D,#2D070C,Matching palette slot in original blue and red PNGs; appearance still needs review,72761,216
+17,clothing,#1E293C,#320A0A,Matching palette slot in original blue and red PNGs; appearance still needs review,28223,87
+32,outline,#000020,#000000,Matching palette slot in original blue and red PNGs; appearance still needs review,21212,204
+39,dark details (hood/boots),#141422,#0F0F13,Matching palette slot in original blue and red PNGs; appearance still needs review,37176,216
+40,dark details (hood/boots),#181923,#1E1D23,Matching palette slot in original blue and red PNGs; appearance still needs review,66710,215
+41,dark details (hood/boots),#2B2D42,#2B2A2E,Matching palette slot in original blue and red PNGs; appearance still needs review,25477,214
+42,dark details (hood/boots),#37374B,#373739,Matching palette slot in original blue and red PNGs; appearance still needs review,597,21

@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "status": "draft",
+  "color_space": "sRGB byte RGB",
+  "source_sprite": "Assets/Project/Character/Hero/test_15_goenitz/Goenitz sprite/Goenitz_idle_0.png",
+  "target_sprite": "Assets/Project/Character/Hero/test_15_goenitz/Goenitz sprite/Goenitz_limit-break_23.png",
+  "evidence": "Original indexed PNG PLTE slots, not screenshot estimates",
+  "match_rule": "Simultaneous exact source RGB lookup; preserve input alpha; unmatched colors pass through",
+  "profiles": {
+    "clothing": [
+      12,
+      13,
+      15,
+      16,
+      17
+    ],
+    "clothing-hair": [
+      4,
+      5,
+      6,
+      12,
+      13,
+      15,
+      16,
+      17
+    ],
+    "full-reference": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      32,
+      39,
+      40,
+      41,
+      42
+    ]
+  },
+  "entries": [
+    {
+      "index": 1,
+      "group": "auxiliary highlights",
+      "source": "#AAA0A5",
+      "target": "#AAA091",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 13717,
+      "normal_sprite_files": 45
+    },
+    {
+      "index": 2,
+      "group": "auxiliary highlights",
+      "source": "#DCD2D7",
+      "target": "#D7C8B4",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 13876,
+      "normal_sprite_files": 59
+    },
+    {
+      "index": 3,
+      "group": "auxiliary highlights",
+      "source": "#FAF0F5",
+      "target": "#FAF0E6",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 7741,
+      "normal_sprite_files": 58
+    },
+    {
+      "index": 4,
+      "group": "hair",
+      "source": "#F0B8C1",
+      "target": "#E6DCA0",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 58690,
+      "normal_sprite_files": 261
+    },
+    {
+      "index": 5,
+      "group": "hair",
+      "source": "#FFC8D3",
+      "target": "#FFFAC8",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 27819,
+      "normal_sprite_files": 261
+    },
+    {
+      "index": 6,
+      "group": "hair",
+      "source": "#FFF0F0",
+      "target": "#FCFCF8",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 17850,
+      "normal_sprite_files": 261
+    },
+    {
+      "index": 7,
+      "group": "skin",
+      "source": "#B98689",
+      "target": "#B28687",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 20378,
+      "normal_sprite_files": 260
+    },
+    {
+      "index": 8,
+      "group": "skin",
+      "source": "#C1949A",
+      "target": "#9E7074",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 97106,
+      "normal_sprite_files": 260
+    },
+    {
+      "index": 9,
+      "group": "skin",
+      "source": "#E6BBBE",
+      "target": "#E4B8B9",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 30964,
+      "normal_sprite_files": 216
+    },
+    {
+      "index": 10,
+      "group": "skin",
+      "source": "#FDE4E1",
+      "target": "#FDDED9",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 25787,
+      "normal_sprite_files": 215
+    },
+    {
+      "index": 12,
+      "group": "clothing",
+      "source": "#A9C5FF",
+      "target": "#A0324B",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 28596,
+      "normal_sprite_files": 216
+    },
+    {
+      "index": 13,
+      "group": "clothing",
+      "source": "#8CA0DC",
+      "target": "#82141E",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 51298,
+      "normal_sprite_files": 216
+    },
+    {
+      "index": 14,
+      "group": "accent",
+      "source": "#F86686",
+      "target": "#F80000",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 388,
+      "normal_sprite_files": 155
+    },
+    {
+      "index": 15,
+      "group": "clothing",
+      "source": "#5F71AA",
+      "target": "#5A0A14",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 54135,
+      "normal_sprite_files": 216
+    },
+    {
+      "index": 16,
+      "group": "clothing",
+      "source": "#09192D",
+      "target": "#2D070C",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 72761,
+      "normal_sprite_files": 216
+    },
+    {
+      "index": 17,
+      "group": "clothing",
+      "source": "#1E293C",
+      "target": "#320A0A",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 28223,
+      "normal_sprite_files": 87
+    },
+    {
+      "index": 32,
+      "group": "outline",
+      "source": "#000020",
+      "target": "#000000",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 21212,
+      "normal_sprite_files": 204
+    },
+    {
+      "index": 39,
+      "group": "dark details (hood/boots)",
+      "source": "#141422",
+      "target": "#0F0F13",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 37176,
+      "normal_sprite_files": 216
+    },
+    {
+      "index": 40,
+      "group": "dark details (hood/boots)",
+      "source": "#181923",
+      "target": "#1E1D23",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 66710,
+      "normal_sprite_files": 215
+    },
+    {
+      "index": 41,
+      "group": "dark details (hood/boots)",
+      "source": "#2B2D42",
+      "target": "#2B2A2E",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 25477,
+      "normal_sprite_files": 214
+    },
+    {
+      "index": 42,
+      "group": "dark details (hood/boots)",
+      "source": "#37374B",
+      "target": "#373739",
+      "evidence": "Matching palette slot in original blue and red PNGs; appearance still needs review",
+      "normal_sprite_pixels": 597,
+      "normal_sprite_files": 21
+    }
+  ],
+  "preserve": "All transparent pixels and unmatched RGB; profile-excluded entries unchanged",
+  "limitation": "An RGB lookup cannot separate semantic regions sharing a color. Group labels are visual annotations, not segmentation masks."
+}

@@ -1,0 +1,107 @@
+<div id="goenitz-palette-draft">
+  <style>
+    #goenitz-palette-draft { color: var(--foreground); display: grid; gap: calc(var(--font-size-base) * 1); }
+    #goenitz-palette-draft .preview-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(var(--font-size-base) * 1); }
+    #goenitz-palette-draft .sprite-view { display: grid; gap: calc(var(--font-size-base) * .5); min-width: 0; }
+    #goenitz-palette-draft canvas { display: block; width: 100%; height: 324px; object-fit: contain; image-rendering: pixelated; background: var(--muted); }
+    #goenitz-palette-draft .swatch { display: inline-block; width: 18px; height: 18px; vertical-align: middle; margin-inline-end: 8px; }
+    #goenitz-palette-draft summary { color: var(--foreground); }
+    #goenitz-palette-draft .status { overflow-wrap: anywhere; }
+    @media (max-width: 400px) { #goenitz-palette-draft canvas { height: 216px; } }
+  </style>
+  <div class="viz-controls">
+    <label class="form-label">Animation frame<select class="form-select" id="goenitz-frame"></select></label>
+    <label class="form-label">Palette<select class="form-select" id="goenitz-profile">
+      <option value="full-reference">Full red reference</option>
+      <option value="clothing-hair">Red clothing + blonde hair</option>
+      <option value="clothing">Red clothing only</option>
+    </select></label>
+    <label class="form-label">Inspect color<select class="form-select" id="goenitz-inspect"><option value="">All pixels</option></select></label>
+  </div>
+  <div class="preview-pair">
+    <div class="sprite-view"><span>Original</span><canvas id="goenitz-original" role="img" aria-label="Original Goenitz sprite">Original sprite</canvas></div>
+    <div class="sprite-view"><span>Draft palette</span><canvas id="goenitz-result" role="img" aria-label="Goenitz sprite with selected draft palette">Palette preview</canvas></div>
+  </div>
+  <div class="status text-small" id="goenitz-status" aria-live="polite"></div>
+  <details>
+    <summary class="cursor-interaction">Source → red reference mapping · 21 colors</summary>
+    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Region</th><th>Source</th><th>Target</th></tr></thead><tbody id="goenitz-colors"></tbody></table></div>
+  </details>
+  <script>
+  (() => {
+    const data = __PALETTE_DATA__;
+    const root = document.getElementById('goenitz-palette-draft');
+    const frameSelect = root.querySelector('#goenitz-frame');
+    const profileSelect = root.querySelector('#goenitz-profile');
+    const inspectSelect = root.querySelector('#goenitz-inspect');
+    const original = root.querySelector('#goenitz-original');
+    const result = root.querySelector('#goenitz-result');
+    const status = root.querySelector('#goenitz-status');
+    const colors = root.querySelector('#goenitz-colors');
+    const parseRgb = value => [1, 3, 5].map(start => parseInt(value.slice(start, start + 2), 16));
+    data.samples.forEach((sample, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = sample.name.replace('.png', '').replace('Goenitz_', '') + (sample.isRed ? ' · existing red' : '');
+      frameSelect.append(option);
+    });
+    frameSelect.value = '0';
+    data.mapping.entries.forEach(entry => {
+      const option = document.createElement('option');
+      option.value = String(entry.index);
+      option.textContent = entry.source + ' · ' + entry.group;
+      inspectSelect.append(option);
+      const row = document.createElement('tr');
+      const label = document.createElement('td');
+      label.textContent = entry.group;
+      row.append(label);
+      for (const hex of [entry.source, entry.target]) {
+        const cell = document.createElement('td');
+        const swatch = document.createElement('span');
+        swatch.className = 'swatch';
+        swatch.style.backgroundColor = hex;
+        swatch.setAttribute('aria-hidden', 'true');
+        cell.append(swatch, document.createTextNode(hex));
+        row.append(cell);
+      }
+      colors.append(row);
+    });
+    function render() {
+      const sample = data.samples[Number(frameSelect.value)];
+      const active = new Set(data.mapping.profiles[profileSelect.value]);
+      const selected = inspectSelect.value === '' ? null : Number(inspectSelect.value);
+      const replacements = new Map(data.mapping.entries.filter(entry => active.has(entry.index)).map(entry => [entry.index, parseRgb(entry.target)]));
+      let changed = 0, selectedPixels = 0;
+      for (const [canvas, recolor] of [[original, false], [result, true]]) {
+        canvas.width = sample.width;
+        canvas.height = sample.height;
+        const ctx = canvas.getContext('2d');
+        const image = ctx.createImageData(sample.width, sample.height);
+        let offset = 0;
+        for (let r = 0; r < sample.runs.length; r += 2) {
+          const index = sample.runs[r];
+          const rgba = sample.palette[index];
+          const replacement = recolor && !sample.isRed && replacements.get(index);
+          const rgb = replacement || rgba;
+          const a = selected === null || index === selected ? rgba[3] : Math.round(rgba[3] * .12);
+          for (let n = 0; n < sample.runs[r + 1]; n++) {
+            image.data.set([rgb[0], rgb[1], rgb[2], a], offset);
+            offset += 4;
+            if (recolor && replacement && rgba[3]) changed++;
+            if (recolor && index === selected && rgba[3]) selectedPixels++;
+          }
+        }
+        if (offset !== image.data.length) throw new Error('Invalid frame pixel count');
+        ctx.putImageData(image, 0, 0);
+      }
+      status.textContent = sample.isRed
+        ? 'Existing red source · colors pass through unchanged' + (selected === null ? '' : ' · ' + selectedPixels + ' pixels in selected palette slot')
+        : changed.toLocaleString() + ' recolored pixels · geometry and transparency preserved' + (selected === null ? '' : ' · ' + selectedPixels + ' pixels use selected color');
+    }
+    frameSelect.addEventListener('change', render);
+    profileSelect.addEventListener('change', render);
+    inspectSelect.addEventListener('change', render);
+    render();
+  })();
+  </script>
+</div>
