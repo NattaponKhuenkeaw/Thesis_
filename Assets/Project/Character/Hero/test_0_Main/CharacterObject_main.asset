@@ -62,6 +62,7 @@ MonoBehaviour:
     dashSpeed: 25
     cooldownFrames: 24
   kitDefinition:
+    runtimeDefinition: {fileID: 0}
     presentation:
       sections:
       - sectionId: basic
@@ -378,7 +379,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 1
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
         actionId: main.skill.dark_chain
         actionName: 
         stepName: 
@@ -448,6 +451,7 @@ MonoBehaviour:
           presentation:
             effectId: main.skill.damage_taken
             displayName: Damage Taken Increase
+            showRemainingTime: 0
             icon: {fileID: 0}
             fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
           policy:
@@ -462,6 +466,8 @@ MonoBehaviour:
             removeOnOwnerDamaged: 0
             stackKey: main.skill.damage_taken
           parameters:
+            overrideDefense: 0
+            evasionChanceAdd: 0
             overrideStatModifiers: 0
             statModifiers: []
             overrideDamageModifier: 1
@@ -516,6 +522,7 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              applyNativeDot: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -601,7 +608,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 1
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
         actionId: main.skill.dark_chain
         actionName: 
         stepName: 
@@ -719,6 +728,7 @@ MonoBehaviour:
           presentation:
             effectId: main.skill.damage_taken
             displayName: Damage Taken Increase
+            showRemainingTime: 0
             icon: {fileID: 0}
             fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
           policy:
@@ -733,6 +743,8 @@ MonoBehaviour:
             removeOnOwnerDamaged: 0
             stackKey: main.skill.damage_taken
           parameters:
+            overrideDefense: 0
+            evasionChanceAdd: 0
             overrideStatModifiers: 0
             statModifiers: []
             overrideDamageModifier: 1
@@ -787,6 +799,7 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              applyNativeDot: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -909,6 +922,7 @@ MonoBehaviour:
           presentation:
             effectId: main.skill.team_mastery
             displayName: DOT Mastery and Additional Damage Increase
+            showRemainingTime: 0
             icon: {fileID: 21300000, guid: 50e134dab34d29b46956f7a61a913a76, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
@@ -923,6 +937,8 @@ MonoBehaviour:
             removeOnOwnerDamaged: 0
             stackKey: main.skill.team_mastery
           parameters:
+            overrideDefense: 0
+            evasionChanceAdd: 0
             overrideStatModifiers: 1
             statModifiers:
             - target: 4
@@ -987,6 +1003,7 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              applyNativeDot: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -1177,6 +1194,7 @@ MonoBehaviour:
           presentation:
             effectId: 
             displayName: Defense Decrease
+            showRemainingTime: 0
             icon: {fileID: 21300000, guid: b25b01306d317ba46894db2b7dfed19b, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
@@ -1191,6 +1209,8 @@ MonoBehaviour:
             removeOnOwnerDamaged: 0
             stackKey: 
           parameters:
+            overrideDefense: 0
+            evasionChanceAdd: 0
             overrideStatModifiers: 1
             statModifiers:
             - target: 2
@@ -1250,6 +1270,7 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              applyNativeDot: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -1334,7 +1355,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 2
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 2
         actionId: main.ultimate.jailbreak_punisher
         actionName: 
         stepName: Void Area
@@ -1412,7 +1435,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 2
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 2
         actionId: main.ultimate.jailbreak_punisher
         actionName: 
         stepName: Void Area
@@ -1530,7 +1555,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 0
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 0
         actionId: main.dash.dimension_cut
         actionName: 
         stepName: 
@@ -1687,7 +1714,9 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 1
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
         actionId: main.skill.dimension_slash
         actionName: 
         stepName: 
@@ -1919,6 +1948,7 @@ MonoBehaviour:
       unlockedByDefault: 0
   qteSwap:
     enabled: 1
+    triggerOnCriticalHit: 0
     triggerActionIds:
     - main.dash.dimension_cut
     introActionKey: main.qte.lightning_plunge

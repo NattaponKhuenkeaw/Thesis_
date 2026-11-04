@@ -15,6 +15,8 @@ blocked_by: []
 
 User instruction on 2026-11-04: "make this color mapping to use on Goenitz sprite while within Blood Frenzy Feedback". This authorizes implementing the reviewed full-reference mapping within the existing feedback path. No extra approval is inferred for gameplay, dependencies, build settings or publishing.
 
+Follow-up UI request: expose four optional Inspector-wired sprites on Goenitz's runtime definition and show them as the base NA/Skill/Ult/Dash icons only while Goenitz's own Blood Frenzy gameplay mode is active. Missing assignments keep their current icons. Do not run or extend the character authoring script.
+
 GDD `@tag:visual-audio`: preserve readable silhouettes and economical animation. Existing kit runtime retains all Frenzy gameplay state authority. This is a scoped presentation extension; no new system/ADR is necessary.
 
 ```mermaid
@@ -32,6 +34,8 @@ flowchart LR
 | TeamLoader | Pass active renderer plus Goenitz-specific recolor flag; no new mode state |
 | FrenzySpriteFeedback | Cache previous shared material; own a temporary palette material and existing flash overlay; restore on flag/source change and dispose |
 | GoenitzFrenzyPalette shader | 21 explicit RGB pairs from mapping JSON; preserve alpha, tint, sprite flips, URP 2D lighting, mask/normal and forward paths |
+| `GoenitzKitRuntimeDefinition` | Four optional authored Frenzy base-action icon sprites |
+| `AbilityUIManager` | Override assigned slot icons only while Goenitz's own runtime reports active Frenzy; preserve resolver/default icons for null slots and all other states |
 | PlayerMovement afterimages | Copy the source shared material when each ghost spawns, preserving its appearance while it fades |
 
 Interface change: `Tick(SpriteRenderer source, bool recolorGoenitz = false)`. Default retains the original flash-only behavior. Actor identity uses `GoenitzKitRuntimeDefinition`, not a name/string match or shared ally tag.

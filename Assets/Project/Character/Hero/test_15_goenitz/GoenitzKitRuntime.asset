@@ -18,6 +18,10 @@ MonoBehaviour:
   exSkillActionId: goenitz.skill.ex_yonokaze
   modeTag: goenitz.blood_frenzy
   sharedModeTag: goenitz.blood_frenzy.shared
+  frenzyNormalAttackIcon: {fileID: 21300000, guid: d385e643fa3c5984597b64fce149c579, type: 3}
+  frenzySkillIcon: {fileID: 21300000, guid: 60293628a3f7a1b43ad08bc4e5928045, type: 3}
+  frenzyUltimateIcon: {fileID: 21300000, guid: f648d59773fb49e4b9c669ddcf71cc78, type: 3}
+  frenzyDashIcon: {fileID: 21300000, guid: c4ff9b75865c4a7429d06f7ffd882d84, type: 3}
   drainInterval: 1
   drainAmount: 3
   killExtension: 6

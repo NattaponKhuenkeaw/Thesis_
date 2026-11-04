@@ -10,6 +10,15 @@ public sealed class GoenitzKitRuntimeDefinition : CharacterKitRuntimeDefinition
     public string exSkillActionId = "goenitz.skill.ex_yonokaze";
     public string modeTag = "goenitz.blood_frenzy";
     public string sharedModeTag = "goenitz.blood_frenzy.shared";
+    [Header("Blood Frenzy Ability UI")]
+    [Tooltip("Optional base Normal Attack icon shown while Goenitz's Blood Frenzy is active.")]
+    public Sprite frenzyNormalAttackIcon;
+    [Tooltip("Optional base Skill icon shown while Goenitz's Blood Frenzy is active.")]
+    public Sprite frenzySkillIcon;
+    [Tooltip("Optional base Ultimate icon shown while Goenitz's Blood Frenzy is active.")]
+    public Sprite frenzyUltimateIcon;
+    [Tooltip("Optional base Dash icon shown while Goenitz's Blood Frenzy is active.")]
+    public Sprite frenzyDashIcon;
     [Header("Aura Energy")]
     [Min(0.01f)] public float drainInterval = 1f;
     [Min(0.01f)] public float drainAmount = 3f;

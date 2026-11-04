@@ -114,4 +114,4 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1

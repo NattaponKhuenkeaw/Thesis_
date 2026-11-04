@@ -19,8 +19,8 @@ MonoBehaviour:
   spawnOffset: {x: 3, y: 0}
   spawnPositionMode: 0
   spawnReferencePointMode: 2
-  playSpawnAnimation: 1
-  spawnDuration: 0.05
+  playSpawnAnimation: 0
+  spawnDuration: 0
   inheritFacingDirection: 1
   applyOffsetToTarget: 0
   spawningHitbox:

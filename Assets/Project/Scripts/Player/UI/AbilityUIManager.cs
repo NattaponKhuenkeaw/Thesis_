@@ -353,6 +353,12 @@ public class AbilityUIManager : MonoBehaviour
         UpdateActionIcon(normalAttackIcon, ResolveCharacterActionIcon(AttackCategory.Normal, _normalDisplay.action));
         UpdateActionIcon(skillIcon, ResolveCharacterActionIcon(AttackCategory.Skill, _skillDisplay.action));
         UpdateActionIcon(ultIcon, ResolveCharacterActionIcon(AttackCategory.Ultimate, _ultimateDisplay.action));
+        if (TryGetBloodFrenzyIcons(out GoenitzKitRuntimeDefinition frenzyIcons))
+        {
+            if (frenzyIcons.frenzyNormalAttackIcon != null) UpdateActionIcon(normalAttackIcon, frenzyIcons.frenzyNormalAttackIcon);
+            if (frenzyIcons.frenzySkillIcon != null) UpdateActionIcon(skillIcon, frenzyIcons.frenzySkillIcon);
+            if (frenzyIcons.frenzyUltimateIcon != null) UpdateActionIcon(ultIcon, frenzyIcons.frenzyUltimateIcon);
+        }
         SetIconAlpha(normalAttackIcon, AlphaReady);
         UpdateWindowEffect(AttackCategory.Normal, normalAttackIcon, ref normalAttackWindowEffect,
             ref _normalFollowUpWasActive, AbilityType.NormalAttack);
@@ -386,6 +392,9 @@ public class AbilityUIManager : MonoBehaviour
             && passive.RuntimeState.GetCounter(meter.counterId) >= Mathf.Max(1, meter.pointsPerBox))
             icon = dash.meterReadyIcon;
         UpdateActionIcon(dashIcon, icon);
+        if (TryGetBloodFrenzyIcons(out GoenitzKitRuntimeDefinition frenzyIcons)
+            && frenzyIcons.frenzyDashIcon != null)
+            UpdateActionIcon(dashIcon, frenzyIcons.frenzyDashIcon);
         float remaining = movement != null ? movement.DashCooldownRemaining : 0f;
         float duration = movement != null ? movement.DashCooldownDuration : 0f;
         bool coolingDown = remaining > 0f;
@@ -407,6 +416,14 @@ public class AbilityUIManager : MonoBehaviour
 
         SetIconAlpha(dashIcon, movement != null && movement.CanDash() ? AlphaReady : AlphaDimmed);
         dashWasCoolingDown = coolingDown;
+    }
+
+    private bool TryGetBloodFrenzyIcons(out GoenitzKitRuntimeDefinition definition)
+    {
+        CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
+        definition = character?.kitDefinition?.runtimeDefinition as GoenitzKitRuntimeDefinition;
+        return definition != null
+            && teamLoader?.KitRuntimes?.Find(character)?.BlocksOrdinaryAuraEnergyGain == true;
     }
 
     public void PlayNormalAttackCommittedFeedback()

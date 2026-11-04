@@ -87,6 +87,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837992
+    requiresSkillHold: 0
+    skillHoldDuration: 0.35
     cooldown: 16
   - actionId: main.skill.dimension_slash
     actionName: Judgment Cut
@@ -115,6 +117,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1267093219165340303
+    requiresSkillHold: 0
+    skillHoldDuration: 0.35
     cooldown: 0
   ultimateActions:
   - actionId: main.ultimate.jailbreak_punisher
@@ -142,6 +146,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837993
+    requiresSkillHold: 0
+    skillHoldDuration: 0.35
     cooldown: 15
     inputTrigger: 0
     holdDuration: 0.35
@@ -182,6 +188,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 8000281000000000003
+    requiresSkillHold: 0
+    skillHoldDuration: 0.35
     cooldown: 15
     inputTrigger: 1
     holdDuration: 0.35
@@ -6477,6 +6485,7 @@ MonoBehaviour:
           rid: 3612912864477839452
         priority: 0
         allowImmediateInterrupt: 0
+        followUpOnly: 0
     - rid: 3612912864477839451
       type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -6553,6 +6562,7 @@ MonoBehaviour:
           rid: 1588256193077837988
         priority: 0
         allowImmediateInterrupt: 0
+        followUpOnly: 0
     - rid: 3612912864477839461
       type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -6570,9 +6580,9 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 3
-          activeFrames: 23
-          recoveryFrames: 6
-          cancelWindowStartFrame: 29
+          activeFrames: 13
+          recoveryFrames: 16
+          cancelWindowStartFrame: 22
           loopActivePhase: 0
           stepName: DimensionCut
           animationClip: {fileID: 7400000, guid: 2262ddbcd8a219a4c97ebbef0e32b82c, type: 2}

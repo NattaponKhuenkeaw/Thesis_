@@ -19,8 +19,8 @@ MonoBehaviour:
   spawnOffset: {x: 3, y: 0}
   spawnPositionMode: 0
   spawnReferencePointMode: 2
-  playSpawnAnimation: 1
-  spawnDuration: 0.05
+  playSpawnAnimation: 0
+  spawnDuration: 0
   inheritFacingDirection: 1
   applyOffsetToTarget: 0
   spawningHitbox:
@@ -35,7 +35,7 @@ MonoBehaviour:
   trackDelaySeconds: 1
   trackingRadius: 20
   speed: 7
-  lifetime: 14.5
+  lifetime: 14
   hitIntervalSeconds: 0.5
   maxHits: 32
   hitCountMode: 1
