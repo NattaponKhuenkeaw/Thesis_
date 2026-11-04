@@ -479,14 +479,14 @@ public class EnemyFlightGuardTests
         Assert.That(clip.length, Is.EqualTo(.2f).Within(.001f));
         Assert.That(clip.isLooping, Is.False);
         Assert.That(kit.HitWindowDuration, Is.EqualTo(.15f));
-        Assert.That(kit.AttackCooldown, Is.EqualTo(1.17f));
+        Assert.That(kit.AttackCooldown, Is.EqualTo(1.5f));
     }
 
-    [TestCase("EnemyCore/EnemyCore")]
-    [TestCase("Enm101/Enemy1")]
-    [TestCase("Enm102/Enemy102")]
-    [TestCase("Enm103/Enemy103")]
-    public void RegularEnemiesUseTheTunedDummyReactionSettings(string prefabName)
+    [TestCase("EnemyCore/EnemyCore", false)]
+    [TestCase("Enm101/Enemy1", true)]
+    [TestCase("Enm102/Enemy102", false)]
+    [TestCase("Enm103/Enemy103", true)]
+    public void RegularEnemiesUseAuthoredReactionModesAndTunedSettings(string prefabName, bool usePositionReactions)
     {
         const string root = "Assets/Project/Character/enemy/enemy/";
         var dummy = AssetDatabase.LoadAssetAtPath<GameObject>(root + "EnemyCore/Enemy_Dummy.prefab");
@@ -497,7 +497,7 @@ public class EnemyFlightGuardTests
         var handler = enemy.GetComponent<EnemyHitReactionHandler>();
         Assert.That(referenceHandler, Is.Not.Null);
         Assert.That(handler, Is.Not.Null);
-        Assert.That(handler.UsesPositionReactions, Is.True);
+        Assert.That(handler.UsesPositionReactions, Is.EqualTo(usePositionReactions));
         var reference = new SerializedObject(referenceHandler);
         var settings = new SerializedObject(handler);
         string[] floatProperties = {

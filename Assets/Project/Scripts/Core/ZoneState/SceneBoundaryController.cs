@@ -400,7 +400,6 @@ namespace Project.Core.ZoneState
                 _capturedStageLeft = true;
             }
 
-            _currentRightWorld = _lockedRightWorld;
             ApplyHorizontalBounds(CameraLeft(), _lockedRightWorld, force: firstLock);
             AlignEntranceWall(_lockedLeftWorld);
             AlignExitWall(_lockedRightWorld);

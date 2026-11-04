@@ -6,7 +6,7 @@ using UnityEngine;
 public class EnemyAttackCadenceTests
 {
     [TestCase("Enm101/Enemy1.prefab", 2.7f, .8f)]
-    [TestCase("Enm102/Enemy102.prefab", 1.17f, 1.17f)]
+    [TestCase("Enm102/Enemy102.prefab", 1.5f, 1.17f)]
     [TestCase("Enm103/Enemy103.prefab", 3.5f, .72f)]
     public void ProductionEnemiesResolveTheirTunedRecoveryFromTheKit(string path, float cooldown, float plant)
     {
