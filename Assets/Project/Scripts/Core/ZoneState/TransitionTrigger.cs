@@ -31,6 +31,8 @@ namespace Project.Core.ZoneState
         private IRoomExitGate exitGate;
         private Collider2D exitCollider;
 
+        public bool IsExitAvailable => exitGate == null || exitGate.IsExitAvailable;
+
         public Collider2D ExitCollider
         {
             get

@@ -191,6 +191,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: groundMeleeFlanking
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: softGroundSeparation
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: comboHitTravel
       value: 1

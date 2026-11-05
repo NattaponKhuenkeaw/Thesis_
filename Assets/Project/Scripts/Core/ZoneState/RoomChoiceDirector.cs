@@ -63,6 +63,9 @@ namespace Project.Core.ZoneState
 
         private bool allowRevisits;
         private bool allowShopInAnyFallback;
+        private int pendingActOfferIndex = -1;
+        private string preparedExitRoomId;
+        private string lastClearedRoomId;
 
         public int OfferCount => offerCount;
         public int ActIndex => actIndex;
@@ -121,6 +124,9 @@ namespace Project.Core.ZoneState
             biomeHadLevel = false;
             biomeHadRest = false;
             lastSafeKindConsumed = (RoomKind)(-1);
+            pendingActOfferIndex = -1;
+            preparedExitRoomId = null;
+            lastClearedRoomId = null;
             offerBuffer.Clear();
             visitedRoomIds.Clear();
             EnsureOfferCount();
@@ -156,12 +162,39 @@ namespace Project.Core.ZoneState
             MarkBiomeSafeConsumed(room.RoomKind);
         }
 
+        /// <summary>
+        /// Consume the offered template slot only after its destination was reached.
+        /// Reopening cards, aborted transitions and duplicate arrival notifications do not advance it.
+        /// </summary>
+        public void NotifyRoomEntered(string roomId)
+        {
+            if (string.IsNullOrWhiteSpace(roomId)) return;
+            bool wasOffered = false;
+            for (int i = 0; i < offerBuffer.Count; i++)
+            {
+                if (offerBuffer[i].IsValid && offerBuffer[i].RoomId == roomId)
+                {
+                    wasOffered = true;
+                    break;
+                }
+            }
+            if (!wasOffered) return;
+
+            if (pendingActOfferIndex == actIndex) AdvanceAct();
+            pendingActOfferIndex = -1;
+            preparedExitRoomId = null;
+            lastClearedRoomId = null;
+            offerBuffer.Clear();
+        }
+
         public IReadOnlyList<RoomChoiceOffer> GenerateOffersAfterClear(string excludeRoomId = null)
         {
             if (string.IsNullOrWhiteSpace(excludeRoomId))
             {
                 excludeRoomId = ResolveCurrentRoomId();
             }
+
+            if (HasPreparedExitOffers(excludeRoomId)) return offerBuffer;
 
             RoomData clearedRoom = ResolveRoom(excludeRoomId);
             if (clearedRoom != null && !string.IsNullOrWhiteSpace(clearedRoom.RoomId))
@@ -185,11 +218,16 @@ namespace Project.Core.ZoneState
             }
 
             RunProgressionManager progression = RunProgressionManager.EnsureInstance();
-            progression?.NotifyRoomCleared(clearedRoom);
+            bool newClear = clearedRoom != null && lastClearedRoomId != clearedRoom.RoomId;
+            if (newClear)
+            {
+                progression?.NotifyRoomCleared(clearedRoom);
+                lastClearedRoomId = clearedRoom.RoomId;
+            }
 
             EnsureTemplate();
 
-            if (clearedRoom != null && clearedRoom.RoomKind == RoomKind.Boss)
+            if (newClear && clearedRoom.RoomKind == RoomKind.Boss)
             {
                 BeginNextBiome();
                 pendingPostBossRest = true;
@@ -201,10 +239,10 @@ namespace Project.Core.ZoneState
                 IReadOnlyList<RoomChoiceOffer> postBoss = BuildOffersForNode(
                     BiomeActNode.Rest,
                     excludeRoomId,
-                    advanceAct: false);
+                    consumeActOnEntry: false);
                 if (OfferBufferContainsKind(RoomKind.Rest))
                 {
-                    return postBoss;
+                    return RememberExitOffers(postBoss, excludeRoomId);
                 }
 
                 // No Rest room authored — fall through to normal act offers.
@@ -212,7 +250,7 @@ namespace Project.Core.ZoneState
 
             if (TryForceBossOffer(progression))
             {
-                return offerBuffer;
+                return RememberExitOffers(offerBuffer, excludeRoomId);
             }
 
             BiomeActNode node = ResolveNodeForOffers();
@@ -220,7 +258,7 @@ namespace Project.Core.ZoneState
             {
                 if (TryForceBossOffer(progression, force: true))
                 {
-                    return offerBuffer;
+                    return RememberExitOffers(offerBuffer, excludeRoomId);
                 }
 
                 Debug.LogError(
@@ -228,12 +266,13 @@ namespace Project.Core.ZoneState
                     this);
             }
 
-            return BuildOffersForNode(node, excludeRoomId, advanceAct: true);
+            return RememberExitOffers(
+                BuildOffersForNode(node, excludeRoomId, consumeActOnEntry: true), excludeRoomId);
         }
 
         /// <summary>
-        /// Leave-path for Shop/Level/Rest. Does not advance the act cursor
-        /// (cursor already moved when the safe was offered after the previous clear).
+        /// Leave-path for Lobby/Shop/Level/Rest. Like combat exits, cards refer to the
+        /// next unconsumed slot; entering the chosen room consumes it exactly once.
         /// </summary>
         public IReadOnlyList<RoomChoiceOffer> GenerateLeaveOffersFromSafeRoom(string excludeRoomId = null)
         {
@@ -241,6 +280,8 @@ namespace Project.Core.ZoneState
             {
                 excludeRoomId = ResolveCurrentRoomId();
             }
+
+            if (HasPreparedExitOffers(excludeRoomId)) return offerBuffer;
 
             RoomData currentRoom = ResolveRoom(excludeRoomId);
             if (currentRoom != null && !string.IsNullOrWhiteSpace(currentRoom.RoomId))
@@ -253,7 +294,7 @@ namespace Project.Core.ZoneState
 
             if (TryForceBossOffer(progression))
             {
-                return offerBuffer;
+                return RememberExitOffers(offerBuffer, excludeRoomId);
             }
 
             BiomeActNode node = ResolveNodeForOffers();
@@ -261,7 +302,7 @@ namespace Project.Core.ZoneState
             {
                 if (TryForceBossOffer(progression, force: true))
                 {
-                    return offerBuffer;
+                    return RememberExitOffers(offerBuffer, excludeRoomId);
                 }
             }
 
@@ -275,13 +316,27 @@ namespace Project.Core.ZoneState
             IReadOnlyList<RoomChoiceOffer> offers = BuildOffersForNode(
                 leaveNode,
                 excludeRoomId,
-                advanceAct: false);
+                consumeActOnEntry: true);
             if (offers != null && offers.Count > 0)
             {
-                return offers;
+                return RememberExitOffers(offers, excludeRoomId);
             }
 
-            return GenerateOffersAllowingRevisits(excludeRoomId, includeShop: false, includeLevel: false, includeRest: false);
+            offers = GenerateOffersAllowingRevisits(excludeRoomId, includeShop: false, includeLevel: false, includeRest: false);
+            pendingActOfferIndex = offers.Count > 0 ? actIndex : -1;
+            return RememberExitOffers(offers, excludeRoomId);
+        }
+
+        private bool HasPreparedExitOffers(string roomId)
+        {
+            return !string.IsNullOrWhiteSpace(roomId)
+                && preparedExitRoomId == roomId && offerBuffer.Count > 0;
+        }
+
+        private IReadOnlyList<RoomChoiceOffer> RememberExitOffers(IReadOnlyList<RoomChoiceOffer> offers, string roomId)
+        {
+            preparedExitRoomId = offers.Count > 0 ? roomId : null;
+            return offers;
         }
 
         public IReadOnlyList<RoomChoiceOffer> GenerateOffers(string excludeRoomId, bool includeShop)
@@ -406,7 +461,7 @@ namespace Project.Core.ZoneState
         private IReadOnlyList<RoomChoiceOffer> BuildOffersForNode(
             BiomeActNode node,
             string excludeRoomId,
-            bool advanceAct)
+            bool consumeActOnEntry)
         {
             ResolveNodeFlags(node, out bool includeShop, out bool includeLevel, out bool includeRest);
             IReadOnlyList<RoomChoiceOffer> offers = BuildOffersRaw(
@@ -440,10 +495,7 @@ namespace Project.Core.ZoneState
                     this);
             }
 
-            if (advanceAct)
-            {
-                AdvanceAct();
-            }
+            pendingActOfferIndex = consumeActOnEntry && offers.Count > 0 ? actIndex : -1;
 
             return offers;
         }
@@ -482,6 +534,8 @@ namespace Project.Core.ZoneState
             bool includeLevel,
             bool includeRest)
         {
+            pendingActOfferIndex = -1;
+            preparedExitRoomId = null;
             if (EnsureMapData() == null)
             {
                 Debug.LogError("[RoomChoiceDirector] MapSO is missing; cannot generate room choices.", this);
@@ -641,6 +695,7 @@ namespace Project.Core.ZoneState
             offerBuffer.Add(RouteOfferGenerator.BuildOffer(bossRoom));
             usedRoomIds.Add(bossRoom.RoomId);
             SnapActToBossNode();
+            pendingActOfferIndex = actIndex;
             Debug.Log(
                 $"[RoomChoiceDirector] Boss offer '{bossRoom.RoomId}' "
                 + $"(act={actIndex}, depth={progression.currentRoomDepth}/{progression.RoomsBeforeBoss}).",

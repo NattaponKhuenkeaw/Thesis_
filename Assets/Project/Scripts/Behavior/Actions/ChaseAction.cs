@@ -4,13 +4,13 @@ using UnityEngine;
 using Unity.Behavior;
 
 /// <summary>
-/// Close into a stand-off slot. Ground melee queues on that slot; ranged holds a back line.
+/// Close into a stand-off slot. Ground melee flanks or queues; ranged holds a back line.
 /// Attack range is a separate check used by the attack nodes, not the signal that chase is done.
 /// </summary>
 [Serializable, GeneratePropertyBag]
 [NodeDescription(
     name: "Enemy Chase",
-    description: "Chases the Target to a stand-off slot. Ground melee queues there. Ranged holds a back line. Attack range is checked by the attack nodes, not here.",
+    description: "Chases the Target to a stand-off slot. Ground melee flanks or queues. Ranged holds a back line. Attack range is checked by the attack nodes, not here.",
     story: "[Agent] chases [Target] (stop at [AttackRange])",
     category: "Action/Enemy",
     id: "c1b2c3d4e5f60004aabbccddeeff0024")]

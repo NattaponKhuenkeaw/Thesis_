@@ -116,7 +116,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         FaceTarget();
         m_Controller.LockFacing();
         m_Controller.BeginRangedAim(Target.Value != null ? Target.Value.transform : null);
-        if (m_OwnsFlightAttack) m_Controller.CommitRangedAim();
+        if (m_OwnsFlightAttack && !m_Locomotion.UsesFlightAttackDescent) m_Controller.CommitRangedAim();
 
         float telegraphDuration = ResolveTelegraphDuration();
         if (telegraphDuration > 0f)
@@ -250,8 +250,9 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         // Visual recovery can outlast the shot window without changing attack cadence.
-        if (m_AttackStarted && m_HitboxDisabled && m_Controller.UsesRangedAttack
-            && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses
+        if (m_AttackStarted && m_HitboxDisabled && m_AnimHandler != null
+            && ((m_Controller.UsesRangedAttack && m_AnimHandler.useRangedAttackPoses)
+                || (!IsBodyCharge && m_AnimHandler.useMeleeAttackPoses))
             && m_AnimHandler.IsRangedAttackPoseComplete())
             m_AnimHandler.EndBodyChargePose();
 
@@ -429,6 +430,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             BeginCommitment();
 
         m_Controller?.FinishAttackWarning();
+        if (m_OwnsFlightAttack) m_Locomotion.HoldFlightAttackAltitude();
         m_Controller?.CommitRangedAim();
         bool usesAttackPoses = IsBodyCharge || (m_AnimHandler != null && m_AnimHandler.useMeleeAttackPoses) || (m_Controller != null && m_Controller.UsesRangedAttack
             && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses);

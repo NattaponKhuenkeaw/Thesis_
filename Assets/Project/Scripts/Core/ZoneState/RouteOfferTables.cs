@@ -105,8 +105,8 @@ namespace Project.Core.ZoneState
                     minEnemiesPerWave = 4,
                     maxEnemiesPerWave = 4,
                     aliveCap = 3,
-                    minCoins = 30,
-                    maxCoins = 60,
+                    minCoins = 80,
+                    maxCoins = 100,
                     artifactChance = 0.05f
                 },
                 new DifficultyProfile
@@ -118,7 +118,7 @@ namespace Project.Core.ZoneState
                     minEnemiesPerWave = 6,
                     maxEnemiesPerWave = 6,
                     aliveCap = 3,
-                    minCoins = 90,
+                    minCoins = 120,
                     maxCoins = 150,
                     artifactChance = 0.28f
                 },
@@ -132,7 +132,7 @@ namespace Project.Core.ZoneState
                     maxEnemiesPerWave = 8,
                     aliveCap = 4,
                     minCoins = 180,
-                    maxCoins = 280,
+                    maxCoins = 220,
                     artifactChance = 0.55f
                 }
             };

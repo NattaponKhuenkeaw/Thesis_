@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.Behavior;
 using Project.UI;
@@ -36,27 +37,32 @@ namespace Project.AIBehaviour.Boss
         [SerializeField] private bool useDefaultStats = true;
         [SerializeField] private float defaultMaxHp = 4000f;
         [SerializeField] private float defaultAttackDamage = 165f;
-        [SerializeField] private float defaultDefense = 500f;
+        [SerializeField] private float defaultDefense = 0f;
 
         [Header("Movement")]
         [SerializeField] private float chaseSpeed = 2.2f;
         [SerializeField] private float cleaveRange = 2.4f;
         [SerializeField] private float decideInterval = 0.2f;
         [Tooltip("Once chase is chosen, keep walking until in cleave range or this timeout.")]
-        [SerializeField] private float maxChaseDuration = 3.5f;
-        [SerializeField] [Range(0f, 1f)] private float phase1ChaseChance = 0.7f;
-        [SerializeField] [Range(0f, 1f)] private float phase2ChaseChance = 0.35f;
+        [SerializeField] private float maxChaseDuration = 1.4f;
+        [Tooltip("Chance to walk into cleave range at medium distance. Far targets use gap closers instead.")]
+        [SerializeField] [Range(0f, 1f)] private float phase1ChaseChance = 0.45f;
+        [SerializeField] [Range(0f, 1f)] private float phase2ChaseChance = 0.25f;
+        [SerializeField, Range(1, 3)] private int maxConsecutivePattern = 2;
 
         [Header("Phases")]
         [SerializeField] [Range(0.05f, 0.95f)] private float phase2HpRatio = 0.5f;
+        [Tooltip("Chance to follow a landed jump or completed charge with cleave, only while the player is close.")]
         [SerializeField] [Range(0f, 1f)] private float phase2ChainCleaveChance = 0.65f;
+        [SerializeField, Min(0f)] private float comboLinkPause = 0.2f;
+        [SerializeField, Min(0f)] private float comboRecoveryDuration = 1.6f;
 
         [Header("Patterns")]
         [SerializeField] private BossPatternTiming cleave = new BossPatternTiming
         {
             telegraphDuration = 1.2f,
             activeDuration = 0.4f,
-            recoveryDuration = 1.75f,
+            recoveryDuration = 1f,
             hitboxLocalOffset = new Vector2(1.4f, 0.2f),
             hitboxSizeOverride = new Vector2(2.6f, 1.4f)
         };
@@ -74,7 +80,7 @@ namespace Project.AIBehaviour.Boss
         {
             telegraphDuration = 1.1f,
             activeDuration = 0.55f,
-            recoveryDuration = 1.5f,
+            recoveryDuration = 1.8f,
             hitboxLocalOffset = new Vector2(0.8f, 0f),
             hitboxSizeOverride = new Vector2(2.2f, 1.6f)
         };
@@ -84,6 +90,26 @@ namespace Project.AIBehaviour.Boss
         [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float cleaveSfxVolume = 1f;
         [Tooltip("Seconds relative to the cleave hitbox opening: negative = earlier during windup; positive = later. Cancelled if this attack ends.")]
         [SerializeField, Range(-2f, 2f)] private float cleaveSfxOffset;
+
+        [Header("Alternating Cleave")]
+        [SerializeField] private BossPatternTiming alternatingCleave = new BossPatternTiming
+        {
+            telegraphDuration = 1.2f, activeDuration = .22f, recoveryDuration = 1.8f,
+            hitboxLocalOffset = new Vector2(1.4f, .2f), hitboxSizeOverride = new Vector2(2.6f, 1.4f)
+        };
+        [SerializeField, Range(2, 6)] private int alternatingCleaveCount = 4;
+        [SerializeField, Min(.15f)] private float alternatingCleaveInterval = .36f;
+
+        [Header("Seismic Barrage (Phase 2)")]
+        [SerializeField] private BossPatternTiming seismicBarrage = new BossPatternTiming
+        {
+            telegraphDuration = 1.5f, activeDuration = .3f, recoveryDuration = 2.2f
+        };
+        [SerializeField, Range(2, 5)] private int seismicJumpCount = 3;
+        [SerializeField, Min(.2f)] private float seismicJumpInterval = .65f;
+        [SerializeField] private BossGroundWave groundWavePrefab;
+        [SerializeField, Min(1f)] private float groundWaveSpeed = 14f;
+        [SerializeField, Min(1f)] private float groundWaveDistance = 80f;
 
         [Header("Attack Warning Audio")]
         [Tooltip("Additional warning at the start of every attack windup. Layers over existing pattern sounds.")]
@@ -149,12 +175,15 @@ namespace Project.AIBehaviour.Boss
         private int phase = 1;
         private bool isBusy;
         private bool statsApplied;
-        private bool pendingChainCleave;
+        private BossPatternId lastPattern;
+        private int consecutivePatternCount;
         private readonly EnemyAttackAudioCue cleaveAudioCue = new EnemyAttackAudioCue();
         private float cleaveAudioUpdatedAt;
         private bool deathAudioPlayed;
         private AudioSource attackWarningAudioSource;
         private AudioSource chargeRushAudioSource;
+        private readonly List<BossGroundWave> groundWaves = new List<BossGroundWave>();
+        private bool samplingCleaveSequence;
 
         private Collider2D activePatternHitbox;
         private Vector2 cachedHitboxOffset;
@@ -177,6 +206,8 @@ namespace Project.AIBehaviour.Boss
         public BossPatternTiming CleaveTiming => cleave;
         public BossPatternTiming JumpSmashTiming => jumpSmash;
         public BossPatternTiming BullChargeTiming => bullCharge;
+        public BossPatternTiming AlternatingCleaveTiming => alternatingCleave;
+        public BossPatternTiming SeismicBarrageTiming => seismicBarrage;
         public float CleaveRange => cleaveRange;
         public float ChargeDistance => chargeDistance;
         public AudioClip CleaveSfx => cleaveSfx;
@@ -232,6 +263,7 @@ namespace Project.AIBehaviour.Boss
 
         private void OnEnable()
         {
+            consecutivePatternCount = 0;
             if (enemy != null && enemy.IsAlive) deathAudioPlayed = false;
             if (enemy != null)
             {
@@ -260,6 +292,7 @@ namespace Project.AIBehaviour.Boss
                 brainRoutine = null;
                 isBusy = false;
                 CleanupAttackState();
+                ClearGroundWaves();
                 RestorePhysics();
                 ZeroVelocity();
             }
@@ -303,6 +336,7 @@ namespace Project.AIBehaviour.Boss
             }
 
             CleanupAttackState();
+            ClearGroundWaves();
             RestorePhysics();
             groundTelegraph?.Hide();
         }
@@ -359,6 +393,7 @@ namespace Project.AIBehaviour.Boss
             CancelSpawnReveal();
             isBusy = false;
             CleanupAttackState();
+            ClearGroundWaves();
             RestorePhysics();
             groundTelegraph?.Hide();
 
@@ -388,6 +423,7 @@ namespace Project.AIBehaviour.Boss
             CancelSpawnReveal();
             isBusy = false;
             CleanupAttackState();
+            ClearGroundWaves();
             RestorePhysics();
             groundTelegraph?.Hide();
 
@@ -506,7 +542,7 @@ namespace Project.AIBehaviour.Boss
                 if (distance <= cleaveRange)
                 {
                     animHandler?.SetSpeed(0f);
-                    yield return ExecutePattern(BossPatternId.HeavyCleave);
+                    yield return ExecutePattern(ChoosePattern(distance));
                     yield break;
                 }
 
@@ -520,9 +556,7 @@ namespace Project.AIBehaviour.Boss
             if (enemy == null || !enemy.IsAlive || !TryAcquireTarget())
                 yield break;
 
-            BossPatternId closer = phase >= 2 && Random.value < 0.55f
-                ? BossPatternId.BullCharge
-                : BossPatternId.JumpSmash;
+            BossPatternId closer = ChoosePattern(cleaveRange * 3f + 1f);
             yield return ExecutePattern(closer);
         }
 
@@ -544,32 +578,53 @@ namespace Project.AIBehaviour.Boss
 
         private BossPatternId ChoosePattern(float distance)
         {
-            bool inCleaveRange = distance <= cleaveRange;
-
-            // HeavyCleave while out of range means "commit chase, then cleave".
-            if (phase < 2)
+            float barrageWeight = phase >= 2 && groundWavePrefab != null ? .24f : 0f;
+            float alternatingWeight = distance <= cleaveRange ? .3f : 0f;
+            float cleaveWeight, jumpWeight, chargeWeight;
+            if (distance <= cleaveRange)
             {
-                if (inCleaveRange)
-                    return BossPatternId.HeavyCleave;
-
-                return Random.value < phase1ChaseChance
-                    ? BossPatternId.HeavyCleave
-                    : BossPatternId.JumpSmash;
+                cleaveWeight = phase < 2 ? .7f : .55f;
+                jumpWeight = 1f - cleaveWeight;
+                chargeWeight = 0f;
+            }
+            else if (distance <= cleaveRange * 3f)
+            {
+                // Cleave here means a short committed chase, not a swing out of range.
+                chargeWeight = phase < 2 ? .15f : .4f;
+                cleaveWeight = Mathf.Min(phase < 2 ? phase1ChaseChance : phase2ChaseChance, 1f - chargeWeight);
+                jumpWeight = 1f - cleaveWeight - chargeWeight;
+            }
+            else
+            {
+                cleaveWeight = 0f;
+                chargeWeight = phase < 2 ? .55f : .65f;
+                jumpWeight = 1f - chargeWeight;
             }
 
-            if (!inCleaveRange)
+            if (consecutivePatternCount >= Mathf.Max(1, maxConsecutivePattern))
             {
-                float roll = Random.value;
-                float chargeWeight = 0.4f;
-                float chaseWeight = phase2ChaseChance;
-                if (roll < chargeWeight)
-                    return BossPatternId.BullCharge;
-                if (roll < chargeWeight + chaseWeight)
-                    return BossPatternId.HeavyCleave;
+                if (lastPattern == BossPatternId.HeavyCleave) cleaveWeight = 0f;
+                if (lastPattern == BossPatternId.JumpSmash) jumpWeight = 0f;
+                if (lastPattern == BossPatternId.BullCharge) chargeWeight = 0f;
+                if (lastPattern == BossPatternId.AlternatingCleave) alternatingWeight = 0f;
+                if (lastPattern == BossPatternId.SeismicBarrage) barrageWeight = 0f;
+            }
+            float roll = Random.value * (cleaveWeight + jumpWeight + chargeWeight + alternatingWeight + barrageWeight);
+            if (roll < barrageWeight) return BossPatternId.SeismicBarrage;
+            roll -= barrageWeight;
+            if (roll < alternatingWeight) return BossPatternId.AlternatingCleave;
+            roll -= alternatingWeight;
+            if (roll < cleaveWeight) return BossPatternId.HeavyCleave;
+            if (jumpWeight > 0f && (roll < cleaveWeight + jumpWeight || chargeWeight <= 0f))
                 return BossPatternId.JumpSmash;
-            }
+            return BossPatternId.BullCharge;
+        }
 
-            return Random.value < 0.7f ? BossPatternId.HeavyCleave : BossPatternId.JumpSmash;
+        private void RememberPattern(BossPatternId pattern)
+        {
+            consecutivePatternCount = consecutivePatternCount > 0 && lastPattern == pattern
+                ? consecutivePatternCount + 1 : 1;
+            lastPattern = pattern;
         }
 
         private IEnumerator ChaseTowardTargetStep()
@@ -591,27 +646,140 @@ namespace Project.AIBehaviour.Boss
             isBusy = true;
             animHandler?.SetSpeed(0f);
             enemy.SetInCombat(true);
-
-            switch (patternId)
+            RememberPattern(patternId);
+            BossPatternTiming timing = patternId == BossPatternId.HeavyCleave ? cleave
+                : patternId == BossPatternId.JumpSmash ? jumpSmash
+                : patternId == BossPatternId.AlternatingCleave ? alternatingCleave
+                : patternId == BossPatternId.SeismicBarrage ? seismicBarrage : bullCharge;
+            try
             {
-                case BossPatternId.HeavyCleave:
-                    yield return RunCleave(usePhaseRecovery: true);
-                    break;
-                case BossPatternId.JumpSmash:
-                    pendingChainCleave = false;
-                    yield return RunJumpSmash();
-                    if (pendingChainCleave)
-                        yield return RunCleave(usePhaseRecovery: true);
-                    break;
-                case BossPatternId.BullCharge:
-                    yield return RunBullCharge();
-                    break;
-            }
+                switch (patternId)
+                {
+                    case BossPatternId.HeavyCleave:
+                        yield return RunCleave();
+                        break;
+                    case BossPatternId.JumpSmash:
+                        yield return RunJumpSmash();
+                        break;
+                    case BossPatternId.BullCharge:
+                        yield return RunBullCharge();
+                        break;
+                    case BossPatternId.AlternatingCleave:
+                        yield return RunAlternatingCleave();
+                        break;
+                    case BossPatternId.SeismicBarrage:
+                        yield return RunSeismicBarrage();
+                        break;
+                }
 
-            isBusy = false;
+                if (!CanContinuePattern()) yield break;
+                bool charge = patternId == BossPatternId.BullCharge;
+                if (ShouldChainCleave(patternId))
+                {
+                    yield return Recovery(charge ? Mathf.Max(comboLinkPause, chargeStopAnimationDuration) : comboLinkPause,
+                        animateChargeStop: charge);
+                    charge = false;
+                    // Recheck after stopping: do not chase or turn an escaped target into a free hit.
+                    if (CanContinuePattern() && IsTargetInCleaveRange())
+                    {
+                        RememberPattern(BossPatternId.HeavyCleave);
+                        yield return RunCleave();
+                        if (CanContinuePattern())
+                            yield return Recovery(Mathf.Max(comboRecoveryDuration, ResolveRecovery(cleave)));
+                        yield break;
+                    }
+                }
+                if (CanContinuePattern())
+                    yield return Recovery(ResolveRecovery(timing), animateChargeStop: charge);
+            }
+            finally
+            {
+                isBusy = false;
+                CleanupAttackState();
+                RestorePhysics();
+            }
         }
 
-        private IEnumerator RunCleave(bool usePhaseRecovery)
+        private bool IsTargetInCleaveRange()
+        {
+            return TryAcquireTarget() && Vector2.Distance(transform.position, target.position) <= cleaveRange;
+        }
+
+        private bool ShouldChainCleave(BossPatternId starter)
+        {
+            return phase >= 2 && (starter == BossPatternId.JumpSmash || starter == BossPatternId.BullCharge) && CanContinuePattern()
+                && enemy.HasSpawnGroundSupport() && IsTargetInCleaveRange()
+                && Random.value < phase2ChainCleaveChance;
+        }
+
+        private IEnumerator RunAlternatingCleave()
+        {
+            FaceTarget();
+            float initialFacing = GetFacingSign();
+            samplingCleaveSequence = true;
+            yield return Telegraph(alternatingCleave, BossPatternId.AlternatingCleave, null, 0f);
+            for (int i = 0; i < Mathf.Clamp(alternatingCleaveCount, 2, 6) && CanContinuePattern(); i++)
+            {
+                // Alternate the committed sides, never home in on a player who escaped the sequence.
+                enemy.ReleaseFacing();
+                EnemyFacingUtil.FaceHorizontal(transform, initialFacing * (i % 2 == 0 ? 1f : -1f));
+                enemy.LockFacing();
+                if (i > 0)
+                {
+                    float pause = 0f;
+                    enemy.TriggerAttackWarning(alternatingCleaveInterval);
+                    while (pause < alternatingCleaveInterval && CanContinuePattern())
+                    {
+                        animHandler?.SampleBossCleave(0f);
+                        ZeroVelocity();
+                        pause += Time.deltaTime;
+                        yield return null;
+                    }
+                }
+                if (!CanContinuePattern()) yield break;
+                EmitCleaveAudio();
+                yield return ActiveMeleeWindow(alternatingCleave, animateCleave: true);
+            }
+        }
+
+        private IEnumerator RunSeismicBarrage()
+        {
+            FaceTarget();
+            for (int i = 0; i < Mathf.Clamp(seismicJumpCount, 2, 5) && CanContinuePattern(); i++)
+            {
+                var timing = new BossPatternTiming
+                {
+                    telegraphDuration = i == 0 ? seismicBarrage.telegraphDuration : seismicJumpInterval,
+                    activeDuration = seismicBarrage.activeDuration,
+                    recoveryDuration = seismicBarrage.recoveryDuration
+                };
+                yield return JumpSmashAt(transform.position, timing, seismic: true);
+            }
+        }
+
+        private void EmitGroundWaves()
+        {
+            if (groundWavePrefab == null || !CanContinuePattern()) return;
+            groundWaves.RemoveAll(wave => wave == null);
+            var hitTargets = new HashSet<int>();
+            float groundY = enemy.bodyCollider != null ? enemy.bodyCollider.bounds.min.y : transform.position.y;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                var wave = Instantiate(groundWavePrefab);
+                wave.Initialize(enemy, new Vector2(transform.position.x, groundY), side,
+                    groundWaveSpeed, groundWaveDistance, hitTargets);
+                groundWaves.Add(wave);
+            }
+        }
+
+        private void ClearGroundWaves()
+        {
+            foreach (var wave in groundWaves)
+                if (wave != null) wave.Cancel();
+            groundWaves.Clear();
+        }
+
+        private IEnumerator RunCleave()
         {
             BossPatternTiming timing = cleave;
             FaceTarget();
@@ -628,24 +796,19 @@ namespace Project.AIBehaviour.Boss
             if (cleaveAudioCue.Confirm(cleaveSfxOffset)) EmitCleaveAudio();
             yield return ActiveMeleeWindow(timing);
 
-            float recovery = usePhaseRecovery ? ResolveRecovery(timing) : 0f;
-            if (recovery > 0f)
-                yield return Recovery(recovery);
-            else
-                CleanupAttackState();
+            CleanupAttackState();
         }
 
         private IEnumerator RunJumpSmash()
         {
-            pendingChainCleave = false;
-            BossPatternTiming timing = jumpSmash;
-
             if (!TryAcquireTarget())
                 yield break;
-
-            Vector3 lockPoint = target.position;
             FaceTarget();
+            yield return JumpSmashAt(target.position, jumpSmash, seismic: false);
+        }
 
+        private IEnumerator JumpSmashAt(Vector3 lockPoint, BossPatternTiming timing, bool seismic)
+        {
             yield return Telegraph(timing, BossPatternId.JumpSmash, lockPoint, ResolveSmashMarkerRadius());
 
             if (!CanContinuePattern())
@@ -682,19 +845,22 @@ namespace Project.AIBehaviour.Boss
             if (Application.isPlaying && jumpLandSfx != null && JumpLandSfxVolume > 0f)
                 GameAudioManager.EnsureInstance().PlayHitSFX(jumpLandSfx, JumpLandSfxVolume);
             groundTelegraph?.Hide();
-            yield return ActiveMeleeWindow(timing, animateLanding: true);
+            if (seismic)
+            {
+                EmitGroundWaves();
+                float elapsed = 0f;
+                while (elapsed < timing.activeDuration && CanContinuePattern())
+                {
+                    animHandler?.SetBossJumpPhase(Mathf.Lerp(.6f, .99f, Mathf.Clamp01(elapsed / .3f)));
+                    elapsed += Time.deltaTime;
+                    ZeroVelocity();
+                    yield return null;
+                }
+            }
+            else yield return ActiveMeleeWindow(timing, animateLanding: true);
             RestorePhysics();
 
-            bool wantsChain = phase >= 2 && Random.value <= phase2ChainCleaveChance;
-            if (wantsChain)
-            {
-                // Skip recovery; caller may chain Cleave immediately.
-                CleanupAttackState();
-                pendingChainCleave = true;
-                yield break;
-            }
-
-            yield return Recovery(ResolveRecovery(timing));
+            CleanupAttackState();
         }
 
         private IEnumerator RunBullCharge()
@@ -759,8 +925,6 @@ namespace Project.AIBehaviour.Boss
             enemy.SetAttackHitboxActive(false);
             RestoreHitboxTransform();
             EndArmored();
-
-            yield return Recovery(ResolveRecovery(timing), animateChargeStop: CanContinuePattern());
         }
 
         /// <summary>
@@ -820,7 +984,9 @@ namespace Project.AIBehaviour.Boss
                 StartTelegraphFlash();
 
             // Wind-up anim cue at telegraph start for grounded swings / charge crouch.
-            if (patternId != BossPatternId.JumpSmash)
+            if (patternId == BossPatternId.AlternatingCleave)
+                animHandler?.SampleBossCleave(0f);
+            else if (patternId != BossPatternId.JumpSmash)
                 animHandler?.TriggerBossPattern(patternId);
 
             if (patternId == BossPatternId.HeavyCleave)
@@ -833,12 +999,14 @@ namespace Project.AIBehaviour.Boss
             float t = 0f;
             while (t < timing.telegraphDuration)
             {
-                if (!enemy.IsAlive || (enemy != null && enemy.IsGrabbed))
+                if (!CanContinuePattern())
                     yield break;
 
                 t += Time.deltaTime;
                 if (patternId == BossPatternId.BullCharge)
                     animHandler?.SetBossChargePhase(Mathf.Min(.2999f, t));
+                if (patternId == BossPatternId.AlternatingCleave)
+                    animHandler?.SampleBossCleave(0f);
                 yield return null;
             }
         }
@@ -851,7 +1019,7 @@ namespace Project.AIBehaviour.Boss
             return smashMarkerRadius;
         }
 
-        private IEnumerator ActiveMeleeWindow(BossPatternTiming timing, bool animateLanding = false)
+        private IEnumerator ActiveMeleeWindow(BossPatternTiming timing, bool animateLanding = false, bool animateCleave = false)
         {
             enemy.HideAttackWarning();
             StopTelegraphFlash();
@@ -867,6 +1035,8 @@ namespace Project.AIBehaviour.Boss
                     break;
                 if (animateLanding)
                     animHandler?.SetBossJumpPhase(Mathf.Lerp(0.6f, 0.99f, Mathf.Clamp01(t / .3f)));
+                if (animateCleave)
+                    animHandler?.SampleBossCleave(Mathf.Lerp(.75f, .99f, Mathf.Clamp01(t / Mathf.Max(.01f, timing.activeDuration))));
                 t += Time.deltaTime;
                 ZeroVelocity();
                 yield return null;
@@ -886,7 +1056,7 @@ namespace Project.AIBehaviour.Boss
             float t = 0f;
             while (t < duration)
             {
-                if (!enemy.IsAlive)
+                if (!CanContinuePattern())
                     yield break;
                 if (animateChargeStop)
                 {
@@ -907,13 +1077,13 @@ namespace Project.AIBehaviour.Boss
         private float ResolveRecovery(BossPatternTiming timing)
         {
             if (phase >= 2)
-                return Mathf.Max(1f, timing.recoveryDuration * 0.85f);
+                return Mathf.Max(.8f, timing.recoveryDuration * 0.85f);
             return timing.recoveryDuration;
         }
 
         private bool CanContinuePattern()
         {
-            return enemy != null && enemy.IsAlive && !enemy.IsGrabbed;
+            return enemy != null && enemy.IsCombatReady && !enemy.IsGrabbed;
         }
 
         private void BeginArmored()
@@ -929,6 +1099,12 @@ namespace Project.AIBehaviour.Boss
 
         private void CleanupAttackState()
         {
+            if (samplingCleaveSequence)
+            {
+                samplingCleaveSequence = false;
+                if (enemy != null && enemy.IsCombatReady && !enemy.IsGrabbed)
+                    animHandler?.EndBossCleaveSequence();
+            }
             cleaveAudioCue.Cancel();
             StopAttackWarningAudio();
             StopChargeRushAudio();

@@ -49,7 +49,7 @@ public class EnemyFlightGuardTests
         }
         Assert.That(flight.PrepareSpawnFlight(), Is.True);
         Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.min.y,
-            Is.EqualTo(6.8f).Within(.001f));
+            Is.EqualTo(4.2f).Within(.001f));
 
         player.transform.position += Vector3.up * jumpHeight;
         player.Movement.GroundState.Tick(false, 5f);
@@ -59,7 +59,7 @@ public class EnemyFlightGuardTests
         typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
         var endpoint = typeof(EnemyLocomotion).GetField("flightMoveEnd", Private);
         Vector2 selected = (Vector2)endpoint.GetValue(flight);
-        Assert.That(selected.y, Is.InRange(6.8f - .2f, 6.8f + .2f));
+        Assert.That(selected.y, Is.InRange(4.2f - .2f, 4.2f + .2f));
 
         player.transform.position += new Vector3(5f, 4f, 0f);
         Physics2D.SyncTransforms();
@@ -81,8 +81,8 @@ public class EnemyFlightGuardTests
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
         using (var flight = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
         {
-            // The higher flight clears Main's ground skill but remains below a comfortable double-jump swing.
-            const float swingRise = 5.2f;
+            // Lower cruising stays reachable without requiring a maximum-height double jump.
+            const float swingRise = 3.2f;
             float rise = 0f;
             float speed = character.movementProfile.jumpSpeed;
             while (speed > 0f)
@@ -109,7 +109,7 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
-    public void LowestAuthoredFlightClearsMainsGroundSkillArea()
+    public void LoweredAuthoredFlightIsReachableByMainsGroundSkillArea()
     {
         var skill = AssetDatabase.LoadAssetAtPath<ProjectileData>(
             "Assets/Project/Character/Hero/test_0_Main/ProjectileData_main_skill.asset");
@@ -120,8 +120,10 @@ public class EnemyFlightGuardTests
         {
             float lowestFeet = settings.FindProperty("flightHeight").floatValue
                 - settings.FindProperty("flightHeightVariation").floatValue;
-            Assert.That(lowestFeet - skillTop, Is.GreaterThan(.15f),
-                "Normal cruising on the same floor must clear the grounded skill, not drift into its hitbox.");
+            Assert.That(skillTop - lowestFeet, Is.GreaterThan(.3f),
+                "The lowered flyer should be reachable by Main's ground skill.");
+            Assert.That(settings.FindProperty("flightAttackHeight").floatValue, Is.Zero,
+                "Use the normal flight altitude while firing, without an attack-only descent.");
         }
     }
 
@@ -381,12 +383,19 @@ public class EnemyFlightGuardTests
             "A new floor changes only the next destination, not the current body position.");
     }
 
-    [Test]
-    public void GroundAnchoredFlightHoldsPositionWhileAttackingAndDuringPostAttackRest()
+    [TestCase(0f)]
+    [TestCase(3.2f)]
+    public void GroundAnchoredFlightHoldsPositionWhileAttackingAndDuringPostAttackRest(float attackHeight)
     {
         Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
         PlayerCharacter player = FlightPlayer(new Vector3(1004f, 0f, 0f));
         EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), player);
+        using (var data = new SerializedObject(flight))
+        {
+            if (attackHeight > 0f) data.FindProperty("flightHeight").floatValue = 6.8f;
+            data.FindProperty("flightAttackHeight").floatValue = attackHeight;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
         Assert.That(flight.PrepareSpawnFlight(), Is.True);
         FieldInfo beat = typeof(EnemyLocomotion).GetField("flightBeat", Private);
         beat.SetValue(flight, System.Enum.Parse(beat.FieldType, "Ready"));
@@ -398,6 +407,14 @@ public class EnemyFlightGuardTests
         Physics2D.SyncTransforms();
         MethodInfo tick = typeof(EnemyLocomotion).GetMethod("TickRoamingFlight", Private);
         tick.Invoke(flight, new object[] { .5f });
+        if (attackHeight > 0f)
+        {
+            Physics2D.SyncTransforms();
+            Assert.That(body.position.x, Is.EqualTo(start.x));
+            Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.min.y,
+                Is.EqualTo(attackHeight).Within(.01f));
+            start = body.position;
+        }
         Assert.That(body.position, Is.EqualTo(start));
         flight.EndFlightAttack(false);
         Assert.That((float)typeof(EnemyLocomotion).GetField("flightBeatTime", Private).GetValue(flight), Is.EqualTo(1f));
@@ -454,7 +471,7 @@ public class EnemyFlightGuardTests
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesFixedHeightFlight, Is.True);
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesRoamingFlight, Is.True);
         var flightSettings = new SerializedObject(flyer.GetComponent<EnemyLocomotion>());
-        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(6.8f));
+        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(4.2f));
         Assert.That(flightSettings.FindProperty("flightHeightMultiplier").floatValue, Is.EqualTo(1f));
         Assert.That(flightSettings.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
         Assert.That(flightSettings.FindProperty("flightArcHeight").floatValue, Is.EqualTo(.35f));
@@ -482,9 +499,9 @@ public class EnemyFlightGuardTests
         Assert.That(kit.AttackCooldown, Is.EqualTo(1.5f));
     }
 
-    [TestCase("EnemyCore/EnemyCore", false)]
+    [TestCase("EnemyCore/EnemyCore", true)]
     [TestCase("Enm101/Enemy1", true)]
-    [TestCase("Enm102/Enemy102", false)]
+    [TestCase("Enm102/Enemy102", true)]
     [TestCase("Enm103/Enemy103", true)]
     public void RegularEnemiesUseAuthoredReactionModesAndTunedSettings(string prefabName, bool usePositionReactions)
     {

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
+using Unity.Behavior;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -76,8 +77,8 @@ public class EnemyGifAnimationTests
     [Test]
     public void BitePreparationAndImpactAreDifferentClipsAndFiringUsesTheStance()
     {
-        AssertFrames(101,"Enemy2_Crouch","Bite",0,2);
-        AssertFrames(101,"Enemy2_Kick","Bite",2,4);
+        AssertFrames(101,"Enemy2_Crouch","Bite",0,3);
+        AssertFrames(101,"Enemy2_Kick","Bite",4,2);
         AssertFrames(102,"Enemy2_Crouch","Shoot",0,6);
         AssertFrames(102,"Enemy2_Kick","ShootStance",0,4);
         AssertFrames(103,"Enemy2_Crouch","Guard",0,4);
@@ -85,6 +86,93 @@ public class EnemyGifAnimationTests
         var kit = AssetDatabase.LoadAssetAtPath<GameObject>(EnemyColorVariantAuthoring.PrefabPath(102)).GetComponent<EnemyController>().Kit;
         Assert.That(kit.ShotAnimationFPS, Is.EqualTo(1f/.15f).Within(.0001f));
     }
+
+    [TestCase(0)] [TestCase(1)] [TestCase(2)]
+    public void BiteHoldsItsOpenMouthThroughoutTheWarningAndClosesOnlyOnStrike(int color)
+    {
+        var host = MakeHandler(101, out var handler, out var animator);
+        var target = new GameObject("Bite target");
+        EnemyAttackAction attack = null;
+        try
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(EnemyColorVariantAuthoring.PrefabPath(101));
+            using (var variants = new SerializedObject(prefab.GetComponent<EnemyColorVariants>()))
+                animator.runtimeAnimatorController = (RuntimeAnimatorController)variants.FindProperty("variants")
+                    .GetArrayElementAtIndex(color).FindPropertyRelative("controller").objectReferenceValue;
+            animator.Rebind(); animator.Update(0f);
+            var warningSprite = AssetDatabase.LoadAllAssetsAtPath(
+                EnemyColorVariantAuthoring.VariantSheetPath(101, (char)('a' + color)))
+                .OfType<Sprite>().Single(sprite => sprite.name == "Gif_Bite_02");
+            handler.useMeleeAttackPoses = prefab.GetComponentInChildren<AnimationHandler_Enemy>().useMeleeAttackPoses;
+            Assert.That(handler.useMeleeAttackPoses, Is.True);
+            var enemy = host.GetComponent<EnemyController>();
+            using (var data = new SerializedObject(enemy))
+            {
+                data.FindProperty("kit").objectReferenceValue = prefab.GetComponent<EnemyController>().Kit;
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+            var hitbox = new GameObject("Bite hitbox");
+            hitbox.transform.SetParent(host.transform);
+            enemy.attackHitbox = hitbox.AddComponent<BoxCollider2D>();
+            target.transform.position = Vector3.right;
+            attack = new EnemyAttackAction {
+                Agent = new BlackboardVariable<GameObject>(host),
+                Target = new BlackboardVariable<GameObject>(target),
+                CanAttack = new BlackboardVariable<bool>(true)
+            };
+            Assert.That(CallAttack(attack, "OnStart").ToString(), Is.EqualTo("Running"));
+            animator.Update(0f);
+            Assert.That(enemy.ResolveWarningDuration(.45f), Is.EqualTo(.9f).Within(.001f));
+            animator.Update(.35f);
+            Assert.That(host.GetComponent<SpriteRenderer>().sprite, Is.EqualTo(warningSprite),
+                $"state={animator.GetCurrentAnimatorStateInfo(0).fullPathHash} progress={animator.GetCurrentAnimatorStateInfo(0).normalizedTime} speed={animator.speed}");
+            typeof(EnemyAttackAction).GetField("m_Timer", Flags).SetValue(attack, .35f);
+            CallAttack(attack, "OnUpdate");
+            Assert.That(enemy.attackHitbox.enabled, Is.False);
+            animator.Update(.54f);
+            typeof(EnemyAttackAction).GetField("m_Timer", Flags).SetValue(attack, .7f);
+            CallAttack(attack, "OnUpdate");
+            Assert.That(host.GetComponent<SpriteRenderer>().sprite, Is.EqualTo(warningSprite));
+            Assert.That(enemy.attackHitbox.enabled, Is.False);
+            Assert.That(attack.CanAttack.Value, Is.False);
+            Assert.That(animator.speed, Is.EqualTo(1f), "Holding a non-looping pose must not freeze Hurt or the strike.");
+
+            typeof(EnemyAttackAction).GetField("m_Timer", Flags).SetValue(attack, .9f);
+            CallAttack(attack, "OnUpdate"); animator.Update(0f);
+            Assert.That(host.GetComponent<SpriteRenderer>().sprite.name, Is.EqualTo("Gif_Bite_04"));
+            Assert.That(enemy.attackHitbox.enabled, Is.True);
+            Assert.That(attack.CanAttack.Value, Is.False);
+            animator.Update(.11f);
+            Assert.That(host.GetComponent<SpriteRenderer>().sprite.name, Is.EqualTo("Gif_Bite_05"));
+            float start = (float)typeof(EnemyAttackAction).GetField("m_AttackStartTime", Flags).GetValue(attack);
+            float end = (float)typeof(EnemyAttackAction).GetField("m_PhaseEndTime", Flags).GetValue(attack);
+            Assert.That(end - start, Is.EqualTo(.28f + 3.8f).Within(.001f));
+            animator.Update(.15f);
+            var strikePose = animator.GetCurrentAnimatorStateInfo(0);
+            typeof(EnemyAttackAction).GetField("m_Timer", Flags).SetValue(attack, start + .29f);
+            CallAttack(attack, "OnUpdate"); animator.Update(0f);
+            Assert.That(enemy.attackHitbox.enabled, Is.False);
+            Assert.That(animator.GetCurrentAnimatorStateInfo(0).fullPathHash,
+                Is.EqualTo(Animator.StringToHash("Base Layer.Idle")),
+                $"Recovery locomotion must not stay stuck in the bite pose. progress={strikePose.normalizedTime} length={strikePose.length} loop={strikePose.loop} active={handler.enemyController?.IsGameplayActive} reaction={handler.enemyController?.CurrentReactionState} playing={typeof(AnimationHandler_Enemy).GetField("bodyChargeAnimationPlaying", Flags).GetValue(handler)}");
+            Assert.That(attack.CanAttack.Value, Is.False, "Returning the animation must not reopen the attack gate.");
+            typeof(EnemyAttackAction).GetField("m_Timer", Flags).SetValue(attack, end - .2f);
+            Assert.That(CallAttack(attack, "OnUpdate").ToString(), Is.EqualTo("Running"));
+            Assert.That(attack.CanAttack.Value, Is.False);
+            typeof(EnemyAttackAction).GetField("m_Timer", Flags).SetValue(attack, end + .01f);
+            Assert.That(CallAttack(attack, "OnUpdate").ToString(), Is.EqualTo("Success"));
+            Assert.That(attack.CanAttack.Value, Is.True);
+        }
+        finally
+        {
+            if (attack != null) CallAttack(attack, "OnEnd");
+            Object.DestroyImmediate(target);
+            Object.DestroyImmediate(host);
+        }
+    }
+
+    private static object CallAttack(EnemyAttackAction attack, string method)
+        => typeof(EnemyAttackAction).GetMethod(method, Flags).Invoke(attack, null);
 
     [Test]
     public void BossMotionTimeSamplesOnlyMovingFramesDuringRushAndAllEightBrakingFramesAfterwards()

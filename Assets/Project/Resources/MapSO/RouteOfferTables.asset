@@ -38,8 +38,8 @@ MonoBehaviour:
     minEnemiesPerWave: 4
     maxEnemiesPerWave: 4
     aliveCap: 3
-    minCoins: 30
-    maxCoins: 60
+    minCoins: 80
+    maxCoins: 100
     artifactChance: 0.05
     enemyPool:
     - prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
@@ -55,7 +55,7 @@ MonoBehaviour:
     minEnemiesPerWave: 6
     maxEnemiesPerWave: 6
     aliveCap: 3
-    minCoins: 90
+    minCoins: 120
     maxCoins: 150
     artifactChance: 0.28
     enemyPool:
@@ -73,7 +73,7 @@ MonoBehaviour:
     maxEnemiesPerWave: 8
     aliveCap: 4
     minCoins: 180
-    maxCoins: 280
+    maxCoins: 220
     artifactChance: 0.55
     enemyPool:
     - prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}

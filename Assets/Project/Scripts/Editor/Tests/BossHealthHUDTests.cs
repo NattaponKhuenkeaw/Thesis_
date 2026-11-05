@@ -354,8 +354,35 @@ public class BossHealthHUDTests
             Assert.That(data.FindProperty("defaultMaxHp").floatValue,Is.EqualTo(enemy.maxHP));
             Assert.That(data.FindProperty("healthBarCount").intValue,Is.EqualTo(5));
             Assert.That(data.FindProperty("defaultAttackDamage").floatValue,Is.EqualTo(165f));
-            Assert.That(data.FindProperty("defaultDefense").floatValue,Is.EqualTo(500f));
+            Assert.That(data.FindProperty("defaultDefense").floatValue,Is.Zero);
+            Assert.That(enemy.defense,Is.Zero);
         }
+    }
+
+    [TestCase(0)]
+    [TestCase(1)]
+    [TestCase(5)]
+    public void BossInitializationAndBiomeScalingKeepDefenseAtZero(int biome)
+    {
+        var root = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(BossPath));
+        try
+        {
+            var enemy = root.GetComponent<EnemyController>();
+            var controller = root.GetComponent<Project.AIBehaviour.Boss.BossPatternController>();
+            enemy.defense = 500f;
+            controller.GetType().GetField("statsApplied",Private).SetValue(controller,false);
+            controller.GetType().GetMethod("ApplyDefaultStatsIfNeeded",Private).Invoke(controller,null);
+            Assert.That(enemy.defense,Is.Zero);
+            Assert.That(enemy.maxHP,Is.EqualTo(4000f));
+            Assert.That(enemy.attackDamage,Is.EqualTo(165f));
+
+            float multiplier = Project.Core.ZoneState.RunProgressionManager.ResolveEnemyBasicStatMultiplier(biome);
+            enemy.ApplyBasicStatMultiplier(multiplier);
+            Assert.That(enemy.defense,Is.Zero);
+            Assert.That(enemy.maxHP,Is.EqualTo(4000f*multiplier).Within(.001f));
+            Assert.That(enemy.attackDamage,Is.EqualTo(165f*multiplier).Within(.001f));
+        }
+        finally { Object.DestroyImmediate(root); }
     }
 }
 #endif

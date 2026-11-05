@@ -846,9 +846,17 @@ public class EnemyReactionAnimationTests
         handler.TriggerAttack();
         Assert.That(GetPresentationField<bool>("reactionReturnPending"), Is.False);
         Assert.That(animator.GetBool("ManualReactionAnimation"), Is.False);
-        animator.Update(.1f);
-        animator.Update(.1f);
-        Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.Attack")));
+        int attackPose = Animator.StringToHash("Base Layer.Attack");
+        bool enteredAttack = false;
+        // The 101 bite lasts 0.2 seconds; a single end-point sample can already be Idle.
+        for (int i = 0; i < 20; i++)
+        {
+            animator.Update(.01f);
+            if (Pose != attackPose) continue;
+            enteredAttack = true;
+            break;
+        }
+        Assert.That(enteredAttack, Is.True, "Attack must start without waiting for the pending hurt-to-idle bridge.");
     }
 
     [Test]

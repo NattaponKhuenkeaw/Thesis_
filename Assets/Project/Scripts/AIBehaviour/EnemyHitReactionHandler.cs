@@ -82,6 +82,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
     public bool IsGrabbed => currentReaction.reactionKind == EnemyReactionKind.Grab;
     public bool IsGroundedForCombat => IsGrounded();
     public bool UsesPositionReactions => usePositionReactions;
+    public bool AllowsGroundSeparation => currentState == EnemyReactionState.None
+        || ((currentState == EnemyReactionState.Recovering || currentState == EnemyReactionState.Knockdown)
+            && currentReactionFrame > currentReaction.ImpactFreezeFrames + currentReaction.ActiveReactionFrames);
     public bool OwnsPositionReactionMotion => positionMotion != null;
     private bool HoldsFlightPlane => locomotion != null && locomotion.HoldsFlightPlaneForReaction;
 

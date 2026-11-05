@@ -16,6 +16,6 @@ MonoBehaviour:
   itemName: Asura Shin
   description: 
   icon: {fileID: 21300000, guid: 011ac730786999640ad87686dae5ecf6, type: 3}
-  price: 1500
+  price: 1100
   characterObjectData: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
   availableInShop: 1

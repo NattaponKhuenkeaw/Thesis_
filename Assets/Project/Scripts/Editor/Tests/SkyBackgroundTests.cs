@@ -1,4 +1,5 @@
 #if UNITY_INCLUDE_TESTS
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,6 +11,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 public class SkyBackgroundTests
@@ -19,6 +21,89 @@ public class SkyBackgroundTests
     private static ParallaxBackground MainSky(GameObject root)
         => root.GetComponentsInChildren<ParallaxBackground>(true)
             .Single(p => SkyBackgroundRepair.IsSky(p) && (p.name == "background" || p.name == "Sky"));
+
+    [Test]
+    public void LayoutFiveKeepsTheUpperSkyEditableButOnlyEnablesThePrimarySkyRow()
+    {
+        var root = PrefabUtility.LoadPrefabContents(BiomeLayoutAuthoring.LayoutPath(5));
+        try
+        {
+            var primary = MainSky(root);
+            var duplicate = root.GetComponentsInChildren<ParallaxBackground>(true).Single(p => p.name == "background (1)");
+            Assert.That(primary.gameObject.activeInHierarchy && primary.enabled, Is.True);
+            Assert.That(duplicate.gameObject.activeSelf, Is.False);
+            Assert.That(SkyBackgroundRepair.RowImages(duplicate).Length, Is.GreaterThanOrEqualTo(3), "Retain the editable upper row instead of deleting artwork");
+            Assert.That(root.GetComponentsInChildren<ParallaxBackground>().Count(SkyBackgroundRepair.IsSky), Is.EqualTo(1));
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [UnityTest]
+    public IEnumerator LayoutFiveRuntimeSkyStaysSingleAndCoversStreetRoofsAndExit()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var holder = new GameObject("Layout five sky regression");
+        holder.SetActive(false);
+        var root = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(BiomeLayoutAuthoring.LayoutPath(5)), holder.transform);
+        root.transform.localPosition = Vector3.zero;
+        foreach (var component in root.GetComponentsInChildren<MonoBehaviour>(true))
+            if (!(component is ParallaxBackground)) component.enabled = false;
+        var skies = root.GetComponentsInChildren<ParallaxBackground>(true).Where(SkyBackgroundRepair.IsSky).ToArray();
+        var row = skies.SelectMany(SkyBackgroundRepair.RowImages).ToArray();
+        foreach (var image in root.GetComponentsInChildren<SpriteRenderer>(true)) image.enabled = row.Contains(image);
+        var cameraHost = new GameObject("Layout five sky camera");
+        var camera = cameraHost.AddComponent<Camera>();
+        camera.enabled = false;
+        camera.orthographic = true;
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = Color.magenta;
+        camera.GetUniversalAdditionalCameraData();
+        cameraHost.AddComponent<AudioListener>();
+        foreach (var sky in skies) sky.targetCamera = cameraHost.transform;
+        var target = new RenderTexture(960, 540, 24);
+        target.Create();
+        Directory.CreateDirectory("Logs/Layout5SkyFix");
+        try
+        {
+            cameraHost.transform.position = new Vector3(10f, 6f, -100f);
+            holder.SetActive(true);
+            var primary = MainSky(root);
+            var duplicate = skies.Single(p => p.name == "background (1)");
+            int view = 0;
+            foreach (var point in new[] { new Vector3(10f, 6f, 8f), new Vector3(90f, 26f, 12f), new Vector3(170f, 8f, 8f) })
+            {
+                cameraHost.transform.position = new Vector3(point.x, point.y, -100f);
+                camera.orthographicSize = point.z;
+                int frame = Time.frameCount;
+                while (Time.frameCount < frame + 3) yield return null;
+                Assert.That(root.GetComponentsInChildren<ParallaxBackground>().Count(SkyBackgroundRepair.IsSky), Is.EqualTo(1));
+                Assert.That(duplicate.gameObject.activeInHierarchy, Is.False);
+                Assert.That(primary.transform.position.y, Is.EqualTo(point.y).Within(.001f));
+                var image = Capture(camera, target);
+                try
+                {
+                    Assert.That(image.GetPixels32().Count(p => p.r > 245 && p.g < 10 && p.b > 245), Is.Zero,
+                        "The primary sky must still fill the screen without its duplicate");
+                    File.WriteAllBytes($"Logs/Layout5SkyFix/View{view++}.png", image.EncodeToPNG());
+                }
+                finally { Object.DestroyImmediate(image); }
+            }
+        }
+        finally
+        {
+            Object.DestroyImmediate(target);
+            Object.DestroyImmediate(holder);
+            Object.DestroyImmediate(cameraHost);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTearDown]
+    public IEnumerator ExitAfterRuntimeFailure()
+    {
+        if (Application.isPlaying) yield return new ExitPlayMode();
+    }
 
     [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)]
     [TestCase(6)] [TestCase(7)] [TestCase(8)] [TestCase(9)] [TestCase(10)]
