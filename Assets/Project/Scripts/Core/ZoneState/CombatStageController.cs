@@ -188,7 +188,12 @@ namespace Project.Core.ZoneState
             EncounterSO encounter = ResolveEncounter(chamber);
             if (encounter != null && encounter.HasTypePool)
             {
-                return encounter.RollQuota(count);
+                var progression = RunProgressionManager.Instance;
+                var inventory = TeamLoader.Instance != null ? TeamLoader.Instance.RunInventory : null;
+                return EncounterPhaseComposition.Roll(encounter, count,
+                    progression != null ? progression.CurrentBiomeIndex : 0,
+                    progression != null ? progression.currentRoomDepth : 0,
+                    EncounterPhaseComposition.HasRotationTeam(inventory));
             }
 
             return CombatStageQuotaSplitter.Take(stageQuota, count);

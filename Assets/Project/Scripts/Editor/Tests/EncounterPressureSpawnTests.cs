@@ -208,10 +208,10 @@ public class EncounterPressureSpawnTests
     }
 
 #if UNITY_EDITOR
-    [TestCase(RouteDifficulty.Easy, 8)]
-    [TestCase(RouteDifficulty.Medium, 12)]
-    [TestCase(RouteDifficulty.Hard, 16)]
-    public void ProductionDifficultyRefillsFiveLivingEnemiesUntilTheDoubledQuotaIsExhausted(RouteDifficulty difficulty, int quota)
+    [TestCase(RouteDifficulty.Easy, 4)]
+    [TestCase(RouteDifficulty.Medium, 6)]
+    [TestCase(RouteDifficulty.Hard, 8)]
+    public void ProductionDifficultyRefillsUpToFiveLivingEnemiesUntilTheQuotaIsExhausted(RouteDifficulty difficulty, int quota)
     {
         EncounterSO encounter = CombatRouteContent.LoadPalette(difficulty);
         Assert.That(encounter.ChamberQuota, Is.EqualTo(quota));
@@ -228,7 +228,7 @@ public class EncounterPressureSpawnTests
             living++;
             spawned++;
         }
-        Assert.That(living, Is.EqualTo(5));
+        Assert.That(living, Is.EqualTo(Mathf.Min(encounter.AliveCap, quota)));
         Assert.That(director.CanSpawn(living), Is.False);
         while (director.Remaining > 0)
         {

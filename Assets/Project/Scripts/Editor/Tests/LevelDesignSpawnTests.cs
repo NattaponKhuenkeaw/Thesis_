@@ -184,7 +184,7 @@ public class LevelDesignSpawnTests
                 bool repairedCombat=level==4 || level==9;
                 Assert.That(room.spawnSlots.Length,Is.EqualTo(repairedCombat ? 5 : expected[i].slots.Length));
                 Assert.That(room.encounter,Is.EqualTo(AssetDatabase.LoadAssetAtPath<EncounterSO>(CombatRouteContent.EasyResourcePath.Insert(0,"Assets/Project/Resources/")+".asset")));
-                Assert.That(room.encounter.RollQuota(room.encounter.ChamberQuota).Count,Is.EqualTo(8));
+                Assert.That(room.encounter.RollQuota(room.encounter.ChamberQuota).Count,Is.EqualTo(4));
                 Assert.That(room.exitWall,Is.Not.Null);
                 Assert.That(((BoxCollider2D)room.exitWall).size.x,Is.GreaterThanOrEqualTo(6f));
                 if (i>0)
@@ -281,9 +281,9 @@ public class LevelDesignSpawnTests
         var easy=CombatRouteContent.LoadPalette(RouteDifficulty.Easy);
         var medium=CombatRouteContent.LoadPalette(RouteDifficulty.Medium);
         var hard=CombatRouteContent.LoadPalette(RouteDifficulty.Hard);
-        Assert.That(easy.ChamberQuota,Is.EqualTo(8));
-        Assert.That(medium.ChamberQuota,Is.EqualTo(12));
-        Assert.That(hard.ChamberQuota,Is.EqualTo(16));
+        Assert.That(easy.ChamberQuota,Is.EqualTo(4));
+        Assert.That(medium.ChamberQuota,Is.EqualTo(6));
+        Assert.That(hard.ChamberQuota,Is.EqualTo(8));
     }
 }
 #endif
