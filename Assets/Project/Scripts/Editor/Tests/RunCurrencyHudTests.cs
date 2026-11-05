@@ -1,10 +1,30 @@
 #if UNITY_INCLUDE_TESTS
 using NUnit.Framework;
 using Project.ShopSystem;
+using TMPro;
+using UnityEditor;
 using UnityEngine;
 
 public class RunCurrencyHudTests
 {
+    [Test]
+    public void AuthoredCurrencyPanelIsVisibleAndBoundToTheHud()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/CombatUI/Player_UI.prefab");
+        Assert.That(prefab, Is.Not.Null);
+        var panel = prefab.transform.Find("currency");
+        Assert.That(panel, Is.Not.Null);
+        var text = panel.Find("RunCurrency").GetComponent<TMP_Text>();
+        Assert.That(text, Is.Not.Null);
+        Assert.That(text.enabled, Is.True);
+        for (Transform current = text.transform; current != null; current = current.parent)
+            Assert.That(current.gameObject.activeSelf, Is.True, current.name + " must not hide the Soul counter.");
+        var hud = prefab.GetComponent<PlayerHUD>();
+        Assert.That(hud, Is.Not.Null);
+        using (var data = new SerializedObject(hud))
+            Assert.That(data.FindProperty("currencyText").objectReferenceValue, Is.EqualTo(text));
+    }
+
     [Test]
     public void FormatRunCurrencyWithoutDollarPrefix()
     {
