@@ -55,6 +55,7 @@ public class BiomeLayoutIntegrationTests
                 Assert.That(postBoss.Any(o=>o.Room.RoomKind==RoomKind.Rest),Is.True);
                 Assert.That(postBoss.Where(o=>o.Room.RoomKind==RoomKind.Combat)
                     .All(o=>o.Room.BiomeIndex==(biome+1)%2),Is.True);
+                director.NotifyRoomEntered(postBoss.First(o=>o.Room.RoomKind==RoomKind.Rest).RoomId);
             }
             Assert.That(progression.CurrentBiomeIndex,Is.EqualTo(6));
         }
