@@ -364,6 +364,21 @@ public class AnimationHandler_Enemy : MonoBehaviour
             anim.SetFloat(jumpPhaseHash, phase);
     }
 
+    public void SampleBossCleave(float normalizedTime)
+    {
+        if (anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null) return;
+        int state = Animator.StringToHash("Base Layer.AttackCleave");
+        if (anim.HasState(0, state)) anim.Play(state, 0, Mathf.Clamp01(normalizedTime));
+    }
+
+    public void EndBossCleaveSequence()
+    {
+        if (anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null) return;
+        anim.ResetTrigger(attackCleaveHash);
+        int idle = Animator.StringToHash("Base Layer.Idle");
+        if (anim.HasState(0, idle)) anim.Play(idle, 0, 0f);
+    }
+
     public bool PlayBodyChargePose(bool rushing)
     {
         if (anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null)
