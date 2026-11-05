@@ -76,6 +76,25 @@ public class EnemyLocomotion : MonoBehaviour
     // every frame while they jostle.
     private const float CrowdRankEpsilon = 0.05f;
 
+    [Header("Ground Melee Flanking")]
+    [Tooltip("Split this melee pack across the player's two flanks. Only enabled on Enemy101.")]
+    [SerializeField] private bool groundMeleeFlanking;
+    [Tooltip("Gently spread grounded melee packs without restoring solid collisions between flankers.")]
+    [SerializeField] private bool softGroundSeparation;
+    [SerializeField, Min(0.1f)] private float softSeparationSpacing = 0.55f;
+    [SerializeField, Min(0.1f)] private float softSeparationSpeed = 1.8f;
+    [Tooltip("Maximum extra spread either side of a collapsed pack. Does not pull an already wider pack together.")]
+    [SerializeField, Min(0.1f)] private float softSeparationHalfWidth = 0.8f;
+    private float softWalkingUntil;
+    private readonly List<EnemyLocomotion> softSeparationPack = new List<EnemyLocomotion>(5);
+    private Transform meleeFlankTarget;
+    private float meleeFlankSide;
+    private float meleeFlankTargetX;
+    private float meleeFlankFootY;
+    private bool meleeFlankCrossing;
+    private float meleeFlankArrivalGap;
+    private readonly List<Collider2D> meleePassThroughBodies = new List<Collider2D>(4);
+
     private static readonly List<EnemyController> livingEnemies = new List<EnemyController>(16);
 
     private EnemyController enemy;
@@ -118,6 +137,9 @@ public class EnemyLocomotion : MonoBehaviour
     private bool UsesGroundAnchoredRoaming => UsesRoamingFlight && !flightHeightRelativeToPlayer;
 
     public EnemyMoveMode MoveMode => moveMode;
+    private bool UsesMeleeFlanking => groundMeleeFlanking && moveMode == EnemyMoveMode.Ground
+        && enemy != null && !enemy.isEliteOrBoss && enemy.CombatRole == EnemyCombatRole.InterruptibleMelee;
+    public bool UsesSoftGroundSeparation => softGroundSeparation && UsesMeleeFlanking;
     public Vector2 AttackSlotOffset => attackSlotOffset;
     public bool UsesFixedHeightFlight => allowNonGroundMove && moveMode == EnemyMoveMode.Fly && fixedHeightFlight;
     public bool FlightInitialized => flightInitialized;
@@ -391,6 +413,15 @@ public class EnemyLocomotion : MonoBehaviour
 
     private void OnDisable()
     {
+        Collider2D self = ResolveBodyCollider();
+        if (self != null)
+            foreach (var other in meleePassThroughBodies)
+                if (other != null) Physics2D.IgnoreCollision(self, other, false);
+        meleePassThroughBodies.Clear();
+        meleeFlankTarget = null;
+        meleeFlankSide = 0f;
+        meleeFlankCrossing = false;
+        softWalkingUntil = 0f;
         ReleaseFlightConstraints();
     }
 
@@ -475,6 +506,12 @@ public class EnemyLocomotion : MonoBehaviour
         if (!IsOnSamePlatform(target))
             return false;
 
+        if (UsesMeleeFlanking)
+        {
+            float side = ResolveMeleeFlankSide(target, enemy.ResolveHoldRange(attackRange));
+            if (IsCrossingToMeleeFlank() || (BodyPosition().x - target.position.x) * side <= 0f) return false;
+        }
+
         return EnemyFacingUtil.HorizontalDistance(BodyPosition(), target.position) <= attackRange;
     }
 
@@ -542,7 +579,8 @@ public class EnemyLocomotion : MonoBehaviour
         // stroll to a new slot while they are in the air; striking still requires same-platform.
         if (moveMode == EnemyMoveMode.Ground
             && !IsOnSamePlatform(target)
-            && currentGap <= Mathf.Max(0.1f, attackRange))
+            && currentGap <= Mathf.Max(0.1f, attackRange)
+            && !(UsesMeleeFlanking && IsCrossingToMeleeFlank()))
         {
             if (!IsUnstacking)
                 StopHorizontal();
@@ -642,6 +680,7 @@ public class EnemyLocomotion : MonoBehaviour
 
         float range = Mathf.Max(0.1f, attackRange);
         holdGap = enemy != null ? enemy.ResolveHoldRange(range) : range * 0.85f;
+        if (UsesMeleeFlanking) side = ResolveMeleeFlankSide(target, holdGap);
         holdGap += ResolveCrowdSlotOffset(target, side);
 
         float holdX = targetPos.x + side * holdGap;
@@ -762,6 +801,7 @@ public class EnemyLocomotion : MonoBehaviour
 
     private void LateUpdate()
     {
+        SyncMeleePassThroughBodies();
         UnstackIfOverlapping();
     }
 
@@ -776,6 +816,33 @@ public class EnemyLocomotion : MonoBehaviour
 
     public bool UnstackIfOverlapping(float deltaTime)
     {
+        if (UsesSoftGroundSeparation)
+        {
+            overlapElapsed = 0f;
+            unstackUntil = 0f;
+            if (!CanDriveMovement() || enemy.FacingLocked)
+            {
+                softWalkingUntil = 0f;
+                return false;
+            }
+            if (TryGetSoftGroundSeparationStep(PhysicsStep(), out float correction))
+            {
+                // Chase yields while this brief correction owns walking. No velocity accumulates.
+                softWalkingUntil = Time.time + .06f;
+                body.linearVelocity = new Vector2(correction / PhysicsStep(), body.linearVelocity.y);
+                return true;
+            }
+            if (Time.time < softWalkingUntil && body != null)
+                body.linearVelocity = new Vector2(0f, body.linearVelocity.y);
+            softWalkingUntil = 0f;
+            return false;
+        }
+        if (UsesMeleeFlanking && enemy.FacingLocked)
+        {
+            overlapElapsed = 0f;
+            unstackUntil = 0f;
+            return false;
+        }
         if (enemy != null && enemy.ShieldGuard != null && enemy.ShieldGuard.IsEngaged)
         {
             overlapElapsed = 0f;
@@ -828,7 +895,74 @@ public class EnemyLocomotion : MonoBehaviour
         return true;
     }
 
-    public bool IsUnstacking => Time.time < unstackUntil;
+    public bool IsUnstacking => Time.time < unstackUntil || Time.time < softWalkingUntil;
+
+    /// <summary>Plans a terrain-safe correction; the current motion owner applies it.</summary>
+    public bool TryGetSoftGroundSeparationStep(float deltaTime, out float correction)
+    {
+        correction = 0f;
+        Cache();
+        if (deltaTime <= 0f || !CanJoinSoftGroundPack()) return false;
+        Collider2D self = ResolveBodyCollider();
+        float feet = self.bounds.min.y;
+        RoomEnemyRegistry.FillLiving(livingEnemies);
+        softSeparationPack.Clear();
+        softSeparationPack.Add(this);
+        // Include connected neighbours so a pile of five receives five distinct, stable slots.
+        for (int p = 0; p < softSeparationPack.Count; p++)
+        {
+            EnemyLocomotion member = softSeparationPack[p];
+            float memberX = member.ResolveBodyCollider().bounds.center.x;
+            foreach (EnemyController other in livingEnemies)
+            {
+                if (other == null || other == enemy) continue;
+                var movement = other.GetComponent<EnemyLocomotion>();
+                if (movement == null || softSeparationPack.Contains(movement) || !movement.CanJoinSoftGroundPack()) continue;
+                Collider2D peer = movement.ResolveBodyCollider();
+                if (Mathf.Abs(peer.bounds.min.y - feet) > .15f
+                    || Mathf.Abs(peer.bounds.center.x - memberX) > softSeparationSpacing + .08f
+                    || IsPassingOppositeFlank(member, movement)) continue;
+                softSeparationPack.Add(movement);
+            }
+        }
+        if (softSeparationPack.Count < 2) return false;
+        softSeparationPack.Sort((a, b) => {
+            int order = a.ResolveBodyCollider().bounds.center.x.CompareTo(b.ResolveBodyCollider().bounds.center.x);
+            return order != 0 ? order : a.enemy.GetInstanceID().CompareTo(b.enemy.GetInstanceID());
+        });
+        float left = softSeparationPack[0].ResolveBodyCollider().bounds.center.x;
+        float right = softSeparationPack[softSeparationPack.Count - 1].ResolveBodyCollider().bounds.center.x;
+        float span = Mathf.Max(right - left,
+            Mathf.Min(softSeparationSpacing * (softSeparationPack.Count - 1), softSeparationHalfWidth * 2f));
+        float slot = softSeparationPack.IndexOf(this) / (float)(softSeparationPack.Count - 1) - .5f;
+        float desired = (left + right) * .5f + slot * span - self.bounds.center.x;
+        if (Mathf.Abs(desired) <= .015f || !HasGroundInDirection(desired)) return false;
+        float step = Mathf.Clamp(desired, -softSeparationSpeed * deltaTime, softSeparationSpeed * deltaTime);
+        correction = ClipFlightTravel(Vector2.right * step).x;
+        return Mathf.Abs(correction) > .0001f;
+    }
+
+    private bool CanJoinSoftGroundPack()
+    {
+        Cache();
+        if (!isActiveAndEnabled || !UsesSoftGroundSeparation || !enemy.IsCombatReady || body == null
+            || body.linearVelocity.y > .1f) return false;
+        EnemyReactionState state = enemy.CurrentReactionState;
+        if (state != EnemyReactionState.None && state != EnemyReactionState.Recovering && state != EnemyReactionState.Knockdown)
+            return false;
+        if (state == EnemyReactionState.None && enemy.FacingLocked) return false;
+        Collider2D collider = ResolveBodyCollider();
+        return collider != null && collider.enabled && enemy.hitReactionHandler != null
+            && enemy.hitReactionHandler.AllowsGroundSeparation && enemy.hitReactionHandler.IsGroundedForCombat;
+    }
+
+    private static bool IsPassingOppositeFlank(EnemyLocomotion a, EnemyLocomotion b)
+    {
+        return a.enemy.CurrentReactionState == EnemyReactionState.None && b.enemy.CurrentReactionState == EnemyReactionState.None
+            && a.meleeFlankTarget != null && a.meleeFlankTarget == b.meleeFlankTarget
+            && a.meleeFlankSide != 0f && b.meleeFlankSide != 0f && a.meleeFlankSide != b.meleeFlankSide
+            && (a.IsCrossingToMeleeFlank() || b.IsCrossingToMeleeFlank());
+    }
 
     private void ApplyUnstackWalk(float sign)
     {
@@ -1408,6 +1542,12 @@ public class EnemyLocomotion : MonoBehaviour
             if (other.GetComponent<EnemyLocomotion>() == null)
                 continue;
 
+            var otherLocomotion = other.GetComponent<EnemyLocomotion>();
+            if (UsesMeleeFlanking && otherLocomotion.UsesMeleeFlanking
+                && (IsCrossingToMeleeFlank() || otherLocomotion.IsCrossingToMeleeFlank()
+                    || meleeFlankTarget != null && otherLocomotion.meleeFlankTarget == meleeFlankTarget))
+                continue;
+
             Vector3 otherPos = other.transform.position;
             if (Mathf.Abs(otherPos.y - self.y) > overlapSameY)
                 continue;
@@ -1456,8 +1596,12 @@ public class EnemyLocomotion : MonoBehaviour
             Vector3 otherPos = other.transform.position;
             if (Mathf.Abs(otherPos.y - self.y) > samePlatformMaxY)
                 continue;
-            // A body on the far side of the target queues against that flank, not this one.
-            if (!Mathf.Approximately(Mathf.Sign(otherPos.x - targetX), side))
+            var otherLocomotion = other.GetComponent<EnemyLocomotion>();
+            float otherSide = UsesMeleeFlanking && otherLocomotion.UsesMeleeFlanking
+                && otherLocomotion.meleeFlankTarget == target
+                ? otherLocomotion.meleeFlankSide : Mathf.Sign(otherPos.x - targetX);
+            // Reserve the destination flank even while a peer is crossing through the pack.
+            if (!Mathf.Approximately(otherSide, side))
                 continue;
 
             float otherGap = Mathf.Abs(otherPos.x - targetX);
@@ -1473,6 +1617,84 @@ public class EnemyLocomotion : MonoBehaviour
         }
 
         return ahead * crowdSlotSpacing;
+    }
+
+    private float ResolveMeleeFlankSide(Transform target, float holdGap)
+    {
+        float naturalSide = BodyPosition().x >= target.position.x ? 1f : -1f;
+        float footY = FootY(ResolveBodyCollider(), BodyPosition().y);
+        if (meleeFlankTarget == target && meleeFlankSide != 0f
+            && Mathf.Abs(target.position.x - meleeFlankTargetX) < 1f
+            && Mathf.Abs(footY - meleeFlankFootY) <= samePlatformMaxY)
+            return meleeFlankSide;
+
+        RoomEnemyRegistry.FillLiving(livingEnemies);
+        int near = 0, far = 0;
+        foreach (var other in livingEnemies)
+        {
+            if (other == null || other == enemy || !other.IsGameplayActive) continue;
+            var movement = other.GetComponent<EnemyLocomotion>();
+            if (movement == null || !movement.isActiveAndEnabled || !movement.UsesMeleeFlanking
+                || movement.meleeFlankTarget != target) continue;
+            if (Mathf.Abs(other.transform.position.y - BodyPosition().y) > samePlatformMaxY) continue;
+            if (movement.meleeFlankSide == naturalSide) near++;
+            else far++;
+        }
+        float chosen = near > far ? -naturalSide : naturalSide;
+        if (chosen != naturalSide && !HasWalkableMeleeFlank(target.position.x + chosen * holdGap))
+            chosen = naturalSide;
+        meleeFlankCrossing = chosen != naturalSide
+            || (meleeFlankTarget == target && meleeFlankSide == chosen && meleeFlankCrossing);
+        meleeFlankArrivalGap = Mathf.Max(.1f, holdGap - arrivalThreshold);
+        meleeFlankTarget = target;
+        meleeFlankSide = chosen;
+        meleeFlankTargetX = target.position.x;
+        meleeFlankFootY = footY;
+        return chosen;
+    }
+
+    private bool IsCrossingToMeleeFlank()
+    {
+        if (meleeFlankTarget == null || meleeFlankSide == 0f) return false;
+        float signedGap = (BodyPosition().x - meleeFlankTarget.position.x) * meleeFlankSide;
+        if (meleeFlankCrossing && signedGap >= meleeFlankArrivalGap) meleeFlankCrossing = false;
+        return meleeFlankCrossing || signedGap < 0f;
+    }
+
+    private bool HasWalkableMeleeFlank(float targetX)
+    {
+        Collider2D collider = ResolveBodyCollider();
+        if (collider == null) return false;
+        float travel = targetX - BodyPosition().x;
+        if (Mathf.Abs(ClipFlightTravel(Vector2.right * travel).x - travel) > .05f) return false;
+        float feet = collider.bounds.min.y;
+        float supportEndX = targetX + Mathf.Sign(travel) * (collider.bounds.extents.x + ledgeProbeDistance);
+        int steps = Mathf.Max(1, Mathf.CeilToInt(Mathf.Abs(supportEndX - BodyPosition().x) / .5f));
+        for (int i = 0; i <= steps; i++)
+        {
+            float x = Mathf.Lerp(BodyPosition().x, supportEndX, (float)i / steps);
+            if (!TryFindFlightGround(new Vector2(x, feet + .05f), groundProbeDistance + .05f, out _)) return false;
+        }
+        return true;
+    }
+
+    private void SyncMeleePassThroughBodies()
+    {
+        Cache();
+        if (!UsesMeleeFlanking || !enemy.IsGameplayActive) return;
+        Collider2D self = ResolveBodyCollider();
+        if (self == null || !self.enabled) return;
+        RoomEnemyRegistry.FillLiving(livingEnemies);
+        foreach (var other in livingEnemies)
+        {
+            if (other == null || other == enemy || !other.IsGameplayActive) continue;
+            var movement = other.GetComponent<EnemyLocomotion>();
+            if (movement == null || !movement.isActiveAndEnabled || !movement.UsesMeleeFlanking) continue;
+            Collider2D peer = other.bodyCollider;
+            if (peer == null || !peer.enabled || Physics2D.GetIgnoreCollision(self, peer)) continue;
+            Physics2D.IgnoreCollision(self, peer, true);
+            if (!meleePassThroughBodies.Contains(peer)) meleePassThroughBodies.Add(peer);
+        }
     }
 
     private bool CanDriveMovement()

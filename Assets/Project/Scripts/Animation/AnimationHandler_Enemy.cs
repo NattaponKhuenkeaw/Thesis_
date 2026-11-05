@@ -81,6 +81,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private int lifecycleAnimationFrame;
     private bool lifecycleAnimationPlaying;
     private bool bodyChargeAnimationPlaying;
+    private readonly List<AnimatorClipInfo> attackPoseClips = new List<AnimatorClipInfo>(2);
     private bool shieldPosePlaying;
     private float speedBeforeShieldPose;
     private AnimatorCullingMode previousCulling;
@@ -423,8 +424,12 @@ public class AnimationHandler_Enemy : MonoBehaviour
             || anim.runtimeAnimatorController == null)
             return true;
         var state = anim.GetCurrentAnimatorStateInfo(0);
+        // Override controllers can report the source state's loop flag instead of the bite/shot clip's flag.
+        anim.GetCurrentAnimatorClipInfo(0, attackPoseClips);
+        bool looping = attackPoseClips.Count > 0 && attackPoseClips[0].clip != null
+            ? attackPoseClips[0].clip.isLooping : state.loop;
         return state.fullPathHash != Animator.StringToHash("Base Layer.BodyChargeRush")
-            || (!state.loop && state.normalizedTime >= 1f);
+            || (!looping && state.normalizedTime >= 1f);
     }
 
     public void EndBodyChargePose()

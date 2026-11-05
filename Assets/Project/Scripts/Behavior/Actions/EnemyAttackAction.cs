@@ -250,8 +250,9 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         // Visual recovery can outlast the shot window without changing attack cadence.
-        if (m_AttackStarted && m_HitboxDisabled && m_Controller.UsesRangedAttack
-            && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses
+        if (m_AttackStarted && m_HitboxDisabled && m_AnimHandler != null
+            && ((m_Controller.UsesRangedAttack && m_AnimHandler.useRangedAttackPoses)
+                || (!IsBodyCharge && m_AnimHandler.useMeleeAttackPoses))
             && m_AnimHandler.IsRangedAttackPoseComplete())
             m_AnimHandler.EndBodyChargePose();
 

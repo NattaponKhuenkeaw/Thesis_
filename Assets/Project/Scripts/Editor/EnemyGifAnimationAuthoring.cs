@@ -99,13 +99,14 @@ public static class EnemyGifAnimationAuthoring
             if (binding.type == typeof(SpriteRenderer) && binding.propertyName == "m_Sprite")
                 AnimationUtility.SetObjectReferenceCurve(clip, binding, null);
         int first = 0, count = pose.seconds.Length;
-        if (id == 101 && key.name == "Enemy2_Crouch") count = 2;
-        if (id == 101 && key.name == "Enemy2_Kick") { first = 2; count = 4; }
+        bool biteWindup = id == 101 && key.name == "Enemy2_Crouch";
+        if (biteWindup) count = 3;
+        if (id == 101 && key.name == "Enemy2_Kick") { first = 4; count = 2; }
         if (key.name == "Enemy_Knockdown") { first = pose.seconds.Length - 1; count = 1; }
         float duration = pose.seconds.Skip(first).Take(count).Sum();
         float scale = 1f;
         bool windup = key.name == "Enemy2_Crouch" && id != 103;
-        if (windup && enemy.Kit != null && enemy.Kit.WarningDuration > 0f)
+        if (windup && !biteWindup && enemy.Kit != null && enemy.Kit.WarningDuration > 0f)
             scale = enemy.Kit.WarningDuration / duration;
         var frames = new ObjectReferenceKeyframe[count];
         float time = 0f;
@@ -115,6 +116,12 @@ public static class EnemyGifAnimationAuthoring
             time += pose.seconds[first + i] * scale;
         }
         duration *= scale;
+        if (biteWindup)
+        {
+            // Open promptly, then hold the last non-looping pose until the attack node strikes.
+            for (int i = 0; i < frames.Length; i++) frames[i].time = i * .1f;
+            duration = Mathf.Max(.4f, enemy.ResolveWarningDuration(.45f));
+        }
         if (id == 111 && pose.name == "Charge")
         {
             // The existing motion-time API separates prepare / moving / braking at .3 and .5.

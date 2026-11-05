@@ -15,9 +15,9 @@ MonoBehaviour:
   combatRole: 0
   attackRange: -1
   holdRange: -1
-  warningDuration: -1
+  warningDuration: 0.9
   hitWindowDuration: -1
-  attackCooldown: 2.7
+  attackCooldown: 3.8
   lungeDistance: -1
   commitTelegraphFraction: -1
   recoveryPlantDuration: 0.8
