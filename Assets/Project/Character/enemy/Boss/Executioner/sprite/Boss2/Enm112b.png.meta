@@ -190,12 +190,12 @@ TextureImporter:
       name: Enm112b_0
       rect:
         serializedVersion: 2
-        x: 33
-        y: 661
-        width: 149
-        height: 162
+        x: 34
+        y: 662
+        width: 147
+        height: 160
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -212,12 +212,12 @@ TextureImporter:
       name: Enm112b_1
       rect:
         serializedVersion: 2
-        x: 140
-        y: 651
-        width: 35
-        height: 52
+        x: 141
+        y: 652
+        width: 33
+        height: 50
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -234,12 +234,12 @@ TextureImporter:
       name: Enm112b_2
       rect:
         serializedVersion: 2
-        x: 248
-        y: 660
-        width: 135
-        height: 154
+        x: 249
+        y: 661
+        width: 133
+        height: 152
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -256,12 +256,12 @@ TextureImporter:
       name: Enm112b_3
       rect:
         serializedVersion: 2
-        x: 450
-        y: 652
-        width: 148
-        height: 171
+        x: 451
+        y: 653
+        width: 146
+        height: 169
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -278,12 +278,12 @@ TextureImporter:
       name: Enm112b_4
       rect:
         serializedVersion: 2
-        x: 657
-        y: 661
-        width: 149
-        height: 162
+        x: 658
+        y: 662
+        width: 147
+        height: 160
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -300,12 +300,12 @@ TextureImporter:
       name: Enm112b_5
       rect:
         serializedVersion: 2
-        x: 764
-        y: 651
-        width: 35
-        height: 52
+        x: 765
+        y: 652
+        width: 33
+        height: 50
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -322,12 +322,12 @@ TextureImporter:
       name: Enm112b_6
       rect:
         serializedVersion: 2
-        x: 865
-        y: 631
-        width: 149
-        height: 192
+        x: 866
+        y: 632
+        width: 147
+        height: 190
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -344,12 +344,12 @@ TextureImporter:
       name: Enm112b_7
       rect:
         serializedVersion: 2
-        x: 972
-        y: 651
-        width: 35
-        height: 52
+        x: 973
+        y: 652
+        width: 33
+        height: 50
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -366,12 +366,12 @@ TextureImporter:
       name: Enm112b_8
       rect:
         serializedVersion: 2
-        x: 1080
-        y: 667
-        width: 136
-        height: 145
+        x: 1081
+        y: 668
+        width: 134
+        height: 143
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -388,12 +388,12 @@ TextureImporter:
       name: Enm112b_9
       rect:
         serializedVersion: 2
-        x: 1185
-        y: 651
-        width: 35
-        height: 63
+        x: 1186
+        y: 652
+        width: 33
+        height: 61
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -410,12 +410,12 @@ TextureImporter:
       name: Enm112b_10
       rect:
         serializedVersion: 2
-        x: 1281
-        y: 647
-        width: 149
-        height: 176
+        x: 1282
+        y: 648
+        width: 147
+        height: 174
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -432,12 +432,12 @@ TextureImporter:
       name: Enm112b_11
       rect:
         serializedVersion: 2
-        x: 1489
-        y: 661
-        width: 149
-        height: 162
+        x: 1490
+        y: 662
+        width: 147
+        height: 160
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -454,12 +454,12 @@ TextureImporter:
       name: Enm112b_12
       rect:
         serializedVersion: 2
-        x: 1596
-        y: 631
-        width: 35
-        height: 72
+        x: 1597
+        y: 632
+        width: 33
+        height: 70
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -476,12 +476,12 @@ TextureImporter:
       name: Enm112b_13
       rect:
         serializedVersion: 2
-        x: 703
-        y: 647
-        width: 7
-        height: 12
+        x: 704
+        y: 648
+        width: 5
+        height: 10
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -498,12 +498,12 @@ TextureImporter:
       name: Enm112b_14
       rect:
         serializedVersion: 2
-        x: 89
-        y: 207
-        width: 30
-        height: 418
+        x: 90
+        y: 208
+        width: 28
+        height: 416
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -520,12 +520,12 @@ TextureImporter:
       name: Enm112b_15
       rect:
         serializedVersion: 2
-        x: 275
-        y: 207
-        width: 78
-        height: 418
+        x: 276
+        y: 208
+        width: 76
+        height: 416
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -542,12 +542,12 @@ TextureImporter:
       name: Enm112b_16
       rect:
         serializedVersion: 2
-        x: 285
-        y: 419
-        width: 6
-        height: 8
+        x: 286
+        y: 420
+        width: 4
+        height: 6
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -564,12 +564,12 @@ TextureImporter:
       name: Enm112b_17
       rect:
         serializedVersion: 2
-        x: 327
-        y: 423
-        width: 6
-        height: 6
+        x: 328
+        y: 424
+        width: 4
+        height: 4
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -586,12 +586,12 @@ TextureImporter:
       name: Enm112b_18
       rect:
         serializedVersion: 2
-        x: 465
-        y: 207
-        width: 107
-        height: 418
+        x: 466
+        y: 208
+        width: 105
+        height: 416
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -608,12 +608,12 @@ TextureImporter:
       name: Enm112b_19
       rect:
         serializedVersion: 2
-        x: 722
-        y: 207
-        width: 12
-        height: 418
+        x: 723
+        y: 208
+        width: 10
+        height: 416
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -630,12 +630,12 @@ TextureImporter:
       name: Enm112b_20
       rect:
         serializedVersion: 2
-        x: 846
-        y: 207
-        width: 179
-        height: 210
+        x: 847
+        y: 208
+        width: 177
+        height: 208
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -652,12 +652,12 @@ TextureImporter:
       name: Enm112b_21
       rect:
         serializedVersion: 2
-        x: 33
-        y: 1
-        width: 149
-        height: 162
+        x: 34
+        y: 2
+        width: 147
+        height: 160
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -674,12 +674,12 @@ TextureImporter:
       name: Enm112b_22
       rect:
         serializedVersion: 2
-        x: 241
-        y: 2
-        width: 149
-        height: 187
+        x: 242
+        y: 3
+        width: 147
+        height: 185
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -696,12 +696,12 @@ TextureImporter:
       name: Enm112b_23
       rect:
         serializedVersion: 2
-        x: 449
-        y: 55
-        width: 153
-        height: 134
+        x: 450
+        y: 56
+        width: 151
+        height: 132
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -718,12 +718,12 @@ TextureImporter:
       name: Enm112b_24
       rect:
         serializedVersion: 2
-        x: 654
+        x: 655
         y: 0
-        width: 162
-        height: 122
+        width: 160
+        height: 121
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -740,12 +740,12 @@ TextureImporter:
       name: Enm112b_25
       rect:
         serializedVersion: 2
-        x: 857
+        x: 858
         y: 0
-        width: 164
-        height: 89
+        width: 162
+        height: 88
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -762,12 +762,12 @@ TextureImporter:
       name: Enm112b_26
       rect:
         serializedVersion: 2
-        x: 1052
+        x: 1053
         y: 0
-        width: 184
-        height: 89
+        width: 182
+        height: 88
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -784,12 +784,12 @@ TextureImporter:
       name: Enm112b_27
       rect:
         serializedVersion: 2
-        x: 1253
+        x: 1254
         y: 0
-        width: 204
-        height: 89
+        width: 202
+        height: 88
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -806,12 +806,12 @@ TextureImporter:
       name: Enm112b_28
       rect:
         serializedVersion: 2
-        x: 1489
+        x: 1490
         y: 0
-        width: 149
-        height: 89
+        width: 147
+        height: 88
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -828,12 +828,12 @@ TextureImporter:
       name: Enm112b_29
       rect:
         serializedVersion: 2
-        x: 1697
-        y: 0
-        width: 149
-        height: 163
+        x: 1698
+        y: 1
+        width: 147
+        height: 161
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -850,7 +850,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: e50a742ff69a61846b1c5d2e1f69f870
     internalID: 0
     vertices: []
     indices: 
@@ -858,7 +858,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       Enm112b_0: -1550449701241493941
       Enm112b_1: -7124782723256376873
