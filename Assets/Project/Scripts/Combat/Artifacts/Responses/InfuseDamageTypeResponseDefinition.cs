@@ -5,5 +5,6 @@ public sealed class InfuseDamageTypeResponseDefinition : ArtifactPassiveResponse
 {
     public ElementType elementType = ElementType.Darkness;
     public float durationSeconds = 10f;
+    public bool onlyCurrentCast;
 }
 

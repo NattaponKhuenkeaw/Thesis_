@@ -402,6 +402,7 @@ namespace Project.Core
             }
 
             RoomData room = mapData != null ? mapData.ResolveRoom(sceneName) : null;
+            zoneStateProvider.BeginVisit();
             if (room == null)
             {
                 // Lobby must behave like Shop (SafeZone) even if MapSO entry is missing.
@@ -409,16 +410,20 @@ namespace Project.Core
                 {
                     zoneStateProvider.SetFallbackMode(ZoneMode.SafeZone);
                     zoneStateProvider.SetCurrentRoom(null);
+                    zoneStateProvider.SetClearing(zoneStateProvider.Visit, ClearingState.Accessible);
                     zoneStateProvider.ForceBroadcast();
                     Debug.LogWarning($"[GameRunManager] Scene '{sceneName}' has no RoomData in MapSO. Forced SafeZone fallback for Lobby.", this);
                     return;
                 }
 
-                Debug.LogWarning($"[GameRunManager] Scene '{sceneName}' has no RoomData in MapSO; zone mode was not updated.", this);
+                zoneStateProvider.SetClearing(zoneStateProvider.Visit, ClearingState.Combat);
+                Debug.LogWarning($"[GameRunManager] Scene '{sceneName}' has no RoomData in MapSO; access remains locked.", this);
                 return;
             }
 
             zoneStateProvider.SetCurrentRoom(room);
+            zoneStateProvider.SetClearing(zoneStateProvider.Visit,
+                ZoneStateProvider.HasEncounterIntent(room) ? ClearingState.Combat : ClearingState.Accessible);
             Debug.Log($"[GameRunManager] Zone state updated for boundary scene. Room={room.name}, Mode={room.ZoneMode}.", this);
         }
 
@@ -438,7 +443,7 @@ namespace Project.Core
             RoomData room = mapData != null ? mapData.ResolveRoom(sceneName) : null;
             bool isLobby = string.Equals(sceneName, lobbySceneName, StringComparison.Ordinal);
             bool isSafeZone = isLobby
-                || (room != null && room.ZoneMode == ZoneMode.SafeZone);
+                || (room != null && !ZoneStateProvider.HasEncounterIntent(room));
 
             if (!isSafeZone)
             {

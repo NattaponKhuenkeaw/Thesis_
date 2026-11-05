@@ -10,6 +10,8 @@ public sealed class CombatActionExecutionToken
     public bool modeEligibilityPending;
     public bool activeNotified;
     private HashSet<ulong> _payloadTargets;
+    private HashSet<string> artifactInfusionRolls;
+    public ElementType? ArtifactInfusion { get; set; }
 
     public CombatActionExecutionToken(CharacterObject owner, CombatAction action)
     {
@@ -21,5 +23,11 @@ public sealed class CombatActionExecutionToken
     {
         _payloadTargets ??= new HashSet<ulong>();
         return _payloadTargets.Add(enemyLife);
+    }
+
+    public bool ClaimArtifactInfusionRoll(string instanceId)
+    {
+        artifactInfusionRolls ??= new HashSet<string>();
+        return artifactInfusionRolls.Add(instanceId);
     }
 }

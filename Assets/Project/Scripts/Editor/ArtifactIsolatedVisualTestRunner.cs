@@ -27,6 +27,83 @@ public static class ArtifactIsolatedVisualTestRunner
     [MenuItem("Tools/Project/Field Effects/Run Isolated Artifact Tests")]
     public static void Run()
     {
+        RunIsolated("Docs_JJK/3_Outputs/Reports/FieldEffectVisuals/scales-crest-tests.xml",
+            "ArtifactAdvancedVisualTests", "ArtifactAreaGeometryTests",
+            "ArtifactCurseThunderTests", "FieldEffectArtifactSequenceTests");
+    }
+
+    [MenuItem("Tools/Project/Field Effects/Run Artifact Inventory Tests")]
+    public static void RunInventory()
+    {
+        RunIsolated("Temp/ArtifactInventoryTests.xml", "ArtifactInstanceSystemTests");
+    }
+
+    [MenuItem("Tools/Project/Field Effects/Run Artifact Regression Tests")]
+    public static void RunRegression()
+    {
+        RunIsolated("Temp/ArtifactRegressionTests.xml", "ArtifactInstanceSystemTests",
+            "ArtifactPassiveDiagnosticTests", "ArtifactAdvancedVisualTests", "ArtifactAreaGeometryTests",
+            "ArtifactCurseThunderTests", "FieldEffectArtifactSequenceTests");
+    }
+
+    [MenuItem("Tools/Project/Field Effects/Capture Artifact Rarity UI")]
+    public static void CaptureRarityUi()
+    {
+        Scene previous = SceneManager.GetActiveScene();
+        Scene isolated = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+        SceneManager.SetActiveScene(isolated);
+        var inventory = ScriptableObject.CreateInstance<Project.ShopSystem.PlayerRunInventory>();
+        try
+        {
+            var picker = UnityEngine.Object.Instantiate(Resources.Load<Project.UI.ArtifactRewardPickerUI>(
+                Project.UI.ArtifactRewardPickerUI.ResourcePath));
+            string[] paths = { "RarityR/R_RustedOathRing", "RaritySR/SR_10_ProtectionOfJoseph",
+                "Phase1/P1_04_BrokenChronoRelic" };
+            var choices = new Project.InventorySystem.Artifacts.ArtifactInstance[3];
+            var generator = new Project.InventorySystem.Artifacts.ArtifactRollGenerator(inventory.ArtifactRollTable);
+            for (int i = 0; i < choices.Length; i++)
+            {
+                var definition = Resources.Load<Project.InventorySystem.Items.ArtifactDefinition>(
+                    "ItemSO/Artifacts/" + paths[i]);
+                choices[i] = generator.Generate(definition, i, 160 + i, 2);
+            }
+            picker.Present(choices, inventory, 1, 2, _ => false).MoveNext();
+            for (int i = 1; i <= 3; i++) picker.transform.Find($"Card{i}").gameObject.SetActive(true);
+            MethodInfo capture = typeof(TeamBuilderInventoryValidation).GetMethod("Capture", BindingFlags.Static | BindingFlags.NonPublic);
+            capture.Invoke(null, new object[] { picker.gameObject, "artifact-rarity-picker", 1920, 1080 });
+            capture.Invoke(null, new object[] { picker.gameObject, "artifact-rarity-picker-4x3", 1024, 768 });
+
+            for (int i = 1; i <= 3; i++) picker.transform.Find($"Card{i}").gameObject.SetActive(false);
+            picker.transform.Find("Confirm").gameObject.SetActive(false);
+            var tilePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/TeamArtifactInventoryCard.prefab");
+            for (int i = 0; i < choices.Length; i++)
+            {
+                var tile = UnityEngine.Object.Instantiate(tilePrefab, picker.transform).GetComponent<Project.TeamBuilder.UI.ArtifactGridItemUI>();
+                ((RectTransform)tile.transform).anchoredPosition = new Vector2((i - 1) * 220, 0);
+                choices[i].isFavourite = i == 1;
+                tile.Init(choices[i], inventory.ResolveArtifactDefinition(choices[i].definitionId),
+                    picker.GetComponent<Canvas>(), inventory.ArtifactRollTable);
+            }
+            capture.Invoke(null, new object[] { picker.gameObject, "artifact-rarity-tiles", 1280, 720 });
+            var dialog = UnityEngine.Object.Instantiate(Resources.Load<Project.TeamBuilder.UI.ArtifactCopyMenuUI>(
+                Project.TeamBuilder.UI.ArtifactCopyMenuUI.DialogPath), picker.transform);
+            capture.Invoke(null, new object[] { picker.gameObject, "artifact-discard-dialog", 1280, 720 });
+            dialog.gameObject.SetActive(false);
+            UnityEngine.Object.Instantiate(Resources.Load<Project.TeamBuilder.UI.ArtifactCopyMenuUI>(
+                Project.TeamBuilder.UI.ArtifactCopyMenuUI.MenuPath), picker.transform);
+            capture.Invoke(null, new object[] { picker.gameObject, "artifact-copy-menu", 1280, 720 });
+            Debug.Log("Artifact rarity UI captures saved under Logs/TeamBuilderInventoryPreviews.");
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(inventory);
+            if (previous.IsValid() && previous.isLoaded) SceneManager.SetActiveScene(previous);
+            if (isolated.IsValid() && isolated.isLoaded) EditorSceneManager.CloseScene(isolated, true);
+        }
+    }
+
+    private static void RunIsolated(string resultPath, params string[] fixtures)
+    {
         if (EditorApplication.isPlayingOrWillChangePlaymode)
             throw new InvalidOperationException("Stop Play mode before running isolated artifact checks.");
         Scene previous = SceneManager.GetActiveScene();
@@ -38,13 +115,12 @@ public static class ArtifactIsolatedVisualTestRunner
             // These fixtures do not load or replace scenes. Unity's main-thread executor is used
             // directly to avoid the TestRunnerApi save/reload task for the user's dirty scene.
             var filter = new OrFilter();
-            foreach (string fixture in new[] { "ArtifactAdvancedVisualTests", "ArtifactAreaGeometryTests",
-                "ArtifactCurseThunderTests", "FieldEffectArtifactSequenceTests" })
+            foreach (string fixture in fixtures)
                 filter.Add(new FullNameFilter(fixture));
             ITestResult result = RunOnUnityThread(filter);
             if (result.PassCount + result.FailCount + result.SkipCount == 0)
                 throw new InvalidOperationException("No isolated artifact tests were selected.");
-            string path = Path.GetFullPath("Docs_JJK/3_Outputs/Reports/FieldEffectVisuals/scales-crest-tests.xml");
+            string path = Path.GetFullPath(resultPath);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             using (XmlWriter writer = XmlWriter.Create(path, new XmlWriterSettings { Indent = true }))
             {

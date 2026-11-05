@@ -368,6 +368,7 @@ namespace Project.Core.ZoneState
 
                 if (zoneStateProvider != null)
                 {
+                    zoneStateProvider.BeginVisit();
                     zoneStateProvider.SetCurrentRoom(targetRoom);
                     Debug.Log($"[SceneTransitionManager] Zone state updated. Room={(targetRoom != null ? targetRoom.name : "missing")}, Mode={zoneStateProvider.CurrentMode}.");
                 }
@@ -449,8 +450,15 @@ namespace Project.Core.ZoneState
                     activeBoundaryController.CompleteIntro();
                 }
 
-                // Safe rooms (shop / level / reward) have no clear gate — unlock exit after intro.
-                if (targetRoom != null && targetRoom.ZoneMode == ZoneMode.SafeZone)
+                bool opensOnEntry = reachedDestination && targetRoom != null &&
+                    !ZoneStateProvider.HasEncounterIntent(targetRoom);
+                if (reachedDestination && zoneStateProvider != null && zoneStateProvider.Clearing == ClearingState.Resolving)
+                {
+                    zoneStateProvider.SetClearing(zoneStateProvider.Visit,
+                        opensOnEntry ? ClearingState.Accessible : ClearingState.Combat);
+                }
+
+                if (opensOnEntry)
                 {
                     if (activeBoundaryController != null)
                     {
@@ -469,7 +477,7 @@ namespace Project.Core.ZoneState
                 EnableSceneCanvases();
                 // Layout-swap keeps RoomChoiceUI across rooms; re-arm after every transition.
                 // SafeZone PrepareOffersForSafeRoom already clears this; combat clears on room clear.
-                if (targetRoom == null || targetRoom.ZoneMode != ZoneMode.SafeZone)
+                if (!opensOnEntry)
                 {
                     Project.UI.RoomChoiceUI.Instance?.ClearCommittedChoice();
                     Project.UI.RoomChoiceUI.Instance?.Hide();

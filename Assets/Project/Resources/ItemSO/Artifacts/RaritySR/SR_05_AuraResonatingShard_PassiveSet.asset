@@ -1,0 +1,169 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6089779d0cf4b4998f070e46b0f91a, type: 3}
+  m_Name: SR_05_AuraResonatingShard_PassiveSet
+  m_EditorClassIdentifier: Assembly-CSharp::ArtifactPassiveSetDefinition
+  stableId: ART-SR-005-PASSIVES
+  rules:
+  - ruleId: encroach-on-switch-in
+    stateKey: encroach-on-switch-in
+    trigger: 3
+    filter:
+      filterByCategory: 0
+      category: 0
+      filterByDelivery: 0
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 0
+      requirePositiveDamage: 1
+      requireCriticalHit: 0
+      requireWearerAsSource: 1
+      switchRelation: 1
+    conditions:
+      cooldownSeconds: 0
+      durationSeconds: 0
+      intervalSeconds: 0
+      chance: 1
+      maximumStacks: 10
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 0
+      requireDisarmed: 0
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 0
+    responses:
+    - rid: 8312694232576164313
+    feedback:
+      feedbackId: encroach-on-switch-in
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 8312694232576164313
+      type: {class: ApplyRuntimeEffectResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 5
+        recipe:
+          recipeId: SR-A05-ENCROACH
+          definition: {fileID: 11400000, guid: 47a11ab6ce4cfb246b90d883a0a4b0dd, type: 2}
+          presentation:
+            effectId: SR-A05-ENCROACH
+            displayName: SR-A05-ENCROACH
+            icon: {fileID: 21300000, guid: b25b01306d317ba46894db2b7dfed19b, type: 3}
+            fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 1
+            durationSeconds: 0
+            stackMode: 2
+            stackLimit: 10
+            refreshDurationOnReapply: 1
+            stackable: 1
+            removeOnOwnerDamaged: 0
+            stackKey: SR-A05-ENCROACH
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 2
+              operation: 1
+              sourceStat: 1
+              statRatioValueSource: 0
+              value: 0.97
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applications: 1

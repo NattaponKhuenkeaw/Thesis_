@@ -25,6 +25,7 @@ public sealed class CombatEventFilter
     public CombatDamageTag forbiddenDamageTags;
     public bool requirePositiveDamage = true;
     public bool requireCriticalHit;
+    public bool requireNonCriticalHit;
     public bool requireWearerAsSource = true;
     public ArtifactSwitchRelation switchRelation;
 }

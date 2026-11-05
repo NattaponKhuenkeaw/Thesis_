@@ -333,10 +333,11 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 Mathf.Max(minimumFreeze, data.ImpactFreezeFrames), data.ActiveReactionFrames, data.RecoveryFrames);
         }
         animationHandler?.BeginReactionAnimation(currentReaction, animationAirFollowup);
-        EnterState(EnemyReactionState.ImpactFreeze);
+        EnterState(data.reactionKind == EnemyReactionKind.Grab && data.actionAnchor != null
+            ? EnemyReactionState.Grabbed : EnemyReactionState.ImpactFreeze);
     }
 
-    public bool ReleaseGrab(int ownerId)
+    public bool ReleaseGrab(int ownerId, Transform anchor = null)
     {
         if (currentState == EnemyReactionState.None || currentReaction.reactionKind != EnemyReactionKind.Grab)
         {
@@ -344,6 +345,11 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
 
         if (currentReaction.reactionOwnerId != 0 && currentReaction.reactionOwnerId != ownerId)
+        {
+            return false;
+        }
+
+        if (anchor != null && currentReaction.grabSocket != anchor)
         {
             return false;
         }

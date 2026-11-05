@@ -17,6 +17,7 @@ MonoBehaviour:
   description: Broken Chrono-Relic
   icon: {fileID: 21300000, guid: 1abe204fa8edc784b9cff53a0e619fe7, type: 3}
   price: 2350
+  rarity: 3
   isEquippable: 1
   passiveDescription: Skill damage summons a 5s enemy-following Wrath of Demon. Enemies
     inside take +10% damage and 200% ATK Additional damage every 2s. 10s cooldown.

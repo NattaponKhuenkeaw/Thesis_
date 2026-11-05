@@ -1471,7 +1471,7 @@ MonoBehaviour:
     triggerOnCriticalHit: 1
     triggerActionIds: []
     introActionKey: goenitz.qte
-    introStepName: Kamidokoku
+    introStepName: Uranagi
     introComboTree:
       treeName: Combo
       comboResetDelay: 0.8

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a922efc8491743858d7dba3553581cb6, type: 3}
+  m_Name: SR_10_JosephHeal
+  m_EditorClassIdentifier: Assembly-CSharp::PeriodicHealRuntimeEffectDefinition
+  effectId: SR-A10-JOSEPH
+  displayName: Protection of Joseph
+  icon: {fileID: 0}
+  fieldVisualPrefab: {fileID: 0}
+  kind: 0
+  appliesOn: 0
+  durationType: 0
+  durationSeconds: 5
+  refreshDurationOnReapply: 1
+  stackable: 0
+  removeOnOwnerDamaged: 0
+  tickInterval: 1
+  valueSource: 1
+  valueRatio: 0.5
+  flatValue: 0
+  useSourceStats: 1
+  onlyWhileAlive: 1

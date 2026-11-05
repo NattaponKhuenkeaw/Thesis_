@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Project.InventorySystem.Items;
 using UnityEngine;
 
 namespace Project.InventorySystem.Artifacts
@@ -27,6 +28,21 @@ namespace Project.InventorySystem.Artifacts
             this.selectionWeight = selectionWeight;
             this.randomEligible = randomEligible;
         }
+    }
+
+    [Serializable]
+    public struct ArtifactRarityRollProfile
+    {
+        public ArtifactRarity rarity;
+        public List<ArtifactAmountBand> amountBands;
+        public List<float> lineCountWeights;
+    }
+
+    [Serializable]
+    public struct ArtifactPhaseRarityWeights
+    {
+        public Vector3 shopWeights;
+        public Vector2 hardRewardWeights;
     }
 
     [Serializable]
@@ -71,12 +87,54 @@ namespace Project.InventorySystem.Artifacts
         [SerializeField] private List<ArtifactStatRollDefinition> stats = new List<ArtifactStatRollDefinition>();
         [SerializeField] private List<ArtifactAmountBand> amountBands = new List<ArtifactAmountBand>();
         [SerializeField] private List<ArtifactBiomeRollProfile> biomeProfiles = new List<ArtifactBiomeRollProfile>();
+        [SerializeField] private List<ArtifactRarityRollProfile> rarityProfiles = new List<ArtifactRarityRollProfile>();
+        [SerializeField] private List<ArtifactPhaseRarityWeights> phaseRarityWeights = new List<ArtifactPhaseRarityWeights>();
 
         private Dictionary<ArtifactStatKind, ArtifactStatRollDefinition> definitionsByKind;
 
         public IReadOnlyList<ArtifactStatRollDefinition> Stats => stats;
         public IReadOnlyList<ArtifactAmountBand> AmountBands => amountBands;
         public IReadOnlyList<ArtifactBiomeRollProfile> BiomeProfiles => biomeProfiles;
+
+        public ArtifactPhaseRarityWeights GetPhaseRarityWeights(int biomeIndex)
+        {
+            if (phaseRarityWeights.Count == 0)
+                return new ArtifactPhaseRarityWeights { shopWeights = Vector3.one, hardRewardWeights = Vector2.right };
+            return phaseRarityWeights[Mathf.Clamp(biomeIndex, 0, phaseRarityWeights.Count - 1)];
+        }
+
+        public bool TryGetRarityProfile(ArtifactRarity rarity, out ArtifactRarityRollProfile profile)
+        {
+            foreach (ArtifactRarityRollProfile candidate in rarityProfiles)
+            {
+                if (candidate.rarity != rarity || rarity == ArtifactRarity.Unassigned) continue;
+                profile = candidate;
+                return true;
+            }
+
+            profile = default;
+            return false;
+        }
+
+        public static int RollRarityLineCount(float percentile01, IReadOnlyList<float> weights)
+        {
+            float total = 0f;
+            foreach (float weight in weights)
+                total += Mathf.Max(0f, weight);
+
+            if (total <= 0f) throw new InvalidOperationException("Artifact rarity has no weighted line counts.");
+            float remaining = Mathf.Clamp01(percentile01) * total;
+            int lastEligible = 1;
+            for (int i = 0; i < weights.Count; i++)
+            {
+                if (weights[i] <= 0f) continue;
+                lastEligible = i + 1;
+                remaining -= weights[i];
+                if (remaining <= 0f) return lastEligible;
+            }
+
+            return lastEligible;
+        }
 
         private void OnEnable()
         {
@@ -288,6 +346,53 @@ namespace Project.InventorySystem.Artifacts
                             new ArtifactAmountBand(0.8f, 1f, 25f)
                         },
                         new List<float> { 15f, 20f, 35f, 30f })
+                };
+            }
+
+            if (rarityProfiles == null || rarityProfiles.Count == 0)
+            {
+                rarityProfiles = new List<ArtifactRarityRollProfile>
+                {
+                    new ArtifactRarityRollProfile
+                    {
+                        rarity = ArtifactRarity.R,
+                        lineCountWeights = new List<float> { 100f },
+                        amountBands = new List<ArtifactAmountBand>
+                        {
+                            new ArtifactAmountBand(0f, .2f, 70f),
+                            new ArtifactAmountBand(.2f, .4f, 25f),
+                            new ArtifactAmountBand(.4f, .6f, 5f)
+                        }
+                    },
+                    new ArtifactRarityRollProfile
+                    {
+                        rarity = ArtifactRarity.SR,
+                        lineCountWeights = new List<float> { 65f, 35f },
+                        amountBands = new List<ArtifactAmountBand>(amountBands)
+                    },
+                    new ArtifactRarityRollProfile
+                    {
+                        rarity = ArtifactRarity.SSR,
+                        lineCountWeights = new List<float> { 15f, 20f, 35f, 30f },
+                        amountBands = new List<ArtifactAmountBand>
+                        {
+                            new ArtifactAmountBand(0f, .2f, 5f),
+                            new ArtifactAmountBand(.2f, .4f, 10f),
+                            new ArtifactAmountBand(.4f, .6f, 25f),
+                            new ArtifactAmountBand(.6f, .8f, 35f),
+                            new ArtifactAmountBand(.8f, 1f, 25f)
+                        }
+                    }
+                };
+            }
+
+            if (phaseRarityWeights == null || phaseRarityWeights.Count == 0)
+            {
+                phaseRarityWeights = new List<ArtifactPhaseRarityWeights>
+                {
+                    new ArtifactPhaseRarityWeights { shopWeights = new Vector3(90, 10, 0), hardRewardWeights = new Vector2(100, 0) },
+                    new ArtifactPhaseRarityWeights { shopWeights = new Vector3(55, 45, 0), hardRewardWeights = new Vector2(70, 30) },
+                    new ArtifactPhaseRarityWeights { shopWeights = new Vector3(25, 45, 30), hardRewardWeights = new Vector2(35, 65) }
                 };
             }
         }

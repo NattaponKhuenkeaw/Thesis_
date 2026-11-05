@@ -1022,8 +1022,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         EnsureZoneStateProvider();
         if (zoneStateProvider != null)
         {
-            zoneStateProvider.OnZoneModeChanged -= HandleZoneModeChanged;
-            zoneStateProvider.OnZoneModeChanged += HandleZoneModeChanged;
+            zoneStateProvider.OnAccessModeChanged -= HandleZoneModeChanged;
+            zoneStateProvider.OnAccessModeChanged += HandleZoneModeChanged;
             zoneStateProvider.OnRoomChanged -= HandleRoomChanged;
             zoneStateProvider.OnRoomChanged += HandleRoomChanged;
         }
@@ -1036,7 +1036,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     {
         if (zoneStateProvider != null)
         {
-            zoneStateProvider.OnZoneModeChanged -= HandleZoneModeChanged;
+            zoneStateProvider.OnAccessModeChanged -= HandleZoneModeChanged;
             zoneStateProvider.OnRoomChanged -= HandleRoomChanged;
         }
 
@@ -1106,10 +1106,10 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
         if (zoneStateProvider != null)
         {
-            if (zoneStateProvider.CurrentMode == ZoneMode.CombatZone)
+            if (zoneStateProvider.AccessMode == ZoneMode.CombatZone)
                 return false;
 
-            if (zoneStateProvider.CurrentMode == ZoneMode.SafeZone)
+            if (zoneStateProvider.AccessMode == ZoneMode.SafeZone)
                 return true;
         }
 

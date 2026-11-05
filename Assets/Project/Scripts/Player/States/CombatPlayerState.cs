@@ -107,6 +107,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     public override void Update()
     {
+        bool paused = GameFreezeManager.IsGameplayPaused;
+        if (advanceCurrentNodeWithUnscaledTime && player.Animator?.anim != null)
+            player.Animator.anim.updateMode = paused ? AnimatorUpdateMode.Normal : AnimatorUpdateMode.UnscaledTime;
+        if (paused) return;
+
         base.Update();
 
         if (fsm.CurrentState != this)
@@ -241,7 +246,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     protected override bool ShouldAdvanceLogicFrames()
     {
-        if (pauseCurrentNodeForSequence)
+        if (pauseCurrentNodeForSequence || GameFreezeManager.IsGameplayPaused)
         {
             return false;
         }
@@ -844,19 +849,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         else if (entry.activationVFXPrefab != null)
         {
             GameObject vfxInstance = Object.Instantiate(entry.activationVFXPrefab, spawnPosition, playerTransform.rotation);
-
-            ParticleSystem[] particleSystems = vfxInstance.GetComponentsInChildren<ParticleSystem>();
-            foreach (ParticleSystem ps in particleSystems)
-            {
-                ParticleSystem.MainModule main = ps.main;
-                main.useUnscaledTime = true;
-            }
-
-            Animator[] animators = vfxInstance.GetComponentsInChildren<Animator>();
-            foreach (Animator animator in animators)
-            {
-                animator.updateMode = AnimatorUpdateMode.UnscaledTime;
-            }
+            vfxInstance.AddComponent<Project.Combat.ActionVfxClock>();
         }
 
         if (GameAudioManager.Instance != null)
@@ -969,7 +962,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     private System.Collections.IEnumerator FinishActionSequenceAfterDelay(float duration)
     {
-        yield return new WaitForSecondsRealtime(duration);
+        yield return GameFreezeManager.WaitForGameplaySeconds(duration);
         activeActionSequenceCoroutine = null;
         FinishActiveActionSequence();
     }

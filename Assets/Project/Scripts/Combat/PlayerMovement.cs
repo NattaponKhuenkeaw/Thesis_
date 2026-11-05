@@ -1,6 +1,7 @@
 using UnityEngine;
 using CombatCore;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -123,7 +124,9 @@ public partial class PlayerMovement : MonoBehaviour
     private bool usesWorldTargetMotion;
     private EnemyController actionMotionTarget;
     private Vector2 actionTargetPosition;
-    private Transform actionTargetAnchor;
+    private readonly Dictionary<EnemyController, Transform> dashHitAnchors = new();
+    private Vector2 targetDashStart;
+    private int targetDashApproachSide;
     private MotionKeyframe resolvedTargetMotion;
     private Vector2 resolvedTargetMotionDelta;
 
@@ -145,11 +148,34 @@ public partial class PlayerMovement : MonoBehaviour
 
     public void ClearActionMotionTarget()
     {
-        if (actionMotionTarget != null) actionMotionTarget.ReleaseGrab(GetInstanceID());
         actionMotionTarget = null;
-        if (actionTargetAnchor != null) Destroy(actionTargetAnchor.gameObject);
-        actionTargetAnchor = null;
+        foreach (var (enemy, anchor) in dashHitAnchors)
+        {
+            if (anchor == null) continue;
+            if (enemy != null) enemy.ReleaseGrab(transform.root.GetInstanceID(), anchor);
+            Destroy(anchor.gameObject);
+        }
+        dashHitAnchors.Clear();
+        resolvedTargetMotion = null;
         usesWorldTargetMotion = false;
+    }
+
+    internal void PrepareDashHitAnchor(EnemyController enemy, int hitFrame, ref HitReactionData reaction)
+    {
+        MotionKeyframe dash = resolvedTargetMotion;
+        if (dash == null || dash.taskType != MotionTaskType.DashThroughTarget || !dash.holdTargetAtAnchor
+            || hitFrame < dash.startFrame || (enemy.IsGrabbed && enemy.CurrentReactionState != EnemyReactionState.None))
+            return;
+
+        if (!dashHitAnchors.TryGetValue(enemy, out Transform anchor))
+        {
+            anchor = new GameObject("DashHitAnchor").transform;
+            dashHitAnchors.Add(enemy, anchor);
+        }
+
+        anchor.position = dash.ResolveTargetDashAnchor(targetDashStart, enemy.transform.position, targetDashApproachSide);
+        reaction.actionAnchor = anchor;
+        reaction.actionAnchorHoldFrames = Mathf.Max(1, dash.endFrame - hitFrame + 1);
     }
 
     public bool TryCommitCombatDash()
@@ -673,7 +699,6 @@ public partial class PlayerMovement : MonoBehaviour
         ClearCapturedWorldMotion();
         StopAttackMotion();
         ClearActionMotionTarget();
-        resolvedTargetMotion = null;
     }
 
     private void OnDisable()
@@ -1310,21 +1335,16 @@ public partial class PlayerMovement : MonoBehaviour
             case MotionTaskType.DashThroughTarget:
                 EnemyController targetEnemy = actionMotionTarget != null && actionMotionTarget.IsTargetable
                     ? actionMotionTarget : (combat as PlayerCombat)?.FindNearestEnemyTarget(k.targetRadius);
+                targetDashStart = start;
+                targetDashApproachSide = (int)dir;
                 if (targetEnemy != null)
                 {
-                    if (actionMotionTarget == null) SetActionMotionTarget(targetEnemy);
+                    if (actionMotionTarget != targetEnemy) SetActionMotionTarget(targetEnemy);
                     usesWorldTargetMotion = true;
                     Vector2 anchor = k.ResolveTargetDashAnchor(start, actionTargetPosition, (int)dir);
                     totalDelta = k.ResolveTargetDashDestination(start, anchor, (int)dir) - start;
                     Vector2 direction = totalDelta.sqrMagnitude > 0.0001f ? totalDelta.normalized : new Vector2(dir, 0f);
                     if (Mathf.Abs(direction.x) > 0.001f) SnapFacingDirection(direction.x > 0f ? 1 : -1);
-                    if (k.holdTargetAtAnchor)
-                    {
-                        if (actionTargetAnchor == null) actionTargetAnchor = new GameObject("ActionTargetAnchor").transform;
-                        actionTargetAnchor.position = anchor;
-                        targetEnemy.TryHoldAtActionAnchor(GetInstanceID(), actionTargetAnchor,
-                            Mathf.Max(1, k.endFrame - k.startFrame + 1));
-                    }
                 }
                 else totalDelta = k.horizontalOnly
                     ? new Vector2(Mathf.Max(k.minimumTravelDistance, Mathf.Abs(k.position.x)) * dir, 0f)

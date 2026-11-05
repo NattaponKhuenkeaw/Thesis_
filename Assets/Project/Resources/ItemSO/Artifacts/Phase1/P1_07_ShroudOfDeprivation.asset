@@ -17,7 +17,8 @@ MonoBehaviour:
   description: A dark wrap that blocks out sight. "The horrors of this place are
     easier to fight when you shut out the terror of seeing them."
   icon: {fileID: 21300000, guid: 72b32f581ae5349448a72b3a2ace5e07, type: 3}
-  price: 500
+  price: 1900
+  rarity: 3
   isEquippable: 1
   passiveDescription: Switching away from the wearer grants the incoming character
     +10% ATK, Crit Rate, and Crit Damage for 10s. 20s cooldown.

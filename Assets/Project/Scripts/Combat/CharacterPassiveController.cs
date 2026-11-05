@@ -952,7 +952,8 @@ public class CharacterPassiveController : MonoBehaviour
             category,
             actionId,
             actionName,
-            stepData));
+            stepData,
+            execution));
     }
 
     public void NotifyActionEnded(AttackCategory category, string actionId, string actionName, AttackStepData stepData)

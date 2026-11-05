@@ -42,8 +42,7 @@ namespace Project.UI.Training
         private CharacterObject[] _roster = Array.Empty<CharacterObject>();
         private int _index;
         private bool _ownsLock;
-        private GameFreezeManager _freeze;
-        private float _previousTimeScale;
+        private Action _releasePauseHold;
         private TMP_Text _statsLabel;
         private TeamUI _teamUI;
         public bool IsOpen { get; private set; }
@@ -101,10 +100,7 @@ namespace Project.UI.Training
             IsOpen = true;
             InputLockManager.Lock();
             _ownsLock = true;
-            _freeze = GameFreezeManager.Instance;
-            _previousTimeScale = Time.timeScale;
-            if (_freeze != null) _freeze.BeginPauseHold();
-            else Time.timeScale = 0f;
+            _releasePauseHold = GameFreezeManager.AcquirePauseHold();
             EnsureModalCanvasAvailable();
             content.SetActive(true);
             errorText.text = "";
@@ -212,8 +208,8 @@ namespace Project.UI.Training
             if (_ownsLock)
             {
                 _ownsLock = false;
-                if (_freeze != null) _freeze.EndPauseHold();
-                else Time.timeScale = _previousTimeScale;
+                _releasePauseHold?.Invoke();
+                _releasePauseHold = null;
                 InputLockManager.Unlock();
             }
             if (EventSystem.current != null && gameObject.activeInHierarchy && openButton != null)

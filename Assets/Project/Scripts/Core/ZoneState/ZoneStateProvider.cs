@@ -3,15 +3,65 @@ using UnityEngine;
 
 namespace Project.Core.ZoneState
 {
+    public enum ClearingState
+    {
+        Resolving,
+        Combat,
+        RewardPending,
+        Accessible
+    }
+
     [CreateAssetMenu(fileName = "ZoneStateProvider", menuName = "Project/Core/ZoneStateProvider")]
     public class ZoneStateProvider : ScriptableObject
     {
         [SerializeField] private ZoneMode fallbackMode = ZoneMode.CombatZone;
 
         private RoomData currentRoom;
+        private ClearingState clearingState;
+        private bool clearingStateResolved;
+        private int visit;
 
         public event Action<ZoneMode> OnZoneModeChanged;
         public event Action<RoomData> OnRoomChanged;
+        public event Action<ZoneMode> OnAccessModeChanged;
+
+        public int Visit => visit;
+        public ClearingState Clearing => clearingStateResolved
+            ? clearingState
+            : (CurrentMode == ZoneMode.SafeZone ? ClearingState.Accessible : ClearingState.Combat);
+        public ZoneMode AccessMode => Clearing == ClearingState.Accessible ? ZoneMode.SafeZone : ZoneMode.CombatZone;
+
+        public static bool HasEncounterIntent(RoomData room)
+        {
+            if (room == null) return false;
+            if (room.Encounter != null || room.RoomKind == RoomKind.Boss ||
+                RouteOfferGenerator.NeedsGeneratedCombat(room.RoomKind)) return true;
+
+            RoomLayoutHost host = RoomLayoutHost.Instance;
+            return host != null && host.ActiveRoom == room && host.ActiveLayoutInstance != null &&
+                host.ActiveLayoutInstance.GetComponentInChildren<CombatStageController>(true) != null;
+        }
+
+        public void BeginVisit()
+        {
+            visit++;
+            SetClearing(ClearingState.Resolving);
+        }
+
+        public bool SetClearing(int expectedVisit, ClearingState state)
+        {
+            if (expectedVisit != visit) return false;
+            SetClearing(state);
+            return true;
+        }
+
+        private void SetClearing(ClearingState state)
+        {
+            if (clearingStateResolved && clearingState == state) return;
+            clearingState = state;
+            clearingStateResolved = true;
+            OnAccessModeChanged?.Invoke(AccessMode);
+        }
 
         public RoomData CurrentRoom
         {
@@ -37,6 +87,7 @@ namespace Project.Core.ZoneState
 
         private void OnEnable()
         {
+            clearingStateResolved = false;
             ResolveCurrentRoomFromActiveScene();
         }
 
@@ -64,6 +115,7 @@ namespace Project.Core.ZoneState
             {
                 OnRoomChanged?.Invoke(currentRoom);
                 OnZoneModeChanged?.Invoke(currentRoom != null ? currentRoom.ZoneMode : fallbackMode);
+                OnAccessModeChanged?.Invoke(AccessMode);
             }
         }
 
@@ -99,6 +151,7 @@ namespace Project.Core.ZoneState
             currentRoom = room;
             OnRoomChanged?.Invoke(currentRoom);
             OnZoneModeChanged?.Invoke(CurrentMode);
+            OnAccessModeChanged?.Invoke(AccessMode);
         }
 
         public void SetFallbackMode(ZoneMode mode)
@@ -108,6 +161,7 @@ namespace Project.Core.ZoneState
             if (CurrentRoom == null)
             {
                 OnZoneModeChanged?.Invoke(fallbackMode);
+                OnAccessModeChanged?.Invoke(AccessMode);
             }
         }
 
@@ -115,6 +169,7 @@ namespace Project.Core.ZoneState
         {
             OnRoomChanged?.Invoke(CurrentRoom);
             OnZoneModeChanged?.Invoke(CurrentMode);
+            OnAccessModeChanged?.Invoke(AccessMode);
         }
     }
 }

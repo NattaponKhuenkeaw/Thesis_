@@ -2,6 +2,7 @@ using Project.InventorySystem;
 using Project.InventorySystem.Items;
 using Project.Progression;
 using Project.InventorySystem.Artifacts;
+using Project.Core.ZoneState;
 using Project.ShopSystem.UI;
 using System;
 using System.Collections.Generic;
@@ -72,7 +73,7 @@ namespace Project.ShopSystem
         public void ResetShopState()
         {
             rerollCount = 0;
-            PopulateShopItemLists();
+            PopulateShopItemLists(reserveEarlyArtifact: true);
             OnRerollPriceMultiplierChanged?.Invoke(CurrentRerollPriceMultiplier);
         }
 
@@ -146,7 +147,7 @@ namespace Project.ShopSystem
             return true;
         }
 
-        private void PopulateShopItemLists()
+        private void PopulateShopItemLists(bool reserveEarlyArtifact = false)
         {
             currentShopItems.Clear();
             ResolveItemLists();
@@ -171,7 +172,16 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                BaseItem item = GetRandomItemForType(itemList.ItemType);
+                BaseItem item;
+                if (itemList.ItemType == ShopItemListType.Artifact)
+                {
+                    item = GetRandomArtifact(reserveEarlyArtifact);
+                    reserveEarlyArtifact = false;
+                }
+                else
+                {
+                    item = GetRandomItemForType(itemList.ItemType);
+                }
                 if (item == null)
                 {
                     itemList.Populate(null, 1, 0);
@@ -211,6 +221,13 @@ namespace Project.ShopSystem
 
             if (playerInventory.CanAfford(purchasePrice))
             {
+                if (item is ArtifactDefinition artifact)
+                {
+                    bool acquired = playerInventory.TryAcquireArtifact(artifact, purchasePrice, out _);
+                    PlayPurchaseAudio(acquired);
+                    return acquired;
+                }
+
                 if (item is CharacterItem defeatedCharacter && playerInventory.CanReacquireDefeatedCharacter(defeatedCharacter))
                 {
                     if (!playerInventory.TryReacquireDefeatedCharacter(defeatedCharacter))
@@ -556,6 +573,53 @@ namespace Project.ShopSystem
 
             int randomIndex = UnityEngine.Random.Range(0, availablePool.Count);
             return availablePool[randomIndex];
+        }
+
+        private ArtifactDefinition GetRandomArtifact(bool reserveEarlyArtifact)
+        {
+            int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
+            ArtifactRollTable table = playerInventory != null
+                ? playerInventory.ArtifactRollTable
+                : Resources.Load<ArtifactRollTable>("ItemSO/Artifacts/ArtifactRollTable");
+            if (table == null) return null;
+
+            Vector3 weights = table.GetPhaseRarityWeights(biome).shopWeights;
+            var groups = new List<ArtifactDefinition>[] { new(), new(), new() };
+            foreach (BaseItem item in codexInventory.allItems)
+            {
+                if (item is not ArtifactDefinition artifact || ShouldExcludeFromShopRoll(artifact)) continue;
+                int index = (int)artifact.rarity - 1;
+                if (index >= 0 && index < groups.Length)
+                    groups[index].Add(artifact);
+            }
+
+            if (reserveEarlyArtifact && biome == 0 && groups[0].Count > 0)
+                return groups[0][UnityEngine.Random.Range(0, groups[0].Count)];
+
+            float totalWeight = 0f;
+            for (int i = 0; i < groups.Length; i++)
+            {
+                weights[i] = groups[i].Count > 0 ? Mathf.Max(0f, weights[i]) : 0f;
+                totalWeight += weights[i];
+            }
+
+            if (totalWeight <= 0f)
+            {
+                Debug.LogWarning($"No eligible Artifact rarity pool in biome {biome}.", this);
+                return null;
+            }
+
+            float remaining = UnityEngine.Random.value * totalWeight;
+            List<ArtifactDefinition> pool = null;
+            for (int i = 0; i < groups.Length; i++)
+            {
+                if (weights[i] <= 0f) continue;
+                pool = groups[i];
+                remaining -= weights[i];
+                if (remaining <= 0f) break;
+            }
+
+            return pool[UnityEngine.Random.Range(0, pool.Count)];
         }
 
         private int CalculateOfferPrice(BaseItem item, int quantity)

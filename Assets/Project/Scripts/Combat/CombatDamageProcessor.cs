@@ -45,7 +45,8 @@ public static class CombatDamageProcessor
         DamageRequest coreRequest = request;
         coreRequest.descriptor = ArtifactPassiveRuntimeSystem.ModifyOutgoingDescriptor(
             coreRequest.sourceCharacter,
-            coreRequest.descriptor);
+            coreRequest.descriptor,
+            coreRequest.execution?.cast);
         if (!coreRequest.hasCriticalRoll)
         {
             coreRequest.hasCriticalRoll = true;

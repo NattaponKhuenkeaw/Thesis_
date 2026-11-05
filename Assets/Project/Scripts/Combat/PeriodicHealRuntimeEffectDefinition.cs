@@ -13,6 +13,7 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
     [Min(0f)] public float flatValue;
     [HideInInspector]
     public bool useSourceStats = true;
+    public bool onlyWhileAlive;
 
     public override bool RequiresFormulaTicking => true;
 
@@ -78,6 +79,9 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
 
     private void ApplyTickHeal(RuntimeEffectContext context, bool hasOverride, RuntimeEffectPeriodicHealParameters parameters)
     {
+        if (onlyWhileAlive && (TeamLoader.Instance == null ||
+            !TeamLoader.Instance.IsCharacterAlive(context.targetCharacter))) return;
+
         RuntimeEffectHealParameters healParameters = hasOverride
             ? parameters
             : new RuntimeEffectHealParameters

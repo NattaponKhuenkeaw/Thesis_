@@ -226,12 +226,18 @@ namespace Project.UI
         }
 
         private static bool HasReward(RoomChoiceOffer offer) => offer.Reward != null
-            && (offer.Reward.Coins > 0 || (offer.Reward.GrantsArtifact && offer.Reward.Artifact != null));
+            && (offer.Reward.Coins > 0 || offer.Reward.ArtifactPulls > 0 ||
+                (offer.Reward.GrantsArtifact && offer.Reward.Artifact != null));
 
         private static string Footer(RoomChoiceOffer offer)
         {
             if (HasReward(offer))
             {
+                if (offer.Reward.ArtifactPulls > 0)
+                {
+                    string picks = offer.Reward.ArtifactPulls == 1 ? "1 ARTIFACT PICK" : $"{offer.Reward.ArtifactPulls} ARTIFACT PICKS";
+                    return offer.Reward.Coins > 0 ? $"{offer.Reward.Coins:N0} SOUL + {picks}" : picks;
+                }
                 bool artifact = offer.Reward.GrantsArtifact && offer.Reward.Artifact != null;
                 if (offer.Reward.Coins > 0)
                     return $"{offer.Reward.Coins:N0} SOUL" + (artifact ? " + ARTIFACT" : "");

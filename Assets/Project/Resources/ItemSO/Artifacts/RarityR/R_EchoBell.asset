@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04534ec67238433a99a929885ae3a875, type: 3}
+  m_Name: R_EchoBell
+  m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.ArtifactDefinition
+  id: ART-R-009
+  itemName: Echo Bell
+  icon: {fileID: 21300000, guid: 72b32f581ae5349448a72b3a2ace5e07, type: 3}
+  price: 325
+  isEquippable: 1
+  rarity: 1
+  fixedStatBonus:
+    statKind: 26
+    valueUnits: 500
+    source: 0
+  passiveDescription: +5% Additional Damage Increase while equipped.
+  passiveSet: {fileID: 0}
+  additionalDamageEffects: []

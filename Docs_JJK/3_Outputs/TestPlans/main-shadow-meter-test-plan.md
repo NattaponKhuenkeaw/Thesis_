@@ -30,6 +30,10 @@ Run **Tools > Project > Combat > Validate Shadow Meter**. The menu uses the proj
 8. Inspect the prefab HUD: status icons above, larger meter with no CUT label in the middle, HP/AE/stat panel below. Switch characters and verify no duplicate meter, stale meter fill or inherited cache.
 9. Verify Potential capacities 2/3/3/3/5 and Attack4-6's Lv2 gate. At Lv1 only Dimension Cut gains +15 CRIT RATE and only its critical hits bypass Defense. At Lv3 verify 8% healing from actual Cut damage. At Lv4 verify 2x meter gain inside Void Area, returning to normal within 0.3 seconds of leaving. Author final animation/motion and approve game feel after this smoke test.
 
+## Multi-enemy dash anchoring
+
+Place two enemies inside Dimension Cut's active hitbox and another inside Target Radius but outside the hitbox. Verify the cut follows its selected destination, each enemy hit snaps to its own offset on the authored dash plane, and the missed enemy stays in place. Repeat with a shield blocking, a reaction-immune enemy, and Hold Target At Anchor disabled. Interrupt the cut while two enemies are held and verify both are released. Repeat the cut after release to check that the same enemies can be held again.
+
 ## Potential regression checks
 
 Run `Tools/Project/Combat/Validate Main Potential` in Edit mode. It runs ShadowMeterTests and CombatDamageTypeTests in an isolated additive scene and writes `Temp/main-potential-tests.xml` without saving the user's open scene.

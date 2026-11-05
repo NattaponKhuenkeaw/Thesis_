@@ -17,6 +17,19 @@ MonoBehaviour:
   aliveCap: 3
   spawnInterval: 0.35
   grantArtifacts: 0
+  hardRewardPatterns:
+  - weight: 25
+    artifactPulls: 2
+    minSoul: 0
+    maxSoul: 0
+  - weight: 50
+    artifactPulls: 1
+    minSoul: 180
+    maxSoul: 280
+  - weight: 25
+    artifactPulls: 0
+    minSoul: 300
+    maxSoul: 400
   profiles:
   - difficulty: 0
     rollWeight: 40

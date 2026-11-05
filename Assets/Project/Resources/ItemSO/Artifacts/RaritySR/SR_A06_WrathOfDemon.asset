@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 437bd966ab4884c4d8b1701609490aca, type: 3}
+  m_Name: SR_A06_WrathOfDemon
+  m_EditorClassIdentifier: Assembly-CSharp::ParticleBehaviorDefinition
+  stableId: PARTICLE-SR-A06
+  runtimePrefab: {fileID: 1114230597238529896, guid: 8adfb2c873bdbab4d80ada116a48ad86, type: 3}
+  anchorPolicy: 2
+  volume:
+    radius: 3
+    verticalRadiusMultiplier: 1
+    centerOffset: {x: 0, y: 0}
+    anchorToGround: 0
+    groundLayers:
+      serializedVersion: 2
+      m_Bits: 0
+    groundProbeDistance: 12
+    targetLayers:
+      serializedVersion: 2
+      m_Bits: 0
+  compatibility:
+    affectEnemies: 1
+    affectWearer: 0
+    affectAllies: 0
+    applyOnEnter: 0
+    applyOnPulse: 1
+    removeEffectsOnExit: 1
+    restrictToAnchorEnemy: 1
+    targetCap: 1
+  lifetimeSeconds: 5
+  pulseIntervalSeconds: 2
+  effects:
+  - rid: 8312694232576164300
+  references:
+    version: 2
+    RefIds:
+    - rid: 8312694232576164300
+      type: {class: ParticleDamageEffectDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        damageBasis: 1
+        ratio: 2
+        critDamageScalingRatio: 0
+        descriptor:
+          delivery: 2
+          elementType: 0
+          criticalPolicy: 2

@@ -435,6 +435,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool HasGrabbedEnemy() => activeThrowContext != null && activeThrowContext.HasAnyTargets();
     public AttackStepData GetCurrentStepData() => currentStepData;
 
+    internal void PrepareDashHitAnchor(HitBoxDamage source, EnemyController enemy, ref HitReactionData reaction)
+    {
+        if (source == hitBoxDamage)
+            movement?.PrepareDashHitAnchor(enemy, currentAttackFrame, ref reaction);
+    }
+
     public EnemyController FindNearestEnemyTarget(float maxRadius)
     {
         Vector2 origin = transform.position;

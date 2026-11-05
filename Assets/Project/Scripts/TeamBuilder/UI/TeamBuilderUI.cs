@@ -75,7 +75,6 @@ namespace Project.TeamBuilder.UI
         private bool isInitialized = false;
         private int panelOpenedFrame = -1;
         private bool isPanelSessionActive = false;
-        private float previousTimeScale = 1f;
         private System.Action pendingCloseAfterDeploy;
         private bool isInventoryPanelOpen = false;
         private int selectedCharacterSwitchSlotIndex = -1;
@@ -98,8 +97,8 @@ namespace Project.TeamBuilder.UI
             activeInstance = this;
             if (zoneStateProvider != null)
             {
-                zoneStateProvider.OnZoneModeChanged += HandleZoneChanged;
-                HandleZoneChanged(zoneStateProvider.CurrentMode);
+                zoneStateProvider.OnAccessModeChanged += HandleZoneChanged;
+                HandleZoneChanged(zoneStateProvider.AccessMode);
             }
         }
 
@@ -119,7 +118,7 @@ namespace Project.TeamBuilder.UI
             ResetInventorySelection();
             if (zoneStateProvider != null)
             {
-                zoneStateProvider.OnZoneModeChanged -= HandleZoneChanged;
+                zoneStateProvider.OnAccessModeChanged -= HandleZoneChanged;
             }
         }
 
@@ -280,8 +279,6 @@ namespace Project.TeamBuilder.UI
             RefreshGrid();
             RefreshActiveIndex();
 
-            previousTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
             audioController.ApplyPauseAudioState();
 
             ApplyModeVisualState();
@@ -304,23 +301,12 @@ namespace Project.TeamBuilder.UI
             deployController?.Hide();
             if (wasOpen)
             {
-                Time.timeScale = previousTimeScale;
                 audioController?.RestorePauseAudioState();
-            }
-
-            if (inspectScreenUI != null && inspectScreenUI.gameObject.activeSelf)
-            {
-                inspectScreenUI.Close();
             }
 
             if (artifactPreviewPanel != null && artifactPreviewPanel.IsOpen)
             {
                 artifactPreviewPanel.Close();
-            }
-
-            if (wasOpen && teamLoader != null)
-            {
-                teamLoader.RefreshRuntimeStatsAndResources();
             }
 
             ApplyModeVisualState();
@@ -355,6 +341,7 @@ namespace Project.TeamBuilder.UI
 
         public static bool TryCloseFromEscape()
         {
+            if (ArtifactCopyMenuUI.TryDismissActive()) return true;
             TeamBuilderUI panel = activeInstance;
             if (panel == null || !panel.isPanelSessionActive || !panel.isActiveAndEnabled)
             {
@@ -942,9 +929,12 @@ namespace Project.TeamBuilder.UI
             return teamLoader;
         }
 
-        private static void ApplyArtifactBonuses(CharacterStats stats, CharacterStats baseStats, ArtifactInstance[] equippedArtifacts)
+        private void ApplyArtifactBonuses(CharacterStats stats, CharacterStats baseStats, ArtifactInstance[] equippedArtifacts)
         {
-            ArtifactStatAggregator.Apply(stats, baseStats, equippedArtifacts);
+            if (playerInventory != null)
+                playerInventory.ApplyArtifactStats(stats, baseStats, equippedArtifacts);
+            else
+                ArtifactStatAggregator.Apply(stats, baseStats, equippedArtifacts);
         }
 
         // =========================================================
@@ -1159,7 +1149,7 @@ namespace Project.TeamBuilder.UI
 
         private void SaveDraftOnExit()
         {
-            if (!isPanelSessionActive || currentMode != ZoneMode.SafeZone || draftController == null)
+            if (!isPanelSessionActive || currentMode != ZoneMode.SafeZone || !HasDraftChanges)
             {
                 return;
             }

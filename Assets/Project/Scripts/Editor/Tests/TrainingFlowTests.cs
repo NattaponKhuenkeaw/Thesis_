@@ -174,11 +174,18 @@ public sealed class TrainingFlowTests
             .First(c => c.characterObjectData != null && !TeamLoader.Instance.ContainsCharacter(c.characterObjectData));
         inspector.Open(unassigned);
         Assert.That(inspector.CurrentCharacter, Is.EqualTo(unassigned));
+        inspector.Close();
+        inspector.Open(unassigned);
+        yield return new WaitForSecondsRealtime(.35f);
+        Assert.That(inspector.isActiveAndEnabled, Is.True, "A previous close fade must not dismiss a reopened Inspector.");
+        Assert.That(Time.timeScale, Is.Zero);
+        Assert.That(InputLockManager.IsLocked, Is.True);
         ScreenCapture.CaptureScreenshot(Report + "training-inspector.png");
         yield return null;
         Object.FindFirstObjectByType<UIManager>().CloseAll();
         yield return new WaitForSecondsRealtime(.35f);
         Assert.That(InputLockManager.IsLocked, Is.False);
+        Assert.That(Time.timeScale, Is.EqualTo(1f));
         drawer.SetVisible(true);
         yield return new WaitForSecondsRealtime(.25f);
         Get<Button>(panel, "statsButton").onClick.Invoke();

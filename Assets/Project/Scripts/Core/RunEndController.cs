@@ -81,9 +81,14 @@ namespace Project.Core.RunEnd
 
         public void NotifyRoomCleared()
         {
+            NotifyRoomCleared(awardLegacyCurrency: true);
+        }
+
+        public void NotifyRoomCleared(bool awardLegacyCurrency)
+        {
             if (Project.Training.TrainingSession.IsTrainingContext) return;
             roomsCleared = Mathf.Max(0, roomsCleared + 1);
-            AwardRoomClearCurrency();
+            if (awardLegacyCurrency) AwardRoomClearCurrency();
         }
 
         public void SetRoomsCleared(int value)

@@ -87,8 +87,14 @@ namespace Project.InventorySystem.Artifacts
                 isNew = true
             };
 
-            int lineCount = table.RollStatLineCount(random.Next01(), safeBiome);
-            IReadOnlyList<ArtifactAmountBand> bands = table.GetAmountBandsForBiome(safeBiome);
+            float lineCountRoll = random.Next01();
+            bool hasRarityProfile = table.TryGetRarityProfile(definition.rarity, out ArtifactRarityRollProfile profile);
+            int lineCount = hasRarityProfile
+                ? ArtifactRollTable.RollRarityLineCount(lineCountRoll, profile.lineCountWeights)
+                : table.RollStatLineCount(lineCountRoll, safeBiome);
+            IReadOnlyList<ArtifactAmountBand> bands = hasRarityProfile
+                ? profile.amountBands
+                : table.GetAmountBandsForBiome(safeBiome);
             for (int i = 0; i < lineCount; i++)
             {
                 ArtifactStatRollDefinition stat = SelectStat(random);

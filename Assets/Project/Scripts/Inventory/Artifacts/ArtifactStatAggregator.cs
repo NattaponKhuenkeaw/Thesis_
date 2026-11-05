@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Project.InventorySystem.Items;
 
 namespace Project.InventorySystem.Artifacts
 {
@@ -7,14 +9,19 @@ namespace Project.InventorySystem.Artifacts
         public static void Apply(
             CharacterStats destination,
             CharacterStats cleanBase,
-            IReadOnlyList<ArtifactInstance> instances)
+            IReadOnlyList<ArtifactInstance> instances,
+            Func<string, ArtifactDefinition> resolveDefinition = null)
         {
             if (destination == null || cleanBase == null || instances == null) return;
 
             for (int i = 0; i < instances.Count; i++)
             {
                 ArtifactInstance instance = instances[i];
-                if (instance?.rolls == null) continue;
+                if (instance == null) continue;
+                ArtifactDefinition definition = resolveDefinition?.Invoke(instance.definitionId);
+                if (definition != null && definition.fixedStatBonus.valueUnits != 0)
+                    ApplyRoll(destination, cleanBase, definition.fixedStatBonus);
+                if (instance.rolls == null) continue;
                 for (int rollIndex = 0; rollIndex < instance.rolls.Count; rollIndex++)
                 {
                     ApplyRoll(destination, cleanBase, instance.rolls[rollIndex]);

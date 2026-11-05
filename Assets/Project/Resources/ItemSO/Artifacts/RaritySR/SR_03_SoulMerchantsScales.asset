@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04534ec67238433a99a929885ae3a875, type: 3}
+  m_Name: SR_03_SoulMerchantsScales
+  m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.ArtifactDefinition
+  id: ART-SR-003
+  itemName: Soul-Merchant's Scales
+  description: Used by the opportunist devil of the Soul Shop. "Everything has a
+    price here, kid... even memories."
+  icon: {fileID: 21300000, guid: e2b7d67300e2d1f4db453175ba4cf300, type: 3}
+  price: 800
+  rarity: 2
+  isEquippable: 1
+  passiveDescription: 'Skill summons a 6s Throne Barrier that follows the wearer and deals 50% ATK every 2s. 20s cooldown.'
+  passiveSet: {fileID: 11400000, guid: fcf6c57f0ee44f37bfa64c2f2fe50237, type: 2}
+  additionalDamageEffects: []

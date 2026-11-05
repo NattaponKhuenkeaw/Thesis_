@@ -1249,7 +1249,7 @@ public partial class CameraManager : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += GameFreezeManager.GameplayUnscaledDeltaTime;
             float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
             SetCameraSize(cam, Mathf.Lerp(startSize, targetSize, t));
             yield return null;
@@ -1261,7 +1261,7 @@ public partial class CameraManager : MonoBehaviour
     private System.Collections.IEnumerator RestoreAfterUltimateBlend()
     {
         // Wait for the brain blend to finish before resetting
-        yield return new WaitForSecondsRealtime(_ultimateTransitionDuration);
+        yield return GameFreezeManager.WaitForGameplaySeconds(_ultimateTransitionDuration);
 
         if (_originalUltimateSize > 0f)
             SetCameraSize(_ultimateCam, _originalUltimateSize);
@@ -1744,7 +1744,7 @@ public partial class CameraManager : MonoBehaviour
 
     private IEnumerator EndTemporaryPlayerSnapAfterDelay(float duration)
     {
-        yield return new WaitForSecondsRealtime(duration);
+        yield return GameFreezeManager.WaitForGameplaySeconds(duration);
         EndTemporaryPlayerSnap();
     }
 }
