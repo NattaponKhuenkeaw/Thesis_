@@ -1,5 +1,7 @@
 #if UNITY_INCLUDE_TESTS
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using Project.Core.ZoneState;
 using UnityEngine;
@@ -64,5 +66,169 @@ public class BiomeActTemplateTests
         Assert.That(director.OfferCount, Is.EqualTo(3));
     }
 #endif
+}
+
+public class BiomeActRouteProgressionTests
+{
+    private const BindingFlags StaticPrivate = BindingFlags.Static | BindingFlags.NonPublic;
+    private GameObject root;
+    private RoomChoiceDirector director;
+    private RunProgressionManager progression;
+    private MapSO map;
+    private RoomChoiceDirector previousDirector;
+    private RunProgressionManager previousProgression;
+    private Random.State randomState;
+
+    [SetUp]
+    public void SetUp()
+    {
+        previousDirector = RoomChoiceDirector.Instance;
+        previousProgression = RunProgressionManager.Instance;
+        SetInstance<RoomChoiceDirector>(null);
+        SetInstance<RunProgressionManager>(null);
+        randomState = Random.state;
+        root = new GameObject(nameof(BiomeActRouteProgressionTests));
+        progression = root.AddComponent<RunProgressionManager>();
+        SetInstance(progression);
+        director = root.AddComponent<RoomChoiceDirector>();
+        SetInstance(director);
+        map = Resources.Load<MapSO>("MapSO/Test_MapSO");
+        Assert.That(map, Is.Not.Null);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        Object.DestroyImmediate(root);
+        SetInstance(previousDirector);
+        SetInstance(previousProgression);
+        Random.state = randomState;
+    }
+
+    [TestCase(0)]
+    [TestCase(1)]
+    [TestCase(17)]
+    public void LobbyToBossMatchesTemplateAcrossThreeConsecutiveBiomes(int seed)
+    {
+        Random.InitState(seed);
+        var expected = new[] { RoomKind.Combat, RoomKind.Combat, RoomKind.Shop,
+            RoomKind.Combat, RoomKind.Level, RoomKind.Combat, RoomKind.Rest, RoomKind.Boss };
+        for (int biome = 0; biome < 3; biome++)
+        {
+            RoomData current = map.GetRoomById("Test_Lobby");
+            var entered = new List<RoomKind>();
+            for (int step = 0; step < 16 && current.RoomKind != RoomKind.Boss; step++)
+            {
+                var offers = OffersFrom(current);
+                Assert.That(offers, Is.Not.Empty);
+                var next = offers.FirstOrDefault(o => o.Kind == RoomKind.Shop
+                    || o.Kind == RoomKind.Level || o.Kind == RoomKind.Rest);
+                if (!next.IsValid) next = offers[0];
+                director.NotifyLeavingRoom(current.RoomId);
+                EnterRoom(next.RoomId);
+                current = next.Room;
+                entered.Add(next.Kind);
+                if (next.Kind == RoomKind.Combat)
+                    Assert.That(next.Room.BiomeIndex, Is.EqualTo(biome % 2));
+            }
+            Assert.That(entered, Is.EqualTo(expected), $"Biome {biome}: extra or missing route node");
+            Assert.That(progression.currentRoomDepth, Is.EqualTo(4));
+            Assert.That(director.ActIndex, Is.EqualTo(7));
+            var afterBoss = director.GenerateOffersAfterClear(current.RoomId);
+            Assert.That(afterBoss.Any(o => o.Kind == RoomKind.Rest), Is.True);
+            Assert.That(progression.CurrentBiomeIndex, Is.EqualTo(biome + 1));
+            director.GenerateOffersAfterClear(current.RoomId);
+            Assert.That(progression.CurrentBiomeIndex, Is.EqualTo(biome + 1), "Repeated clear must not advance biome twice");
+        }
+    }
+
+    [Test]
+    public void ReopeningOffersAndRetryingTransitionDoesNotConsumeNodesOrCountClearsTwice()
+    {
+        RoomData lobby = map.GetRoomById("Test_Lobby");
+        var first = director.GenerateLeaveOffersFromSafeRoom(lobby.RoomId)[0];
+        for (int i = 0; i < 3; i++)
+        {
+            director.GenerateLeaveOffersFromSafeRoom(lobby.RoomId);
+            director.NotifyLeavingRoom(lobby.RoomId);
+            Assert.That(director.ActIndex, Is.Zero, "Preparing/aborting a transition must not consume a node");
+            Assert.That(director.LastOffers[0].RoomId, Is.EqualTo(first.RoomId));
+        }
+        EnterRoom(first.RoomId);
+        Assert.That(director.ActIndex, Is.EqualTo(1));
+        EnterRoom(first.RoomId);
+        Assert.That(director.ActIndex, Is.EqualTo(1), "Repeated arrival must be idempotent");
+        for (int i = 0; i < 3; i++)
+        {
+            director.GenerateOffersAfterClear(first.RoomId);
+            Assert.That(director.ActIndex, Is.EqualTo(1));
+            Assert.That(progression.currentRoomDepth, Is.EqualTo(1));
+            Assert.That(director.LastOffers.All(o => o.Kind == RoomKind.Combat), Is.True);
+        }
+    }
+
+    [Test]
+    public void ResetRunDiscardsPendingOffersAndStartsAtTheFirstCombatAgain()
+    {
+        var first = director.GenerateLeaveOffersFromSafeRoom("Test_Lobby")[0];
+        director.NotifyRoomEntered(first.RoomId);
+        var pending = director.GenerateOffersAfterClear(first.RoomId)[0];
+        director.ResetRouteState();
+        director.NotifyRoomEntered(pending.RoomId);
+        Assert.That(director.ActIndex, Is.Zero);
+        Assert.That(progression.currentRoomDepth, Is.Zero);
+        Assert.That(director.LastOffers, Is.Empty);
+        var restarted = director.GenerateLeaveOffersFromSafeRoom("Test_Lobby")[0];
+        director.NotifyRoomEntered(restarted.RoomId);
+        Assert.That(director.ActIndex, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void UnofferedDestinationDoesNotConsumeThePendingChoice()
+    {
+        var offer = director.GenerateLeaveOffersFromSafeRoom("Test_Lobby")[0];
+        director.NotifyRoomEntered("Boss_01");
+        Assert.That(director.ActIndex, Is.Zero);
+        Assert.That(director.LastOffers.Count, Is.EqualTo(3));
+        director.NotifyRoomEntered(offer.RoomId);
+        Assert.That(director.ActIndex, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void SafeNodeCanStillBeReplacedByCombatWithoutAddingAnotherRouteSlot()
+    {
+        RoomData current = map.GetRoomById("Test_Lobby");
+        var entered = new List<RoomKind>();
+        for (int step = 0; step < 16 && current.RoomKind != RoomKind.Boss; step++)
+        {
+            var offers = OffersFrom(current);
+            var next = offers.FirstOrDefault(o => o.Kind == RoomKind.Combat);
+            if (!next.IsValid) next = offers[0];
+            director.NotifyLeavingRoom(current.RoomId);
+            EnterRoom(next.RoomId);
+            current = next.Room;
+            entered.Add(next.Kind);
+        }
+        Assert.That(entered.Count, Is.EqualTo(8));
+        Assert.That(entered.Count(k => k == RoomKind.Combat), Is.EqualTo(7));
+        Assert.That(entered.Last(), Is.EqualTo(RoomKind.Boss));
+    }
+
+    private IReadOnlyList<RoomChoiceOffer> OffersFrom(RoomData room)
+    {
+        return room.ZoneMode == ZoneMode.SafeZone
+            ? director.GenerateLeaveOffersFromSafeRoom(room.RoomId)
+            : director.GenerateOffersAfterClear(room.RoomId);
+    }
+
+    private void EnterRoom(string roomId)
+    {
+        director.NotifyRoomEntered(roomId);
+    }
+
+    private static void SetInstance<T>(T value)
+    {
+        typeof(T).GetField("<Instance>k__BackingField", StaticPrivate).SetValue(null, value);
+    }
 }
 #endif

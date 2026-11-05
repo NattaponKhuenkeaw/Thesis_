@@ -409,6 +409,10 @@ namespace Project.Core.ZoneState
 
                 yield return StartCoroutine(RevealEntranceRoutine(player, targetEntrance));
                 reachedDestination = true;
+                if (targetRoom != null)
+                {
+                    RoomChoiceDirector.Instance?.NotifyRoomEntered(targetRoom.RoomId);
+                }
 
                 if (player != null && player.StateMachine != null)
                 {
