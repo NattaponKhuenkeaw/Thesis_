@@ -16,6 +16,6 @@ MonoBehaviour:
   itemName: Yureka Rei
   description: 
   icon: {fileID: 21300000, guid: 07ac22505236389428e62791d6c70652, type: 3}
-  price: 1500
+  price: 1100
   characterObjectData: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
   availableInShop: 1
