@@ -1,0 +1,897 @@
+fileFormatVersion: 2
+guid: 68ca42d2494488b47b9e3049ea70b257
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2286268177049947669
+    second: Enm112a_0
+  - first:
+      213: 3226038018207944931
+    second: Enm112a_1
+  - first:
+      213: -4721779767135910082
+    second: Enm112a_2
+  - first:
+      213: 9011627412252027812
+    second: Enm112a_3
+  - first:
+      213: 4661078711094046731
+    second: Enm112a_4
+  - first:
+      213: -8016886469630382420
+    second: Enm112a_5
+  - first:
+      213: -3284114049740518103
+    second: Enm112a_6
+  - first:
+      213: -7982856932280272120
+    second: Enm112a_7
+  - first:
+      213: 8841075880076196587
+    second: Enm112a_8
+  - first:
+      213: 524012868004195262
+    second: Enm112a_9
+  - first:
+      213: -4576954368175008750
+    second: Enm112a_10
+  - first:
+      213: -6263550992536218907
+    second: Enm112a_11
+  - first:
+      213: 1833263032196459363
+    second: Enm112a_12
+  - first:
+      213: -5615644522748218805
+    second: Enm112a_13
+  - first:
+      213: 3162904362085987288
+    second: Enm112a_14
+  - first:
+      213: 6617934435694878353
+    second: Enm112a_15
+  - first:
+      213: -8729779220401847607
+    second: Enm112a_16
+  - first:
+      213: 7608748184257203705
+    second: Enm112a_17
+  - first:
+      213: -3713724609260613446
+    second: Enm112a_18
+  - first:
+      213: 4919507219038141945
+    second: Enm112a_19
+  - first:
+      213: -5726524147688447745
+    second: Enm112a_20
+  - first:
+      213: -4684804193451317774
+    second: Enm112a_21
+  - first:
+      213: 368239397504652365
+    second: Enm112a_22
+  - first:
+      213: 3318914207792581247
+    second: Enm112a_23
+  - first:
+      213: -367996862109955064
+    second: Enm112a_24
+  - first:
+      213: 6286197352711550844
+    second: Enm112a_25
+  - first:
+      213: -1418486614997143003
+    second: Enm112a_26
+  - first:
+      213: 6210818003323711850
+    second: Enm112a_27
+  - first:
+      213: -7611095969176650685
+    second: Enm112a_28
+  - first:
+      213: -7709353182631554541
+    second: Enm112a_29
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Enm112a_0
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 661
+        width: 149
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be178a5c43b8540e0800000000000000
+      internalID: -2286268177049947669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_1
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 651
+        width: 35
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e0903b3c7035cc20800000000000000
+      internalID: 3226038018207944931
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_2
+      rect:
+        serializedVersion: 2
+        x: 248
+        y: 660
+        width: 135
+        height: 154
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e37cc30a15ed87eb0800000000000000
+      internalID: -4721779767135910082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_3
+      rect:
+        serializedVersion: 2
+        x: 450
+        y: 652
+        width: 148
+        height: 171
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ab6473c26bbf0d70800000000000000
+      internalID: 9011627412252027812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_4
+      rect:
+        serializedVersion: 2
+        x: 657
+        y: 661
+        width: 149
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0075ec646a7fa040800000000000000
+      internalID: 4661078711094046731
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_5
+      rect:
+        serializedVersion: 2
+        x: 764
+        y: 651
+        width: 35
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: caeab0d2b3c4eb090800000000000000
+      internalID: -8016886469630382420
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_6
+      rect:
+        serializedVersion: 2
+        x: 865
+        y: 631
+        width: 149
+        height: 192
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92dc857fbab7c62d0800000000000000
+      internalID: -3284114049740518103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_7
+      rect:
+        serializedVersion: 2
+        x: 972
+        y: 651
+        width: 35
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80b7ba24ae1373190800000000000000
+      internalID: -7982856932280272120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_8
+      rect:
+        serializedVersion: 2
+        x: 1080
+        y: 667
+        width: 136
+        height: 145
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bea3730cbafc1ba70800000000000000
+      internalID: 8841075880076196587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_9
+      rect:
+        serializedVersion: 2
+        x: 1185
+        y: 651
+        width: 35
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ebbaf175deaa54700800000000000000
+      internalID: 524012868004195262
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_10
+      rect:
+        serializedVersion: 2
+        x: 1281
+        y: 647
+        width: 149
+        height: 176
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21491cb70446b70c0800000000000000
+      internalID: -4576954368175008750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_11
+      rect:
+        serializedVersion: 2
+        x: 1489
+        y: 661
+        width: 149
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e25559de856319a0800000000000000
+      internalID: -6263550992536218907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_12
+      rect:
+        serializedVersion: 2
+        x: 1596
+        y: 631
+        width: 35
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36bece5c30f017910800000000000000
+      internalID: 1833263032196459363
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_13
+      rect:
+        serializedVersion: 2
+        x: 703
+        y: 647
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4279bc3f093112b0800000000000000
+      internalID: -5615644522748218805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_14
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 207
+        width: 30
+        height: 418
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d33ba072c4e4eb20800000000000000
+      internalID: 3162904362085987288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_15
+      rect:
+        serializedVersion: 2
+        x: 275
+        y: 207
+        width: 78
+        height: 418
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19e1b625e40a7db50800000000000000
+      internalID: 6617934435694878353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_16
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 419
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c28c582d0899d680800000000000000
+      internalID: -8729779220401847607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_17
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 423
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9fd8c042924b79960800000000000000
+      internalID: 7608748184257203705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_18
+      rect:
+        serializedVersion: 2
+        x: 465
+        y: 207
+        width: 107
+        height: 418
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab0156fd423367cc0800000000000000
+      internalID: -3713724609260613446
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_19
+      rect:
+        serializedVersion: 2
+        x: 722
+        y: 207
+        width: 12
+        height: 418
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9fdfcb440c9954440800000000000000
+      internalID: 4919507219038141945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_20
+      rect:
+        serializedVersion: 2
+        x: 846
+        y: 207
+        width: 179
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff0655bc0ac4780b0800000000000000
+      internalID: -5726524147688447745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_21
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 1
+        width: 149
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f5e21f386b3cfeb0800000000000000
+      internalID: -4684804193451317774
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_22
+      rect:
+        serializedVersion: 2
+        x: 241
+        y: 2
+        width: 149
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d449190f7cf3c1500800000000000000
+      internalID: 368239397504652365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_23
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 55
+        width: 153
+        height: 134
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7a497b33e62f0e20800000000000000
+      internalID: 3318914207792581247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_24
+      rect:
+        serializedVersion: 2
+        x: 654
+        y: 0
+        width: 162
+        height: 122
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80c4a7bbdcc94eaf0800000000000000
+      internalID: -367996862109955064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_25
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 0
+        width: 164
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c777f54cf2f0d3750800000000000000
+      internalID: 6286197352711550844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_26
+      rect:
+        serializedVersion: 2
+        x: 1052
+        y: 0
+        width: 184
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 522f27a60f5805ce0800000000000000
+      internalID: -1418486614997143003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_27
+      rect:
+        serializedVersion: 2
+        x: 1253
+        y: 0
+        width: 204
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a61f5b45112413650800000000000000
+      internalID: 6210818003323711850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_28
+      rect:
+        serializedVersion: 2
+        x: 1489
+        y: 0
+        width: 149
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34c71d59a84ff5690800000000000000
+      internalID: -7611095969176650685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm112a_29
+      rect:
+        serializedVersion: 2
+        x: 1697
+        y: 0
+        width: 149
+        height: 163
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31218355020e20590800000000000000
+      internalID: -7709353182631554541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Enm112a_0: -2286268177049947669
+      Enm112a_1: 3226038018207944931
+      Enm112a_10: -4576954368175008750
+      Enm112a_11: -6263550992536218907
+      Enm112a_12: 1833263032196459363
+      Enm112a_13: -5615644522748218805
+      Enm112a_14: 3162904362085987288
+      Enm112a_15: 6617934435694878353
+      Enm112a_16: -8729779220401847607
+      Enm112a_17: 7608748184257203705
+      Enm112a_18: -3713724609260613446
+      Enm112a_19: 4919507219038141945
+      Enm112a_2: -4721779767135910082
+      Enm112a_20: -5726524147688447745
+      Enm112a_21: -4684804193451317774
+      Enm112a_22: 368239397504652365
+      Enm112a_23: 3318914207792581247
+      Enm112a_24: -367996862109955064
+      Enm112a_25: 6286197352711550844
+      Enm112a_26: -1418486614997143003
+      Enm112a_27: 6210818003323711850
+      Enm112a_28: -7611095969176650685
+      Enm112a_29: -7709353182631554541
+      Enm112a_3: 9011627412252027812
+      Enm112a_4: 4661078711094046731
+      Enm112a_5: -8016886469630382420
+      Enm112a_6: -3284114049740518103
+      Enm112a_7: -7982856932280272120
+      Enm112a_8: 8841075880076196587
+      Enm112a_9: 524012868004195262
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
