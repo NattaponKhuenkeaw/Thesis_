@@ -952,10 +952,10 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            NotifyRunEndRoomCleared();
+            bool bossFlow = useBossDeathFlow || spawnedBossEnemy || IsCurrentRoomBoss();
+            NotifyRunEndRoomCleared(bossFlow);
             TryGrantActiveRouteReward();
 
-            bool bossFlow = useBossDeathFlow || spawnedBossEnemy || IsCurrentRoomBoss();
             if (bossFlow)
             {
                 // Progression + next offers still roll, but no portal / choice gate.
@@ -1013,7 +1013,7 @@ namespace Project.Core.ZoneState
             return room != null && room.RoomKind == RoomKind.Boss;
         }
 
-        private void NotifyRunEndRoomCleared()
+        private void NotifyRunEndRoomCleared(bool bossFlow)
         {
             RunEndController runEndController = RunEndController.Instance ?? FindFirstObjectByType<RunEndController>();
             if (runEndController == null)
@@ -1022,7 +1022,9 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            runEndController.NotifyRoomCleared();
+            RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
+            RoomKind kind = bossFlow ? RoomKind.Boss : room != null ? room.RoomKind : RoomKind.Combat;
+            runEndController.NotifyRoomCleared(kind);
         }
 
         private void UnsubscribeActiveEnemies()
