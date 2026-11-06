@@ -308,6 +308,8 @@ public class EnemyController : MonoBehaviour
         set => rangedMuzzle = value;
     }
     public bool ArmorDuringCommittedSwing => CombatRole == EnemyCombatRole.CommitMelee;
+    public bool HasBossDriver => GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null
+        || GetComponentInChildren<Project.AIBehaviour.Boss.Boss112Controller>(true) != null;
 
     public float ResolveAttackRange(float blackboardRange)
     {
@@ -1343,7 +1345,7 @@ public class EnemyController : MonoBehaviour
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();
         if (behaviorAgent != null)
         {
-            bool hasBossDriver = GetComponent<Project.AIBehaviour.Boss.BossPatternController>() != null;
+            bool hasBossDriver = HasBossDriver;
             if (!active || !hasBossDriver)
                 behaviorAgent.enabled = active;
         }

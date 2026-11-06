@@ -113,7 +113,7 @@ namespace Project.Core.ZoneState
             RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
             RoomKind kind = room != null ? room.RoomKind : RoomKind.Combat;
             if (enemies != null && enemies.Exists(enemy => enemy != null
-                && enemy.GetComponent<Project.AIBehaviour.Boss.BossPatternController>() != null))
+                && enemy.HasBossDriver))
                 kind = RoomKind.Boss;
             runEndController.NotifyRoomCleared(kind);
         }

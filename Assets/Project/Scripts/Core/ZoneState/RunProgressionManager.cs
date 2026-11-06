@@ -36,7 +36,7 @@ namespace Project.Core.ZoneState
         [Tooltip("Optional explicit combat room ids for GetNextRoomId(). Empty = use MapSO Combat offers.")]
         public List<string> combatRoomIds = new List<string>();
 
-        [Tooltip("Forced boss room when depth reaches roomsBeforeBoss.")]
+        [Tooltip("Primary boss room for Level 1, 3, 5... when the act reaches its Boss node.")]
         public string bossRoomId = DefaultBossRoomId;
 
         [Header("Dependencies")]
@@ -44,7 +44,10 @@ namespace Project.Core.ZoneState
 
         public bool IsBossDue => currentRoomDepth >= roomsBeforeBoss;
         public int RoomsBeforeBoss => roomsBeforeBoss;
-        public string BossRoomId => bossRoomId;
+        [Tooltip("Boss used on Level 2, 4, 6... Empty keeps the primary boss on every level.")]
+        [SerializeField] private string alternateBossRoomId = "Boss_02";
+        public string BossRoomId => CurrentBiomeIndex % 2 == 1 && !string.IsNullOrWhiteSpace(alternateBossRoomId)
+            ? alternateBossRoomId : string.IsNullOrWhiteSpace(bossRoomId) ? DefaultBossRoomId : bossRoomId;
         public int CurrentBiomeIndex => Mathf.Max(0, currentBiomeIndex);
         public float BiomeBasicStatBonus => Mathf.Max(0f, biomeBasicStatBonus);
 
@@ -190,7 +193,7 @@ namespace Project.Core.ZoneState
         {
             if (IsBossDue)
             {
-                return string.IsNullOrWhiteSpace(bossRoomId) ? DefaultBossRoomId : bossRoomId;
+                return BossRoomId;
             }
 
             EnsureMapData();
@@ -261,7 +264,7 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
-            string id = string.IsNullOrWhiteSpace(bossRoomId) ? DefaultBossRoomId : bossRoomId;
+            string id = BossRoomId;
             if (catalog != null)
             {
                 bossRoom = catalog.GetRoomById(id);

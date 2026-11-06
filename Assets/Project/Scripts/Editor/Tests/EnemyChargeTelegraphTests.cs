@@ -64,6 +64,51 @@ public class EnemyChargeTelegraphTests
     private static void Invoke(object component, string method)
         => component.GetType().GetMethod(method, Private).Invoke(component, null);
 
+    [TestCase(BossChargeTelegraphAuthoring.Boss111Path, typeof(Project.AIBehaviour.Boss.BossPatternController))]
+    [TestCase(BossChargeTelegraphAuthoring.Boss112Path, typeof(Project.AIBehaviour.Boss.Boss112Controller))]
+    public void BossesReferenceTheSameAuthoredLaneWithoutAddingDamageComponents(string path, System.Type controllerType)
+    {
+        var root = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        var lanes = root.GetComponentsInChildren<EnemyChargeTelegraph>(true);
+        Assert.That(lanes.Length, Is.EqualTo(1));
+        using var controller = new SerializedObject(root.GetComponent(controllerType));
+        Assert.That(controller.FindProperty("chargeTelegraph").objectReferenceValue, Is.EqualTo(lanes[0]));
+        using var data = new SerializedObject(lanes[0]);
+        Assert.That(data.FindProperty("externallyDriven").boolValue, Is.True);
+        Assert.That(lanes[0].GetComponentsInChildren<Collider2D>(true), Is.Empty);
+        Assert.That(lanes[0].GetComponentsInChildren<Rigidbody2D>(true), Is.Empty);
+        using var shield = new SerializedObject(visual);
+        Assert.That(shield.FindProperty("externallyDriven").boolValue, Is.False);
+        foreach (var name in new[] { "laneColor", "fillColor", "outlineColor" })
+            Assert.That(data.FindProperty(name).colorValue, Is.EqualTo(shield.FindProperty(name).colorValue));
+        Assert.That(data.FindProperty("outlineWidth").floatValue, Is.EqualTo(shield.FindProperty("outlineWidth").floatValue));
+        foreach (var line in lanes[0].GetComponentsInChildren<LineRenderer>(true))
+        {
+            Assert.That(line.sharedMaterial, Is.EqualTo(Line(line.name).sharedMaterial));
+            Assert.That(line.useWorldSpace, Is.True);
+            Assert.That(line.enabled, Is.False);
+        }
+    }
+
+    [TestCase(1f, 0f)] [TestCase(-1f, 0f)] [TestCase(0f, -1f)]
+    public void ExternalLaneSupportsHorizontalAndDownwardWarningsWithAProgressiveRectangularFill(float x, float y)
+    {
+        Vector3 start = new Vector3(2f, 10f, 0f);
+        Vector3 direction = new Vector3(x, y, 0f);
+        visual.ShowLane(start, start + direction * 8f, 3f, .5f);
+        Assert.That(Line("background").GetPosition(1), Is.EqualTo(start + direction * 8f));
+        Assert.That(Line("fill").GetPosition(1), Is.EqualTo(start + direction * 4f));
+        Assert.That(Line("background").startWidth, Is.EqualTo(3f));
+        var outline = Line("outline");
+        Assert.That(Vector3.Distance(outline.GetPosition(0), outline.GetPosition(1)), Is.EqualTo(8f).Within(.001f));
+        Assert.That(Vector3.Distance(outline.GetPosition(1), outline.GetPosition(2)), Is.EqualTo(3f).Within(.001f));
+        visual.Hide();
+        AssertHidden();
+        visual.enabled = false;
+        visual.ShowLane(start, start + direction * 8f, 3f, 1f);
+        AssertHidden();
+    }
+
     [Test]
     public void AuthoredPrefabAddsOnlyPresentationAndLeavesAllTuningUnchanged()
     {

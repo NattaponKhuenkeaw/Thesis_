@@ -46,7 +46,7 @@ namespace Project.Core.ZoneState
         [Header("Room Clear")]
         [SerializeField] private bool unlockSceneExitOnClear = true;
         [SerializeField] private GameObject portalsRoot;
-        [Tooltip("When true (or when a BossPatternController was in the wave), skip portal/choice UI and let BossDeathSequence handle continue.")]
+        [Tooltip("When true (or when a dedicated boss driver was in the wave), skip portal/choice UI and let BossDeathSequence handle continue.")]
         [SerializeField] private bool useBossDeathFlow;
 
         private readonly List<EnemyController> activeEnemies = new List<EnemyController>();
@@ -794,6 +794,9 @@ namespace Project.Core.ZoneState
             // The instance is already at its final ground spawn position; lifecycle handles the
             // setup frame instead of hiding a fresh enemy in the sky or stripping components.
             enemy.InitializeSpawn(spawnPosition, spawnPoint.rotation);
+            var observer = enemy.GetComponent<Project.AIBehaviour.Boss.Boss112Controller>();
+            var observerArena = GetComponentInParent<Project.AIBehaviour.Boss.Boss112Arena>();
+            if (observer != null && observerArena != null) observerArena.ConfigureBoss(observer);
             enemy.OnDied -= HandleEnemyDied;
             enemy.OnDied += HandleEnemyDied;
             RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
@@ -801,7 +804,7 @@ namespace Project.Core.ZoneState
             spawnOrigins[enemy] = spawnPosition;
             spawnedAnyEnemy = true;
 
-            if (enemy.GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null)
+            if (enemy.HasBossDriver)
             {
                 spawnedBossEnemy = true;
             }

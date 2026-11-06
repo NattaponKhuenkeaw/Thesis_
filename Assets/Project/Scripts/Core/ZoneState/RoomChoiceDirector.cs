@@ -69,6 +69,7 @@ namespace Project.Core.ZoneState
 
         public int OfferCount => offerCount;
         public int ActIndex => actIndex;
+        public bool HasVisitedShopThisAct => biomeHadShop;
         public IReadOnlyList<BiomeActNode> BiomeTemplate => biomeTemplate;
         public IReadOnlyList<RoomChoiceOffer> LastOffers => offerBuffer;
 
@@ -262,7 +263,7 @@ namespace Project.Core.ZoneState
                 }
 
                 Debug.LogError(
-                    "[RoomChoiceDirector] Act is on Boss node but boss room could not be resolved. Check Boss_01 in MapSO.",
+                    "[RoomChoiceDirector] Act is on Boss node but boss room could not be resolved. Check the configured boss room IDs in MapSO.",
                     this);
             }
 
