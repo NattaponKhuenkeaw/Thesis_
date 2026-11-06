@@ -25,8 +25,9 @@ public class EncounterPhaseCompositionTests
             yield return new TestCaseData(difficulty, 0, 0, false, 0, 0);
             yield return new TestCaseData(difficulty, 0, 1, false, 1, 0);
             yield return new TestCaseData(difficulty, 0, 1, true, 1, 0);
-            yield return new TestCaseData(difficulty, 0, 2, false, 1, 1);
-            yield return new TestCaseData(difficulty, 0, 3, true, 1, 1);
+            yield return new TestCaseData(difficulty, 0, 2, false, 1, 0);
+            yield return new TestCaseData(difficulty, 0, 3, true, 1, 0);
+            yield return new TestCaseData(difficulty, 0, 20, true, 1, 0);
             yield return new TestCaseData(difficulty, 1, 0, false, 0, 1);
             yield return new TestCaseData(difficulty, 1, 1, false, 1, 1);
             yield return new TestCaseData(difficulty, 1, 2, true, 1, 1);
@@ -95,20 +96,25 @@ public class EncounterPhaseCompositionTests
         finally { Object.DestroyImmediate(inventory); }
     }
 
-    [TestCase(0, 0, 0, 0)]
-    [TestCase(0, 1, 1, 0)]
-    [TestCase(0, 2, 1, 1)]
-    [TestCase(0, 3, 1, 1)]
-    [TestCase(1, 0, 0, 1)]
-    [TestCase(1, 2, 1, 1)]
-    [TestCase(2, 0, 2, 2)]
-    public void StageSelectionReadsTheCurrentRunAndDeployedTeam(int biome, int depth, int ranged, int guards)
+    [TestCase(0, 0, 0, 0, false)]
+    [TestCase(0, 0, 0, 0, true)]
+    [TestCase(0, 1, 1, 0, false)]
+    [TestCase(0, 1, 1, 0, true)]
+    [TestCase(0, 2, 1, 0, false)]
+    [TestCase(0, 2, 1, 0, true)]
+    [TestCase(0, 3, 1, 0, true)]
+    [TestCase(1, 0, 0, 1, false)]
+    [TestCase(1, 2, 1, 1, true)]
+    [TestCase(2, 0, 2, 2, false)]
+    public void StageSelectionReadsTheCurrentRunAndDeployedTeam(int biome, int depth, int ranged, int guards, bool passedShop)
     {
         const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
         var progressionInstance = typeof(RunProgressionManager).GetField("<Instance>k__BackingField", flags);
         var loaderInstance = typeof(TeamLoader).GetField("<Instance>k__BackingField", flags);
         var previousProgression = RunProgressionManager.Instance;
         var previousLoader = TeamLoader.Instance;
+        var previousDirector = RoomChoiceDirector.Instance;
+        var directorInstance = typeof(RoomChoiceDirector).GetField("<Instance>k__BackingField", flags);
         var previousOffer = ActiveRouteOffer.Current;
         bool hadOffer = ActiveRouteOffer.HasSelection;
         var host = new GameObject("Phase selection context");
@@ -121,6 +127,9 @@ public class EncounterPhaseCompositionTests
             progression.currentBiomeIndex = biome;
             progression.currentRoomDepth = depth;
             progressionInstance.SetValue(null, progression);
+            var director = host.AddComponent<RoomChoiceDirector>();
+            typeof(RoomChoiceDirector).GetField("biomeHadShop", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(director, passedShop);
+            directorInstance.SetValue(null, director);
             var loader = host.AddComponent<TeamLoader>();
             typeof(TeamLoader).GetField("runInventory", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(loader, inventory);
             loaderInstance.SetValue(null, loader);
@@ -140,6 +149,7 @@ public class EncounterPhaseCompositionTests
             Object.DestroyImmediate(inventory);
             progressionInstance.SetValue(null, previousProgression);
             loaderInstance.SetValue(null, previousLoader);
+            directorInstance.SetValue(null, previousDirector);
             if (hadOffer) ActiveRouteOffer.Set(previousOffer); else ActiveRouteOffer.Clear();
         }
     }
@@ -175,9 +185,11 @@ public class EncounterPhaseRuntimeTests
         yield return new EnterPlayMode();
         var context = new GameObject("Phase runtime context");
         var progression = context.AddComponent<RunProgressionManager>();
+        var director = context.AddComponent<RoomChoiceDirector>();
         var phases = new[] {
-            new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(0, 2), new Vector2Int(0, 3),
-            new Vector2Int(1, 0), new Vector2Int(1, 1), new Vector2Int(2, 0)
+            new Vector3Int(0, 0, 0), new Vector3Int(0, 0, 1), new Vector3Int(0, 1, 0), new Vector3Int(0, 1, 1),
+            new Vector3Int(0, 2, 0), new Vector3Int(0, 2, 1), new Vector3Int(0, 3, 1),
+            new Vector3Int(1, 0, 0), new Vector3Int(1, 1, 1), new Vector3Int(2, 0, 0)
         };
         try
         {
@@ -186,6 +198,11 @@ public class EncounterPhaseRuntimeTests
             {
                 progression.currentBiomeIndex = phase.x;
                 progression.currentRoomDepth = phase.y;
+                using (var data = new SerializedObject(director))
+                {
+                    data.FindProperty("biomeHadShop").boolValue = phase.z != 0;
+                    data.ApplyModifiedPropertiesWithoutUndo();
+                }
                 var root = Object.Instantiate(Resources.Load<GameObject>("RoomLayouts/LV/RoomLayout_LV_01"));
                 var player = new GameObject("Phase trigger player");
                 try
@@ -230,7 +247,7 @@ public class EncounterPhaseRuntimeTests
                     Assert.That(seen.Count, Is.EqualTo(expected), label);
                     int expectedRanged = phase.x == 0 ? (phase.y >= 1 ? 1 : 0)
                         : phase.x == 1 && phase.y == 0 ? 0 : 1;
-                    int expectedGuards = phase.x == 0 ? (phase.y >= 2 ? 1 : 0) : 1;
+                    int expectedGuards = phase.x == 0 ? 0 : 1;
                     Assert.That(ranged, Is.EqualTo(expectedRanged), label);
                     Assert.That(guards, Is.EqualTo(expectedGuards), label);
                 }
