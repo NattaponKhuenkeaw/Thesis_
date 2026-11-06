@@ -8,6 +8,7 @@ using NUnit.Framework;
 using Project.Core.ZoneState;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.U2D.Sprites;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -89,9 +90,10 @@ public class RoomExitLightTests
         foreach (var sprite in sprites)
         {
             Assert.That(sprite.pivot.x / sprite.rect.width, Is.EqualTo(1f).Within(.005f));
-            Assert.That(sprite.pivot.y / sprite.rect.height, Is.EqualTo(.14f).Within(.005f));
-            Assert.That(sprite.bounds.size.x, Is.EqualTo(sprites[0].bounds.size.x).Within(.01f));
-            Assert.That(sprite.bounds.size.y, Is.EqualTo(sprites[0].bounds.size.y).Within(.01f));
+            Assert.That(sprite.pivot.y / sprite.rect.height, Is.EqualTo(0f).Within(.005f));
+            float texel = 1f / sprite.pixelsPerUnit;
+            Assert.That(sprite.bounds.size.x, Is.EqualTo(sprites[0].bounds.size.x).Within(texel));
+            Assert.That(sprite.bounds.size.y, Is.EqualTo(sprites[0].bounds.size.y).Within(texel));
         }
         var source = new Texture2D(2, 2);
         try
@@ -115,6 +117,41 @@ public class RoomExitLightTests
         CollectionAssert.AreEqual(new Object[] { sprites[0], sprites[1], sprites[2], sprites[1], sprites[0] },
             keys.Select(k => k.value).ToArray());
         Assert.That(AnimationUtility.GetCurveBindings(clip), Is.Empty, "The loop must not animate position, scale, or brightness.");
+    }
+
+    [Test]
+    public void SpriteEditorCropsExcludeDoorFrameAndNeighbouringFrames()
+    {
+        var importer = (TextureImporter)AssetImporter.GetAtPath(RoomExitLightAuthoring.SheetPath);
+        var factories = new SpriteDataProviderFactories();
+        factories.Init();
+        var provider = factories.GetSpriteEditorDataProviderFromObject(importer);
+        provider.InitSpriteEditorDataProvider();
+        var frames = provider.GetSpriteRects().OrderBy(s => s.name).ToArray();
+        Assert.That(frames.Length, Is.EqualTo(3));
+        var source = new Texture2D(2, 2);
+        try
+        {
+            source.LoadImage(File.ReadAllBytes(RoomExitLightAuthoring.SheetPath));
+            for (int frame = 0; frame < frames.Length; frame++)
+            {
+                Rect rect = frames[frame].rect;
+                Assert.That(rect, Is.EqualTo(new Rect(frame * 724 + 32, 112, 666, 612)));
+                var pixels = source.GetPixels((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+                for (int x = 0; x < (int)rect.width; x++)
+                {
+                    int bright = 0;
+                    for (int y = 0; y < (int)rect.height; y++)
+                    {
+                        Color p = pixels[y * (int)rect.width + x];
+                        if (p.a > .4f && p.r > .82f && p.g > .82f && p.b > .63f) bright++;
+                    }
+                    Assert.That(bright, Is.LessThan(rect.height * .6f),
+                        $"Frame {frame} column {x} must not contain a vertical door-frame strip.");
+                }
+            }
+        }
+        finally { Object.DestroyImmediate(source); }
     }
 
     [UnityTest]
