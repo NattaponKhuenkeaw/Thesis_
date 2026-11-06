@@ -37,14 +37,21 @@ public class EnemyController : MonoBehaviour
     /// </summary>
     public void ApplyBasicStatMultiplier(float multiplier)
     {
-        if (multiplier <= 0f || Mathf.Approximately(multiplier, 1f))
+        ApplyStatMultipliers(multiplier, multiplier, multiplier);
+    }
+
+    public void ApplyStatMultipliers(float healthMultiplier, float attackMultiplier, float defenseMultiplier)
+    {
+        if (healthMultiplier <= 0f || attackMultiplier <= 0f || defenseMultiplier <= 0f
+            || (Mathf.Approximately(healthMultiplier, 1f) && Mathf.Approximately(attackMultiplier, 1f)
+                && Mathf.Approximately(defenseMultiplier, 1f)))
         {
             return;
         }
 
-        maxHP *= multiplier;
-        attackDamage *= multiplier;
-        defense *= multiplier;
+        maxHP *= healthMultiplier;
+        attackDamage *= attackMultiplier;
+        defense *= defenseMultiplier;
         currentHP = maxHP;
         NotifyHealthPresentationRefreshed();
     }
@@ -301,6 +308,8 @@ public class EnemyController : MonoBehaviour
 
     public bool UninterruptibleOnceWindup => CombatRole == EnemyCombatRole.CommitMelee;
     public bool UsesRangedAttack => CombatRole == EnemyCombatRole.RangedHold || CombatRole == EnemyCombatRole.AimedRanged;
+    public bool HasBossDriver => GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null
+        || GetComponentInChildren<Project.AIBehaviour.Boss.Boss112Controller>(true) != null;
     public bool NeverEvade => UsesRangedAttack || CombatRole == EnemyCombatRole.ShieldGuard;
     public Transform RangedMuzzle
     {
@@ -308,8 +317,6 @@ public class EnemyController : MonoBehaviour
         set => rangedMuzzle = value;
     }
     public bool ArmorDuringCommittedSwing => CombatRole == EnemyCombatRole.CommitMelee;
-    public bool HasBossDriver => GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null
-        || GetComponentInChildren<Project.AIBehaviour.Boss.Boss112Controller>(true) != null;
 
     public float ResolveAttackRange(float blackboardRange)
     {
