@@ -17,7 +17,7 @@ public sealed class EncounterBatchSpawnTests
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
     [Test]
-    public void GeneratedFallbackOffersAlsoUseFiveEnemyBatchesWithoutChangingTheQuota()
+    public void GeneratedFallbackOffersKeepTheirQuotaAndFiveEnemyCap()
     {
         var room = ScriptableObject.CreateInstance<RoomData>();
         var previous = UnityEngine.Random.state;
@@ -42,20 +42,28 @@ public sealed class EncounterBatchSpawnTests
     }
 
     [UnityTest]
-    public IEnumerator QuotasSpawnInGroupsOfFiveAndNeverRefillWhileOneSurvives()
+    public IEnumerator QuotasSpawnInBalancedGroupsAndNeverRefillWhileOneSurvives()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
-        foreach (int quota in new[] { 4, 6, 8, 12 })
+        var plans = new Dictionary<int, int[]>
         {
+            { 4, new[] { 4 } },
+            { 6, new[] { 3, 3 } },
+            { 8, new[] { 4, 4 } },
+            { 12, new[] { 4, 4, 4 } }
+        };
+        foreach (var plan in plans)
+        {
+            int quota = plan.Key;
             using (var f = new Fixture(5))
             {
                 f.Start(quota, quota == 12 ? 99 : 5);
                 var seen = new HashSet<int>();
                 int remaining = quota;
-                while (remaining > 0)
+                foreach (int expected in plan.Value)
                 {
-                    int expected = Mathf.Min(5, remaining);
+                    Assert.That(expected, Is.InRange(2, 5));
                     yield return Until(() => f.Living.Length == expected);
                     var group = f.Living;
                     foreach (var enemy in group) Assert.That(seen.Add(enemy.GetInstanceID()), Is.True);
@@ -114,20 +122,20 @@ public sealed class EncounterBatchSpawnTests
         using (var f = new Fixture(5))
         {
             f.Start(8);
-            Assert.That(f.Living.Length, Is.EqualTo(5));
+            Assert.That(f.Living.Length, Is.EqualTo(4));
             f.Waves.enabled = false;
             yield return Wait(.2f);
             Assert.That(f.Living, Is.Empty);
             f.Waves.enabled = true;
             f.Start(6);
-            Assert.That(f.Living.Length, Is.EqualTo(5));
-            Assert.That(f.Pending, Is.EqualTo(1));
+            Assert.That(f.Living.Length, Is.EqualTo(3));
+            Assert.That(f.Pending, Is.EqualTo(3));
             foreach (var enemy in f.Living) enemy.Die();
-            yield return Until(() => f.Living.Length == 1);
+            yield return Until(() => f.Living.Length == 3);
             yield return Wait(.15f);
-            Assert.That(f.Living.Length, Is.EqualTo(1));
+            Assert.That(f.Living.Length, Is.EqualTo(3));
             Assert.That(f.Pending, Is.Zero);
-            f.Living[0].Die();
+            foreach (var enemy in f.Living) enemy.Die();
             yield return Until(() => !f.Running);
         }
         yield return new ExitPlayMode();

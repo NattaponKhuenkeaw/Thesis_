@@ -519,6 +519,9 @@ public class InteractableWorldUI : MonoBehaviour
             return prompt.descriptionString;
         }
 
-        return prompt.descriptionString;
+        Project.ShopSystem.ShopManager shopManager = FindFirstObjectByType<Project.ShopSystem.ShopManager>();
+        return shopManager != null
+            ? $"{prompt.descriptionString} FREE (+{shopManager.CurrentRerollPriceIncreasePercent:0.#}%)"
+            : $"{prompt.descriptionString} FREE";
     }
 }

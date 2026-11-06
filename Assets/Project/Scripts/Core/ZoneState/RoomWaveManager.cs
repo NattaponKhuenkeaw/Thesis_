@@ -271,7 +271,10 @@ namespace Project.Core.ZoneState
             int batchCap = Mathf.Clamp(runtimeAliveCap, 1, 5);
             while (pressureDirector.Remaining > 0)
             {
-                int count = Mathf.Min(batchCap, pressureDirector.Remaining);
+                // Balance the remaining quota across groups instead of leaving a lone final enemy.
+                int remaining = pressureDirector.Remaining;
+                int groupCount = 1 + (remaining - 1) / batchCap;
+                int count = 1 + (remaining - 1) / groupCount;
                 int spawned = 0;
                 for (int i = 0; i < count; i++)
                 {
@@ -1166,7 +1169,16 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            runEndController.NotifyRoomCleared(awardLegacyCurrency);
+            if (!awardLegacyCurrency)
+            {
+                runEndController.NotifyRoomCleared(awardLegacyCurrency: false);
+                return;
+            }
+
+            RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
+            RoomKind kind = useBossDeathFlow || spawnedBossEnemy || IsCurrentRoomBoss()
+                ? RoomKind.Boss : room != null ? room.RoomKind : RoomKind.Combat;
+            runEndController.NotifyRoomCleared(kind);
         }
 
         private void UnsubscribeActiveEnemies()
