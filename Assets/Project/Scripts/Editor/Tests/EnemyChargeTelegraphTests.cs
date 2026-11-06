@@ -83,9 +83,9 @@ public class EnemyChargeTelegraphTests
         Assert.That(kit.WarningDuration, Is.EqualTo(1f));
         Assert.That(kit.LungeDistance, Is.EqualTo(9f));
         Assert.That(kit.HitWindowDuration, Is.EqualTo(.48f));
-        Assert.That(kit.AttackCooldown, Is.EqualTo(3.5f));
+        Assert.That(kit.AttackCooldown, Is.EqualTo(5f));
         using (var data = new SerializedObject(prefab.GetComponent<EnemyShieldGuard>()))
-            Assert.That(data.FindProperty("guardWaitDuration").floatValue, Is.EqualTo(4.5f));
+            Assert.That(data.FindProperty("guardWaitDuration").floatValue, Is.EqualTo(2.5f));
     }
 
     [Test]
