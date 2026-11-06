@@ -198,7 +198,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             {
                 m_HitboxDisabled = true;
                 RestoreChargeHitbox();
-                if (m_Controller.CurrentReactionState == EnemyReactionState.None)
+                if (m_Controller.CurrentReactionState == EnemyReactionState.None
+                    && m_ShieldGuard.Phase != EnemyShieldGuard.GuardPhase.Advancing)
                     StopChargeMotion();
             }
             return running ? Status.Running : Status.Success;

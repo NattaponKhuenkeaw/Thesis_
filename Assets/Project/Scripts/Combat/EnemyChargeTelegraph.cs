@@ -1,6 +1,6 @@
 using UnityEngine;
 
-/// <summary>Presentation only: reads the shield guard's existing windup, never advances it.</summary>
+/// <summary>Presentation only: displays an attack lane without advancing combat or changing physics.</summary>
 [DisallowMultipleComponent]
 public sealed class EnemyChargeTelegraph : MonoBehaviour
 {
@@ -11,6 +11,7 @@ public sealed class EnemyChargeTelegraph : MonoBehaviour
     [SerializeField] private Color fillColor = new Color(1f, .8f, .12f, .30f);
     [SerializeField] private Color outlineColor = new Color(1f, .85f, .25f, .65f);
     [SerializeField, Min(.01f)] private float outlineWidth = .035f;
+    [SerializeField] private bool externallyDriven;
 
     private EnemyController owner;
     private EnemyShieldGuard guard;
@@ -26,6 +27,11 @@ public sealed class EnemyChargeTelegraph : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (externallyDriven)
+        {
+            if (owner == null || !owner.isActiveAndEnabled || !owner.IsCombatReady) Hide();
+            return;
+        }
         if (owner == null || guard == null || !guard.isActiveAndEnabled
             || !owner.IsCombatReady || owner.CurrentReactionState != EnemyReactionState.None
             || guard.Phase != EnemyShieldGuard.GuardPhase.Windup
@@ -48,12 +54,24 @@ public sealed class EnemyChargeTelegraph : MonoBehaviour
             body.center.y, owner.transform.position.z);
         Vector3 end = start + Vector3.right * (direction * length);
         float progress = guard.WindupProgress;
-        DrawStrip(background, start, end, body.size.y, laneColor);
-        DrawStrip(fill, start, Vector3.Lerp(start, end, progress), body.size.y, fillColor);
+        ShowLane(start, end, body.size.y, progress);
+    }
+
+    public void ShowLane(Vector3 start, Vector3 end, float width, float progress)
+    {
+        if (!isActiveAndEnabled || (externallyDriven && (owner == null || !owner.isActiveAndEnabled || !owner.IsCombatReady))
+            || (end - start).sqrMagnitude < .000001f || width <= 0f)
+        {
+            Hide();
+            return;
+        }
+        progress = Mathf.Clamp01(progress);
+        DrawStrip(background, start, end, width, laneColor);
+        DrawStrip(fill, start, Vector3.Lerp(start, end, progress), width, fillColor);
         if (fill != null) fill.enabled = progress > 0f;
         if (outline != null)
         {
-            Vector3 halfHeight = Vector3.up * body.extents.y;
+            Vector3 halfHeight = Vector3.Cross(Vector3.forward, (end - start).normalized) * (width * .5f);
             outline.positionCount = 4;
             outline.loop = true;
             outline.SetPosition(0, start - halfHeight);
@@ -77,7 +95,7 @@ public sealed class EnemyChargeTelegraph : MonoBehaviour
         line.enabled = true;
     }
 
-    private void Hide()
+    public void Hide()
     {
         if (background != null) background.enabled = false;
         if (fill != null) fill.enabled = false;

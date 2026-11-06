@@ -63,6 +63,41 @@ public static class EnemyColorVariantAuthoring
         Debug.Log("[Enemy GIFs] Applied supplied pose sequences to three new colors. Original source assets retained.");
     }
 
+    [MenuItem("Tools/Project/Enemies/Fix Boss Spawn Color Holds")]
+    public static void FixBossSpawnColors()
+    {
+        foreach (char color in new[] { 'a', 'b', 'c' })
+        {
+            var sprite = AssetDatabase.LoadAllAssetsAtPath(VariantSheetPath(111, color))
+                .OfType<Sprite>().Single(s => s.name == "Gif_Idle_00");
+            foreach (string state in new[] { "SpawnGround", "SpawnFall" })
+            {
+                string path = RootPath(111) + $"animation/ColorVariants/boss_{state}_Color{char.ToUpperInvariant(color)}.anim";
+                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+                if (clip == null) throw new InvalidOperationException("Missing boss spawn clip: " + path);
+                HoldBossSpawnColor(clip, sprite);
+                AssetDatabase.SaveAssetIfDirty(clip);
+            }
+        }
+        Debug.Log("[Enemy Colors] Boss spawn clips now retain their selected color; prefab and combat clips unchanged.");
+    }
+
+    private static void HoldBossSpawnColor(AnimationClip clip, Sprite sprite)
+    {
+        var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
+        var frames = AnimationUtility.GetObjectReferenceCurve(clip, binding);
+        if (frames != null && frames.Length > 0) return;
+        // Empty write-defaults states otherwise restore the renderer's pre-randomization sprite.
+        var settings = AnimationUtility.GetAnimationClipSettings(clip);
+        float duration = Mathf.Max(.01f, settings.stopTime - settings.startTime);
+        AnimationUtility.SetObjectReferenceCurve(clip, binding, new[] {
+            new ObjectReferenceKeyframe { time = 0f, value = sprite },
+            new ObjectReferenceKeyframe { time = duration, value = sprite }
+        });
+        AnimationUtility.SetAnimationClipSettings(clip, settings);
+        EditorUtility.SetDirty(clip);
+    }
+
     private static void AuthorEnemy(int id)
     {
         string folder = RootPath(id) + "animation/ColorVariants";
@@ -183,6 +218,8 @@ public static class EnemyColorVariantAuthoring
                             frames[f].value = replacement;
                     AnimationUtility.SetObjectReferenceCurve(clip, binding, frames);
                 }
+                if (id == 111 && (overrides[i].Key.name == "boss_SpawnGround" || overrides[i].Key.name == "boss_SpawnFall"))
+                    HoldBossSpawnColor(clip, allSprites["Gif_Idle_00"]);
                 // Replacing sprite keys recalculates stop time; retain authored holds and loop settings.
                 AnimationUtility.SetAnimationClipSettings(clip, AnimationUtility.GetAnimationClipSettings(source));
                 EditorUtility.SetDirty(clip);

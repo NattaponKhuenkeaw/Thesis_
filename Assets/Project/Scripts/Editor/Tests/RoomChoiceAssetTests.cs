@@ -371,7 +371,7 @@ public class RoomChoiceAssetTests
         yield return null;
     }
 
-    private static void Capture(Canvas canvas, string name, int width, int height)
+    internal static void Capture(Canvas canvas, string name, int width, int height)
     {
         Directory.CreateDirectory("Logs/RoomChoicePreviews");
         var oldMode = canvas.renderMode;
@@ -410,6 +410,31 @@ public class RoomChoiceAssetTests
             {
                 label.ForceMeshUpdate();
                 Assert.That(label.isTextOverflowing, Is.False, name + ": " + label.text);
+            }
+            var choiceCards = Get<RoomChoiceCardView[]>(canvas.GetComponent<RoomChoiceUI>(), "cards");
+            foreach (var card in choiceCards.Where(c => c.gameObject.activeInHierarchy))
+            {
+                ((RectTransform)card.transform).GetWorldCorners(corners);
+                var marker = Get<GameObject>(card, "selectionMarker");
+                Assert.That(marker.transform.position.y, Is.EqualTo(corners[1].y).Within(.01f),
+                    name + ": selection marker must stay on the card edge when the card is resized");
+                foreach (var corner in corners)
+                {
+                    Vector3 local = panel.InverseTransformPoint(corner);
+                    Assert.That(local.x, Is.InRange(panel.rect.xMin, panel.rect.xMax), name + ": card outside panel");
+                    Assert.That(local.y, Is.InRange(panel.rect.yMin, panel.rect.yMax), name + ": card outside panel");
+                }
+            }
+            var progress = canvas.GetComponentInChildren<RoomRouteProgressUI>();
+            if (progress != null)
+            {
+                ((RectTransform)choiceCards[0].transform).GetWorldCorners(corners);
+                float cardTop = corners[1].y;
+                foreach (var node in progress.GetComponentsInChildren<RoomRouteProgressNode>())
+                {
+                    Get<TMP_Text>(node, "number").rectTransform.GetWorldCorners(corners);
+                    Assert.That(corners[0].y, Is.GreaterThan(cardTop), name + ": cards must not cover progress numbers");
+                }
             }
             RenderPipeline.SubmitRenderRequest(camera, new UniversalRenderPipeline.SingleCameraRequest { destination = target });
             RenderTexture.active = target;

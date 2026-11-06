@@ -6,7 +6,7 @@ namespace Project.Core.ZoneState
     /// <summary>
     /// Tracks combat-room depth and biome index for the current run.
     /// Depth increments only on Combat/Elite clears. Shop/Reward/Safe do not count.
-    /// Clearing Boss advances biome (+20% enemy basic stats) and resets the segment depth.
+    /// Clearing Boss advances biome difficulty and resets the segment depth.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class RunProgressionManager : MonoBehaviour
@@ -14,6 +14,8 @@ namespace Project.Core.ZoneState
         private const string DefaultMapResourcePath = "MapSO/Test_MapSO";
         private const string DefaultBossRoomId = "Boss_01";
         private const float DefaultBiomeStatBonus = 0.20f;
+        private const float DefaultNormalEnemyHealthBonus = 0.40f;
+        private const float DefaultNormalEnemyAttackBonus = 0.15f;
 
         public static RunProgressionManager Instance { get; private set; }
 
@@ -29,30 +31,49 @@ namespace Project.Core.ZoneState
         public int roomsBeforeBoss = 4;
 
         [Header("Difficulty Curve")]
-        [Tooltip("Enemy basic stats (HP / ATK / DEF) gain this fraction per biome. Biome 0 = 1.0x, Biome 1 = 1.20x.")]
+        [Tooltip("Boss HP / ATK / DEF gain this fraction of base stats per cleared level. The existing boss curve is unchanged.")]
         [SerializeField, Min(0f)] private float biomeBasicStatBonus = DefaultBiomeStatBonus;
+        [Tooltip("Normal enemy HP compounds by this fraction per cleared level. DEF is not scaled.")]
+        [SerializeField, Min(0f)] private float normalEnemyHealthBonusPerLevel = DefaultNormalEnemyHealthBonus;
+        [Tooltip("Normal enemy ATK compounds by this fraction per cleared level.")]
+        [SerializeField, Min(0f)] private float normalEnemyAttackBonusPerLevel = DefaultNormalEnemyAttackBonus;
 
         [Header("Room Pool")]
         [Tooltip("Optional explicit combat room ids for GetNextRoomId(). Empty = use MapSO Combat offers.")]
         public List<string> combatRoomIds = new List<string>();
 
-        [Tooltip("Forced boss room when depth reaches roomsBeforeBoss.")]
+        [Tooltip("Primary boss room for Level 1, 3, 5... when the act reaches its Boss node.")]
         public string bossRoomId = DefaultBossRoomId;
+        [Tooltip("Boss used on Level 2, 4, 6... Empty keeps the primary boss on every level.")]
+        [SerializeField] private string alternateBossRoomId = "Boss_02";
 
         [Header("Dependencies")]
         [SerializeField] private MapSO mapData;
 
         public bool IsBossDue => currentRoomDepth >= roomsBeforeBoss;
         public int RoomsBeforeBoss => roomsBeforeBoss;
-        public string BossRoomId => bossRoomId;
+        public string BossRoomId => CurrentBiomeIndex % 2 == 1 && !string.IsNullOrWhiteSpace(alternateBossRoomId)
+            ? alternateBossRoomId : string.IsNullOrWhiteSpace(bossRoomId) ? DefaultBossRoomId : bossRoomId;
         public int CurrentBiomeIndex => Mathf.Max(0, currentBiomeIndex);
         public float BiomeBasicStatBonus => Mathf.Max(0f, biomeBasicStatBonus);
 
         /// <summary>
-        /// Multiplier for enemy basic stats in the current biome.
+        /// Legacy basic-stat multiplier, retained for bosses.
         /// Biome 0 = 1.0, Biome 1 = 1.20, Biome 2 = 1.40, ...
         /// </summary>
         public float EnemyBasicStatMultiplier => ResolveEnemyBasicStatMultiplier(CurrentBiomeIndex, BiomeBasicStatBonus);
+        public float NormalEnemyHealthMultiplier => ResolveNormalEnemyHealthMultiplier(CurrentBiomeIndex, normalEnemyHealthBonusPerLevel);
+        public float NormalEnemyAttackMultiplier => ResolveNormalEnemyAttackMultiplier(CurrentBiomeIndex, normalEnemyAttackBonusPerLevel);
+
+        public static float ResolveNormalEnemyHealthMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyHealthBonus)
+        {
+            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Max(0, biomeIndex));
+        }
+
+        public static float ResolveNormalEnemyAttackMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyAttackBonus)
+        {
+            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Max(0, biomeIndex));
+        }
 
         public static float ResolveEnemyBasicStatMultiplier(int biomeIndex, float bonusPerBiome = DefaultBiomeStatBonus)
         {
@@ -68,7 +89,7 @@ namespace Project.Core.ZoneState
         }
 
         /// <summary>
-        /// Scales enemy HP / ATK / DEF for the active biome. No-op at biome 0.
+        /// Normal enemies compound HP / ATK and retain base DEF. Bosses keep their existing curve.
         /// </summary>
         public static void ApplyBiomeDifficultyToEnemy(EnemyController enemy)
         {
@@ -77,13 +98,16 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            float multiplier = GetActiveEnemyBasicStatMultiplier();
-            if (Mathf.Approximately(multiplier, 1f))
+            // Elite flags are also used by normal-enemy variants; only an actual boss keeps the old curve.
+            if (enemy.HasBossDriver)
             {
+                enemy.ApplyBasicStatMultiplier(GetActiveEnemyBasicStatMultiplier());
                 return;
             }
 
-            enemy.ApplyBasicStatMultiplier(multiplier);
+            RunProgressionManager progression = Instance ?? EnsureInstance();
+            enemy.ApplyStatMultipliers(progression != null ? progression.NormalEnemyHealthMultiplier : 1f,
+                progression != null ? progression.NormalEnemyAttackMultiplier : 1f, 1f);
         }
 
         private void Awake()
@@ -155,7 +179,8 @@ namespace Project.Core.ZoneState
                 currentBiomeIndex = Mathf.Max(0, currentBiomeIndex + 1);
                 Debug.Log(
                     $"[RunProgressionManager] Boss cleared. Biome -> {currentBiomeIndex} " +
-                    $"(enemy basic stats x{EnemyBasicStatMultiplier:0.##}).",
+                    $"(normal HP x{NormalEnemyHealthMultiplier:0.###}, ATK x{NormalEnemyAttackMultiplier:0.###}, " +
+                    $"DEF unchanged; boss basic stats x{EnemyBasicStatMultiplier:0.##}).",
                     this);
                 return;
             }
@@ -190,7 +215,7 @@ namespace Project.Core.ZoneState
         {
             if (IsBossDue)
             {
-                return string.IsNullOrWhiteSpace(bossRoomId) ? DefaultBossRoomId : bossRoomId;
+                return BossRoomId;
             }
 
             EnsureMapData();
@@ -261,7 +286,7 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
-            string id = string.IsNullOrWhiteSpace(bossRoomId) ? DefaultBossRoomId : bossRoomId;
+            string id = BossRoomId;
             if (catalog != null)
             {
                 bossRoom = catalog.GetRoomById(id);

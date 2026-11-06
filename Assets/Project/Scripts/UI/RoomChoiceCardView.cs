@@ -50,6 +50,7 @@ namespace Project.UI
         private bool confirmed;
 
         public Button Button => button;
+        public RoomChoiceOffer BoundOffer { get; private set; }
 
         private void Awake()
         {
@@ -69,6 +70,7 @@ namespace Project.UI
 
             gameObject.SetActive(true);
             ClearClick();
+            BoundOffer = offer;
 
             Color accent = ResolveKindColor(offer.Kind);
             RoomData room = offer.Room;

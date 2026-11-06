@@ -23,6 +23,6 @@ MonoBehaviour:
   waves: []
   delayBetweenWaves: 0.9
   chamberQuota: 8
-  spawnMode: 0
+  spawnMode: 2
   aliveCap: 5
   spawnInterval: 0.28

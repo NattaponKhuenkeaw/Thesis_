@@ -332,14 +332,51 @@ public class BossHealthHUDTests
         finally { Object.DestroyImmediate(root); Object.DestroyImmediate(host); }
     }
 
-    [TestCase("Enm101/Enemy1.prefab",318.75f)]
-    [TestCase("Enm102/Enemy102.prefab",127.5f)]
-    [TestCase("Enm103/Enemy103.prefab",382.5f)]
-    public void NormalEnemyHealthTuningIsSavedOnTheIndividualPrefab(string path,float hp)
+    [TestCase("Enm101/Enemy1.prefab",200f,10f,10f,100f)]
+    [TestCase("Enm102/Enemy102.prefab",100f,0f,0f,80f)]
+    [TestCase("Enm103/Enemy103.prefab",260f,15f,10f,80f)]
+    public void NormalEnemyHealthTuningIsSavedOnTheIndividualPrefab(string path,float hp,float defense,float resistance,float attack)
     {
         var enemy = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/"+path).GetComponent<EnemyController>();
         Assert.That(enemy.maxHP,Is.EqualTo(hp));
         Assert.That(enemy.currentHP,Is.EqualTo(hp));
+        Assert.That(enemy.defense,Is.EqualTo(defense));
+        Assert.That(enemy.damageRes,Is.EqualTo(resistance),"This tuning changes HP/DEF only.");
+        Assert.That(enemy.attackDamage,Is.EqualTo(attack));
+    }
+
+    [TestCase("Enm101/Enemy1.prefab",200f,10f,0)]
+    [TestCase("Enm101/Enemy1.prefab",200f,10f,1)]
+    [TestCase("Enm101/Enemy1.prefab",200f,10f,5)]
+    [TestCase("Enm102/Enemy102.prefab",100f,0f,0)]
+    [TestCase("Enm102/Enemy102.prefab",100f,0f,1)]
+    [TestCase("Enm102/Enemy102.prefab",100f,0f,5)]
+    [TestCase("Enm103/Enemy103.prefab",260f,15f,0)]
+    [TestCase("Enm103/Enemy103.prefab",260f,15f,1)]
+    [TestCase("Enm103/Enemy103.prefab",260f,15f,5)]
+    public void NormalEnemyBaseTuningCompoundsHealthAndAttackWithoutScalingDefense(string path,float hp,float defense,int biome)
+    {
+        var holder = new GameObject("Inactive enemy balance fixture");
+        holder.SetActive(false);
+        try
+        {
+            var root = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Project/Character/enemy/enemy/"+path),holder.transform);
+            var enemy = root.GetComponent<EnemyController>();
+            float attack = enemy.attackDamage;
+            float resistance = enemy.damageRes;
+            float healthMultiplier = Project.Core.ZoneState.RunProgressionManager.ResolveNormalEnemyHealthMultiplier(biome);
+            float attackMultiplier = Project.Core.ZoneState.RunProgressionManager.ResolveNormalEnemyAttackMultiplier(biome);
+            Assert.That(healthMultiplier,Is.EqualTo(Mathf.Pow(1.4f,biome)).Within(.0001f));
+            Assert.That(attackMultiplier,Is.EqualTo(Mathf.Pow(1.15f,biome)).Within(.0001f));
+            enemy.ApplyStatMultipliers(healthMultiplier,attackMultiplier,1f);
+            Assert.That(enemy.maxHP,Is.EqualTo(hp*healthMultiplier).Within(.001f));
+            Assert.That(enemy.currentHP,Is.EqualTo(enemy.maxHP));
+            Assert.That(enemy.defense,Is.EqualTo(defense));
+            Assert.That(enemy.attackDamage,Is.EqualTo(attack*attackMultiplier).Within(.001f));
+            Assert.That(enemy.damageRes,Is.EqualTo(resistance));
+        }
+        finally { Object.DestroyImmediate(holder); }
     }
 
     [Test]

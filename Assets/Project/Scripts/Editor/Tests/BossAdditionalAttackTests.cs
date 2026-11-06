@@ -165,6 +165,56 @@ public class BossAdditionalAttackTests
     }
 
     [UnityTest]
+    public IEnumerator TravelingJumpRisesHigherWithoutChangingTheThreeStationaryJumps()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        foreach (var pattern in new[] { BossPatternId.JumpSmash, BossPatternId.SeismicBarrage })
+        {
+            using var f = new Fixture();
+            yield return f.Ready();
+            Set(f.Boss, "phase", 1);
+            f.Target.transform.position = Vector3.right * 8f;
+            Assert.That(f.Boss.JumpArcHeight, Is.EqualTo(5f));
+            Assert.That(f.Boss.SeismicJumpArcHeight, Is.EqualTo(3.5f));
+            Assert.That(f.Boss.JumpTravelDuration, Is.EqualTo(.75f));
+            float startY = f.Enemy.rb.position.y;
+            float startX = f.Enemy.rb.position.x;
+            var peaks = new List<float>();
+            bool airborne = false;
+            float peak = startY;
+            f.Start(pattern);
+            float deadline = Time.realtimeSinceStartup + 15f;
+            while (f.Boss.IsBusy && Time.realtimeSinceStartup < deadline)
+            {
+                if (f.Enemy.rb.bodyType == RigidbodyType2D.Kinematic)
+                {
+                    if (!airborne) peak = startY;
+                    airborne = true;
+                    peak = Mathf.Max(peak, f.Enemy.rb.position.y);
+                }
+                else if (airborne)
+                {
+                    peaks.Add(peak-startY);
+                    airborne = false;
+                }
+                if (pattern == BossPatternId.SeismicBarrage)
+                    Assert.That(f.Enemy.rb.position.x, Is.EqualTo(startX).Within(.06f));
+                yield return null;
+            }
+            Assert.That(f.Boss.IsBusy, Is.False);
+            Assert.That(peaks.Count, Is.EqualTo(pattern == BossPatternId.JumpSmash ? 1 : 3));
+            float expected = pattern == BossPatternId.JumpSmash ? 5f : 3.5f;
+            foreach (float height in peaks) Assert.That(height, Is.EqualTo(expected).Within(.25f));
+            if (pattern == BossPatternId.JumpSmash)
+                Assert.That(f.Enemy.rb.position.x, Is.EqualTo(8f).Within(.1f));
+            f.AssertClean();
+            TestContext.WriteLine($"{pattern}: peak rises = {string.Join(", ",peaks)}");
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
     public IEnumerator WaveDamagesOnlyOncePerLandingPairAndStopsAtWalls()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

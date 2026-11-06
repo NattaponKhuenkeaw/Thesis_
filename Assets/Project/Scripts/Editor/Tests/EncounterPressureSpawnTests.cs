@@ -211,42 +211,19 @@ public class EncounterPressureSpawnTests
     [TestCase(RouteDifficulty.Easy, 4)]
     [TestCase(RouteDifficulty.Medium, 6)]
     [TestCase(RouteDifficulty.Hard, 8)]
-    public void ProductionDifficultyRefillsUpToFiveLivingEnemiesUntilTheQuotaIsExhausted(RouteDifficulty difficulty, int quota)
+    public void ProductionDifficultyKeepsItsQuotaAndUsesFiveEnemyBatches(RouteDifficulty difficulty, int quota)
     {
         EncounterSO encounter = CombatRouteContent.LoadPalette(difficulty);
         Assert.That(encounter.ChamberQuota, Is.EqualTo(quota));
         Assert.That(encounter.AliveCap, Is.EqualTo(5));
-        Assert.That(encounter.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
+        Assert.That(encounter.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
         var enemies = encounter.RollQuota(encounter.ChamberQuota);
         Assert.That(enemies.Count, Is.EqualTo(quota));
-        var director = new EncounterPressureDirector(encounter.AliveCap, enemies);
-        int living = 0;
-        int spawned = 0;
-        while (director.CanSpawn(living))
-        {
-            Assert.That(director.DequeueNext(), Is.Not.Null);
-            living++;
-            spawned++;
-        }
-        Assert.That(living, Is.EqualTo(Mathf.Min(encounter.AliveCap, quota)));
-        Assert.That(director.CanSpawn(living), Is.False);
-        while (director.Remaining > 0)
-        {
-            living--;
-            Assert.That(director.CanSpawn(living), Is.True);
-            Assert.That(director.DequeueNext(), Is.Not.Null);
-            living++;
-            spawned++;
-            Assert.That(living, Is.EqualTo(5));
-            Assert.That(director.CanSpawn(living), Is.False);
-        }
-        Assert.That(spawned, Is.EqualTo(quota));
-        Assert.That(director.IsCleared(living), Is.False);
-        Assert.That(director.IsCleared(0), Is.True);
+        foreach (GameObject enemy in enemies) Assert.That(enemy, Is.Not.Null);
     }
 
     [Test]
-    public void CombatEncounterAssetsUsePressureAndBossUsesBurst()
+    public void CombatEncounterAssetsUseBatchesAndBossKeepsItsAuthoredBurst()
     {
         EncounterSO easy = UnityEditor.AssetDatabase.LoadAssetAtPath<EncounterSO>(
             "Assets/Project/Resources/EncounterSO/Encounter_Easy.asset");
@@ -261,9 +238,9 @@ public class EncounterPressureSpawnTests
         Assert.That(medium, Is.Not.Null);
         Assert.That(hard, Is.Not.Null);
         Assert.That(boss, Is.Not.Null);
-        Assert.That(easy.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
-        Assert.That(medium.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
-        Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
+        Assert.That(easy.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
+        Assert.That(medium.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
+        Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
         Assert.That(easy.AliveCap, Is.GreaterThanOrEqualTo(1));
         Assert.That(easy.TypePickMode, Is.EqualTo(EncounterTypePickMode.ShuffleBag));
         Assert.That(easy.CollectPalettePrefabs().Count, Is.GreaterThan(0));
@@ -278,7 +255,7 @@ public class EncounterPressureSpawnTests
         RouteOfferTables tables = UnityEditor.AssetDatabase.LoadAssetAtPath<RouteOfferTables>(
             "Assets/Project/Resources/MapSO/RouteOfferTables.asset");
         Assert.That(tables, Is.Not.Null);
-        Assert.That(tables.AliveCap, Is.EqualTo(3));
+        Assert.That(tables.AliveCap, Is.EqualTo(5));
 
         GameObject enemy1 = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
             "Assets/Project/Character/enemy/enemy/Enm101/Enemy1.prefab");

@@ -17,7 +17,7 @@ public class ShopPurchaseAudioTests
     [Test]
     public void ShopSceneReferencesChosenPurchaseSound()
     {
-        var scene = EditorSceneManager.OpenPreviewScene("Assets/Project/Scenes/Test_Shop.unity");
+        var scene = EditorSceneManager.OpenPreviewScene(AssetDatabase.GUIDToAssetPath("d36c77798e07625409da16f442bc42f5"));
         try
         {
             ShopManager shop = null;

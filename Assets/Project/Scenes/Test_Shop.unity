@@ -176,7 +176,8 @@ MonoBehaviour:
   purchaseSuccessVolume: 1
   purchaseFailureSfx: {fileID: 8300000, guid: 6c4b18aa0cf441ecb3618d9fe4b715f6, type: 3}
   purchaseFailureVolume: 1
-  rerollPriceIncreasePercent: 15
+  rerollBaseCost: 80
+  rerollCostStep: 40
   currentShopItems: []
 --- !u!1 &136003602
 GameObject:

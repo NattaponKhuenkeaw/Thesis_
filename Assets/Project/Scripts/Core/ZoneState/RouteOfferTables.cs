@@ -28,7 +28,7 @@ namespace Project.Core.ZoneState
             [Min(1)] public int maxWaves = 1;
             [Min(1)] public int minEnemiesPerWave = 1;
             [Min(1)] public int maxEnemiesPerWave = 2;
-            [Min(1)] public int aliveCap = 3;
+            [Min(1)] public int aliveCap = 5;
             [Min(0)] public int minCoins = 40;
             [Min(0)] public int maxCoins = 80;
             [Range(0f, 1f)] public float artifactChance = 0.1f;
@@ -47,7 +47,7 @@ namespace Project.Core.ZoneState
         [Header("Spawn")]
         [SerializeField, Min(1)] private int defaultSpawnSlotCount = 3;
         [SerializeField, Min(0f)] private float delayBetweenWaves = 1.25f;
-        [SerializeField, Min(1)] private int aliveCap = 3;
+        [SerializeField, Min(1)] private int aliveCap = 5;
         [SerializeField, Min(0f)] private float spawnInterval = 0.35f;
         [Tooltip("When false, route clears never grant artifacts (coins only).")]
         [SerializeField] private bool grantArtifacts = false;
@@ -104,7 +104,7 @@ namespace Project.Core.ZoneState
                     maxWaves = 1,
                     minEnemiesPerWave = 4,
                     maxEnemiesPerWave = 4,
-                    aliveCap = 3,
+                    aliveCap = 5,
                     minCoins = 80,
                     maxCoins = 100,
                     artifactChance = 0.05f
@@ -117,7 +117,7 @@ namespace Project.Core.ZoneState
                     maxWaves = 1,
                     minEnemiesPerWave = 6,
                     maxEnemiesPerWave = 6,
-                    aliveCap = 3,
+                    aliveCap = 5,
                     minCoins = 120,
                     maxCoins = 150,
                     artifactChance = 0.28f
@@ -130,7 +130,7 @@ namespace Project.Core.ZoneState
                     maxWaves = 1,
                     minEnemiesPerWave = 8,
                     maxEnemiesPerWave = 8,
-                    aliveCap = 4,
+                    aliveCap = 5,
                     minCoins = 180,
                     maxCoins = 220,
                     artifactChance = 0.55f

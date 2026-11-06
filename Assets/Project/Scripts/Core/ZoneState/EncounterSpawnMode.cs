@@ -8,6 +8,8 @@ namespace Project.Core.ZoneState
         /// <summary>Cap concurrent living enemies; spawn one-at-a-time; refill on death.</summary>
         Pressure = 0,
         /// <summary>Spawn a whole wave at once, wait for wipe, then the next wave.</summary>
-        Burst = 1
+        Burst = 1,
+        /// <summary>Release at most five enemies per group; refill only after the entire group dies.</summary>
+        Batched = 2
     }
 }
