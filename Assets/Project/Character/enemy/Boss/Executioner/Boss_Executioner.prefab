@@ -1970,6 +1970,7 @@ MonoBehaviour:
   animHandler: {fileID: 87850261739301812}
   rb: {fileID: 149250144316134452}
   groundTelegraph: {fileID: 755331666093085811}
+  chargeTelegraph: {fileID: 935404333843192226}
   playerTag: Player
   revealOnSpawn: 1
   spawnPanDuration: 0.5
@@ -1977,7 +1978,6 @@ MonoBehaviour:
   spawnReturnDuration: 0.6
   bossDisplayName: Executioner
   bindScreenHealthHud: 1
-  chargeTelegraph: {fileID: 935404333843192226}
   healthBarCount: 5
   useDefaultStats: 1
   defaultMaxHp: 4000

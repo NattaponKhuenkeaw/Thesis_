@@ -145,9 +145,9 @@ namespace Project.AIBehaviour.Boss
         [Header("Jump Smash")]
         [SerializeField] private float jumpArcHeight = 5f;
         [SerializeField] private float jumpTravelDuration = 0.75f;
-        [Tooltip("Fallback world radius when hitboxSizeOverride is unset. Prefer deriving from jump smash hitbox.")]
         [Tooltip("Separate height for the stationary shockwave jumps; does not follow the traveling jump tuning.")]
         [SerializeField, Min(0f)] private float seismicJumpArcHeight = 3.5f;
+        [Tooltip("Fallback world radius when hitboxSizeOverride is unset. Prefer deriving from jump smash hitbox.")]
         [SerializeField] private float smashMarkerRadius = 1.6f;
 
         [Header("Bull Charge")]
@@ -229,8 +229,8 @@ namespace Project.AIBehaviour.Boss
         public AudioClip JumpLandSfx => jumpLandSfx;
         public float JumpLandSfxVolume => GameAudioManager.ClampSFXGain(jumpLandSfxVolume);
         public float JumpArcHeight => jumpArcHeight;
-        public float JumpTravelDuration => jumpTravelDuration;
         public float SeismicJumpArcHeight => seismicJumpArcHeight;
+        public float JumpTravelDuration => jumpTravelDuration;
         public float ChargeSpeed => chargeSpeed;
         public float ChargeStopAnimationDuration => chargeStopAnimationDuration;
 
