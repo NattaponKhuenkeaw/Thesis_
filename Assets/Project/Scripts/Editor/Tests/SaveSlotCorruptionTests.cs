@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Project.Save;
 using Project.ShopSystem;
+using Project.UI;
+using UnityEditor;
 using UnityEngine;
 
 public class SaveSlotCorruptionTests
@@ -179,6 +181,43 @@ public class SaveSlotCorruptionTests
         SaveSlotStore.EnsureMigrated();
         Assert.That(PlayerPrefs.GetString("project.save.slot9.header"), Is.EqualTo(header));
         Assert.That(PlayerPrefs.GetString(SaveSlotStore.MetaKey(9)), Is.EqualTo("existing tenth save"));
+        Assert.That(SaveSlotStore.IsOccupied(9), Is.True);
+    }
+
+    [Test]
+    public void FreshStoreShowsTenEmptyCardsEvenWhenBootstrapAssetsAreLoaded()
+    {
+        Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+        Resources.Load<Project.Progression.PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+        var panel = Object.Instantiate(AssetDatabase.LoadAssetAtPath<SaveSelectPanel>(
+            "Assets/Project/Prefab/UI/SaveSelectPanel.prefab"));
+        try
+        {
+            panel.Refresh();
+            for (int i = 0; i < SaveSlotStore.SlotCount; i++)
+            {
+                Assert.That(SaveSlotStore.IsOccupied(i), Is.False);
+                Assert.That(SaveSlotStore.TryReadHeader(i, out _), Is.False);
+                using var card = new SerializedObject(panel.GetSlot(i));
+                var empty = (GameObject)card.FindProperty("emptyLabel").objectReferenceValue;
+                Assert.That(empty.activeSelf, Is.True);
+                var filled = card.FindProperty("filledObjects");
+                for (int j = 0; j < filled.arraySize; j++)
+                    Assert.That(((GameObject)filled.GetArrayElementAtIndex(j).objectReferenceValue).activeSelf, Is.False);
+            }
+        }
+        finally { Object.DestroyImmediate(panel.gameObject); }
+    }
+
+    [Test]
+    public void BuildValidationDoesNotDeleteExistingPlayerSave()
+    {
+        const string headerKey = "project.save.slot9.header";
+        string header = JsonUtility.ToJson(new SaveSlotHeader { currency = 5432, globalLevel = 8 });
+        PlayerPrefs.SetString(headerKey, header);
+        SaveSlotStore.MarkOccupied(9);
+        Assert.DoesNotThrow(() => new CleanSaveBuildGuard().OnPreprocessBuild(null));
+        Assert.That(PlayerPrefs.GetString(headerKey), Is.EqualTo(header));
         Assert.That(SaveSlotStore.IsOccupied(9), Is.True);
     }
 
