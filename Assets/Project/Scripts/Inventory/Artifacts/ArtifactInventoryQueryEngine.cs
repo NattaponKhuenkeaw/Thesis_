@@ -14,7 +14,8 @@ namespace Project.InventorySystem.Artifacts
         SelectedStatTotal,
         DefinitionName,
         EquippedFirst,
-        UnequippedFirst
+        UnequippedFirst,
+        Rarity
     }
 
     public enum ArtifactOptionalBool
@@ -92,6 +93,9 @@ namespace Project.InventorySystem.Artifacts
             {
                 switch (Query.sortMode)
                 {
+                    case ArtifactSortMode.Rarity:
+                        return (ResolveDefinition?.Invoke(left.definitionId)?.rarity ?? ArtifactRarity.Unassigned)
+                            .CompareTo(ResolveDefinition?.Invoke(right.definitionId)?.rarity ?? ArtifactRarity.Unassigned);
                     case ArtifactSortMode.FavouriteFirst:
                         return left.isFavourite.CompareTo(right.isFavourite);
                     case ArtifactSortMode.StatLineCount:

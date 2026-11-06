@@ -20,6 +20,8 @@ namespace Project.TeamBuilder.UI
         [Header("UI References")]
         [SerializeField] private Image artifactIcon;
         [SerializeField] private Image slotBackground;
+        [Tooltip("Non-interactive overlay showing the destination for inventory equipment.")]
+        [SerializeField] private Image selectionOverlay;
 
         [Header("Visual Settings")]
         [SerializeField] private Color emptySlotColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
@@ -33,7 +35,6 @@ namespace Project.TeamBuilder.UI
         private ArtifactDefinition currentDefinition;
         private TeamSlotUI parentSlot;
         private bool isDropHighlighted;
-        private bool isSelectionDestination;
         private TMP_Text emptySlotLabel;
 
         // =========================================================
@@ -144,7 +145,32 @@ namespace Project.TeamBuilder.UI
 
         public void SetSelectionDestination(bool selected)
         {
-            isSelectionDestination = selected;
+            if (selected && selectionOverlay == null)
+            {
+                var overlay = new GameObject("Selection Overlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Outline), typeof(LayoutElement));
+                overlay.layer = gameObject.layer;
+                overlay.transform.SetParent(transform, false);
+                selectionOverlay = overlay.GetComponent<Image>();
+                var rect = selectionOverlay.rectTransform;
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = rect.offsetMax = Vector2.zero;
+                selectionOverlay.sprite = slotBackground != null ? slotBackground.sprite : null;
+                selectionOverlay.type = Image.Type.Sliced;
+                selectionOverlay.fillCenter = false;
+                selectionOverlay.color = new Color(1f, .9f, .15f, .85f);
+                selectionOverlay.raycastTarget = false;
+                var outline = overlay.GetComponent<Outline>();
+                outline.effectColor = new Color(1f, .9f, .15f, 1f);
+                outline.effectDistance = new Vector2(2f, 2f);
+                outline.useGraphicAlpha = false;
+                overlay.GetComponent<LayoutElement>().ignoreLayout = true;
+            }
+            if (selectionOverlay != null)
+            {
+                selectionOverlay.gameObject.SetActive(selected);
+                selectionOverlay.transform.SetAsLastSibling();
+            }
             RefreshBackground();
         }
 
@@ -263,11 +289,7 @@ namespace Project.TeamBuilder.UI
         private void RefreshBackground()
         {
             if (slotBackground == null) return;
-            if (isSelectionDestination)
-            {
-                slotBackground.color = Color.white;
-            }
-            else if (isDropHighlighted)
+            if (isDropHighlighted)
             {
                 slotBackground.color = new Color(1f, 1f, 1f, 0.5f);
             }

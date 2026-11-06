@@ -10,6 +10,8 @@ using UnityEngine;
 /// </summary>
 public class CameraLookAhead : MonoBehaviour
 {
+    private const float PlayerSearchInterval = 0.25f;
+
     // =========================================================
     // Dependencies
     // =========================================================
@@ -35,6 +37,8 @@ public class CameraLookAhead : MonoBehaviour
     // =========================================================
     private float currentProxyX      = 0f;
     private float proxyVelocityX     = 0f;
+    private float nextPlayerSearchTime;
+    private Rigidbody2D initializedPlayerRigidbody;
     private float currentHorizontalOffset = 0f;
     private float directionalCueOffset = 0f;
     private bool confineHorizontal;
@@ -52,21 +56,7 @@ public class CameraLookAhead : MonoBehaviour
     // =========================================================
     private void Awake()
     {
-        if (playerRigidbody == null)
-        {
-            GameObject playerObj = GameObject.FindWithTag("Player");
-            if (playerObj != null)
-                playerRigidbody = playerObj.GetComponent<Rigidbody2D>();
-
-            if (playerRigidbody == null)
-                Debug.LogWarning("[CameraLookAhead] No Rigidbody2D found. Assign playerRigidbody in the inspector.");
-        }
-
-        if (playerRigidbody != null)
-        {
-            currentProxyX = playerRigidbody.position.x;
-            CheckFacingDirection(true); // Initialize offset instantly
-        }
+        TryResolvePlayerRigidbody();
     }
 
     private void CheckFacingDirection(bool instant = false)
@@ -104,7 +94,7 @@ public class CameraLookAhead : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (playerRigidbody == null)
+        if (!TryResolvePlayerRigidbody())
             return;
 
         bool holdSwapX = swapCenterActive && Time.unscaledTime < swapCenterUntil;
@@ -158,6 +148,32 @@ public class CameraLookAhead : MonoBehaviour
         );
     }
 
+    private bool TryResolvePlayerRigidbody()
+    {
+        if (playerRigidbody == null)
+        {
+            if (Time.unscaledTime < nextPlayerSearchTime)
+                return false;
+
+            nextPlayerSearchTime = Time.unscaledTime + PlayerSearchInterval;
+            GameObject playerObject = GameObject.FindWithTag("Player");
+            if (playerObject != null)
+                playerRigidbody = playerObject.GetComponent<Rigidbody2D>();
+        }
+
+        if (playerRigidbody == null)
+            return false;
+
+        if (initializedPlayerRigidbody != playerRigidbody)
+        {
+            initializedPlayerRigidbody = playerRigidbody;
+            currentProxyX = playerRigidbody.position.x;
+            proxyVelocityX = 0f;
+            CheckFacingDirection(true);
+        }
+        return true;
+    }
+
     /// <summary>
     /// Fade horizontal look-ahead as the player approaches a room wall so the
     /// tracking target does not pull the camera past the confiner.
@@ -197,6 +213,7 @@ public class CameraLookAhead : MonoBehaviour
     {
         if (incomingBody == null) return;
         playerRigidbody = incomingBody;
+        initializedPlayerRigidbody = incomingBody;
         if (tweenId >= 0 && LeanTween.isTweening(tweenId)) LeanTween.cancel(tweenId);
         tweenId = -1;
         if (directionalCueRoutine != null) StopCoroutine(directionalCueRoutine);

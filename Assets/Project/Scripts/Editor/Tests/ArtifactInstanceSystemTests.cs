@@ -247,9 +247,10 @@ public class ArtifactInstanceSystemTests
             Assert.That(picker.transform.Find("Card2/Title").GetComponent<TMPro.TMP_Text>().text, Is.EqualTo(common.itemName));
             picker.GetComponent<CanvasGroup>().interactable = true;
             picker.transform.Find("Card2").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
-            var confirm = picker.transform.Find("Confirm").GetComponent<UnityEngine.UI.Button>();
-            confirm.onClick.Invoke();
-            confirm.onClick.Invoke();
+            Assert.That(calls, Is.Zero, "The first click previews without claiming.");
+            Assert.That(picker.transform.Find("Confirm"), Is.Null);
+            picker.transform.Find("Card2").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            picker.transform.Find("Card2").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
             Assert.That(calls, Is.EqualTo(1));
             Assert.That(inventory.TryGetArtifactInstance("candidate-1", out ArtifactInstance claimed), Is.True);
             Assert.That(claimed.rolls, Is.EqualTo(choices[1].rolls));

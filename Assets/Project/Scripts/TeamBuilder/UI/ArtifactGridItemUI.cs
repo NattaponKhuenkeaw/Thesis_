@@ -27,7 +27,6 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private GameObject equippedBadge; // Visual indicator when equipped
         [SerializeField] private GameObject favouriteBadge;
         [SerializeField] private GameObject newBadge;
-        [SerializeField] private TMP_Text rollSummaryText;
         [SerializeField] private GameObject[] rarityStars;
 
         [Header("Visual States")]
@@ -41,7 +40,6 @@ namespace Project.TeamBuilder.UI
         private ArtifactInstance artifactData;
         private ArtifactDefinition artifactDefinition;
         private CanvasGroup canvasGroup;
-        private string currentSummary;
         private float lastClickTime = float.NegativeInfinity;
         private bool isEquipped;
         private bool isSelected;
@@ -87,14 +85,6 @@ namespace Project.TeamBuilder.UI
                 if (iconImage != null && definition != null && definition.icon != null)
                     iconImage.sprite = definition.icon;
 
-                RefreshName();
-
-                string quality = ArtifactRollQuality.TryGetAverageQuality(artifact, rollTable, out float quality01)
-                    ? $"Q {quality01 * 100f:0.##}"
-                    : "Q -";
-                currentSummary = quality;
-                if (rollSummaryText != null)
-                    rollSummaryText.text = quality;
                 RefreshName();
 
                 if (favouriteBadge != null)
@@ -146,9 +136,7 @@ namespace Project.TeamBuilder.UI
         {
             if (nameText == null || artifactData == null) return;
             string displayName = artifactDefinition != null ? artifactDefinition.itemName : artifactData.definitionId;
-            nameText.text = rollSummaryText == null && !string.IsNullOrEmpty(currentSummary)
-                ? $"{displayName}\n{currentSummary}"
-                : displayName;
+            nameText.text = displayName;
         }
 
         /// <summary>

@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace Project.UI
 {
@@ -25,29 +26,42 @@ namespace Project.UI
             public Button button;
             public Image icon;
             public Image frame;
+            public Image background;
             public TMP_Text title;
             public TMP_Text stats;
             public TMP_Text passive;
             public GameObject[] stars;
+            [NonSerialized] public Vector2 restPosition;
+            [NonSerialized] public bool hasRestPosition;
+            [NonSerialized] public Coroutine selectionMotion;
+            [NonSerialized] public UnityAction selectAction;
         }
 
         [SerializeField] private TMP_Text pullLabel;
-        [SerializeField] private Button confirm;
         [SerializeField] private Card[] cards;
         [SerializeField] private AudioClip revealSound;
         [SerializeField] private AudioClip confirmSound;
 
+        [Header("Selection Motion")]
+        [Tooltip("Starting lift in canvas units; review against the header at narrow aspect ratios.")]
+        [SerializeField] private float selectionLift = 28f;
+        [SerializeField] private float selectionDuration = .12f;
+        [SerializeField] private float pickupDistance = 100f;
+        [SerializeField] private float pickupDuration = .2f;
+
         private CanvasGroup group;
         private int selected = -1;
         private bool accepted;
+        private bool committing;
         private Func<int, bool> commit;
+        private string pullText;
 
         public bool IsConfigured
         {
             get
             {
                 ResolveBindings();
-                return pullLabel != null && confirm != null && cards != null &&
+                return pullLabel != null && cards != null &&
                     cards.Length == CardsPerPull && Array.TrueForAll(cards, card =>
                         card != null && card.button != null && card.icon != null && card.frame != null &&
                         card.title != null && card.stats != null && card.passive != null);
@@ -57,7 +71,6 @@ namespace Project.UI
         private void ResolveBindings()
         {
             pullLabel ??= transform.Find("PullLabel")?.GetComponent<TMP_Text>();
-            confirm ??= transform.Find("Confirm")?.GetComponent<Button>();
             if (cards == null || cards.Length != CardsPerPull)
                 cards = new Card[CardsPerPull];
             for (int i = 0; i < cards.Length; i++)
@@ -66,11 +79,17 @@ namespace Project.UI
                 cards[i] ??= new Card();
                 Card card = cards[i];
                 card.button ??= root?.GetComponent<Button>();
+                card.background ??= root?.GetComponent<Image>();
                 card.frame ??= root?.Find("Frame")?.GetComponent<Image>();
                 card.icon ??= root?.Find("Icon")?.GetComponent<Image>();
                 card.title ??= root?.Find("Title")?.GetComponent<TMP_Text>();
                 card.stats ??= root?.Find("Stats")?.GetComponent<TMP_Text>();
                 card.passive ??= root?.Find("Passive")?.GetComponent<TMP_Text>();
+                if (!card.hasRestPosition && card.button != null)
+                {
+                    card.restPosition = ((RectTransform)card.button.transform).anchoredPosition;
+                    card.hasRestPosition = true;
+                }
                 cards[i].stars = new GameObject[3];
                 for (int star = 0; star < cards[i].stars.Length; star++)
                     cards[i].stars[star] = root?.Find($"RarityStar{star + 1}")?.gameObject;
@@ -89,19 +108,25 @@ namespace Project.UI
         {
             ResolveBindings();
             group = GetComponent<CanvasGroup>();
-            pullLabel.text = $"Select Artifact   /   {pull} of {total}";
+            pullText = $"{pull} of {total}";
+            pullLabel.text = $"Select Artifact   /   {pullText}";
             selected = -1;
             accepted = false;
+            committing = false;
             commit = commitSelection;
-            confirm.interactable = false;
-            confirm.onClick.AddListener(Confirm);
             group.interactable = false;
+            group.blocksRaycasts = true;
             group.alpha = 0f;
             for (int i = 0; i < cards.Length; i++)
             {
                 int index = i;
                 Card card = cards[i];
-                card.button.onClick.AddListener(() => Select(index));
+                if (card.selectAction != null) card.button.onClick.RemoveListener(card.selectAction);
+                card.selectAction = () => Select(index);
+                card.button.onClick.AddListener(card.selectAction);
+                if (card.selectionMotion != null) StopCoroutine(card.selectionMotion);
+                ((RectTransform)card.button.transform).anchoredPosition = card.restPosition;
+                card.button.transform.localScale = Vector3.one;
                 Bind(card, candidates[i], inventory);
                 card.button.gameObject.SetActive(false);
             }
@@ -123,31 +148,95 @@ namespace Project.UI
             EventSystem.current?.SetSelectedGameObject(cards[0].button.gameObject);
             while (this != null && isActiveAndEnabled && !accepted)
             {
-                group.interactable = !PauseMenuController.IsOpen;
+                group.interactable = !committing && !PauseMenuController.IsOpen;
                 yield return null;
             }
             if (this == null || !isActiveAndEnabled) yield break;
+            group.interactable = false;
             if (confirmSound != null) GameAudioManager.Instance?.PlayHitSFX(confirmSound);
-            yield return new WaitForSecondsRealtime(.16f);
+            yield return PickUp(cards[selected]);
             yield return Fade(0f);
+            group.blocksRaycasts = false;
         }
 
         private void Select(int index)
         {
-            if (!group.interactable || accepted || PauseMenuController.IsOpen) return;
+            if (group == null || !group.interactable || accepted || committing || PauseMenuController.IsOpen) return;
+            if (selected == index)
+            {
+                Confirm();
+                return;
+            }
             selected = index;
             for (int i = 0; i < cards.Length; i++)
-                cards[i].button.transform.localScale = Vector3.one * (i == index ? 1.045f : 1f);
-            confirm.interactable = true;
-            EventSystem.current?.SetSelectedGameObject(confirm.gameObject);
+            {
+                Card card = cards[i];
+                if (card.selectionMotion != null) StopCoroutine(card.selectionMotion);
+                card.selectionMotion = StartCoroutine(MoveSelection(card, i == index));
+            }
+            pullLabel.text = $"Select again to claim   /   {pullText}";
+            EventSystem.current?.SetSelectedGameObject(cards[index].button.gameObject);
         }
 
         private void Confirm()
         {
-            if (selected < 0 || accepted || PauseMenuController.IsOpen) return;
+            if (selected < 0 || accepted || committing || PauseMenuController.IsOpen) return;
+            committing = true;
             group.interactable = false;
-            accepted = commit(selected);
-            if (!accepted) group.interactable = true;
+            try { accepted = commit?.Invoke(selected) == true; }
+            finally
+            {
+                committing = false;
+                if (group != null) group.interactable = !accepted && !PauseMenuController.IsOpen;
+            }
+            if (accepted) pullLabel.text = "Artifact acquired";
+        }
+
+        private IEnumerator MoveSelection(Card card, bool isSelected)
+        {
+            var rect = (RectTransform)card.button.transform;
+            Vector2 from = rect.anchoredPosition;
+            Vector2 target = card.restPosition + (isSelected ? Vector2.up * selectionLift : Vector2.zero);
+            Vector3 scale = rect.localScale;
+            Vector3 targetScale = Vector3.one * (isSelected ? 1.045f : 1f);
+            float duration = Mathf.Max(.01f, selectionDuration);
+            for (float elapsed = 0f; Application.isPlaying && elapsed < duration; elapsed += Time.unscaledDeltaTime)
+            {
+                float t = 1f - Mathf.Pow(1f - elapsed / duration, 2f);
+                rect.anchoredPosition = Vector2.Lerp(from, target, t);
+                rect.localScale = Vector3.Lerp(scale, targetScale, t);
+                yield return null;
+            }
+            rect.anchoredPosition = target;
+            rect.localScale = targetScale;
+            card.selectionMotion = null;
+        }
+
+        private IEnumerator PickUp(Card card)
+        {
+            if (card.selectionMotion != null) StopCoroutine(card.selectionMotion);
+            var rect = (RectTransform)card.button.transform;
+            Vector2 from = rect.anchoredPosition;
+            Vector3 scale = rect.localScale;
+            float duration = Mathf.Max(.01f, pickupDuration);
+            for (float elapsed = 0f; elapsed < duration && rect != null; elapsed += Time.unscaledDeltaTime)
+            {
+                float t = elapsed / duration;
+                rect.anchoredPosition = from + Vector2.up * (pickupDistance * t * t);
+                rect.localScale = Vector3.Lerp(scale, Vector3.one * .88f, t);
+                yield return null;
+            }
+        }
+
+        private void OnDisable()
+        {
+            StopAllCoroutines();
+            commit = null;
+            if (group != null)
+            {
+                group.interactable = false;
+                group.blocksRaycasts = false;
+            }
         }
 
         private IEnumerator Fade(float target)
@@ -180,21 +269,29 @@ namespace Project.UI
             ArtifactDefinition definition = inventory.ResolveArtifactDefinition(instance.definitionId);
             card.icon.sprite = definition.icon;
             card.frame.color = RarityColor(definition.rarity);
+            card.frame.fillCenter = false;
+            if (card.background != null)
+            {
+                card.background.sprite = null;
+                card.background.color = Color.Lerp(new Color(.08f, .09f, .13f), RarityColor(definition.rarity), .45f);
+            }
             card.title.text = definition.itemName;
             if (card.stars != null)
             {
                 for (int i = 0; i < card.stars.Length; i++)
                     if (card.stars[i] != null) card.stars[i].SetActive(i < (int)definition.rarity);
             }
-            card.passive.text = definition.passiveDescription;
+            card.passive.richText = true;
+            card.passive.text = string.IsNullOrWhiteSpace(definition.description) ? definition.passiveDescription
+                : string.IsNullOrWhiteSpace(definition.passiveDescription) ? definition.description
+                : $"{definition.passiveDescription}\n{definition.description}";
             var stats = new StringBuilder();
             foreach (ArtifactRoll roll in instance.rolls)
             {
+                if (!ArtifactStatCatalog.IsPlayerVisible(roll.statKind)) continue;
                 string suffix = ArtifactRollValue.ScaleFor(roll.statKind) == 100 ? "%" : string.Empty;
                 stats.AppendLine($"+{roll.Value:0.##}{suffix} {ArtifactStatCatalog.GetLabel(roll.statKind)}");
             }
-            if (ArtifactRollQuality.TryGetAverageQuality(instance, inventory.ArtifactRollTable, out float quality))
-                stats.Append($"Roll Quality  {quality * 100f:0.#}");
             card.stats.text = stats.ToString();
         }
     }

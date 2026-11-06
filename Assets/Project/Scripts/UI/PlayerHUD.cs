@@ -1007,6 +1007,12 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         {
             navGo.AddComponent<Project.UI.UIBlockPlayerClick>();
         }
+        Button settings = navGo != null ? navGo.transform.Find("Setting")?.GetComponent<Button>() : null;
+        if (settings != null)
+        {
+            settings.onClick.RemoveListener(OpenPauseMenu);
+            settings.onClick.AddListener(OpenPauseMenu);
+        }
     }
 
     private void EnsureZoneStateProvider()

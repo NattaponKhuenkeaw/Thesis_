@@ -115,7 +115,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &417472722361509520
 RectTransform:
   m_ObjectHideFlags: 0
@@ -157,13 +157,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: XXXX
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: c76e8317ce034f44aa4a67c18a082049, type: 2}
   m_sharedMaterial: {fileID: -2788837241560181309, guid: c76e8317ce034f44aa4a67c18a082049, type: 2}
@@ -687,7 +687,6 @@ MonoBehaviour:
   equippedBadge: {fileID: 4001336893671125999}
   favouriteBadge: {fileID: 5367025632088350151}
   newBadge: {fileID: 3469750492192377169}
-  rollSummaryText: {fileID: 605826399337563421}
   normalFrameColor: {r: 0.8, g: 0.7, b: 0.4, a: 1}
   equippedFrameColor: {r: 0.3, g: 0.3, b: 0.3, a: 0.5}
   equippedAlpha: 0.4

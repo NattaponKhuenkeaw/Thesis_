@@ -49,7 +49,7 @@ public static class TeamBuilderInventoryValidation
             var artifactPreview = Read<ArtifactPreviewPanel>(builder, "artifactPreviewPanel");
             var slots = Read<TeamSlotUI[]>(builder, "teamSlots");
             Check(!inventory.gameObject.activeSelf, "Inventory starts closed.");
-            Check(!preview.gameObject.activeSelf && !artifactPreview.gameObject.activeSelf, "Both previews are authored inactive.");
+            Check(!preview.gameObject.activeInHierarchy && !artifactPreview.gameObject.activeInHierarchy, "Both previews are hidden inside the closed inventory.");
             Check(artifactPreview.transform.IsChildOf(artifacts.transform), "Artifact preview belongs to its category.");
             foreach (var gridPanel in new Component[] { characters, artifacts })
             {
@@ -80,7 +80,7 @@ public static class TeamBuilderInventoryValidation
             }
             inventory.Init(builder, root.GetComponent<Canvas>());
             inventory.SubscribeToArtifactClicks(artifact => typeof(TeamBuilderUI).GetMethod("HandleArtifactClicked", Private).Invoke(builder, new object[] { artifact }));
-            artifactPreview.SetEquipAction(artifact => { if (builder.TryEquipArtifact(artifact)) builder.CloseInventoryPanel(); });
+            artifactPreview.SetEquipAction(artifact => builder.TryEquipArtifact(artifact));
             var characterData = AssetDatabase.FindAssets("t:CharacterItem").Select(AssetDatabase.GUIDToAssetPath)
                 .Select(AssetDatabase.LoadAssetAtPath<CharacterItem>).Where(c => c.characterObjectData != null)
                 .GroupBy(c => c.characterObjectData).Select(g => g.First()).Take(2).ToList();
@@ -125,6 +125,8 @@ public static class TeamBuilderInventoryValidation
             artifacts.PopulateGrid(instances);
             var target = slots[0].GetFirstEmptyOrFirstArtifactSlot();
             builder.BeginArtifactSwitch(target);
+            var overlay = Read<Image>(target, "selectionOverlay");
+            Check(overlay != null && overlay.gameObject.activeSelf && !overlay.raycastTarget && !overlay.fillCenter, "Destination overlay is visible, noninteractive and leaves the artifact visible.");
             Check(!artifactPreview.gameObject.activeSelf, "Opening artifact destination does not preselect equipped gear.");
             var artifactCard = artifacts.GetComponentsInChildren<ArtifactGridItemUI>().First();
             artifactCard.OnPointerClick(pointer);
@@ -132,11 +134,15 @@ public static class TeamBuilderInventoryValidation
             Check(target.CurrentArtifact == null, "First click cannot auto-equip.");
             Capture(root, "artifact-selected");
             Capture(root, "artifact-selected-4x3", 1024, 768);
+            var sort = Read<TMP_Dropdown>(artifacts, "sortDropdown");
+            var sortRect = (RectTransform)sort.transform;
+            Check(sort.options.Any(option => option.text == "Rarity"), "Rarity is available in the sorting menu.");
+            Check(sortRect.rect.width > 100f && sortRect.rect.width <= ((RectTransform)sortRect.parent).rect.width + .01f, "Sorting remains visible and inside its toolbar.");
             CheckSlotsDoNotOverlap(root, inventory, slots);
             Check(Read<Button>(artifactPreview, "equipButton").gameObject.activeSelf, "Inline Equip button is visible.");
             Read<Button>(artifactPreview, "equipButton").onClick.Invoke();
             Check(target.CurrentArtifact == artifactCard.ArtifactData, "Equip confirms the selected artifact.");
-            Check(!artifactPreview.gameObject.activeSelf && !inventory.IsAnyPanelOpen, "Equip closes and clears inventory.");
+            Check(artifactPreview.gameObject.activeSelf && inventory.IsArtifactGridOpen, "Equip keeps the inventory and preview open.");
             builder.CloseInventoryPanel(); builder.BeginArtifactSwitch(target);
             Check(!artifactPreview.gameObject.activeSelf && artifactPreview.CurrentArtifact == null, "Artifact reopen clears selection.");
             builder.BeginCharacterSwitch(0);

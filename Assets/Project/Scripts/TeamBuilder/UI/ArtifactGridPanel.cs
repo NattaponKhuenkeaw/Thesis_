@@ -116,7 +116,7 @@ namespace Project.TeamBuilder.UI
             if (favouriteFilterButton != null)
             {
                 favouriteFilterButton.onClick.RemoveListener(CycleFavouriteFilter);
-                favouriteFilterButton.onClick.AddListener(CycleFavouriteFilter);
+                favouriteFilterButton.gameObject.SetActive(false);
             }
             RefreshFavouriteFilterLabel();
         }
@@ -310,6 +310,7 @@ namespace Project.TeamBuilder.UI
                 ArtifactSortMode.FavouriteFirst => "Favourites",
                 ArtifactSortMode.EquippedFirst => "Equipped",
                 ArtifactSortMode.UnequippedFirst => "Unequipped",
+                ArtifactSortMode.Rarity => "Rarity",
                 _ => mode.ToString()
             };
         }
@@ -343,7 +344,7 @@ namespace Project.TeamBuilder.UI
             var prefab = Resources.Load<ArtifactCopyMenuUI>(ArtifactCopyMenuUI.MenuPath);
             if (prefab == null) return;
 
-            activeMenu = Instantiate(prefab, rootCanvas.transform, false);
+            TrackMenu(Instantiate(prefab, rootCanvas.transform, false));
             activeMenu.OpenMenu(instance.isFavourite, CanDiscard(instanceId), screenPosition, eventCamera,
                 () =>
                 {
@@ -368,8 +369,20 @@ namespace Project.TeamBuilder.UI
             var prefab = Resources.Load<ArtifactCopyMenuUI>(ArtifactCopyMenuUI.DialogPath);
             if (prefab == null || rootCanvas == null) return;
             string displayName = playerInventory.ResolveArtifactDefinition(instance.definitionId)?.itemName ?? "this Artifact";
-            activeMenu = Instantiate(prefab, rootCanvas.transform, false);
+            TrackMenu(Instantiate(prefab, rootCanvas.transform, false));
             activeMenu.OpenDiscard(displayName, () => Discard(instanceId));
+        }
+
+        private void TrackMenu(ArtifactCopyMenuUI menu)
+        {
+            activeMenu = menu;
+            menu.Closed += HandleMenuClosed;
+        }
+
+        private void HandleMenuClosed(ArtifactCopyMenuUI menu)
+        {
+            menu.Closed -= HandleMenuClosed;
+            if (activeMenu == menu) activeMenu = null;
         }
 
         private bool CanManageCopies() => isActiveAndEnabled && playerInventory != null &&
@@ -390,7 +403,7 @@ namespace Project.TeamBuilder.UI
             if (spawnedItems.Count > 0)
                 EventSystem.current?.SetSelectedGameObject(spawnedItems[Mathf.Clamp(formerIndex, 0, spawnedItems.Count - 1)].gameObject);
             else
-                EventSystem.current?.SetSelectedGameObject(favouriteFilterButton != null ? favouriteFilterButton.gameObject : null);
+                EventSystem.current?.SetSelectedGameObject(sortDropdown != null ? sortDropdown.gameObject : null);
             return true;
         }
 

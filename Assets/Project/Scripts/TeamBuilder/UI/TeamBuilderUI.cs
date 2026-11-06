@@ -570,7 +570,7 @@ namespace Project.TeamBuilder.UI
                 }
             }
             ApplyModeVisualState();
-            inventoryPanel?.SetContext("ARTIFACT INVENTORY");
+            inventoryPanel?.SetContext(string.Empty);
         }
 
         public void CloseArtifactGridPanel()
@@ -623,7 +623,7 @@ namespace Project.TeamBuilder.UI
             }
 
             ApplyModeVisualState();
-            inventoryPanel?.SetContext($"TEAM SLOT {destinationSlot.ParentSlot.SlotIndex + 1:00} / ARTIFACT");
+            inventoryPanel?.SetContext(string.Empty);
         }
 
         public HashSet<string> GetDraftEquippedArtifactInstanceIds(HashSet<string> destination = null)
@@ -725,7 +725,6 @@ namespace Project.TeamBuilder.UI
 
             // Equip to target slot (HandleArtifactDrop automatically un-equips from any other slot on team)
             targetSlot.ParentSlot.HandleArtifactDrop(targetSlot, artifact);
-            ClearArtifactSwitchSelection();
             return true;
         }
 
@@ -1258,7 +1257,7 @@ namespace Project.TeamBuilder.UI
 
         private void HandleArtifactDoubleClicked(ArtifactInstance artifact)
         {
-            if (TryEquipArtifact(artifact)) CloseInventoryPanel();
+            if (TryEquipArtifact(artifact)) inventoryPanel?.RefreshInTeamStates();
         }
 
 

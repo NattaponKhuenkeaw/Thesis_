@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 29}
-  m_SizeDelta: {x: -16, y: 36}
+  m_AnchoredPosition: {x: 0, y: 6}
+  m_SizeDelta: {x: -16, y: 46}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &1447806600769885835
 CanvasRenderer:
@@ -376,7 +376,6 @@ MonoBehaviour:
   equippedBadge: {fileID: 3190714308067371715}
   favouriteBadge: {fileID: 6814949029298482071}
   newBadge: {fileID: 8919317616970253778}
-  rollSummaryText: {fileID: 8500826576263813920}
   rarityStars:
   - {fileID: 6360554244941976740}
   - {fileID: 5040126694912636706}
@@ -520,7 +519,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2267054057916219661
 RectTransform:
   m_ObjectHideFlags: 0

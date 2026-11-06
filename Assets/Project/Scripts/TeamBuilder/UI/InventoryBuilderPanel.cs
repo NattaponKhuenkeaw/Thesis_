@@ -76,7 +76,11 @@ namespace Project.TeamBuilder.UI
 
         public void SetContext(string context)
         {
-            if (contextText != null) contextText.text = context;
+            if (contextText != null)
+            {
+                contextText.text = context;
+                contextText.gameObject.SetActive(!string.IsNullOrWhiteSpace(context));
+            }
             if (titleText != null) titleText.text = IsCharacterGridOpen ? "SELECT CHARACTER" : "SELECT ARTIFACT";
             SetTabColor(characterTab, IsCharacterGridOpen);
             SetTabColor(artifactTab, IsArtifactGridOpen);

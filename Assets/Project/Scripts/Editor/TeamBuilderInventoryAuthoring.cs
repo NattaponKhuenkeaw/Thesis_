@@ -98,11 +98,11 @@ public static class TeamBuilderInventoryAuthoring
             var toolbar = Rect(artifactRoot, "ArtifactTools");
             PreferredHeight(toolbar, 92);
             var search = Search(toolbar, font); Box((RectTransform)search.transform, 0, 0, 602, 40);
-            var favourite = Button(toolbar, "Favourite", "FAVOURITE", font, false);
-            Box((RectTransform)favourite.transform, 0, 50, 252, 36);
-            var sort = Dropdown(toolbar, font); Box((RectTransform)sort.transform, 266, 50, 336, 36);
-            Set(artifacts, "searchInput", search); Set(artifacts, "favouriteModeButton", favourite);
-            Set(artifacts, "favouriteModeLabel", favourite.GetComponentInChildren<TMP_Text>()); Set(artifacts, "sortDropdown", sort);
+            var sort = Dropdown(toolbar, font); Box((RectTransform)sort.transform, 0, 50, 602, 36);
+            var sortRect = (RectTransform)sort.transform;
+            sortRect.anchorMax = Vector2.one;
+            sortRect.sizeDelta = new Vector2(0f, 36f);
+            Set(artifacts, "searchInput", search); Set(artifacts, "sortDropdown", sort);
             var artScroll = Scroll(artifactRoot, "ArtifactGrid");
             var artPreview = ArtifactPreview(artifactRoot, font, statPrefab);
             Set(artifacts, "previewPanel", artPreview);
@@ -134,13 +134,13 @@ public static class TeamBuilderInventoryAuthoring
         var icon = iconRect.gameObject.AddComponent<Image>(); icon.preserveAspect = true; icon.raycastTarget = false;
         var name = Text(root, "ItemName", "", font, 17, FontStyles.Bold);
         Bottom(name.rectTransform, 7, 26, 7, 26); name.alignment = TextAlignmentOptions.Center;
-        var summary = Text(root, "Summary", "", font, 15); Bottom(summary.rectTransform, 7, 6, 7, 20);
-        summary.alignment = TextAlignmentOptions.Center;
         var badge = Text(root, "EquippedBadge", "IN TEAM", font, 14, FontStyles.Bold);
         Bottom(badge.rectTransform, 7, 52, 7, 22); badge.color = Accent;
         badge.alignment = TextAlignmentOptions.Right;
         if (character)
         {
+            var summary = Text(root, "Summary", "", font, 15); Bottom(summary.rectTransform, 7, 6, 7, 20);
+            summary.alignment = TextAlignmentOptions.Center;
             var cell = root.gameObject.AddComponent<CharacterGridItemUI>();
             Set(cell, "iconImage", icon); Set(cell, "frameImage", frame); Set(cell, "nameText", name);
             Set(cell, "levelText", summary); Set(cell, "equippedText", badge); SetFloat(cell, "inTeamAlpha", .7f);
@@ -150,9 +150,11 @@ public static class TeamBuilderInventoryAuthoring
         }
         else
         {
+            Bottom(name.rectTransform, 7, 6, 7, 46);
+            name.alignment = TextAlignmentOptions.Center;
             var cell = root.gameObject.AddComponent<ArtifactGridItemUI>();
             Set(cell, "iconImage", icon); Set(cell, "frameImage", frame); Set(cell, "nameText", name);
-            Set(cell, "rollSummaryText", summary); Set(cell, "equippedBadge", badge.gameObject); SetFloat(cell, "equippedAlpha", .7f);
+            Set(cell, "equippedBadge", badge.gameObject); SetFloat(cell, "equippedAlpha", .7f);
             Set(cell, "selectedFrameSprite", Sprite("UI_BlackBox_YellowBorder_NoOutLine.PNG"));
             Set(cell, "normalFrameSprite", frame.sprite);
             SetColor(cell, "normalFrameColor", Color.white); SetColor(cell, "equippedFrameColor", Color.white);
@@ -220,6 +222,7 @@ public static class TeamBuilderInventoryAuthoring
         var icon = iconRoot.gameObject.AddComponent<Image>(); icon.preserveAspect = true; icon.raycastTarget = false;
         var stats = Rect(root, "Stats"); Box(stats, 110, 58, 476, 140);
         var layout = stats.gameObject.AddComponent<VerticalLayoutGroup>(); layout.childControlHeight = true; layout.childForceExpandHeight = false;
+        layout.childControlWidth = layout.childForceExpandWidth = true;
         var description = Text(root, "Description", "", font, 19); Box(description.rectTransform, 14, 204, 574, 90);
         var button = Button(root, "EquipArtifact", "EQUIP", font, true); Box((RectTransform)button.transform, 14, 300, 574, 46);
         Set(panel, "artifactNameText", name); Set(panel, "artifactIcon", icon); Set(panel, "statItemContainer", stats);
@@ -400,6 +403,8 @@ public static class TeamBuilderInventoryAuthoring
                 text.rectTransform.offsetMin = Vector2.zero; text.rectTransform.offsetMax = Vector2.zero;
             }
             name.alignment = TextAlignmentOptions.MidlineLeft; value.alignment = TextAlignmentOptions.MidlineRight;
+            ui.FitToContainer();
+            ((RectTransform)row.transform).sizeDelta = new Vector2(476, 32);
             return PrefabUtility.SaveAsPrefabAsset(row, "Assets/Project/Prefab/UI/TeamInventoryStatRow.prefab");
         }
         finally { Object.DestroyImmediate(row); }
