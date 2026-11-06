@@ -30,6 +30,9 @@ public class EnemyController : MonoBehaviour
     public float defense = 0f;
     public float damageRes = 0f;
     public bool isEliteOrBoss = false;
+    [Tooltip("Ignore ordinary stagger and launch reactions, but remain vulnerable to Grab and action anchors.")]
+    [SerializeField] private bool resistOrdinaryHitReactions;
+    public bool ResistsOrdinaryHitReactions => resistOrdinaryHitReactions;
 
     /// <summary>
     /// Scales basic combat stats (maxHP / attackDamage / defense) and syncs currentHP to the new max.
@@ -316,7 +319,7 @@ public class EnemyController : MonoBehaviour
         get => rangedMuzzle;
         set => rangedMuzzle = value;
     }
-    public bool ArmorDuringCommittedSwing => CombatRole == EnemyCombatRole.CommitMelee;
+    public bool ArmorDuringCommittedSwing => CombatRole == EnemyCombatRole.CommitMelee && !resistOrdinaryHitReactions;
 
     public float ResolveAttackRange(float blackboardRange)
     {
@@ -927,10 +930,14 @@ public class EnemyController : MonoBehaviour
         }
 
         bool alreadyIgnoringReactions = ignoreHitReactions;
-        bool shouldApplyReaction = !isSeparateDamage && ShouldApplyHitReaction();
+        bool isGrab = reactionData.reactionKind == EnemyReactionKind.Grab
+            || (reactionData.actionAnchor != null && finalIncomingDamage > 0f && currentHP > 0f);
+        bool shouldApplyReaction = !isSeparateDamage && (resistOrdinaryHitReactions
+            ? isGrab && !ignoreHitReactions && !IsArmored
+            : ShouldApplyHitReaction());
         LastHitAppliedReaction = shouldApplyReaction;
 
-        if (!shouldApplyReaction && !isSeparateDamage)
+        if (!shouldApplyReaction && !isSeparateDamage && !resistOrdinaryHitReactions)
         {
             // Grant / refresh a short armor window so mash cannot re-stagger before AI attacks.
             // Duration 0 keeps legacy behavior: single resist then reset combo.
