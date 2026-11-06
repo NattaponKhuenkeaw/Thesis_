@@ -360,6 +360,110 @@ public class ShopEconomyBalanceTests
         });
     }
 
+    [TestCase(135, 0, 135)]
+    [TestCase(135, 1, 189)]
+    [TestCase(135, 2, 243)]
+    [TestCase(135, 4, 351)]
+    [TestCase(135, 9, 621)]
+    [TestCase(0, 99, 0)]
+    [TestCase(135, -1, 135)]
+    [TestCase(-1, 3, 0)]
+    [TestCase(int.MaxValue, int.MaxValue, int.MaxValue)]
+    public void CombatSoulUsesFortyPercentOfBasePerLevelWithoutCompounding(int coins, int biome, int expected)
+    {
+        var method = typeof(RouteOfferGenerator).GetMethod("ScaleCombatSoul", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.That(method.Invoke(null, new object[] { coins, biome }), Is.EqualTo(expected));
+    }
+
+    [TestCase(RouteDifficulty.Easy, 0)]
+    [TestCase(RouteDifficulty.Easy, 1)]
+    [TestCase(RouteDifficulty.Easy, 2)]
+    [TestCase(RouteDifficulty.Easy, 4)]
+    [TestCase(RouteDifficulty.Medium, 0)]
+    [TestCase(RouteDifficulty.Medium, 1)]
+    [TestCase(RouteDifficulty.Medium, 2)]
+    [TestCase(RouteDifficulty.Medium, 4)]
+    [TestCase(RouteDifficulty.Hard, 0)]
+    [TestCase(RouteDifficulty.Hard, 1)]
+    [TestCase(RouteDifficulty.Hard, 2)]
+    [TestCase(RouteDifficulty.Hard, 4)]
+    public void HigherLevelCardsScaleOnlySoulAndKeepTheSameArtifactDrawCount(RouteDifficulty difficulty, int biome)
+    {
+        WithProgression(biome, progression => {
+            var tables = Object.Instantiate(Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables"));
+            try
+            {
+                foreach (var profile in tables.Profiles) profile.rollWeight = profile.difficulty == difficulty ? 1f : 0f;
+                var room = Resources.Load<RoomData>("MapSO/LV/RoomData_LV_01");
+                var patterns = new HashSet<int>();
+                for (int i = 0; i < 96; i++)
+                {
+                    progression.SetCurrentBiomeIndex(0);
+                    Random.InitState(619 + i);
+                    var baseline = RouteOfferGenerator.BuildOffer(room, tables);
+                    progression.SetCurrentBiomeIndex(biome);
+                    Random.InitState(619 + i);
+                    var scaled = RouteOfferGenerator.BuildOffer(room, tables);
+                    int expected = (int)System.Math.Round(baseline.Reward.Coins * (1d + .4d * biome),
+                        System.MidpointRounding.AwayFromZero);
+                    Assert.That(scaled.Reward.Coins, Is.EqualTo(expected));
+                    Assert.That(scaled.Reward.ArtifactPulls, Is.EqualTo(baseline.Reward.ArtifactPulls));
+                    Assert.That(scaled.Reward.GrantsArtifact, Is.EqualTo(baseline.Reward.GrantsArtifact));
+                    Assert.That(scaled.Reward.IncludesBasePayout, Is.EqualTo(baseline.Reward.IncludesBasePayout));
+                    Assert.That(scaled.Reward.RewardSeed, Is.EqualTo(baseline.Reward.RewardSeed));
+                    if (difficulty == RouteDifficulty.Hard)
+                    {
+                        Assert.That(scaled.Reward.BiomeIndex, Is.EqualTo(biome));
+                        patterns.Add(scaled.Reward.ArtifactPulls);
+                    }
+                }
+                if (difficulty == RouteDifficulty.Hard) CollectionAssert.AreEquivalent(new[] { 0, 1, 2 }, patterns);
+            }
+            finally { Object.DestroyImmediate(tables); }
+        });
+    }
+
+    [TestCase(RouteDifficulty.Easy)]
+    [TestCase(RouteDifficulty.Medium)]
+    public void ScaledCardPaysTheAdvertisedSoulOnceEvenIfTheLevelChangesLater(RouteDifficulty difficulty)
+    {
+        WithProgression(4, progression => {
+            var tables = Object.Instantiate(Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables"));
+            try
+            {
+                foreach (var profile in tables.Profiles) profile.rollWeight = profile.difficulty == difficulty ? 1f : 0f;
+                var room = Resources.Load<RoomData>("MapSO/LV/RoomData_LV_01");
+                var card = RouteOfferGenerator.BuildOffer(room, tables);
+                int advertised = card.Reward.Coins;
+                Assert.That(advertised, Is.InRange(tables.GetProfile(difficulty).minCoins * 2.6,
+                    tables.GetProfile(difficulty).maxCoins * 2.6));
+                progression.SetCurrentBiomeIndex(9);
+                WithClearManagers(room, (runEnd, waves) => {
+                    ActiveRouteOffer.Set(card);
+                    int before = inventory.currency;
+                    CallWave(waves, "NotifyRunEndRoomCleared", true);
+                    CallWave(waves, "TryGrantActiveRouteReward", room);
+                    Assert.That(inventory.currency, Is.EqualTo(before + advertised));
+                    CallWave(waves, "TryGrantActiveRouteReward", room);
+                    Assert.That(inventory.currency, Is.EqualTo(before + advertised));
+                });
+            }
+            finally { Object.DestroyImmediate(tables); }
+        });
+    }
+
+    [Test]
+    public void LaterLevelsDoNotIncreaseTheBossBonusOrStartingSoul()
+    {
+        WithProgression(9, progression => {
+            Assert.That(inventory.currency, Is.EqualTo(1000));
+            WithClearManagers(null, (runEnd, waves) => {
+                runEnd.NotifyRoomCleared(RoomKind.Boss);
+                Assert.That(inventory.currency, Is.EqualTo(1500));
+            });
+        });
+    }
+
     [TestCase(RoomKind.Combat, 0)]
     [TestCase(RoomKind.Elite, 0)]
     [TestCase(RoomKind.Boss, 500)]
@@ -485,6 +589,25 @@ public class ShopEconomyBalanceTests
             typeof(TeamLoader).GetProperty("Instance").SetValue(null, previousTeam);
             if (hadCard) ActiveRouteOffer.Set(previousCard);
             else ActiveRouteOffer.Clear();
+        }
+    }
+
+    private static void WithProgression(int biome, System.Action<RunProgressionManager> check)
+    {
+        var previous = RunProgressionManager.Instance;
+        var root = new GameObject("Economy level context");
+        root.SetActive(false);
+        try
+        {
+            var progression = root.AddComponent<RunProgressionManager>();
+            progression.SetCurrentBiomeIndex(biome);
+            typeof(RunProgressionManager).GetProperty("Instance").SetValue(null, progression);
+            check(progression);
+        }
+        finally
+        {
+            typeof(RunProgressionManager).GetProperty("Instance").SetValue(null, previous);
+            Object.DestroyImmediate(root);
         }
     }
 
