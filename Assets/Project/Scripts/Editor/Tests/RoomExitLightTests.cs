@@ -60,11 +60,12 @@ public class RoomExitLightTests
         Assert.That(boss.GetComponentsInChildren<RoomExitLight>(true), Is.Empty);
     }
 
-    [TestCase("Assets/Project/Scenes/Test_Lobby.unity")]
-    [TestCase("Assets/Project/Scenes/Test_Shop.unity")]
-    public void SceneAuthoredSafeRoomsAlsoHaveBoundExitLights(string path)
+    [TestCase("a148dcd3fee0376418d8129a64e74e76")]
+    [TestCase("d36c77798e07625409da16f442bc42f5")]
+    public void SceneAuthoredSafeRoomsAlsoHaveBoundExitLights(string sceneGuid)
     {
-        EditorSceneManager.OpenScene("Assets/Project/Scenes/MainMenu.unity", OpenSceneMode.Single);
+        string path = AssetDatabase.GUIDToAssetPath(sceneGuid);
+        EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath("4d6e8a1c3b5f7092e4a6c8d0b2f4e6a8"), OpenSceneMode.Single);
         Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
         try
         {

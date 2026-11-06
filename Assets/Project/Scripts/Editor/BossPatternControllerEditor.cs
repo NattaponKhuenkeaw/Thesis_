@@ -15,8 +15,6 @@ namespace Project.EditorTools
         {
             serializedObject.Update();
 
-            if (GUILayout.Button("Open Enemy Preview")) EnemyPreviewWindow.OpenForBoss();
-
             EditorGUILayout.HelpBox(
                 "Preview ใช้สูตรเดียวกับตอน Play (offset บน collider local)\n" +
                 "เปิดทีละท่าด้วย Hitbox Preview Mode กันซ้อน\n" +

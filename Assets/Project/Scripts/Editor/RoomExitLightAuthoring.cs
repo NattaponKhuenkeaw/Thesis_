@@ -16,15 +16,16 @@ public static class RoomExitLightAuthoring
     public const string ArtFolder = "Assets/Project/VFX/RoomExit";
     public const string SheetPath = ArtFolder + "/ExitLight_Pixel_3Frames.png";
     public const string PrefabPath = "Assets/Project/Prefab/Environment/RoomExitLight.prefab";
-    public static readonly string[] SafeScenes = {
-        "Assets/Project/Scenes/Test_Lobby.unity", "Assets/Project/Scenes/Test_Shop.unity"
+    public static string[] SafeScenes => new[] {
+        AssetDatabase.GUIDToAssetPath("a148dcd3fee0376418d8129a64e74e76"),
+        AssetDatabase.GUIDToAssetPath("d36c77798e07625409da16f442bc42f5")
     };
 
     [MenuItem("Tools/Never Night/Author Exit Lights")]
     public static void Build()
     {
         if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-        EditorSceneManager.OpenScene("Assets/Project/Scenes/MainMenu.unity", OpenSceneMode.Single);
+        EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath("4d6e8a1c3b5f7092e4a6c8d0b2f4e6a8"), OpenSceneMode.Single);
         ImportFrames();
         BuildPrefab();
         var report = new List<string>();
