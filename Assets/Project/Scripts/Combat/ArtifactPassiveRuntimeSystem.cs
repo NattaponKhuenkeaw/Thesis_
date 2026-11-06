@@ -79,8 +79,14 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
     }
 
     public static DamageDescriptor ModifyOutgoingDescriptor(CharacterObject sourceCharacter,
-        DamageDescriptor descriptor)
+        DamageDescriptor descriptor, CombatActionExecutionToken cast = null)
     {
+        if (descriptor.delivery == DamageDelivery.Primary && cast?.ArtifactInfusion is ElementType castElement)
+        {
+            descriptor.elementType = castElement;
+            return descriptor;
+        }
+
         ArtifactPassiveRuntimeSystem system = _instance;
         if (system == null || sourceCharacter == null) return descriptor;
 
@@ -284,7 +290,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             if (rule.trigger != ArtifactPassiveTrigger.ActionStarted
                 || (rule.filter.filterByCategory && rule.filter.category != combatEvent.category)
                 || !CanActivate(runtime.Rules[ruleIndex], rule.conditions, Time.time)) continue;
-            Activate(runtime, rule, ruleIndex, null, null);
+            Activate(runtime, rule, ruleIndex, null, null, combatEvent.execution?.cast);
         }
     }
 
@@ -332,9 +338,11 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
     }
 
     private void Activate(ArtifactPassiveRuntime runtime, ArtifactPassiveRuleDefinition rule, int ruleIndex,
-        DamageResolvedEvent? damageEvent, CharacterObject incomingCharacter)
+        DamageResolvedEvent? damageEvent, CharacterObject incomingCharacter, CombatActionExecutionToken cast = null)
     {
         ArtifactRuleRuntimeState state = runtime.Rules[ruleIndex];
+        if (rule.responses.Exists(response => response is InfuseDamageTypeResponseDefinition infusion && infusion.onlyCurrentCast)
+            && (cast == null || !cast.ClaimArtifactInfusionRoll(runtime.Artifact.InstanceId))) return;
         if (rule.conditions.chance < 1f && UnityEngine.Random.value > Mathf.Clamp01(rule.conditions.chance)) return;
 
         bool wasArmed = state.armed;
@@ -351,7 +359,8 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             }
             else if (response is InfuseDamageTypeResponseDefinition infusionResponse)
             {
-                ApplyInfusion(runtime, infusionResponse);
+                if (infusionResponse.onlyCurrentCast) cast.ArtifactInfusion = infusionResponse.elementType;
+                else ApplyInfusion(runtime, infusionResponse);
             }
             else if (response is SpawnParticleResponseDefinition particleResponse)
             {
@@ -608,7 +617,11 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         CharacterObject[] team = _teamLoader != null ? _teamLoader.GetTeamSnapshot() : Array.Empty<CharacterObject>();
         if (response.target == ArtifactResponseTarget.Wearer)
         {
-            ApplyCharacterEffect(runtime, runtime.Wearer, response.recipe);
+            if (response.removeFromWearer)
+                _teamLoader?.RunInventory?.RemoveRuntimeEffect(runtime.Wearer, response.recipe.definition,
+                    response.recipe, runtime.Wearer);
+            else
+                ApplyCharacterEffect(runtime, runtime.Wearer, response.recipe);
             return;
         }
         if (response.target == ArtifactResponseTarget.TriggerSource && damageEvent.HasValue && damageEvent.Value.sourceCharacter != null)
@@ -628,6 +641,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
                 CharacterObject target = team[i];
                 if (target == null || (response.target == ArtifactResponseTarget.Teammates
                     && ReferenceEquals(target, runtime.Wearer))) continue;
+                if (response.livingAlliesOnly && !_teamLoader.IsCharacterAlive(target)) continue;
                 ApplyCharacterEffect(runtime, target, response.recipe);
             }
             return;
@@ -757,9 +771,10 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
                 break;
             case ArtifactStateOperation.Disarm:
             case ArtifactStateOperation.ConsumeMark:
-                if (state.storedTarget != null && state.storedTarget.RuntimeEffects != null)
+                if (state.storedTarget != null && state.storedTarget.RuntimeEffects != null &&
+                    !string.IsNullOrEmpty(response.storedTargetEffectKey))
                 {
-                    state.storedTarget.RuntimeEffects.RemoveEffectStacks("P1-A04-MARK-INJURY", int.MaxValue);
+                    state.storedTarget.RuntimeEffects.RemoveEffectStacks(response.storedTargetEffectKey, int.MaxValue);
                 }
                 state.armed = false;
                 state.storedTarget = null;
@@ -795,6 +810,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         if (filter.requireWearerAsSource && !ReferenceEquals(wearer, combatEvent.sourceCharacter)) return false;
         if (filter.requirePositiveDamage && combatEvent.damageDealt <= 0f) return false;
         if (filter.requireCriticalHit && !combatEvent.isCriticalHit) return false;
+        if (filter.requireNonCriticalHit && combatEvent.isCriticalHit) return false;
         if (filter.filterByCategory && filter.category != combatEvent.category) return false;
         if (filter.filterByDelivery && filter.delivery != combatEvent.descriptor.delivery) return false;
         if ((combatEvent.provenance.tags & filter.requiredDamageTags) != filter.requiredDamageTags) return false;

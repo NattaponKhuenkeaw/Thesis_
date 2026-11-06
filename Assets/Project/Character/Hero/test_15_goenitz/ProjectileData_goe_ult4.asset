@@ -55,7 +55,7 @@ MonoBehaviour:
   destroyOnLifetimeExpire: 1
   centerGrabbedTargets: 0
   grabCenterOffset: {x: 0, y: 0}
-  magnetismSpeed: 0
+  magnetismSpeed: 10
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04534ec67238433a99a929885ae3a875, type: 3}
+  m_Name: SR_05_AuraResonatingShard
+  m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.ArtifactDefinition
+  id: ART-SR-005
+  itemName: Aura-Resonating Shard
+  description: Clashing Auras from player swaps release shockwaves of raw fighting
+    spirit that Fiends fear.
+  icon: {fileID: 21300000, guid: cae8a6bf811d9e848ba61b1d82ac6877, type: 3}
+  price: 800
+  rarity: 2
+  isEquippable: 1
+  passiveDescription: 'Switch into the wearer to apply Encroach to living room enemies. Each stack reduces DEF by 3%, up to 10 stacks.'
+  passiveSet: {fileID: 11400000, guid: 6104f32c2c244ccbb78ee62c24e28887, type: 2}
+  additionalDamageEffects: []

@@ -17,20 +17,25 @@ public partial class GameAudioManager
     private readonly List<TimelineAudioPlayback> timelineAudio = new List<TimelineAudioPlayback>();
     public int ActiveTimelineAudioCount => timelineAudio.Count;
 
-    private static bool TimelineAudioFrozen => Time.timeScale <= 0f
-        || (GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld);
-
     private void TrackTimelineAudio(AudioSource source, AudioEntry entry, bool voice)
     {
-        var playback = new TimelineAudioPlayback { source = source, clip = entry.clip, basePitch = entry.pitchVariation,
-            slowMotionAware = entry.slowMotionAware, voice = voice };
-        if (playback.slowMotionAware && TimelineAudioFrozen)
+        TrackActionAudio(source, entry.pitchVariation, entry.slowMotionAware, voice);
+    }
+
+    private void TrackActionAudio(AudioSource source, float basePitch, bool slowMotionAware, bool voice)
+    {
+        var playback = new TimelineAudioPlayback { source = source, clip = source.clip, basePitch = basePitch,
+            slowMotionAware = slowMotionAware, voice = voice };
+        if (ShouldPauseTimelineAudio(playback))
         {
             source.Pause();
             playback.pausedByClock = true;
         }
         timelineAudio.Add(playback);
     }
+
+    private static bool ShouldPauseTimelineAudio(TimelineAudioPlayback playback) => GameFreezeManager.IsGameplayPaused
+        || (playback.slowMotionAware && Time.timeScale <= 0f);
 
     private void ForgetTimelineAudio(AudioSource source)
     {
@@ -50,7 +55,7 @@ public partial class GameAudioManager
                 continue;
             }
             source.pitch = AnimationTimePolicy.AudioPitch(playback.basePitch, Time.timeScale, playback.slowMotionAware);
-            bool frozen = playback.slowMotionAware && TimelineAudioFrozen;
+            bool frozen = ShouldPauseTimelineAudio(playback);
             if (frozen && !playback.pausedByClock) { source.Pause(); playback.pausedByClock = true; }
             else if (!frozen && playback.pausedByClock) { source.UnPause(); playback.pausedByClock = false; }
             // isPlaying is false while paused too; a pause must never return an unfinished clip to the pool.

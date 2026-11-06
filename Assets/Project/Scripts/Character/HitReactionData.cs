@@ -81,6 +81,8 @@ public struct HitReactionData
     public Vector2 grabOffset;
     public bool alignGrabToBodyCenter;
     public int reactionOwnerId;
+    public Transform actionAnchor;
+    public int actionAnchorHoldFrames;
 
     // =========================================================
     // Legacy Compatibility

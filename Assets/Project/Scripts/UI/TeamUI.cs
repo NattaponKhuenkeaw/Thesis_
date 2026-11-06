@@ -17,6 +17,7 @@ namespace Project.UI
         private Canvas rootCanvas;
         private IOrchestratedPanel activePanel;
         private bool inputLockHeld = false;
+        private System.Action releasePauseHold;
         private bool previousOverrideSorting = false;
         private int previousSortingOrder = 0;
         private string previousActionMapName;
@@ -42,16 +43,10 @@ namespace Project.UI
             }
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
-            // Safety net: if this TeamUI is destroyed while holding the input lock / action map,
-            // restore the action map so the new scene's PlayerInput starts clean.
-            if (inputLockHeld)
-            {
-                InputLockManager.Unlock();
-                inputLockHeld = false;
-            }
-            RestorePreviousActionMap();
+            activePanel = null;
+            ReleaseCanvasShell();
         }
 
         private void Update()
@@ -68,41 +63,31 @@ namespace Project.UI
 
         public void RegisterActivePanel(IOrchestratedPanel panel)
         {
-            if (activePanel == panel)
-            {
-                OpenCanvasShell();
-                return;
-            }
-
-            if (activePanel != null)
-            {
-                activePanel.OnPanelClosed();
-            }
-
+            IOrchestratedPanel previousPanel = activePanel;
             activePanel = panel;
             OpenCanvasShell();
+            if (previousPanel != panel) previousPanel?.OnPanelClosed();
         }
 
         public void UnregisterActivePanel(IOrchestratedPanel panel)
         {
-            if (activePanel == panel)
-            {
-                activePanel = null;
+            if (activePanel != panel) return;
+            activePanel = null;
+            ReleaseCanvasShell();
+        }
 
-                // Restore raycast-blocking to false so the canvas no longer intercepts gameplay input.
-                if (canvasGroup != null)
-                {
-                    canvasGroup.blocksRaycasts = false;
-                }
+        private void ReleaseCanvasShell()
+        {
+            if (!inputLockHeld) return;
 
-                RestoreCanvasSorting();
-                RestorePreviousActionMap();
-                if (inputLockHeld)
-                {
-                    InputLockManager.Unlock();
-                    inputLockHeld = false;
-                }
-            }
+            if (canvasGroup != null) canvasGroup.blocksRaycasts = false;
+            RestoreCanvasSorting();
+            RestorePreviousActionMap();
+            InputLockManager.Unlock();
+            inputLockHeld = false;
+
+            releasePauseHold?.Invoke();
+            releasePauseHold = null;
         }
 
         public void RequestCloseActivePanel()
@@ -130,7 +115,6 @@ namespace Project.UI
             gameObject.SetActive(true);
             canvasShellOpenedFrame = Time.frameCount;
             RepairCanvasRootTransform();
-            BringCanvasToFront();
 
             if (canvasGroup != null)
             {
@@ -141,6 +125,9 @@ namespace Project.UI
 
             if (!inputLockHeld)
             {
+                BringCanvasToFront();
+                releasePauseHold = GameFreezeManager.AcquirePauseHold();
+
                 InputLockManager.Lock();
                 inputLockHeld = true;
                 SwitchToUIActionMap();

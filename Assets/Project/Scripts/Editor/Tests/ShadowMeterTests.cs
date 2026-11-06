@@ -616,6 +616,75 @@ public class ShadowMeterTests
     }
 
     [Test]
+    public void TargetDashHoldsEachHitEnemyAtItsOwnAnchor()
+    {
+        const BindingFlags privateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
+        var movement = owner.AddComponent<PlayerMovement>();
+        typeof(PlayerMovement).GetField("rb", privateInstance).SetValue(movement, owner.GetComponent<Rigidbody2D>());
+        var combat = owner.AddComponent<PlayerCombat>();
+        combat.movement = movement;
+        var hitboxObject = new GameObject("Dash Hitbox");
+        hitboxObject.transform.SetParent(owner.transform, false);
+        var hitbox = hitboxObject.AddComponent<HitBoxDamage>();
+        // The fixture's inactive player is excluded from the runtime parent lookup.
+        typeof(HitBoxDamage).GetField("playerCombat", privateInstance).SetValue(hitbox, combat);
+        hitbox.movement = movement;
+        combat.hitBoxDamage = hitbox;
+        typeof(PlayerCombat).GetField("currentAttackFrame", privateInstance).SetValue(combat, 5);
+        hitbox.SetHitData(10f, false, false, 0f, 1f, new NormalHitbox { flashFrames = 0 },
+            AttackCategory.Normal, "Dimension Cut", null, null);
+
+        var enemies = new EnemyController[4];
+        var anchors = (System.Collections.Generic.Dictionary<EnemyController, Transform>)typeof(PlayerMovement)
+            .GetField("dashHitAnchors", privateInstance).GetValue(movement);
+        try
+        {
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                var enemyObject = new GameObject($"Dash Target {i}");
+                enemyObject.transform.position = new Vector2(i + 1f, i);
+                var enemy = enemies[i] = enemyObject.AddComponent<EnemyController>();
+                enemy.hitReactionHandler = enemyObject.AddComponent<EnemyHitReactionHandler>();
+                typeof(EnemyHitReactionHandler).GetMethod("Awake", privateInstance).Invoke(enemy.hitReactionHandler, null);
+                typeof(EnemyController).GetField("lifecycleState", privateInstance).SetValue(enemy, EnemyLifecycleStateId.Active);
+            }
+            enemies[3].ignoreHitReactions = true;
+
+            var motion = new MotionKeyframe { taskType = MotionTaskType.DashThroughTarget, startFrame = 3, endFrame = 11,
+                horizontalOnly = true, holdTargetAtAnchor = true, alignTargetToDashPlane = true,
+                targetAnchorOffset = new Vector2(-0.5f, 0f) };
+            movement.SetActionMotionTarget(enemies[0]);
+            var dash = (System.Collections.IEnumerator)typeof(PlayerMovement).GetMethod("AttackMovementCoroutine", privateInstance)
+                .Invoke(movement, new object[] { motion, true });
+            Assert.That(dash.MoveNext(), Is.True);
+            Assert.That(movement.TryGetResolvedTargetMotion(out _, out Vector2 initialTravel), Is.True);
+            Assert.That(anchors, Is.Empty);
+
+            hitbox.ProcessHit(enemies[1]);
+            hitbox.ProcessHit(enemies[2]);
+            hitbox.ProcessHit(enemies[3]);
+
+            Assert.That(enemies[0].IsGrabbed, Is.False);
+            Assert.That(enemies[1].currentHP, Is.EqualTo(90f));
+            Assert.That(enemies[2].currentHP, Is.EqualTo(90f));
+            Assert.That(enemies[1].CurrentReactionState, Is.EqualTo(EnemyReactionState.Grabbed));
+            Assert.That(enemies[2].CurrentReactionState, Is.EqualTo(EnemyReactionState.Grabbed));
+            Assert.That(enemies[3].IsGrabbed, Is.False);
+            Assert.That((Vector2)anchors[enemies[1]].position, Is.EqualTo(new Vector2(1.5f, 0f)));
+            Assert.That((Vector2)anchors[enemies[2]].position, Is.EqualTo(new Vector2(2.5f, 0f)));
+            movement.TryGetResolvedTargetMotion(out _, out Vector2 travelAfterHits);
+            Assert.That(travelAfterHits, Is.EqualTo(initialTravel));
+        }
+        finally
+        {
+            foreach (Transform anchor in anchors.Values)
+                if (anchor != null) Object.DestroyImmediate(anchor.gameObject);
+            foreach (EnemyController enemy in enemies)
+                if (enemy != null) Object.DestroyImmediate(enemy.gameObject);
+        }
+    }
+
+    [Test]
     public void PrefabMeterLivesBetweenStatusAndStats()
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/CombatUI/Player_UI.prefab");

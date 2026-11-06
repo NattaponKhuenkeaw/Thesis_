@@ -61,6 +61,7 @@ Filenames for ADR-006/007/011/012 still use older numbers from the pre-merge bra
 | [018](018-training-session-progression-overrides.md) | Temporary Training Level and Potential Overrides | **Accepted; implemented, feel review pending** | Training | Owner-scoped runtime overrides preserve existing progression/stat authorities; 72 focused checks passed |
 | [019](019-character-kit-information.md) | Character Kit Information Ownership | **Accepted** | Character UI | Action-owned copy, kit-owned sections, targeted Potential patches, and shared value evaluation |
 | [020](020-source-scoped-character-kit-runtime.md) | Source-Scoped Character Kit Runtime | **Proposed; architecture approval pending** | Character combat | Off-field AE-funded mode, cast-scoped eligibility, independent Blizzard/ATK recipe lifetimes and source-aware hit/kill rules |
+| [021](021-visit-scoped-room-rewards.md) | Visit-Scoped Room Rewards | **Accepted** | Room progression | Visit-scoped clearing phase, patterned total payouts and exact-copy draw commits |
 
 ## Phase Mapping
 

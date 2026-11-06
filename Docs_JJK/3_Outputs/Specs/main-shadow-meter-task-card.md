@@ -63,6 +63,10 @@ User report: with Face Target On Arrival disabled on DashThroughTarget, buffered
 
 Root cause: PlayerMovement inferred step starts from attacking/idle samples and combo-depth changes. Buffered replacements at the same depth retained the previous step's completed or cancelled initial-lock flag. PlayerCombat now explicitly calls BeginCombatStepFacing after committing the new step metadata and before animation/payload processing.
 
+## Multi-enemy dash anchoring — 2026-11-05
+
+The dash still selects one enemy within Target Radius to determine travel. With Hold Target At Anchor enabled, each eligible enemy damaged by the cut's melee hitbox is held at an anchor calculated from its position at contact. The authored offset and dash-height alignment apply separately to each hit. Guard and reaction immunity still apply. The selected enemy receives a hold only if the hitbox connects.
+
 ## Damage-Taken Debuff Visual Follow-up — 2026-11-01
 
 Source: Apricha's follow-up in chat. Reuse the approved downward-chevron `FieldPowerDown` visual for Main's `Damage Taken Increase` Skill recipe at both base strength and Potential Lv.4. This is presentation-only: preserve the 16-second duration, refresh behavior, and existing damage-taken values. The saved recipe references are in `CharacterObject_main.asset`; manual combat readability and expiry review remain pending.

@@ -87,11 +87,14 @@ namespace Project.Core.RunEnd
 
         public void NotifyRoomCleared(RoomKind roomKind)
         {
+            NotifyRoomCleared(awardLegacyCurrency: roomKind != RoomKind.Combat && roomKind != RoomKind.Elite);
+        }
+
+        public void NotifyRoomCleared(bool awardLegacyCurrency)
+        {
             if (Project.Training.TrainingSession.IsTrainingContext) return;
             roomsCleared = Mathf.Max(0, roomsCleared + 1);
-            // Combat already pays the selected card; preserve the existing fixed reward for bosses.
-            if (roomKind != RoomKind.Combat && roomKind != RoomKind.Elite)
-                AwardRoomClearCurrency();
+            if (awardLegacyCurrency) AwardRoomClearCurrency();
         }
 
         public void SetRoomsCleared(int value)

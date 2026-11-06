@@ -346,6 +346,9 @@ namespace Project.ShopSystem.UI
         private Color GetItemTypeColor(BaseItem item)
         {
             if (item is CharacterItem) return characterTypeColor;
+            if (item is ArtifactDefinition { rarity: ArtifactRarity.R }) return new Color32(107, 114, 128, 255);
+            if (item is ArtifactDefinition { rarity: ArtifactRarity.SR }) return new Color32(46, 119, 78, 255);
+            if (item is ArtifactDefinition { rarity: ArtifactRarity.SSR }) return new Color32(113, 59, 166, 255);
             if (item is ArtifactDefinition) return artifactTypeColor;
             return consumableTypeColor;
         }
@@ -353,6 +356,8 @@ namespace Project.ShopSystem.UI
         private static string GetTypeLabel(BaseItem item)
         {
             if (item is CharacterItem) return "Character";
+            if (item is ArtifactDefinition artifact && artifact.rarity != ArtifactRarity.Unassigned)
+                return $"{artifact.rarity} Artifact";
             if (item is ArtifactDefinition) return "Artifact";
             return "Consumable";
         }

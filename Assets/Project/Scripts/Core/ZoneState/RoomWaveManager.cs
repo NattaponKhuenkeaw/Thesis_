@@ -2,7 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Project.Core.RunEnd;
+using Project.InventorySystem.Artifacts;
 using Project.ShopSystem;
+using Project.UI;
 
 namespace Project.Core.ZoneState
 {
@@ -64,6 +66,10 @@ namespace Project.Core.ZoneState
         private bool spawnedAnyEnemy;
         private bool spawnedBossEnemy;
         private CombatStageController stageController;
+        private ArtifactRewardPickerUI activeRewardPicker;
+        private Coroutine rewardRoutine;
+        private bool holdsRewardInputLock;
+        private int encounterVisit = -1;
         private readonly List<Vector3> livingEnemyPositions = new List<Vector3>();
         private readonly Dictionary<EnemyController, Vector3> spawnOrigins = new Dictionary<EnemyController, Vector3>();
 
@@ -81,6 +87,12 @@ namespace Project.Core.ZoneState
 
         private void OnDisable()
         {
+            if (rewardRoutine != null)
+            {
+                StopCoroutine(rewardRoutine);
+                rewardRoutine = null;
+            }
+            ReleaseRewardView();
             if (waveRoutine != null)
             {
                 StopCoroutine(waveRoutine);
@@ -148,6 +160,8 @@ namespace Project.Core.ZoneState
             }
 
             hasStarted = true;
+            ZoneStateProvider clearing = Resources.Load<ZoneStateProvider>("CombatSO/ZoneStateProvider");
+            encounterVisit = clearing != null ? clearing.Visit : 0;
 
             if (waveRoutine != null)
             {
@@ -990,6 +1004,8 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            ZoneStateProvider clearing = Resources.Load<ZoneStateProvider>("CombatSO/ZoneStateProvider");
+            if (clearing != null && encounterVisit >= 0 && clearing.Visit != encounterVisit) return;
             roomCleared = true;
             if (!spawnedAnyEnemy)
             {
@@ -1002,9 +1018,20 @@ namespace Project.Core.ZoneState
             }
 
             bool bossFlow = useBossDeathFlow || spawnedBossEnemy || IsCurrentRoomBoss();
-            NotifyRunEndRoomCleared(bossFlow);
-            TryGrantActiveRouteReward();
+            RoomData room = (RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null)
+                ?? clearing?.CurrentRoom;
+            int visit = encounterVisit >= 0 ? encounterVisit : (clearing != null ? clearing.Visit : 0);
+            if (!bossFlow && !Project.Training.TrainingSession.IsTrainingContext &&
+                ActiveRouteOffer.TryGetForRoom(room?.RoomId, out RoomChoiceOffer offer) &&
+                offer.Reward != null && offer.Reward.IncludesBasePayout)
+            {
+                rewardRoutine = StartCoroutine(ResolvePatternedReward(offer.Reward, clearing, visit));
+                return;
+            }
 
+            NotifyRunEndRoomCleared(awardLegacyCurrency: true);
+            if (!Project.Training.TrainingSession.IsTrainingContext)
+                TryGrantActiveRouteReward(room);
             if (bossFlow)
             {
                 // Progression + next offers still roll, but no portal / choice gate.
@@ -1013,25 +1040,93 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            ReleaseClearedRoom(clearing, visit);
+        }
+
+        private IEnumerator ResolvePatternedReward(RouteReward terms, ZoneStateProvider clearing, int visit)
+        {
+            if (clearing != null && clearing.Visit != visit) yield break;
+            CharacterInventoryState inventory = ResolveRewardInventory();
+            ArtifactRewardPickerUI prefab = terms.ArtifactPulls > 0
+                ? Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath)
+                : null;
+            ArtifactInstance[][] draws = null;
+            if (inventory == null || (terms.ArtifactPulls > 0 &&
+                (prefab == null || !prefab.IsConfigured ||
+                 !ArtifactRewardDraft.TryPrepare(terms, inventory.ArtifactRollTable, out draws))))
+            {
+                Debug.LogError("[RoomWaveManager] Could not prepare the selected Hard reward. Return to the lobby to retry.", this);
+                yield break;
+            }
+
+            NotifyRunEndRoomCleared(awardLegacyCurrency: false);
+            if (terms.Coins > 0) inventory.AddCurrency(terms.Coins);
+            ActiveRouteOffer.Clear();
+            if (draws != null)
+            {
+                if (clearing != null && !clearing.SetClearing(visit, ClearingState.RewardPending))
+                    yield break;
+                InputLockManager.Lock();
+                holdsRewardInputLock = true;
+                for (int index = 0; index < draws.Length; index++)
+                {
+                    ArtifactInstance[] candidates = draws[index];
+                    bool committed = false;
+                    while (!committed && (clearing == null || clearing.Visit == visit))
+                    {
+                        activeRewardPicker = Instantiate(prefab);
+                        yield return activeRewardPicker.Present(candidates, inventory, index + 1, draws.Length,
+                            choice =>
+                            {
+                                if (clearing != null && clearing.Visit != visit) return false;
+                                if (!committed) committed = inventory.TryCommitArtifact(candidates[choice], 0, out _);
+                                return committed;
+                            });
+                        DestroyRewardView();
+                    }
+                    if (!committed) break;
+                }
+                ReleaseRewardView();
+            }
+            ReleaseClearedRoom(clearing, visit);
+            rewardRoutine = null;
+        }
+
+        private void ReleaseClearedRoom(ZoneStateProvider clearing, int visit)
+        {
+            if (clearing != null && !clearing.SetClearing(visit, ClearingState.Accessible)) return;
             RoomExitPresenter.RevealExits(portalsRoot, unlockSceneExitOnClear);
         }
 
-        private void TryGrantActiveRouteReward()
+        private void DestroyRewardView()
         {
-            RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
+            if (activeRewardPicker != null) Destroy(activeRewardPicker.gameObject);
+            activeRewardPicker = null;
+        }
+
+        private void ReleaseRewardView()
+        {
+            DestroyRewardView();
+            if (!holdsRewardInputLock) return;
+            holdsRewardInputLock = false;
+            InputLockManager.Unlock();
+        }
+
+        private static CharacterInventoryState ResolveRewardInventory()
+        {
+            CharacterInventoryState inventory = TeamLoader.Instance != null ? TeamLoader.Instance.RunInventory : null;
+            return inventory != null ? inventory : Project.Training.CharacterStateContext.ResolveInventory();
+        }
+
+        private void TryGrantActiveRouteReward(RoomData room)
+        {
             string roomId = room != null ? room.RoomId : null;
             if (!ActiveRouteOffer.TryGetForRoom(roomId, out RoomChoiceOffer offer) || offer.Reward == null)
             {
                 return;
             }
 
-            CharacterInventoryState inventory = TeamLoader.Instance != null
-                ? TeamLoader.Instance.RunInventory
-                : null;
-            if (inventory == null)
-            {
-                inventory = Project.Training.CharacterStateContext.ResolveInventory();
-            }
+            CharacterInventoryState inventory = ResolveRewardInventory();
 
             if (inventory == null)
             {
@@ -1062,7 +1157,7 @@ namespace Project.Core.ZoneState
             return room != null && room.RoomKind == RoomKind.Boss;
         }
 
-        private void NotifyRunEndRoomCleared(bool bossFlow)
+        private void NotifyRunEndRoomCleared(bool awardLegacyCurrency)
         {
             RunEndController runEndController = RunEndController.Instance ?? FindFirstObjectByType<RunEndController>();
             if (runEndController == null)
@@ -1071,8 +1166,15 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            if (!awardLegacyCurrency)
+            {
+                runEndController.NotifyRoomCleared(awardLegacyCurrency: false);
+                return;
+            }
+
             RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
-            RoomKind kind = bossFlow ? RoomKind.Boss : room != null ? room.RoomKind : RoomKind.Combat;
+            RoomKind kind = useBossDeathFlow || spawnedBossEnemy || IsCurrentRoomBoss()
+                ? RoomKind.Boss : room != null ? room.RoomKind : RoomKind.Combat;
             runEndController.NotifyRoomCleared(kind);
         }
 

@@ -2108,7 +2108,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                 if (slotArtifacts != null && slotArtifacts.Length > 0)
                 {
                     CharacterStats cleanBase = stats.Clone();
-                    ArtifactStatAggregator.Apply(stats, cleanBase, slotArtifacts);
+                    runInventory.ApplyArtifactStats(stats, cleanBase, slotArtifacts);
                 }
             }
         }

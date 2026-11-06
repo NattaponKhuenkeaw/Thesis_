@@ -77,6 +77,7 @@ namespace Project.TeamBuilder.UI
         private Coroutine fadeCoroutine;
         private Coroutine slideCoroutine;
         private Coroutine pageTransitionCoroutine;
+        private bool isOpen;
         private Vector2 openAnchoredPosition;
         private int selectedCharacterIndex = -1;
         private UIFeedbackDriver cachedDriver;
@@ -104,8 +105,8 @@ namespace Project.TeamBuilder.UI
 
             if (zoneStateProvider != null)
             {
-                zoneStateProvider.OnZoneModeChanged += HandleZoneChanged;
-                HandleZoneChanged(zoneStateProvider.CurrentMode);
+                zoneStateProvider.OnAccessModeChanged += HandleZoneChanged;
+                HandleZoneChanged(zoneStateProvider.AccessMode);
             }
 
             // Tab and close buttons live inside the panel — wire here so they re-fire after re-enables.
@@ -138,7 +139,7 @@ namespace Project.TeamBuilder.UI
         {
             if (zoneStateProvider != null)
             {
-                zoneStateProvider.OnZoneModeChanged -= HandleZoneChanged;
+                zoneStateProvider.OnAccessModeChanged -= HandleZoneChanged;
             }
 
             if (closeButton != null)
@@ -161,8 +162,11 @@ namespace Project.TeamBuilder.UI
                 equipmentTabButton.onClick.RemoveListener(ShowEquipmentPage);
             }
 
+            isOpen = false;
+            StopFadeTransition();
             StopPageTransition();
             ResetFolderMotion();
+            owningTeamUI?.UnregisterActivePanel(this);
         }
 
         private void HandleZoneChanged(ZoneMode newMode)
@@ -270,7 +274,7 @@ namespace Project.TeamBuilder.UI
             // When zoneStateProvider is null (e.g. playground scenes) default to SafeZone
             // so the inspector is not silently blocked.
             ZoneMode liveMode = Project.Training.TrainingAccessPolicy.LoadoutMode(
-                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
+                zoneStateProvider != null ? zoneStateProvider.AccessMode : ZoneMode.SafeZone);
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -295,7 +299,7 @@ namespace Project.TeamBuilder.UI
         public void OpenInspectorOnPage(InspectPage page)
         {
             ZoneMode liveMode = Project.Training.TrainingAccessPolicy.LoadoutMode(
-                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
+                zoneStateProvider != null ? zoneStateProvider.AccessMode : ZoneMode.SafeZone);
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -315,7 +319,7 @@ namespace Project.TeamBuilder.UI
         public void OpenInspectorWithCharacterOnPage(string name, InspectPage page)
         {
             ZoneMode liveMode = Project.Training.TrainingAccessPolicy.LoadoutMode(
-                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
+                zoneStateProvider != null ? zoneStateProvider.AccessMode : ZoneMode.SafeZone);
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -343,7 +347,7 @@ namespace Project.TeamBuilder.UI
         public void Open(CharacterItem character, ArtifactInstance[] equippedArtifacts = null)
         {
             ZoneMode liveMode = Project.Training.TrainingAccessPolicy.LoadoutMode(
-                zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone);
+                zoneStateProvider != null ? zoneStateProvider.AccessMode : ZoneMode.SafeZone);
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -369,7 +373,8 @@ namespace Project.TeamBuilder.UI
 
             owningTeamUI?.RegisterActivePanel(this);
 
-            bool isAlreadyOpen = gameObject.activeSelf && rootCanvasGroup != null && rootCanvasGroup.alpha > 0.01f;
+            bool isAlreadyOpen = isOpen;
+            isOpen = true;
 
             if (!isAlreadyOpen)
             {
@@ -383,7 +388,6 @@ namespace Project.TeamBuilder.UI
                 }
                 if (rootCanvasGroup != null)
                 {
-                    rootCanvasGroup.alpha = 0f;
                     rootCanvasGroup.interactable = true;
                     rootCanvasGroup.blocksRaycasts = true;
                 }
@@ -421,15 +425,8 @@ namespace Project.TeamBuilder.UI
 
         public void Close()
         {
-            bool isVisuallyOpen = gameObject.activeSelf && rootCanvasGroup != null && rootCanvasGroup.alpha > 0.01f;
-
-            if (!isVisuallyOpen)
-            {
-                // Panel is not visually open, but may still hold a registered lock/action-map.
-                // Always release ownership so the action map and input lock are never stranded.
-                owningTeamUI?.UnregisterActivePanel(this);
-                return;
-            }
+            if (!isOpen) return;
+            isOpen = false;
 
             StopPageTransition();
 
@@ -441,11 +438,11 @@ namespace Project.TeamBuilder.UI
             PlayFadeTransition(false);
         }
 
-        private void OnDestroy()
+        private void StopFadeTransition()
         {
-            // Safety net: if this object is destroyed (e.g., scene unload) while a panel is registered,
-            // unregister immediately so the action map and input lock are always restored.
-            owningTeamUI?.UnregisterActivePanel(this);
+            if (fadeCoroutine != null && cachedDriver != null)
+                cachedDriver.StopCoroutine(fadeCoroutine);
+            fadeCoroutine = null;
         }
 
         private void PlayFadeTransition(bool opening)
@@ -459,30 +456,19 @@ namespace Project.TeamBuilder.UI
                 }
                 if (!opening)
                 {
-                    gameObject.SetActive(false); currentCharacter = null; ClearCharacterSlider();
+                    CompleteClose();
                 }
                 return;
             }
             // Always stop on the cached driver — the coroutine was started there.
-            if (fadeCoroutine != null && cachedDriver != null)
-            {
-                cachedDriver.StopCoroutine(fadeCoroutine);
-                fadeCoroutine = null;
-            }
+            StopFadeTransition();
 
             if (cachedDriver != null)
             {
                 fadeCoroutine = cachedDriver.PlayFade(rootCanvasGroup, opening, slideDuration, () =>
                 {
-                    if (!opening)
-                    {
-                        gameObject.SetActive(false);
-                        currentCharacter = null;
-                        currentArtifacts = new Artifact[0];
-                        ClearCharacterSlider();
-                        owningTeamUI?.UnregisterActivePanel(this);
-                    }
                     fadeCoroutine = null;
+                    if (!opening) CompleteClose();
                 });
             }
             else
@@ -493,13 +479,18 @@ namespace Project.TeamBuilder.UI
                 }
                 if (!opening)
                 {
-                    gameObject.SetActive(false);
-                    currentCharacter = null;
-                    currentArtifacts = new Artifact[0];
-                    ClearCharacterSlider();
-                    owningTeamUI?.UnregisterActivePanel(this);
+                    CompleteClose();
                 }
             }
+        }
+
+        private void CompleteClose()
+        {
+            gameObject.SetActive(false);
+            currentCharacter = null;
+            currentArtifacts = Array.Empty<Artifact>();
+            ClearCharacterSlider();
+            owningTeamUI?.UnregisterActivePanel(this);
         }
 
         private void PlayContentSlideTransition()
@@ -1235,7 +1226,11 @@ namespace Project.TeamBuilder.UI
             if (equippedArtifacts != null && equippedArtifacts.Length > 0)
             {
                 CharacterStats baseStats = ResolveCharacterBaseStats(character);
-                ArtifactStatAggregator.Apply(stats, baseStats, equippedArtifacts);
+                CharacterInventoryState inventory = ResolveRunInventory();
+                if (inventory != null)
+                    inventory.ApplyArtifactStats(stats, baseStats, equippedArtifacts);
+                else
+                    ArtifactStatAggregator.Apply(stats, baseStats, equippedArtifacts);
             }
 
             ResolveRunInventory()?.ApplyRuntimeEffectsToStats(character, stats);

@@ -55,7 +55,7 @@ namespace Project.UI
         private bool isPaused;
         private bool ownsInputLock;
         private bool isLeaving;
-        private bool ownsPauseHold;
+        private System.Action releasePauseHold;
         private GameObject returnFocus;
 
         private void Awake()
@@ -76,15 +76,9 @@ namespace Project.UI
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
-
-            if (!isLeaving)
-            {
-                ForceGameplayResume();
-            }
+            if (Instance != this) return;
+            Instance = null;
+            if (!isLeaving && releasePauseHold != null) ReleaseGameplayPause();
         }
 
         private void Update()
@@ -188,7 +182,7 @@ namespace Project.UI
 
             SetPanelVisible(pauseRoot, true);
             Focus(resumeButton);
-            BeginPauseHold();
+            releasePauseHold = GameFreezeManager.AcquirePauseHold();
             AudioListener.pause = true;
 
             if (!ownsInputLock)
@@ -208,19 +202,7 @@ namespace Project.UI
             isPaused = false;
             HideAll(true);
             GameSettings.Save();
-            AudioListener.pause = false;
-            EndPauseHold();
-
-            if (IsTeamBuilderOpen())
-            {
-                Time.timeScale = 0f;
-            }
-
-            if (ownsInputLock)
-            {
-                InputLockManager.Unlock();
-                ownsInputLock = false;
-            }
+            ReleaseGameplayPause();
             if (EventSystem.current != null)
                 EventSystem.current.SetSelectedGameObject(returnFocus != null && returnFocus.activeInHierarchy ? returnFocus : null);
             returnFocus = null;
@@ -443,61 +425,23 @@ namespace Project.UI
             SetPanelVisible(pauseRoot, false, animated);
         }
 
-        private void BeginPauseHold()
-        {
-            if (ownsPauseHold)
-            {
-                return;
-            }
-
-            if (GameFreezeManager.Instance != null)
-            {
-                GameFreezeManager.Instance.BeginPauseHold();
-            }
-            else
-            {
-                Time.timeScale = 0f;
-            }
-
-            ownsPauseHold = true;
-        }
-
-        private void EndPauseHold()
-        {
-            if (!ownsPauseHold)
-            {
-                return;
-            }
-
-            ownsPauseHold = false;
-            if (GameFreezeManager.Instance != null)
-            {
-                GameFreezeManager.Instance.EndPauseHold();
-            }
-            else
-            {
-                Time.timeScale = 1f;
-            }
-        }
-
-        private void ForceGameplayResume()
+        private void ReleaseGameplayPause()
         {
             AudioListener.pause = false;
-            EndPauseHold();
-            if (GameFreezeManager.Instance != null)
-            {
-                GameFreezeManager.Instance.RestoreTime();
-            }
-            else
-            {
-                Time.timeScale = 1f;
-            }
-
+            releasePauseHold?.Invoke();
+            releasePauseHold = null;
             if (ownsInputLock)
             {
                 InputLockManager.Unlock();
                 ownsInputLock = false;
             }
+        }
+
+        private void ForceGameplayResume()
+        {
+            ReleaseGameplayPause();
+            if (GameFreezeManager.Instance != null) GameFreezeManager.Instance.RestoreTime();
+            else if (!GameFreezeManager.IsGameplayPaused) Time.timeScale = 1f;
         }
 
         private void TeardownRunSession()
@@ -525,12 +469,6 @@ namespace Project.UI
             {
                 Destroy(component.gameObject);
             }
-        }
-
-        private static bool IsTeamBuilderOpen()
-        {
-            TeamUI teamUi = FindFirstObjectByType<TeamUI>();
-            return teamUi != null && teamUi.IsTeamBuilderOpen;
         }
 
         private static void EnsureEventSystem()

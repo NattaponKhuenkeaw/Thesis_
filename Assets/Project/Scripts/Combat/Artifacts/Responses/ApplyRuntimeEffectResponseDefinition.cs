@@ -5,5 +5,7 @@ public sealed class ApplyRuntimeEffectResponseDefinition : ArtifactPassiveRespon
 {
     public RuntimeEffectRecipe recipe = new RuntimeEffectRecipe();
     public int applications = 1;
+    public bool removeFromWearer;
+    public bool livingAlliesOnly;
 }
 

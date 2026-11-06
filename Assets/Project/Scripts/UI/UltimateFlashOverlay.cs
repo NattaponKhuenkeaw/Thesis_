@@ -237,7 +237,7 @@ public class UltimateFlashOverlay : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < settings.fadeInDuration)
         {
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += GameFreezeManager.GameplayUnscaledDeltaTime;
             float t = settings.fadeInDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / settings.fadeInDuration);
             flashRenderer.color = WithAlpha(settings.flashColor, t);
             yield return null;
@@ -246,13 +246,13 @@ public class UltimateFlashOverlay : MonoBehaviour
 
         if (settings.holdDuration > 0f)
         {
-            yield return new WaitForSecondsRealtime(settings.holdDuration);
+            yield return GameFreezeManager.WaitForGameplaySeconds(settings.holdDuration);
         }
 
         elapsed = 0f;
         while (elapsed < settings.darkenDuration)
         {
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += GameFreezeManager.GameplayUnscaledDeltaTime;
             float t = settings.darkenDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / settings.darkenDuration);
             flashRenderer.color = Color.Lerp(settings.flashColor, settings.darkColor, t);
             yield return null;
@@ -263,13 +263,13 @@ public class UltimateFlashOverlay : MonoBehaviour
 
         if (settings.blackHoldDuration > 0f)
         {
-            yield return new WaitForSecondsRealtime(settings.blackHoldDuration);
+            yield return GameFreezeManager.WaitForGameplaySeconds(settings.blackHoldDuration);
         }
 
         elapsed = 0f;
         while (elapsed < settings.fadeOutDuration)
         {
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += GameFreezeManager.GameplayUnscaledDeltaTime;
             float t = settings.fadeOutDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / settings.fadeOutDuration);
             flashRenderer.color = WithAlpha(settings.darkColor, 1f - t);
             yield return null;
@@ -292,7 +292,7 @@ public class UltimateFlashOverlay : MonoBehaviour
         }
 
         flashRenderer.color = WithAlpha(GetDefaultFlashColor(), 1f);
-        yield return new WaitForSecondsRealtime(hitFlashDuration);
+        yield return GameFreezeManager.WaitForGameplaySeconds(hitFlashDuration);
         SetAlpha(0f);
 
         hitFlashCoroutine = null;
@@ -312,7 +312,7 @@ public class UltimateFlashOverlay : MonoBehaviour
         {
             flashRenderer.color = WithAlpha(flashColor, settings.SampleAlpha(elapsedFrames));
             yield return null;
-            elapsedFrames += Time.unscaledDeltaTime * CombatCore.FrameDataConstants.LOGIC_FPS;
+            elapsedFrames += GameFreezeManager.GameplayUnscaledDeltaTime * CombatCore.FrameDataConstants.LOGIC_FPS;
         }
 
         SetAlpha(0f);

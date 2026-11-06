@@ -1,0 +1,130 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6089779d0cf4b4998f070e46b0f91a, type: 3}
+  m_Name: SR_04_BrokenChronoRelic_PassiveSet
+  m_EditorClassIdentifier: Assembly-CSharp::ArtifactPassiveSetDefinition
+  stableId: ART-SR-004-PASSIVES
+  rules:
+  - ruleId: mark-on-skill-hit
+    stateKey: mark-injury
+    trigger: 1
+    filter:
+      filterByCategory: 1
+      category: 1
+      filterByDelivery: 0
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 38
+      requirePositiveDamage: 1
+      requireCriticalHit: 0
+      requireWearerAsSource: 1
+      switchRelation: 0
+    conditions:
+      cooldownSeconds: 14
+      durationSeconds: 10
+      intervalSeconds: 0
+      chance: 1
+      maximumStacks: 1
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 0
+      requireDisarmed: 0
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 0
+    responses:
+    - rid: 8312694232576164320
+    - rid: 8312694232576164321
+    feedback:
+      feedbackId: mark-on-skill-hit
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  - ruleId: consume-mark
+    stateKey: mark-injury
+    trigger: 1
+    filter:
+      filterByCategory: 0
+      category: 0
+      filterByDelivery: 0
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 63
+      requirePositiveDamage: 1
+      requireCriticalHit: 0
+      requireWearerAsSource: 0
+      switchRelation: 0
+    conditions:
+      cooldownSeconds: 0
+      durationSeconds: 0
+      intervalSeconds: 0
+      chance: 1
+      maximumStacks: 1
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 1
+      requireDisarmed: 0
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 1
+    responses:
+    - rid: 8312694232576164322
+    - rid: 8312694232576164323
+    - rid: 8312694232576164324
+    feedback:
+      feedbackId: consume-mark
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 8312694232576164320
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        operation: 2
+        amount: 1
+    - rid: 8312694232576164321
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        operation: 4
+        amount: 1
+    - rid: 8312694232576164322
+      type: {class: ExplosionSplashResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        definition: {fileID: 11400000, guid: 054e6465b6b38984db967e40a350f186, type: 2}
+        damageBasis: 3
+        damageRatio: 0.35
+        elementType: 2
+        preserveParentDelivery: 1
+        preserveParentElement: 0
+    - rid: 8312694232576164323
+      type: {class: ApplyDotResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 8
+        definition: {fileID: 11400000, guid: 9bc5528b84bcfad468477074f9473d73, type: 2}
+        damageBasis: 1
+        ratio: 0.3
+    - rid: 8312694232576164324
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        operation: 5
+        amount: 1
+        storedTargetEffectKey: ""

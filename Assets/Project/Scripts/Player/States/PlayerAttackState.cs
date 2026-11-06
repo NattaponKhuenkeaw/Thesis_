@@ -52,7 +52,7 @@ public class PlayerAttackState : CombatPlayerState
     {
         base.Update();
 
-        if (fsm.CurrentState != this)
+        if (fsm.CurrentState != this || GameFreezeManager.IsGameplayPaused)
             return;
 
         if (player.Combat != null && !player.Combat.IsAttacking() && currentPhase == ActionPhase.None)

@@ -63,7 +63,10 @@ namespace Project.TeamBuilder.UI.Panels
             if (_equippedArtifacts != null)
             {
                 CharacterStats baseStats = _characterObject != null ? _characterObject.GetLeveledStats() : new CharacterStats();
-                ArtifactStatAggregator.Apply(_artifactBonusStats, baseStats, _equippedArtifacts);
+                if (playerInventory != null)
+                    playerInventory.ApplyArtifactStats(_artifactBonusStats, baseStats, _equippedArtifacts);
+                else
+                    ArtifactStatAggregator.Apply(_artifactBonusStats, baseStats, _equippedArtifacts);
             }
 
             if (levelUpButton != null)

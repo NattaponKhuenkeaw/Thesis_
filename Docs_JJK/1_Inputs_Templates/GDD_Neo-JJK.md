@@ -415,7 +415,7 @@ Run Global Level is casual, run-scoped growth shared by the complete character r
   - **Content Panel**: Populates based on the selected character and contains the following windows:
     - **Character Info Panel**: Shared Run Global Level, permanent Potential, all character stats, and 3 Artifact Slots.
     - **Character Skill Panel**: Ordered Skill, Ultimate, Passive, Special, and QTE sections containing learned action cards; ordinary Normal Attack entries are excluded. Single-action sections use a flat card, while sections with multiple actions nest their cards. Skill/Ultimate/Passive headers show current Lv.0–4. Potential-locked or permanently replaced actions are hidden, while learned actions remain visible during temporary combat unavailability. Ground/Airborne/Both, cooldown, and AE cost use compact header badges. QTE can reuse an ordinary action through a separate information entry. Potential patches target individual entries; conditional modifiers do not inflate unconditional values.
-    - **Equipment Panel**: 3 Artifact Slots. Clicking an equipped Artifact shows its definition, rolled stat lines, and numeric Roll Quality. Switching opens the Artifact inventory; there is no Ascend or rarity UI.
+    - **Equipment Panel**: 3 Artifact Slots. Clicking an equipped Artifact shows its definition, rolled stat lines, and numeric Roll Quality. Switching opens the Artifact inventory, where stars and frame color show rarity.
     - **Character Potential Panel**: A full-screen view exited through a back button. It contains three tracks—Skill, Ultimate, and Passive—with four sequential levels each (12 nodes total). Clicking a node shows its preview, fragment cost, and upgrade button. Character Potential Fragments are required to unlock the next level in that track.
 
 > [!NOTE]
@@ -486,9 +486,9 @@ Character Potential is permanent meta progression. Artifact instances are run eq
 
 ### Artifacts
 
-Artifacts are equipment instances assigned before deployment. Each instance has a stable identity, references one reusable Artifact definition, and owns one to four rolled stat lines. Artifacts have no rarity, star level, or upgrade level; their numeric **Roll Quality (0–100)** is the average normalized position of generated rolls inside their allowed ranges. Imported legacy values show unavailable quality rather than a misleading score.
+Artifacts are equipment instances assigned before deployment. Each instance has a stable identity, references one reusable Artifact definition, and owns one to four rolled stat lines. Rarity belongs to the definition. **Roll Quality (0–100)** belongs to the copy and averages the normalized position of its generated rolls inside the ranges below. Imported legacy values show unavailable quality.
 
-Every acquisition rolls one guaranteed line, then has cumulative chances of 50% for at least two lines, 35% for at least three, and 15% for four. Exact line-count odds are therefore 50% / 15% / 20% / 15%. Stat selection is with replacement, so one Artifact may roll the same stat multiple times. Amount bands are weighted low-to-high at 35% / 30% / 20% / 10% / 5%.
+R is white with one star, one fixed stat passive and one rolled line. SR is green with two stars, a narrower passive and up to two rolled lines. SSR is purple with three stars, retains the nine existing passives, and is sold in late shops. Phase weights control which rarities appear. Eligible Hard routes can trade Soul for one or more three-card draws after the final encounter. Each draw adds the chosen copy to inventory. The room opens for loadout editing and travel after the final reward. Stat selection is with replacement for copies with multiple lines. [Artifact design and tuning](../3_Outputs/Specs/artifact-rarity-and-rewards-design-spec.md)
 
 | Roll | Range |
 | --- | ---: |
@@ -502,7 +502,7 @@ Every acquisition rolls one guaranteed line, then has cumulative chances of 50% 
 | AER% | 7.78–38.88% |
 | DM% / DI% / ADI% | 9.32–56.23% |
 
-Artifact Inventory supports search, stat/line/favourite/equipped/new filters, sorting by quality, selected-stat total, line count, name, acquisition time, favourite, and equipped state. Inventory cards are click-only: selecting an Artifact destination first makes the next normal card click equip there; without a destination, a card click previews. Activating Favourite Mode changes card clicks into favourite toggles without clearing the pending destination.
+Artifact Inventory supports search and sorting by quality, selected-stat total, line count, name, acquisition time, favourite, and equipped state. Selecting an Artifact destination first makes the next normal card click equip there. A card click previews when no destination is selected. Right-click opens per-copy Favourite and Discard actions. New and Favourite have separate icon badges. Equipped and draft-assigned copies require unequipping before discard.
 
 Passive descriptions are currently display text unless the behavior is also represented by implemented stat bonuses or an authored runtime effect.
 
@@ -556,7 +556,7 @@ Effect columns below remain historical concept material and do not override the 
 | Artifact Transcendence and Artifact Fragments | Retired. Artifacts are duplicate-able instances whose progression is finding stronger randomized rolls. Character Potential fragments are unchanged. |
 | Artifact passive descriptions automatically executing | Not implemented generically. Only numeric `bonusStats` and explicitly authored Additional Damage effects affect combat. |
 | The two active Artifact passive descriptions | Not authored as runtime effects in the current Artifact assets. |
-| Finding Artifacts during Cursed Realm runs and losing them on run failure | Not implemented by this branch; current code covers Soul Shop ownership, loadout management, and deployment. |
+| Finding Artifacts during Cursed Realm runs and losing them on run failure | Eligible Hard routes offer Artifact draws after encounter completion. Acquired copies use the run inventory's existing reset and boss-lobby checkpoint behavior. |
 | One-off buff/debuff assets owning formula, timing, stacking, and presentation | Replaced by Runtime Effect Recipes: kits and projectiles own application values/policy while reusable definitions own formula behavior. Legacy direct definitions remain supported during migration. |
 | Unattributed delayed or off-field damage | Replaced by source-character attribution carried through projectiles and outgoing-character switch actions into enemy damage and Training Debug totals. |
 | Unbounded stage edges and direct scene loading | Replaced in the active prototype by scene-local entrance/exit boundaries coordinated through a persistent transition manager. Full randomized run routing remains a target. |

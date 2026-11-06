@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Project.InventorySystem.Items;
+using Project.UI;
 using UnityEngine;
 
 namespace Project.Core.ZoneState
@@ -195,6 +196,10 @@ namespace Project.Core.ZoneState
 
         private static RouteReward BuildReward(RouteOfferTables.DifficultyProfile profile, RouteOfferTables tables)
         {
+            if (profile.difficulty == RouteDifficulty.Hard && tables.HardRewardPatterns.Count > 0 &&
+                TryBuildHardReward(tables.HardRewardPatterns, out RouteReward patterned))
+                return patterned;
+
             int minCoins = Mathf.Min(profile.minCoins, profile.maxCoins);
             int maxCoins = Mathf.Max(profile.minCoins, profile.maxCoins);
             RouteReward reward = new RouteReward
@@ -222,6 +227,36 @@ namespace Project.Core.ZoneState
             }
 
             return reward;
+        }
+
+        private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns,
+            out RouteReward reward)
+        {
+            reward = null;
+            ArtifactRewardPickerUI picker = Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath);
+            if (picker == null || !picker.IsConfigured || Project.Training.TrainingSession.IsTrainingContext)
+                return false;
+
+            float total = 0f;
+            foreach (RouteOfferTables.HardRewardPattern pattern in patterns)
+                total += Mathf.Max(0f, pattern.weight);
+            if (total <= 0f) return false;
+
+            float remaining = Random.value * total;
+            RouteOfferTables.HardRewardPattern selected = default;
+            foreach (RouteOfferTables.HardRewardPattern pattern in patterns)
+            {
+                if (pattern.weight <= 0f) continue;
+                selected = pattern;
+                remaining -= pattern.weight;
+                if (remaining <= 0f) break;
+            }
+
+            int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
+            reward = RouteReward.Patterned(
+                Random.Range(Mathf.Min(selected.minSoul, selected.maxSoul), Mathf.Max(selected.minSoul, selected.maxSoul) + 1),
+                Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome);
+            return true;
         }
 
         private static GameObject PickEnemy(List<RouteOfferTables.EnemyEntry> pool)

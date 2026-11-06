@@ -5660,7 +5660,7 @@ MonoBehaviour:
           recoveryFrames: 10
           cancelWindowStartFrame: 39
           loopActivePhase: 0
-          stepName: Kamidokoku
+          stepName: Uranagi
           animationClip: {fileID: 7400000, guid: 694f8e50d53d3ca47b241fd5f0664c4c, type: 2}
           syncAnimationToActionFrames: 0
           lockAirPosition: 1
@@ -5765,8 +5765,8 @@ MonoBehaviour:
     - rid: 5456672870199459981
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 3
-        activeFrames: 9
+        startFrameOffset: 0
+        activeFrames: 23
         elementType: 0
         damageTags: 0
         suppressImpactFeedback: 0

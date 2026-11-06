@@ -7,6 +7,7 @@ using Project.Core.ZoneState;
 using Project.Core.RunEnd;
 using Project.InventorySystem;
 using Project.InventorySystem.Items;
+using Project.InventorySystem.Artifacts;
 using Project.ShopSystem;
 using Project.ShopSystem.UI;
 using UnityEditor;
@@ -24,15 +25,15 @@ public class ShopEconomyBalanceTests
 
     private static IEnumerable<TestCaseData> ArtifactPrices()
     {
-        yield return new TestCaseData("P1_01_BlindsBoundlessRibbon", 650);
-        yield return new TestCaseData("P1_02_FiendFleshMask", 500);
-        yield return new TestCaseData("P1_03_SoulMerchantsScales", 650);
-        yield return new TestCaseData("P1_04_BrokenChronoRelic", 850);
-        yield return new TestCaseData("P1_05_AuraResonatingShard", 650);
-        yield return new TestCaseData("P1_06_RivalsBrokenCrest", 850);
-        yield return new TestCaseData("P1_07_ShroudOfDeprivation", 500);
-        yield return new TestCaseData("P1_08_MemoryDrainingUrn", 500);
-        yield return new TestCaseData("P1_09_ShinsRustyDagger", 650);
+        yield return new TestCaseData("P1_01_BlindsBoundlessRibbon", 3000);
+        yield return new TestCaseData("P1_02_FiendFleshMask", 1800);
+        yield return new TestCaseData("P1_03_SoulMerchantsScales", 2200);
+        yield return new TestCaseData("P1_04_BrokenChronoRelic", 4250);
+        yield return new TestCaseData("P1_05_AuraResonatingShard", 2250);
+        yield return new TestCaseData("P1_06_RivalsBrokenCrest", 2350);
+        yield return new TestCaseData("P1_07_ShroudOfDeprivation", 1900);
+        yield return new TestCaseData("P1_08_MemoryDrainingUrn", 2900);
+        yield return new TestCaseData("P1_09_ShinsRustyDagger", 4100);
     }
 
     [SetUp]
@@ -110,7 +111,7 @@ public class ShopEconomyBalanceTests
         var tables = Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables");
         var profile = tables.GetProfile(RouteDifficulty.Medium);
         var character = Resources.Load<CharacterItem>("ItemSO/char_1_CameraGIrl");
-        var artifact = LoadArtifact("P1_07_ShroudOfDeprivation");
+        var artifact = Resources.Load<ArtifactDefinition>("ItemSO/Artifacts/RarityR/R_CrackedWardPlate");
         Assert.That(inventory.currency, Is.EqualTo(1000));
         var room = Resources.Load<RoomData>("MapSO/LV/RoomData_LV_01");
         WithClearManagers(room, (runEnd, waves) => {
@@ -119,7 +120,7 @@ public class ShopEconomyBalanceTests
                 ActiveRouteOffer.Set(new RoomChoiceOffer(room, RouteDifficulty.Medium, null,
                     new RouteReward { Coins = profile.minCoins }));
                 CallWave(waves, "NotifyRunEndRoomCleared", false);
-                CallWave(waves, "TryGrantActiveRouteReward");
+                CallWave(waves, "TryGrantActiveRouteReward", room);
             }
         });
         Assert.That(inventory.currency, Is.EqualTo(1240));
@@ -133,24 +134,26 @@ public class ShopEconomyBalanceTests
         else
         {
             Assert.That(shop.TryPurchase(artifact, 1, OfferPrice(artifact)), Is.True);
-            Assert.That(shop.TryPurchase(LoadArtifact("P1_02_FiendFleshMask")), Is.True);
+            Assert.That(shop.TryPurchase(Resources.Load<ArtifactDefinition>("ItemSO/Artifacts/RarityR/R_EchoBell")), Is.True);
             Assert.That(shop.TryPurchase(character, 1, OfferPrice(character)), Is.False);
-            Assert.That(inventory.currency, Is.EqualTo(240));
+            Assert.That(inventory.currency, Is.EqualTo(640));
         }
     }
 
     [Test]
-    public void ArtifactBudgetMatchesTheApprovedCardRewards()
+    public void ArtifactCatalogUsesIncomingRarityPricesAndKeepsEasyMediumRewards()
     {
         var tables = Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables");
         var easy = tables.GetProfile(RouteDifficulty.Easy);
         var hard = tables.GetProfile(RouteDifficulty.Hard);
         var artifacts = shop.codexInventory.allItems.OfType<ArtifactDefinition>().ToArray();
-        Assert.That(artifacts.Length, Is.EqualTo(9));
-        Assert.That(artifacts.Select(item => item.price).Distinct().OrderBy(price => price), Is.EqualTo(new[] { 500, 650, 850 }));
+        Assert.That(artifacts.Count(item => item.rarity == ArtifactRarity.R), Is.EqualTo(10));
+        Assert.That(artifacts.Count(item => item.rarity == ArtifactRarity.SR), Is.EqualTo(8));
+        Assert.That(artifacts.Count(item => item.rarity == ArtifactRarity.SSR), Is.EqualTo(9));
+        Assert.That(artifacts.Where(item => item.rarity == ArtifactRarity.R).All(item => item.price >= 275 && item.price <= 450), Is.True);
+        Assert.That(artifacts.Where(item => item.rarity == ArtifactRarity.SR).All(item => item.price >= 800 && item.price <= 1200), Is.True);
+        Assert.That(artifacts.Where(item => item.rarity == ArtifactRarity.SSR).Min(item => item.price), Is.EqualTo(1800));
         Assert.That(inventory.currency, Is.EqualTo(1000));
-        Assert.That(artifacts.Min(item => item.price) * 3, Is.GreaterThan(inventory.currency + 2 * hard.maxCoins),
-            "Even saving the starting budget and two maximum Hard rewards cannot buy three artifacts at the first act shop.");
         Assert.That(easy.minCoins, Is.EqualTo(80));
         Assert.That(easy.maxCoins, Is.EqualTo(100));
         Assert.That(hard.minCoins, Is.EqualTo(180));
@@ -317,7 +320,18 @@ public class ShopEconomyBalanceTests
             {
                 RoomChoiceOffer card = RouteOfferGenerator.BuildOffer(room, tables);
                 Assert.That(card.Difficulty, Is.EqualTo(difficulty));
-                Assert.That(card.Reward.Coins, Is.InRange(minimum, maximum));
+                if (difficulty == RouteDifficulty.Hard)
+                {
+                    Assert.That(card.Reward.IncludesBasePayout, Is.True);
+                    Assert.That(tables.HardRewardPatterns.Any(pattern =>
+                        pattern.artifactPulls == card.Reward.ArtifactPulls &&
+                        card.Reward.Coins >= pattern.minSoul && card.Reward.Coins <= pattern.maxSoul), Is.True);
+                }
+                else
+                {
+                    Assert.That(card.Reward.IncludesBasePayout, Is.False);
+                    Assert.That(card.Reward.Coins, Is.InRange(minimum, maximum));
+                }
             }
         }
         finally { Object.DestroyImmediate(tables); }
@@ -337,10 +351,10 @@ public class ShopEconomyBalanceTests
             int before = inventory.currency;
             CallWave(waves, "NotifyRunEndRoomCleared", false);
             Assert.That(inventory.currency, Is.EqualTo(before), "Combat must not pay the fixed 500 Soul bonus.");
-            CallWave(waves, "TryGrantActiveRouteReward");
+            CallWave(waves, "TryGrantActiveRouteReward", room);
             Assert.That(inventory.currency, Is.EqualTo(before + coins));
             Assert.That(ActiveRouteOffer.HasSelection, Is.False);
-            CallWave(waves, "TryGrantActiveRouteReward");
+            CallWave(waves, "TryGrantActiveRouteReward", room);
             Assert.That(inventory.currency, Is.EqualTo(before + coins), "A consumed card must not pay twice.");
             Assert.That(typeof(RunEndController).GetField("roomsCleared", Private).GetValue(runEnd), Is.EqualTo(1));
         });
@@ -364,9 +378,58 @@ public class ShopEconomyBalanceTests
     {
         WithClearManagers(null, (runEnd, waves) => {
             int before = inventory.currency;
-            CallWave(waves, "NotifyRunEndRoomCleared", bossFlow);
+            typeof(RoomWaveManager).GetField("useBossDeathFlow", Private).SetValue(waves, bossFlow);
+            CallWave(waves, "NotifyRunEndRoomCleared", true);
             Assert.That(inventory.currency, Is.EqualTo(before + expected));
         });
+    }
+
+    [Test]
+    public void NormalCombatClearWithLegacyPayoutEnabledStillCannotRestoreTheFixedBonus()
+    {
+        WithClearManagers(Resources.Load<RoomData>("MapSO/LV/RoomData_LV_01"), (runEnd, waves) => {
+            int before = inventory.currency;
+            CallWave(waves, "NotifyRunEndRoomCleared", true);
+            Assert.That(inventory.currency, Is.EqualTo(before));
+        });
+    }
+
+    [TestCase(0)]
+    [TestCase(1)]
+    [TestCase(2)]
+    public void HardDraftsHaveThreeDistinctSameRarityChoicesAndStableRolls(int biome)
+    {
+        var table = Resources.Load<ArtifactRollTable>("ItemSO/Artifacts/ArtifactRollTable");
+        var method = typeof(RouteReward).Assembly.GetType("Project.Core.ZoneState.ArtifactRewardDraft")
+            .GetMethod("TryPrepare", BindingFlags.Public | BindingFlags.Static);
+        var terms = RouteReward.Patterned(0, 2, 8431, biome);
+        var first = new object[] { terms, table, null };
+        var second = new object[] { terms, table, null };
+        Assert.That(method.Invoke(null, first), Is.True);
+        Assert.That(method.Invoke(null, second), Is.True);
+        var draws = (ArtifactInstance[][])first[2];
+        var repeated = (ArtifactInstance[][])second[2];
+        Assert.That(draws.Length, Is.EqualTo(2));
+        var definitions = Resources.LoadAll<ArtifactDefinition>("ItemSO/Artifacts")
+            .Where(item => !string.IsNullOrEmpty(item.id)).GroupBy(item => item.id)
+            .ToDictionary(group => group.Key, group => group.First());
+        for (int pull = 0; pull < draws.Length; pull++)
+        {
+            Assert.That(draws[pull].Length, Is.EqualTo(3));
+            Assert.That(draws[pull].Select(item => item.definitionId).Distinct().Count(), Is.EqualTo(3));
+            var rarities = draws[pull].Select(item => definitions[item.definitionId].rarity).Distinct().ToArray();
+            Assert.That(rarities.Length, Is.EqualTo(1));
+            Assert.That(rarities[0] == ArtifactRarity.R || rarities[0] == ArtifactRarity.SR, Is.True);
+            if (biome == 0) Assert.That(rarities[0], Is.EqualTo(ArtifactRarity.R));
+            for (int card = 0; card < 3; card++)
+            {
+                Assert.That(draws[pull][card].definitionId, Is.EqualTo(repeated[pull][card].definitionId));
+                Assert.That(draws[pull][card].rolls, Is.EqualTo(repeated[pull][card].rolls));
+            }
+        }
+        int before = inventory.currency;
+        Assert.That(inventory.TryCommitArtifact(draws[0][0], 0, out _), Is.True);
+        Assert.That(inventory.currency, Is.EqualTo(before));
     }
 
     [TestCase(false, 0)]

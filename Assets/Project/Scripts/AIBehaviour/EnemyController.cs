@@ -947,6 +947,16 @@ public class EnemyController : MonoBehaviour
         // Fire event (reaction pose is driven by EnemyHitReactionHandler → AnimationHandler_Enemy)
         if (shouldApplyReaction)
         {
+            // Check guard and reaction immunity as a normal hit before binding to the dash anchor.
+            if (reactionData.actionAnchor != null && finalIncomingDamage > 0f && currentHP > 0f
+                && (!IsGrabbed || CurrentReactionState == EnemyReactionState.None))
+            {
+                reactionData.reactionKind = EnemyReactionKind.Grab;
+                reactionData.attackerTransform = reactionData.grabSocket = reactionData.actionAnchor;
+                reactionData.grabOffset = reactionData.snapOffset = Vector2.zero;
+                reactionData.knockfallFrames = 0;
+                reactionData.reactionTiming = HitReactionData.CreateTiming(0, reactionData.actionAnchorHoldFrames, 0);
+            }
             attackAudioCue.Cancel();
             StopAttackWarningAudio();
             ShieldGuard?.EndGuard();
@@ -1358,26 +1368,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    public bool ReleaseGrab(int ownerId)
+    public bool ReleaseGrab(int ownerId, Transform anchor = null)
     {
-        return hitReactionHandler != null && hitReactionHandler.ReleaseGrab(ownerId);
-    }
-
-    public bool TryHoldAtActionAnchor(int ownerId, Transform anchor, int holdFrames)
-    {
-        if (!IsTargetable || anchor == null || hitReactionHandler == null || !ShouldApplyHitReaction()) return false;
-        if (IsGrabbed && hitReactionHandler.CurrentReactionOwnerId != ownerId) return false;
-        hitReactionHandler.StartReaction(new HitReactionData
-        {
-            reactionKind = EnemyReactionKind.Grab,
-            reactionOwnerId = ownerId,
-            attackerTransform = anchor,
-            grabSocket = anchor,
-            reactionTiming = HitReactionData.CreateTiming(0, Mathf.Max(1, holdFrames), 0),
-            juggleLaunchScale = 1f,
-            juggleStunScale = 1f
-        }, anchor.position);
-        return true;
+        return hitReactionHandler != null && hitReactionHandler.ReleaseGrab(ownerId, anchor);
     }
 
     public bool MaintainGrab(int ownerId, Transform grabSocket, Vector2 grabOffset, int holdFrames, int recoveryFrames = 0)

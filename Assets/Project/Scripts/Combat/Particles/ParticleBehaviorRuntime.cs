@@ -130,30 +130,7 @@ public sealed class ParticleBehaviorRuntime
     {
         _pulseFlashUntil = Time.time + 0.18f;
         _pulseTargets.Clear();
-        int layerMask = _definition.volume.targetLayers.value;
-        if (layerMask == 0) layerMask = Physics2D.AllLayers;
-        Vector2 radii = ArtifactAreaGeometry.Radii(_definition.volume.radius, _definition.volume.verticalRadiusMultiplier);
-        bool stretched = radii.y > radii.x;
-        int count = stretched
-            ? Physics2D.OverlapBoxNonAlloc(center, radii * 2f, 0f, _overlapBuffer, layerMask)
-            : Physics2D.OverlapCircleNonAlloc(center, radii.x, _overlapBuffer, layerMask);
-        int cap = _definition.compatibility.targetCap > 0
-            ? _definition.compatibility.targetCap
-            : int.MaxValue;
-        for (int i = 0; i < count && _pulseTargets.Count < cap; i++)
-        {
-            Collider2D collider = _overlapBuffer[i];
-            if (collider == null) continue;
-            if (stretched && !ArtifactAreaGeometry.Overlaps(collider, center, radii)) continue;
-            EnemyController enemy = collider.GetComponentInParent<EnemyController>();
-            if (enemy != null && enemy.IsTargetable) _pulseTargets.Add(enemy);
-        }
-
-        if (_pulseTargets.Count == 0 && _anchorEnemy != null && _anchorEnemy.IsAlive
-            && (_anchorEnemy.bodyCollider == null || ArtifactAreaGeometry.Overlaps(_anchorEnemy.bodyCollider, center, radii)))
-        {
-            _pulseTargets.Add(_anchorEnemy);
-        }
+        CollectPulseTargets(center);
 
         ulong rootId = CombatEventHub.Shared.ReserveEventId();
         float confirmedDamage = 0f;
@@ -186,6 +163,40 @@ public sealed class ParticleBehaviorRuntime
             {
                 HealCharacters(healEffect, confirmedDamage);
             }
+        }
+    }
+
+    private void CollectPulseTargets(Vector2 center)
+    {
+        if (_definition.compatibility.restrictToAnchorEnemy)
+        {
+            if (_anchorEnemy != null && _anchorEnemy.IsTargetable) _pulseTargets.Add(_anchorEnemy);
+            return;
+        }
+
+        int layerMask = _definition.volume.targetLayers.value;
+        if (layerMask == 0) layerMask = Physics2D.AllLayers;
+        Vector2 radii = ArtifactAreaGeometry.Radii(_definition.volume.radius, _definition.volume.verticalRadiusMultiplier);
+        bool stretched = radii.y > radii.x;
+        int count = stretched
+            ? Physics2D.OverlapBoxNonAlloc(center, radii * 2f, 0f, _overlapBuffer, layerMask)
+            : Physics2D.OverlapCircleNonAlloc(center, radii.x, _overlapBuffer, layerMask);
+        int cap = _definition.compatibility.targetCap > 0
+            ? _definition.compatibility.targetCap
+            : int.MaxValue;
+        for (int i = 0; i < count && _pulseTargets.Count < cap; i++)
+        {
+            Collider2D collider = _overlapBuffer[i];
+            if (collider == null) continue;
+            if (stretched && !ArtifactAreaGeometry.Overlaps(collider, center, radii)) continue;
+            EnemyController enemy = collider.GetComponentInParent<EnemyController>();
+            if (enemy != null && enemy.IsTargetable) _pulseTargets.Add(enemy);
+        }
+
+        if (_pulseTargets.Count == 0 && _anchorEnemy != null && _anchorEnemy.IsAlive
+            && (_anchorEnemy.bodyCollider == null || ArtifactAreaGeometry.Overlaps(_anchorEnemy.bodyCollider, center, radii)))
+        {
+            _pulseTargets.Add(_anchorEnemy);
         }
     }
 

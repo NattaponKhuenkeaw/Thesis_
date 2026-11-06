@@ -35,6 +35,7 @@ namespace Project.Combat
         private bool adjustLayer;
         private Vector3 currentKeyScale = Vector3.one;
         private Vector3 currentKeyPositionOffset = Vector3.zero;
+        private bool ignoresHitstop;
 
         private static readonly int PlayStateHash = Animator.StringToHash("Play");
 
@@ -138,7 +139,8 @@ namespace Project.Combat
                 spriteRenderer.color = def.tint;
             }
 
-            animator.updateMode = def.obeyHitstop ? AnimatorUpdateMode.Normal : AnimatorUpdateMode.UnscaledTime;
+            ignoresHitstop = !def.obeyHitstop;
+            UpdateAnimatorClock();
 
             if (overrideController != null)
             {
@@ -169,19 +171,22 @@ namespace Project.Combat
                     UpdateTrajectory(elapsed);
                 }
 
-                if (animator.updateMode == AnimatorUpdateMode.UnscaledTime)
-                {
-                    yield return null;
-                    elapsed += Time.unscaledDeltaTime;
-                }
-                else
-                {
-                    yield return null;
-                    elapsed += Time.deltaTime;
-                }
+                yield return null;
+                elapsed += ignoresHitstop ? GameFreezeManager.GameplayUnscaledDeltaTime : Time.deltaTime;
             }
             
             OnAnimationComplete();
+        }
+
+        private void Update()
+        {
+            if (ignoresHitstop) UpdateAnimatorClock();
+        }
+
+        private void UpdateAnimatorClock()
+        {
+            animator.updateMode = ignoresHitstop && !GameFreezeManager.IsGameplayPaused
+                ? AnimatorUpdateMode.UnscaledTime : AnimatorUpdateMode.Normal;
         }
 
         private void LateUpdate()

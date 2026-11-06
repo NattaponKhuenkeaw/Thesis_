@@ -21,12 +21,6 @@ public sealed class ArtifactPassiveDiagnosticTests
     private CharacterObject charA;
     private CharacterObject charB;
 
-    [OneTimeSetUp]
-    public void OneTimeSetUp()
-    {
-        ArtifactPhase1AssetCreator.CreateOrUpdateApprovedAssets();
-    }
-
     [SetUp]
     public void SetUp()
     {

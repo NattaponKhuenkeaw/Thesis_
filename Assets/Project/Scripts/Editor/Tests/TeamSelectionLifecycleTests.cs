@@ -151,6 +151,44 @@ public class TeamSelectionLifecycleTests
     }
 
     [Test]
+    public void SwitchingBetweenTeamBuilderAndInspectorRetainsTheSharedPause()
+    {
+        var inspector = builder.InspectScreenUI;
+        Call(inspector, "Awake");
+        Time.timeScale = .35f;
+        int sortingOrder = shell.GetComponent<Canvas>().sortingOrder;
+
+        builder.OpenPanel();
+        inspector.Open(main);
+        Assert.That(Time.timeScale, Is.Zero);
+        Assert.That(InputLockManager.IsLocked, Is.True);
+
+        builder.OpenPanel();
+        Assert.That(Time.timeScale, Is.Zero);
+        inspector.Close();
+        Assert.That(shell.IsTeamBuilderOpen, Is.True);
+
+        builder.ClosePanel();
+        Assert.That(Time.timeScale, Is.EqualTo(.35f));
+        Assert.That(shell.GetComponent<Canvas>().sortingOrder, Is.EqualTo(sortingOrder));
+        Assert.That(InputLockManager.IsLocked, Is.EqualTo(locks > 0));
+    }
+
+    [Test]
+    public void ClosingWithoutEditsDoesNotRedeployTheActiveCharacter()
+    {
+        var loader = Loader(false);
+        Set(builder, "teamLoader", loader);
+        int teamChanges = 0;
+        loader.OnTeamChanged += () => teamChanges++;
+
+        builder.OpenPanel();
+        builder.ClosePanel();
+
+        Assert.That(teamChanges, Is.Zero);
+    }
+
+    [Test]
     public void DisablingAnOpenPanelReleasesItsPauseAndInputLock()
     {
         Set(builder, "teamLoader", Loader(false));

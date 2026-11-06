@@ -70,15 +70,17 @@ public readonly struct ActionStartedEvent
     public readonly string actionId;
     public readonly string actionName;
     public readonly AttackStepData stepData;
+    public readonly CombatExecutionContext execution;
 
     public ActionStartedEvent(CharacterObject sourceCharacter, AttackCategory category, string actionId,
-        string actionName, AttackStepData stepData)
+        string actionName, AttackStepData stepData, CombatExecutionContext execution = null)
     {
         this.sourceCharacter = sourceCharacter;
         this.category = category;
         this.actionId = actionId;
         this.actionName = actionName;
         this.stepData = stepData;
+        this.execution = execution;
     }
 }
 

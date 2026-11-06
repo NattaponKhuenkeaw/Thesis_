@@ -23,6 +23,8 @@ public class GameFreezeManager : MonoBehaviour
     }
 
     public static GameFreezeManager Instance { get; private set; }
+    private static int fallbackPauseHoldCount;
+    private static float fallbackResumeScale;
 
     private Coroutine freezeCoroutine;
     private Coroutine slowMotionCoroutine;
@@ -31,10 +33,43 @@ public class GameFreezeManager : MonoBehaviour
     private int activeScopedFreezeTokenId;
     private int pauseHoldCount;
     private float defaultFixedDeltaTime;
+    private float activeSlowMotionScale = 1f;
 
     public bool IsTimeFrozen => Time.timeScale <= 0f;
     public bool HasActiveScopedFreeze => activeScopedFreezeTokenId != 0;
-    public bool IsPauseHeld => pauseHoldCount > 0;
+    public bool IsPauseHeld => pauseHoldCount > 0 || fallbackPauseHoldCount > 0;
+    public static bool IsGameplayPaused => fallbackPauseHoldCount > 0 || (Instance != null && Instance.IsPauseHeld);
+    public static float GameplayUnscaledDeltaTime => IsGameplayPaused ? 0f : Time.unscaledDeltaTime;
+
+    public static Action AcquirePauseHold()
+    {
+        GameFreezeManager manager = Instance;
+        if (manager != null)
+        {
+            manager.BeginPauseHold();
+            return () => { if (manager != null) manager.EndPauseHold(); };
+        }
+
+        if (fallbackPauseHoldCount++ == 0) fallbackResumeScale = Time.timeScale;
+        Time.timeScale = 0f;
+        return ReleaseFallbackPauseHold;
+    }
+
+    private static void ReleaseFallbackPauseHold()
+    {
+        if (--fallbackPauseHoldCount != 0) return;
+        if (Instance != null) Instance.ApplyTimeScale();
+        else Time.timeScale = fallbackResumeScale;
+    }
+
+    public static IEnumerator WaitForGameplaySeconds(float seconds)
+    {
+        do
+        {
+            yield return null;
+            seconds -= GameplayUnscaledDeltaTime;
+        } while (seconds > 0f || IsGameplayPaused);
+    }
 
     private void Awake()
     {
@@ -73,7 +108,7 @@ public class GameFreezeManager : MonoBehaviour
         if (Instance == this)
         {
             // Ensure timeScale is restored if the manager is destroyed
-            Time.timeScale = 1f;
+            Time.timeScale = fallbackPauseHoldCount > 0 ? 0f : 1f;
             Time.fixedDeltaTime = defaultFixedDeltaTime > 0f ? defaultFixedDeltaTime : 0.02f;
             Instance = null;
         }
@@ -88,7 +123,7 @@ public class GameFreezeManager : MonoBehaviour
         if (frames <= 0) return;
         if (HasActiveScopedFreeze) return;
 
-        StopSlowMotion(false);
+        StopSlowMotion();
 
         // If a new freeze is requested, we take the maximum duration
         if (frames > currentFreezeFramesRemaining)
@@ -108,7 +143,7 @@ public class GameFreezeManager : MonoBehaviour
     public FreezeToken BeginScopedFreeze()
     {
         currentFreezeFramesRemaining = 0;
-        StopSlowMotion(false);
+        StopSlowMotion();
 
         if (freezeCoroutine != null)
         {
@@ -148,7 +183,7 @@ public class GameFreezeManager : MonoBehaviour
             return;
         }
 
-        StopSlowMotion(false);
+        StopSlowMotion();
 
         currentFreezeFramesRemaining = frames;
 
@@ -165,16 +200,11 @@ public class GameFreezeManager : MonoBehaviour
     {
         Time.timeScale = 0f;
 
-        // Use WaitForSecondsRealtime because Time.timeScale is 0
-        yield return new WaitForSecondsRealtime(seconds);
+        yield return WaitForGameplaySeconds(seconds);
 
         currentFreezeFramesRemaining = 0;
         freezeCoroutine = null;
-        if (!IsPauseHeld && !HasActiveScopedFreeze)
-        {
-            Time.timeScale = 1f;
-            Time.fixedDeltaTime = defaultFixedDeltaTime;
-        }
+        ApplyTimeScale();
 
         onComplete?.Invoke();
     }
@@ -182,32 +212,14 @@ public class GameFreezeManager : MonoBehaviour
     public void BeginPauseHold()
     {
         pauseHoldCount++;
-        StopSlowMotion(false);
-        if (freezeCoroutine != null)
-        {
-            StopCoroutine(freezeCoroutine);
-            freezeCoroutine = null;
-            currentFreezeFramesRemaining = 0;
-        }
-
-        Time.timeScale = 0f;
+        ApplyTimeScale();
     }
 
     public void EndPauseHold()
     {
-        if (pauseHoldCount > 0)
-        {
-            pauseHoldCount--;
-        }
-
-        if (IsPauseHeld || HasActiveScopedFreeze)
-        {
-            Time.timeScale = 0f;
-            return;
-        }
-
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = defaultFixedDeltaTime > 0f ? defaultFixedDeltaTime : 0.02f;
+        if (pauseHoldCount == 0) return;
+        pauseHoldCount--;
+        ApplyTimeScale();
     }
 
     public void PlaySlowMotion(float timeScale, float duration, float delaySeconds = 0f)
@@ -216,6 +228,8 @@ public class GameFreezeManager : MonoBehaviour
         {
             return;
         }
+
+        if (delaySeconds <= 0f && !IsPauseHeld && IsTimeFrozen) return;
 
         if (slowMotionCoroutine != null)
         {
@@ -232,7 +246,11 @@ public class GameFreezeManager : MonoBehaviour
     {
         if (delaySeconds > 0f)
         {
-            yield return new WaitForSecondsRealtime(delaySeconds);
+            yield return WaitForGameplaySeconds(delaySeconds);
+        }
+        else if (IsPauseHeld)
+        {
+            yield return WaitForGameplaySeconds(0f);
         }
 
         if (HasActiveScopedFreeze || IsTimeFrozen)
@@ -241,18 +259,14 @@ public class GameFreezeManager : MonoBehaviour
             yield break;
         }
 
-        Time.timeScale = timeScale;
-        Time.fixedDeltaTime = defaultFixedDeltaTime * timeScale;
+        activeSlowMotionScale = timeScale;
+        ApplyTimeScale();
 
-        yield return new WaitForSecondsRealtime(duration);
-
-        if (!HasActiveScopedFreeze && !IsTimeFrozen)
-        {
-            Time.timeScale = 1f;
-            Time.fixedDeltaTime = defaultFixedDeltaTime;
-        }
+        yield return WaitForGameplaySeconds(duration);
 
         slowMotionCoroutine = null;
+        activeSlowMotionScale = 1f;
+        ApplyTimeScale();
     }
 
     /// <summary>
@@ -266,20 +280,25 @@ public class GameFreezeManager : MonoBehaviour
             freezeCoroutine = null;
         }
 
-        StopSlowMotion(false);
+        StopSlowMotion();
         currentFreezeFramesRemaining = 0;
         activeScopedFreezeTokenId = 0;
-        if (IsPauseHeld)
+        ApplyTimeScale();
+    }
+
+    private void ApplyTimeScale()
+    {
+        if (IsPauseHeld || HasActiveScopedFreeze || freezeCoroutine != null)
         {
             Time.timeScale = 0f;
             return;
         }
 
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = defaultFixedDeltaTime;
+        Time.timeScale = activeSlowMotionScale;
+        Time.fixedDeltaTime = defaultFixedDeltaTime * activeSlowMotionScale;
     }
 
-    private void StopSlowMotion(bool restoreTimeScale)
+    private void StopSlowMotion()
     {
         if (slowMotionCoroutine != null)
         {
@@ -287,10 +306,6 @@ public class GameFreezeManager : MonoBehaviour
             slowMotionCoroutine = null;
         }
 
-        if (restoreTimeScale)
-        {
-            Time.timeScale = 1f;
-            Time.fixedDeltaTime = defaultFixedDeltaTime;
-        }
+        activeSlowMotionScale = 1f;
     }
 }

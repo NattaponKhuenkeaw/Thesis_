@@ -66,7 +66,7 @@ public class PlayerAnimator : MonoBehaviour
 
     void Update()
     {
-        if (movement == null || anim == null || rb == null)
+        if (movement == null || anim == null || rb == null || GameFreezeManager.IsGameplayPaused)
             return;
 
         // Standard locomotion parameters

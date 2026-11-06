@@ -164,4 +164,73 @@ MonoBehaviour:
     - 20
     - 35
     - 30
+  rarityProfiles:
+  - rarity: 1
+    amountBands:
+    - normalizedMin: 0
+      normalizedMax: 0.2
+      weight: 70
+    - normalizedMin: 0.2
+      normalizedMax: 0.4
+      weight: 25
+    - normalizedMin: 0.4
+      normalizedMax: 0.6
+      weight: 5
+    - normalizedMin: 0.6
+      normalizedMax: 0.8
+      weight: 0
+    - normalizedMin: 0.8
+      normalizedMax: 1
+      weight: 0
+    lineCountWeights:
+    - 100
+  - rarity: 2
+    amountBands:
+    - normalizedMin: 0
+      normalizedMax: 0.2
+      weight: 35
+    - normalizedMin: 0.2
+      normalizedMax: 0.4
+      weight: 30
+    - normalizedMin: 0.4
+      normalizedMax: 0.6
+      weight: 20
+    - normalizedMin: 0.6
+      normalizedMax: 0.8
+      weight: 10
+    - normalizedMin: 0.8
+      normalizedMax: 1
+      weight: 5
+    lineCountWeights:
+    - 65
+    - 35
+  - rarity: 3
+    amountBands:
+    - normalizedMin: 0
+      normalizedMax: 0.2
+      weight: 5
+    - normalizedMin: 0.2
+      normalizedMax: 0.4
+      weight: 10
+    - normalizedMin: 0.4
+      normalizedMax: 0.6
+      weight: 25
+    - normalizedMin: 0.6
+      normalizedMax: 0.8
+      weight: 35
+    - normalizedMin: 0.8
+      normalizedMax: 1
+      weight: 25
+    lineCountWeights:
+    - 15
+    - 20
+    - 35
+    - 30
+  phaseRarityWeights:
+  - shopWeights: {x: 90, y: 10, z: 0}
+    hardRewardWeights: {x: 100, y: 0}
+  - shopWeights: {x: 55, y: 45, z: 0}
+    hardRewardWeights: {x: 70, y: 30}
+  - shopWeights: {x: 25, y: 45, z: 30}
+    hardRewardWeights: {x: 35, y: 65}
 

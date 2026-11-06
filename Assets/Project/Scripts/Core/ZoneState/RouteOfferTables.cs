@@ -35,6 +35,15 @@ namespace Project.Core.ZoneState
             public List<EnemyEntry> enemyPool = new List<EnemyEntry>();
         }
 
+        [Serializable]
+        public struct HardRewardPattern
+        {
+            [Min(0f)] public float weight;
+            [Min(0)] public int artifactPulls;
+            [Min(0)] public int minSoul;
+            [Min(0)] public int maxSoul;
+        }
+
         [Header("Spawn")]
         [SerializeField, Min(1)] private int defaultSpawnSlotCount = 3;
         [SerializeField, Min(0f)] private float delayBetweenWaves = 1.25f;
@@ -45,6 +54,7 @@ namespace Project.Core.ZoneState
 
         [Header("Difficulty Profiles")]
         [SerializeField] private List<DifficultyProfile> profiles = new List<DifficultyProfile>();
+        [SerializeField] private List<HardRewardPattern> hardRewardPatterns = new List<HardRewardPattern>();
 
         [Header("Artifact Pool (optional — empty loads Resources/ItemSO Artifacts)")]
         [SerializeField] private List<Artifact> artifactPool = new List<Artifact>();
@@ -55,6 +65,7 @@ namespace Project.Core.ZoneState
         public float SpawnInterval => Mathf.Max(0f, spawnInterval);
         public bool GrantArtifacts => grantArtifacts;
         public IReadOnlyList<DifficultyProfile> Profiles => profiles;
+        public IReadOnlyList<HardRewardPattern> HardRewardPatterns => hardRewardPatterns;
 
         public DifficultyProfile GetProfile(RouteDifficulty difficulty)
         {

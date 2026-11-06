@@ -188,6 +188,73 @@ public class ScreenImpulseCameraTests
         yield return new ExitPlayMode();
     }
 
+    [UnityTest]
+    public IEnumerator MenuPauseSuspendsDelayedSlowMotionAndActionFreeze()
+    {
+        yield return new EnterPlayMode();
+        var freeze = GameFreezeManager.Instance;
+        GameObject host = null;
+        if (freeze == null)
+        {
+            host = new GameObject("Menu Pause Test Clock");
+            freeze = host.AddComponent<GameFreezeManager>();
+        }
+
+        float normalStep = Time.fixedDeltaTime;
+        int holds = 0;
+        try
+        {
+            freeze.PlaySlowMotion(.25f, .2f, .1f);
+            freeze.BeginPauseHold(); holds++;
+            yield return new WaitForSecondsRealtime(.4f);
+            Assert.That(Time.timeScale, Is.Zero);
+
+            freeze.EndPauseHold(); holds--;
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+            float deadline = Time.realtimeSinceStartup + 1f;
+            while (Time.timeScale == 1f && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(Time.timeScale, Is.EqualTo(.25f));
+
+            freeze.BeginPauseHold(); holds++;
+            freeze.BeginPauseHold(); holds++;
+            yield return new WaitForSecondsRealtime(.4f);
+            freeze.EndPauseHold(); holds--;
+            Assert.That(Time.timeScale, Is.Zero);
+            freeze.EndPauseHold(); holds--;
+            Assert.That(Time.timeScale, Is.EqualTo(.25f));
+            Assert.That(Time.fixedDeltaTime, Is.EqualTo(normalStep * .25f).Within(.000001f));
+            yield return new WaitForSecondsRealtime(.4f);
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+
+            var scopedFreeze = freeze.BeginScopedFreeze();
+            freeze.BeginPauseHold(); holds++;
+            Assert.That(GameFreezeManager.GameplayUnscaledDeltaTime, Is.Zero);
+            freeze.EndPauseHold(); holds--;
+            Assert.That(freeze.OwnsScopedFreeze(scopedFreeze), Is.True);
+            Assert.That(Time.timeScale, Is.Zero);
+            Assert.That(freeze.EndScopedFreeze(scopedFreeze), Is.True);
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+
+            bool freezeCompleted = false;
+            freeze.UltimateFreeze(12, () => freezeCompleted = true);
+            freeze.BeginPauseHold(); holds++;
+            yield return new WaitForSecondsRealtime(.4f);
+            Assert.That(freezeCompleted, Is.False);
+            freeze.EndPauseHold(); holds--;
+            Assert.That(Time.timeScale, Is.Zero);
+            yield return new WaitForSecondsRealtime(.4f);
+            Assert.That(freezeCompleted, Is.True);
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+        }
+        finally
+        {
+            while (holds-- > 0) freeze.EndPauseHold();
+            freeze.RestoreTime();
+            if (host != null) Object.DestroyImmediate(host);
+        }
+        yield return new ExitPlayMode();
+    }
+
     [Test]
     public void CameraEnvelopeCutsHoldsAndReturns()
     {

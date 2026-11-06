@@ -572,9 +572,9 @@ public partial class GameAudioManager : MonoBehaviour
 
     private IEnumerator PlayUnscaledDelayed(AudioClip clip, float delayRealtime, bool isVoice, float volume = 1f)
     {
-        if (delayRealtime > 0f)
+        if (delayRealtime > 0f || GameFreezeManager.IsGameplayPaused)
         {
-            yield return new WaitForSecondsRealtime(delayRealtime);
+            yield return GameFreezeManager.WaitForGameplaySeconds(delayRealtime);
         }
 
         if (isVoice)
@@ -586,8 +586,7 @@ public partial class GameAudioManager : MonoBehaviour
             voiceSource.pitch = 1f;
             voiceSource.ignoreListenerPause = true; // PLAY THROUGH FREEZE
             voiceSource.Play();
-            
-            // Note: voiceSource doesn't need to be returned to pool
+            TrackActionAudio(voiceSource, 1f, false, true);
         }
         else
         {
@@ -598,9 +597,7 @@ public partial class GameAudioManager : MonoBehaviour
             src.ignoreListenerPause = true; // PLAY THROUGH FREEZE
             src.Play();
 
-            // Can't use normal ReturnSourceRoutine since time scale is 0. 
-            // Return after unscaled realtime.
-            StartCoroutine(ReturnSourceUnscaledRoutine(src, clip.length));
+            TrackActionAudio(src, 1f, false, false);
         }
     }
 
@@ -610,9 +607,4 @@ public partial class GameAudioManager : MonoBehaviour
         ReturnSource(src);
     }
 
-    private IEnumerator ReturnSourceUnscaledRoutine(AudioSource src, float delay)
-    {
-        yield return new WaitForSecondsRealtime(delay);
-        ReturnSource(src);
-    }
 }

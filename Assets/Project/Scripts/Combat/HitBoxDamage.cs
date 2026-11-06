@@ -206,6 +206,8 @@ public class HitBoxDamage : MonoBehaviour
         HitReactionData reactionData = currentGrabHitbox != null
             ? BuildGrabReactionData(direction)
             : BuildReactionData(enemy, direction);
+        if (currentNormalHitbox != null && currentGrabHitbox == null && projectileOwner == null)
+            playerCombat?.PrepareDashHitAnchor(this, enemy, ref reactionData);
 
         ProjectileData grabProjectile = projectileOwner != null ? projectileOwner.ProjectileData : null;
         if (reactionData.reactionKind == EnemyReactionKind.Grab

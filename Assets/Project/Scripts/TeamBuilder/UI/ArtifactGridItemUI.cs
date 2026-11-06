@@ -13,7 +13,7 @@ namespace Project.TeamBuilder.UI
     /// Equipped ArtifactSlotUI items remain the only draggable Artifact UI.
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
-    public class ArtifactGridItemUI : MonoBehaviour, IPointerClickHandler
+    public class ArtifactGridItemUI : MonoBehaviour, IPointerClickHandler, ISubmitHandler
     {
         // =========================================================
         // UI References
@@ -28,6 +28,7 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private GameObject favouriteBadge;
         [SerializeField] private GameObject newBadge;
         [SerializeField] private TMP_Text rollSummaryText;
+        [SerializeField] private GameObject[] rarityStars;
 
         [Header("Visual States")]
         [SerializeField] private Color normalFrameColor = new Color(0.8f, 0.7f, 0.4f, 1f);
@@ -44,6 +45,7 @@ namespace Project.TeamBuilder.UI
         private float lastClickTime = float.NegativeInfinity;
         private bool isEquipped;
         private bool isSelected;
+        private Color rarityFrameColor;
 
         public void SetSelected(bool selected)
         {
@@ -55,6 +57,7 @@ namespace Project.TeamBuilder.UI
         // Event for preview and double-click to equip
         public event Action<ArtifactInstance> OnClicked;
         public event Action<ArtifactInstance> OnDoubleClicked;
+        public event Action<ArtifactGridItemUI, Vector2, Camera> OnContextRequested;
 
         // =========================================================
         // Properties
@@ -80,24 +83,18 @@ namespace Project.TeamBuilder.UI
 
             if (artifact != null)
             {
+                ApplyRarity();
                 if (iconImage != null && definition != null && definition.icon != null)
                     iconImage.sprite = definition.icon;
 
                 RefreshName();
 
                 string quality = ArtifactRollQuality.TryGetAverageQuality(artifact, rollTable, out float quality01)
-                    ? $"Q • {quality01 * 100f:0.##}"
-                    : "Q —";
-                int visibleLineCount = 0;
-                if (artifact.rolls != null)
-                {
-                    for (int i = 0; i < artifact.rolls.Count; i++)
-                        if (ArtifactStatCatalog.IsPlayerVisible(artifact.rolls[i].statKind)) visibleLineCount++;
-                }
-                string summary = $"{quality}";
-                currentSummary = summary;
+                    ? $"Q {quality01 * 100f:0.##}"
+                    : "Q -";
+                currentSummary = quality;
                 if (rollSummaryText != null)
-                    rollSummaryText.text = summary;
+                    rollSummaryText.text = quality;
                 RefreshName();
 
                 if (favouriteBadge != null)
@@ -107,6 +104,28 @@ namespace Project.TeamBuilder.UI
             }
 
             SetEquippedState(alreadyEquipped);
+        }
+
+        private void ApplyRarity()
+        {
+            favouriteBadge ??= transform.Find("FavouriteBadge")?.gameObject;
+            newBadge ??= transform.Find("NewBadge")?.gameObject;
+            if (rarityStars == null || rarityStars.Length == 0)
+            {
+                rarityStars = new GameObject[3];
+                for (int i = 0; i < rarityStars.Length; i++)
+                    rarityStars[i] = transform.Find($"RarityStar{i + 1}")?.gameObject;
+            }
+            ArtifactRarity rarity = artifactDefinition != null ? artifactDefinition.rarity : ArtifactRarity.Unassigned;
+            rarityFrameColor = rarity switch
+            {
+                ArtifactRarity.SR => new Color32(110, 205, 139, 255),
+                ArtifactRarity.SSR => new Color32(181, 118, 245, 255),
+                ArtifactRarity.R => new Color32(223, 228, 242, 255),
+                _ => normalFrameColor
+            };
+            for (int i = 0; i < rarityStars.Length; i++)
+                if (rarityStars[i] != null) rarityStars[i].SetActive(i < (int)rarity);
         }
 
         public void SetFavouriteState(bool favourite)
@@ -127,12 +146,9 @@ namespace Project.TeamBuilder.UI
         {
             if (nameText == null || artifactData == null) return;
             string displayName = artifactDefinition != null ? artifactDefinition.itemName : artifactData.definitionId;
-            string prefix = artifactData.isNew
-                ? (artifactData.isFavourite ? "NEW ★ " : "NEW ")
-                : (artifactData.isFavourite ? "★ " : string.Empty);
             nameText.text = rollSummaryText == null && !string.IsNullOrEmpty(currentSummary)
-                ? $"{prefix}{displayName}\n{currentSummary}"
-                : $"{prefix}{displayName}";
+                ? $"{displayName}\n{currentSummary}"
+                : displayName;
         }
 
         /// <summary>
@@ -153,7 +169,7 @@ namespace Project.TeamBuilder.UI
             else
             {
                 canvasGroup.alpha = 1f;
-                if (frameImage != null) frameImage.color = normalFrameColor;
+                if (frameImage != null) frameImage.color = artifactDefinition != null ? rarityFrameColor : normalFrameColor;
                 if (equippedBadge != null) equippedBadge.SetActive(false);
             }
             if (isSelected)
@@ -168,6 +184,11 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                OnContextRequested?.Invoke(this, eventData.position, eventData.pressEventCamera);
+                return;
+            }
             if (eventData.button == PointerEventData.InputButton.Left)
             {
                 float timeSinceLast = Time.unscaledTime - lastClickTime;
@@ -180,6 +201,11 @@ namespace Project.TeamBuilder.UI
                     OnDoubleClicked?.Invoke(artifactData);
                 }
             }
+        }
+
+        public void OnSubmit(BaseEventData eventData)
+        {
+            OnClicked?.Invoke(artifactData);
         }
     }
 }

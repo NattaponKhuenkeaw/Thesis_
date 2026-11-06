@@ -15,5 +15,6 @@ public sealed class ModifyArtifactStateResponseDefinition : ArtifactPassiveRespo
 {
     public ArtifactStateOperation operation;
     public int amount = 1;
+    public string storedTargetEffectKey = "P1-A04-MARK-INJURY";
 }
 

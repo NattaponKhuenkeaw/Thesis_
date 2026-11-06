@@ -436,6 +436,16 @@ namespace Project.ShopSystem
             int? seedOverride = null,
             int? biomeIndexOverride = null)
         {
+            return TryAcquireArtifact(definition, 0, out instance, seedOverride, biomeIndexOverride);
+        }
+
+        public bool TryAcquireArtifact(
+            ArtifactDefinition definition,
+            int soulPrice,
+            out ArtifactInstance instance,
+            int? seedOverride = null,
+            int? biomeIndexOverride = null)
+        {
             instance = null;
             if (definition == null || string.IsNullOrWhiteSpace(definition.id))
             {
@@ -443,22 +453,45 @@ namespace Project.ShopSystem
             }
 
             EnsureRunData();
+            if (soulPrice < 0 || !CanAfford(soulPrice)) return false;
             int seed = seedOverride ?? UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             int activeBiome = biomeIndexOverride
                 ?? (Project.Core.ZoneState.RunProgressionManager.Instance != null
                     ? Project.Core.ZoneState.RunProgressionManager.Instance.CurrentBiomeIndex
                     : 0);
             ArtifactRollGenerator generator = new ArtifactRollGenerator(ArtifactRollTable);
-            instance = generator.Generate(definition, nextArtifactAcquisitionOrder++, seed, activeBiome);
-            if (!TryAddArtifactInstanceInternal(instance))
+            ArtifactInstance prepared = generator.Generate(definition, 0, seed, activeBiome);
+            return TryCommitArtifact(prepared, soulPrice, out instance);
+        }
+
+        public bool TryCommitArtifact(ArtifactInstance prepared, int soulPrice, out ArtifactInstance instance)
+        {
+            instance = null;
+            if (prepared == null || prepared.rolls == null || prepared.rolls.Count == 0 || soulPrice < 0)
+                return false;
+
+            EnsureRunData();
+            if (!CanAfford(soulPrice)) return false;
+
+            ArtifactInstance acquired = prepared.Clone();
+            acquired.acquisitionOrder = nextArtifactAcquisitionOrder;
+            acquired.collectedTimestampUtc = DateTime.UtcNow.Ticks;
+            if (!TryAddArtifactInstanceInternal(acquired))
             {
-                instance = null;
                 return false;
             }
 
+            currency -= soulPrice;
+            instance = acquired;
             SavePersistentState();
+            if (soulPrice > 0) NotifyCurrencyChanged();
             NotifyArtifactsChanged();
             return true;
+        }
+
+        public void ApplyArtifactStats(CharacterStats stats, CharacterStats cleanBase, IReadOnlyList<ArtifactInstance> instances)
+        {
+            ArtifactStatAggregator.Apply(stats, cleanBase, instances, ResolveArtifactDefinition);
         }
 
         public bool TryGetArtifactInstance(string instanceId, out ArtifactInstance instance)
@@ -1959,7 +1992,7 @@ namespace Project.ShopSystem
             {
                 ArtifactInstance[] artifacts = GetEquippedArtifactInstancesAt(slotIndex);
                 CharacterStats artifactBaseStats = stats.Clone();
-                ArtifactStatAggregator.Apply(stats, artifactBaseStats, artifacts);
+                ApplyArtifactStats(stats, artifactBaseStats, artifacts);
             }
             // Live source-stat formulas may form a cross-character dependency cycle
             // (for example, A reads B's current stats while B reads A's). Keep the

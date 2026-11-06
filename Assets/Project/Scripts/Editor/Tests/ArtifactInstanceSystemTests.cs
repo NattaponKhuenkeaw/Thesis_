@@ -1,7 +1,10 @@
 #if UNITY_INCLUDE_TESTS
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
+using Project.Core.ZoneState;
 using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
@@ -10,6 +13,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.EventSystems;
 using Project.TeamBuilder.UI;
+using Project.UI;
 
 public class ArtifactInstanceSystemTests
 {
@@ -81,6 +85,210 @@ public class ArtifactInstanceSystemTests
         }
 
         Assert.That(foundDuplicate, Is.True, "Stat selection must be with replacement.");
+    }
+
+    [Test]
+    public void AuthoredRarityProfilesLimitEarlyPowerWithoutChangingStatUnits()
+    {
+        ArtifactRollTable authored = Resources.Load<ArtifactRollTable>("ItemSO/Artifacts/ArtifactRollTable");
+        var generator = new ArtifactRollGenerator(authored);
+        definition.rarity = ArtifactRarity.R;
+        definition.fixedStatBonus = new ArtifactRoll(ArtifactStatKind.AttackPercent, 500, ArtifactRollSource.Generated);
+        ArtifactInstance first = generator.Generate(definition, 0, 10, 2, "first");
+        ArtifactInstance repeat = generator.Generate(definition, 0, 10, 0, "repeat");
+        Assert.That(first.rolls.Count, Is.EqualTo(1));
+        Assert.That(first.rolls[0].statKind, Is.EqualTo(repeat.rolls[0].statKind));
+        Assert.That(first.rolls[0].valueUnits, Is.EqualTo(repeat.rolls[0].valueUnits));
+        ArtifactInstance fallback = new ArtifactRollGenerator(table).Generate(definition, 0, 10, 2, "fallback");
+        Assert.That(fallback.rolls, Is.EqualTo(first.rolls), "Inventory fallback must respect the same rarity profile.");
+        Assert.That(ArtifactRollQuality.TryGetAverageQuality(first, authored, out float quality), Is.True);
+        Assert.That(quality, Is.LessThanOrEqualTo(.61f));
+
+        first.rolls.Clear();
+        first.rolls.Add(new ArtifactRoll(ArtifactStatKind.AttackPercent, 700, ArtifactRollSource.Generated));
+        CharacterStats cleanBase = new CharacterStats { attack = 100 };
+        CharacterStats result = cleanBase.Clone();
+        ArtifactStatAggregator.Apply(result, cleanBase, new[] { first }, _ => definition);
+        Assert.That(result.attack, Is.EqualTo(112f).Within(.001f));
+    }
+
+    [Test]
+    public void PreparedArtifactCommitChargesOnceAndPreservesTheSelectedRolls()
+    {
+        var inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        try
+        {
+            var generator = new ArtifactRollGenerator(table);
+            ArtifactInstance prepared = generator.Generate(definition, 0, 15, "selected-copy");
+            inventory.currency = 100;
+            Assert.That(inventory.TryCommitArtifact(prepared, 40, out ArtifactInstance acquired), Is.True);
+            Assert.That(inventory.currency, Is.EqualTo(60));
+            Assert.That(acquired.instanceId, Is.EqualTo(prepared.instanceId));
+            Assert.That(acquired.rolls, Is.EqualTo(prepared.rolls));
+            Assert.That(inventory.TryCommitArtifact(prepared, 40, out _), Is.False);
+            Assert.That(inventory.currency, Is.EqualTo(60));
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void ClearingStateRejectsACompletionFromAnEarlierVisit()
+    {
+        var clearing = ScriptableObject.CreateInstance<ZoneStateProvider>();
+        try
+        {
+            clearing.BeginVisit();
+            int firstVisit = clearing.Visit;
+            Assert.That(clearing.SetClearing(firstVisit, ClearingState.RewardPending), Is.True);
+            Assert.That(clearing.AccessMode, Is.EqualTo(ZoneMode.CombatZone));
+            clearing.BeginVisit();
+            Assert.That(clearing.SetClearing(firstVisit, ClearingState.Accessible), Is.False);
+            Assert.That(clearing.SetClearing(clearing.Visit, ClearingState.Accessible), Is.True);
+            Assert.That(clearing.AccessMode, Is.EqualTo(ZoneMode.SafeZone));
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(clearing);
+        }
+    }
+
+    [Test]
+    public void RewardPrefabsAndAuthoredRarityCatalogResolve()
+    {
+        var counts = new Dictionary<ArtifactRarity, int>();
+        var ids = new HashSet<string>();
+        foreach (ArtifactDefinition item in Resources.LoadAll<ArtifactDefinition>("ItemSO/Artifacts"))
+        {
+            if (item.rarity == ArtifactRarity.Unassigned) continue;
+            Assert.That(ids.Add(item.id), Is.True, $"Duplicate Artifact ID {item.id}");
+            counts.TryGetValue(item.rarity, out int count);
+            counts[item.rarity] = count + 1;
+            if (item.rarity != ArtifactRarity.R)
+            {
+                Assert.That(item.passiveSet, Is.Not.Null, item.id);
+                Assert.That(item.passiveSet.rules, Is.Not.Empty, item.id);
+                foreach (ArtifactPassiveRuleDefinition rule in item.passiveSet.rules)
+                {
+                    Assert.That(rule.responses, Is.Not.Empty, item.id);
+                    foreach (ArtifactPassiveResponseDefinition response in rule.responses)
+                        Assert.That(response, Is.Not.Null, item.id);
+                }
+            }
+        }
+        Assert.That(counts[ArtifactRarity.R], Is.EqualTo(10));
+        Assert.That(counts[ArtifactRarity.SR], Is.EqualTo(8));
+        Assert.That(counts[ArtifactRarity.SSR], Is.EqualTo(9));
+        var picker = Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath);
+        Assert.That(picker, Is.Not.Null);
+        Assert.That(picker.IsConfigured, Is.True);
+        Assert.That(picker.transform.Find("Card3/RarityStar3"), Is.Not.Null);
+        Assert.That(Resources.Load<ArtifactCopyMenuUI>(ArtifactCopyMenuUI.MenuPath), Is.Not.Null);
+        Assert.That(Resources.Load<ArtifactCopyMenuUI>(ArtifactCopyMenuUI.DialogPath), Is.Not.Null);
+        var tile = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/TeamArtifactInventoryCard.prefab");
+        Assert.That(tile.transform.Find("FavouriteBadge"), Is.Not.Null);
+        Assert.That(tile.transform.Find("NewBadge"), Is.Not.Null);
+    }
+
+    [Test]
+    public void HardOffersPreviewTheSameTotalAndPullCountThatTheRoomReceives()
+    {
+        var room = Resources.Load<RoomData>("MapSO/RoomData_Combat_01");
+        Assert.That(room, Is.Not.Null);
+        UnityEngine.Random.State originalRandom = UnityEngine.Random.state;
+        var pullCounts = new HashSet<int>();
+        try
+        {
+            UnityEngine.Random.InitState(15273);
+            for (int i = 0; i < 128 && pullCounts.Count < 3; i++)
+            {
+                RoomChoiceOffer offer = RouteOfferGenerator.BuildOffer(room);
+                if (offer.Difficulty != RouteDifficulty.Hard) continue;
+                Assert.That(offer.Reward.IncludesBasePayout, Is.True);
+                pullCounts.Add(offer.Reward.ArtifactPulls);
+                switch (offer.Reward.ArtifactPulls)
+                {
+                    case 0: Assert.That(offer.Reward.Coins, Is.InRange(300, 400)); break;
+                    case 1: Assert.That(offer.Reward.Coins, Is.InRange(180, 280)); break;
+                    case 2: Assert.That(offer.Reward.Coins, Is.Zero); break;
+                    default: Assert.Fail("Unexpected Hard reward pattern."); break;
+                }
+            }
+        }
+        finally
+        {
+            UnityEngine.Random.state = originalRandom;
+        }
+        CollectionAssert.AreEquivalent(new[] { 0, 1, 2 }, pullCounts);
+    }
+
+    [Test]
+    public void RewardPickerConfirmsTheDisplayedCopyOnceAndKeepsTheOtherChoicesUnowned()
+    {
+        var inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        var picker = UnityEngine.Object.Instantiate(Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath));
+        try
+        {
+            ArtifactDefinition common = Resources.Load<ArtifactDefinition>("ItemSO/Artifacts/RarityR/R_RustedOathRing");
+            var generator = new ArtifactRollGenerator(inventory.ArtifactRollTable);
+            var choices = new ArtifactInstance[3];
+            for (int i = 0; i < choices.Length; i++)
+                choices[i] = generator.Generate(common, 0, 100 + i, 0, $"candidate-{i}");
+
+            int calls = 0;
+            IEnumerator presentation = picker.Present(choices, inventory, 1, 2, choice =>
+            {
+                calls++;
+                return inventory.TryCommitArtifact(choices[choice], 0, out _);
+            });
+            Assert.That(presentation.MoveNext(), Is.True);
+            Assert.That(picker.transform.Find("Card2/Title").GetComponent<TMPro.TMP_Text>().text, Is.EqualTo(common.itemName));
+            picker.GetComponent<CanvasGroup>().interactable = true;
+            picker.transform.Find("Card2").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            var confirm = picker.transform.Find("Confirm").GetComponent<UnityEngine.UI.Button>();
+            confirm.onClick.Invoke();
+            confirm.onClick.Invoke();
+            Assert.That(calls, Is.EqualTo(1));
+            Assert.That(inventory.TryGetArtifactInstance("candidate-1", out ArtifactInstance claimed), Is.True);
+            Assert.That(claimed.rolls, Is.EqualTo(choices[1].rolls));
+            Assert.That(inventory.TryGetArtifactInstance("candidate-0", out _), Is.False);
+            Assert.That(inventory.TryGetArtifactInstance("candidate-2", out _), Is.False);
+            Assert.That(picker.transform.Find("Card2/RarityStar2").gameObject.activeSelf, Is.False);
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(picker.gameObject);
+            UnityEngine.Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void DiscardDeletesOnlyTheTargetedCopyAndRejectsAStaleTarget()
+    {
+        var inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        var host = new GameObject("DiscardValidation");
+        try
+        {
+            inventory.TryAcquireArtifact(definition, out ArtifactInstance first, 1);
+            inventory.TryAcquireArtifact(definition, out ArtifactInstance second, 2);
+            host.SetActive(false);
+            var panel = host.AddComponent<ArtifactGridPanel>();
+            typeof(ArtifactGridPanel).GetField("playerInventory", BindingFlags.NonPublic | BindingFlags.Instance)
+                .SetValue(panel, inventory);
+            host.SetActive(true);
+            MethodInfo discard = typeof(ArtifactGridPanel).GetMethod("Discard", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.That((bool)discard.Invoke(panel, new object[] { first.instanceId }), Is.True);
+            Assert.That(inventory.TryGetArtifactInstance(first.instanceId, out _), Is.False);
+            Assert.That(inventory.TryGetArtifactInstance(second.instanceId, out _), Is.True);
+            Assert.That((bool)discard.Invoke(panel, new object[] { first.instanceId }), Is.False);
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(host);
+            UnityEngine.Object.DestroyImmediate(inventory);
+        }
     }
 
     [TestCase(0.10f, 0.00f, 0.20f)]
@@ -340,19 +548,20 @@ public class ArtifactInstanceSystemTests
     [Test]
     public void AllNineAuthoredArtifactsMigrateWithoutChangingStats()
     {
-        string[] guids = AssetDatabase.FindAssets("t:Artifact", new[] { "Assets/Project/Resources/ItemSO" });
+        string[] guids = AssetDatabase.FindAssets("t:ArtifactDefinition",
+            new[] { "Assets/Project/Resources/ItemSO/Artifacts/Phase1" });
         Assert.That(guids.Length, Is.EqualTo(9));
 
         for (int i = 0; i < guids.Length; i++)
         {
-            Artifact artifact = AssetDatabase.LoadAssetAtPath<Artifact>(AssetDatabase.GUIDToAssetPath(guids[i]));
+            ArtifactDefinition artifact = AssetDatabase.LoadAssetAtPath<ArtifactDefinition>(AssetDatabase.GUIDToAssetPath(guids[i]));
             Assert.That(artifact, Is.Not.Null);
             CharacterStats cleanBase = new CharacterStats { maxHP = 1000f, attack = 100f, defense = 100f };
             CharacterStats expected = cleanBase.Clone();
-            expected.ApplyArtifactBonuses(cleanBase, artifact.bonusStats);
+            expected.ApplyArtifactBonuses(cleanBase, artifact.LegacyBonusStats);
             // SPD is now system-only, so the shared buildable-stat helper intentionally omits it.
             // Legacy Artifact a4 authored a hidden -1 SPD modifier and the importer must preserve it exactly.
-            expected.speed += artifact.bonusStats != null ? artifact.bonusStats.speed : 0f;
+            expected.speed += artifact.LegacyBonusStats != null ? artifact.LegacyBonusStats.speed : 0f;
             CharacterStats migrated = cleanBase.Clone();
             ArtifactInstance instance = ArtifactLegacyImporter.Create(artifact, i, $"legacy-{i}");
             ArtifactStatAggregator.Apply(migrated, cleanBase, new[] { instance });
@@ -369,7 +578,9 @@ public class ArtifactInstanceSystemTests
         {
             maxHP = 1000f,
             attack = 100f,
-            defense = 50f
+            defense = 50f,
+            critRate = 0f,
+            critDamage = 0f
         };
         CharacterStats destination = cleanBase.Clone();
 
@@ -379,11 +590,11 @@ public class ArtifactInstanceSystemTests
             definitionId = definition.id,
             rolls = new List<ArtifactRoll>
             {
-                new ArtifactRoll(ArtifactStatKind.FlatMaxHP, 25000, ArtifactRollSource.Generated),     // +250 HP
+                new ArtifactRoll(ArtifactStatKind.FlatMaxHP, 250, ArtifactRollSource.Generated),       // +250 HP
                 new ArtifactRoll(ArtifactStatKind.MaxHPPercent, 1000, ArtifactRollSource.Generated),   // +10% Max HP (100)
-                new ArtifactRoll(ArtifactStatKind.FlatAttack, 5000, ArtifactRollSource.Generated),      // +50 ATK
+                new ArtifactRoll(ArtifactStatKind.FlatAttack, 50, ArtifactRollSource.Generated),        // +50 ATK
                 new ArtifactRoll(ArtifactStatKind.AttackPercent, 2000, ArtifactRollSource.Generated),  // +20% ATK (20)
-                new ArtifactRoll(ArtifactStatKind.FlatDefense, 2500, ArtifactRollSource.Generated),    // +25 DEF
+                new ArtifactRoll(ArtifactStatKind.FlatDefense, 25, ArtifactRollSource.Generated),      // +25 DEF
                 new ArtifactRoll(ArtifactStatKind.DefensePercent, 1000, ArtifactRollSource.Generated), // +10% DEF (5)
                 new ArtifactRoll(ArtifactStatKind.CritRate, 1500, ArtifactRollSource.Generated),       // +15% Crit Rate
                 new ArtifactRoll(ArtifactStatKind.CritDamage, 3000, ArtifactRollSource.Generated),     // +30% Crit DMG

@@ -214,7 +214,7 @@ public class GameImpulseController : MonoBehaviour
     private void Update()
     {
         AdvanceImpulses(Time.deltaTime, Time.unscaledDeltaTime, Time.timeScale,
-            GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld);
+            GameFreezeManager.IsGameplayPaused);
     }
 
     public void AdvanceImpulses(float scaledDelta, float unscaledDelta, float timeScale, bool paused)
@@ -331,7 +331,7 @@ public class GameImpulseController : MonoBehaviour
                 yield return null;
                 elapsed += GameImpulseRequest.PlaybackDelta(followSlowMotion, followHitstop,
                     Time.deltaTime, Time.unscaledDeltaTime, Time.timeScale,
-                    GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld);
+                    GameFreezeManager.IsGameplayPaused);
             }
 
             EmitImpulse(request.endStrength * strengthMultiplier, followSlowMotion, followHitstop);
@@ -374,7 +374,7 @@ public class GameImpulseController : MonoBehaviour
             _activeImpulses.Add(new ClockedImpulse { impulse = impulse, signal = impulse.SignalSource,
                 followSlowMotion = followSlowMotion, followHitstop = followHitstop });
             if (_impulseBrain == null) _impulseBrain = FindFirstObjectByType<CinemachineBrain>();
-            UpdateCameraClock(Time.timeScale, GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsPauseHeld);
+            UpdateCameraClock(Time.timeScale, GameFreezeManager.IsGameplayPaused);
         }
         return impulse;
     }
