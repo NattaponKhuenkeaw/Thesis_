@@ -17,6 +17,8 @@ public sealed class EnemyShieldGuard : MonoBehaviour
         new System.Collections.Generic.List<EnemyController>();
 
     [Header("Rear Opening")]
+    [Tooltip("Delay before reversing chase/advance facing. Applies across guard restarts so crossing behind stays punishable.")]
+    [SerializeField, Min(0f)] private float followTurnDelay = 0.9f;
     [Tooltip("The player must remain behind this long before the shield is lowered.")]
     [SerializeField, Min(0.05f)] private float rearRecheckDelay = 0.75f;
     [Tooltip("Shield stays open while turning, then raises again after this delay.")]
@@ -34,6 +36,8 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     private bool hasTurned;
     private bool ownsPlant;
     private bool guardBroken;
+    private float pendingFacing;
+    private float turnRequestedAt;
     private RigidbodyConstraints2D originalConstraints;
 
     public GuardPhase Phase { get; private set; }
@@ -56,6 +60,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     {
         EndGuard();
         attackCooldownRemaining = 0f;
+        pendingFacing = 0f;
     }
 
     private void Update()
@@ -80,6 +85,32 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     {
         return candidate != null && candidate.gameObject.activeInHierarchy
             && ((Vector2)(candidate.position - transform.position)).sqrMagnitude <= EngagementRange * EngagementRange;
+    }
+
+    public bool AllowsFacingChange(float directionX)
+    {
+        float desired = Mathf.Sign(directionX);
+        if (desired == EnemyFacingUtil.GetFacingSign(transform))
+        {
+            // Locomotion can face its travel direction while backing away from a rear target.
+            if (target == null || (target.position.x - transform.position.x) * desired >= -sideDeadzone)
+                pendingFacing = 0f;
+            return true;
+        }
+        // The planted guard already waited through its rear check before this turn animation.
+        if (Phase == GuardPhase.Turning && phaseElapsed >= turnDuration * .5f)
+        {
+            pendingFacing = 0f;
+            return true;
+        }
+        if (pendingFacing != desired)
+        {
+            pendingFacing = desired;
+            turnRequestedAt = Time.time;
+        }
+        if (Time.time - turnRequestedAt < followTurnDelay) return false;
+        pendingFacing = 0f;
+        return true;
     }
 
     public bool BeginGuard(Transform candidate)

@@ -1251,7 +1251,7 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
-    public void RecoveryFacesPlayerAndRestartsFullGuardCountdown()
+    public void RecoveryKeepsTheRearOpeningAndRestartsFullGuardCountdown()
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("NextRoundTarget", enemy.transform.position + Vector3.right * 5f);
@@ -1264,8 +1264,13 @@ public class EnemyFlightGuardTests
         target.transform.position = enemy.transform.position + Vector3.left * 5f;
         guard.TickGuard(.81f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f), "Recovery must not bypass the rear opening.");
+        guard.TickGuard(.76f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Turning));
+        guard.TickGuard(.23f);
         Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
-        guard.TickGuard(4.3f);
+        guard.TickGuard(.23f);
+        guard.TickGuard(3.1f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
         guard.TickGuard(.11f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
@@ -1538,6 +1543,115 @@ public class EnemyFlightGuardTests
     public System.Collections.IEnumerator RestoreEditModeAfterRuntimeFailure()
     {
         if (Application.isPlaying) yield return new UnityEngine.TestTools.ExitPlayMode();
+    }
+
+    [Test]
+    public void ShieldTurnDelayIsAuthoredWithoutChangingRushTiming()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm103/Enemy103.prefab");
+        using var data = new SerializedObject(prefab.GetComponent<EnemyShieldGuard>());
+        Assert.That(data.FindProperty("followTurnDelay").floatValue, Is.EqualTo(.9f).Within(.001f));
+        Assert.That(data.FindProperty("rearRecheckDelay").floatValue, Is.EqualTo(.75f).Within(.001f));
+        Assert.That(data.FindProperty("turnDuration").floatValue, Is.EqualTo(.45f).Within(.001f));
+        Assert.That(Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard").AttackCooldown, Is.EqualTo(5f));
+    }
+
+    [Test]
+    public void ShieldTurnDelayCoversChaseFacingWithoutRestartingOnRepeatedRequests()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        typeof(EnemyShieldGuard).GetField("turnRequestedAt", Private).SetValue(guard, Time.time - .89f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        typeof(EnemyShieldGuard).GetField("turnRequestedAt", Private).SetValue(guard, Time.time - .91f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+    }
+
+    [Test]
+    public void ShieldTurnDelayResetsIfThePlayerReturnsToTheFront()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        typeof(EnemyShieldGuard).GetField("turnRequestedAt", Private).SetValue(guard, Time.time - .91f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, 1f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+    }
+
+    [Test]
+    public void ShieldTurnDelayAlsoProtectsTheRearWhileAdvancing()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("Advance rear target", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        target.transform.position = enemy.transform.position + Vector3.right * 20f;
+        guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Advancing));
+        target.transform.position = enemy.transform.position + Vector3.left * 3f;
+        guard.TickGuard(0f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        Assert.That(guard.BlocksHit(target.transform.position, DamageDelivery.Primary), Is.False);
+        Assert.That(guard.BlocksHit(enemy.transform.position + Vector3.right, DamageDelivery.Primary), Is.True);
+        typeof(EnemyShieldGuard).GetField("turnRequestedAt", Private).SetValue(guard, Time.time - .91f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, 1f);
+        guard.TickGuard(0f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+    }
+
+    [Test]
+    public void ShieldTurnDelaySurvivesGuardReentryWithoutAnImmediateFlip()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        var target = Host("Reentry rear target", enemy.transform.position + Vector3.left * 3f);
+        guard.BeginGuard(target.transform);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        guard.EndGuard();
+        guard.BeginGuard(target.transform);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        Assert.That(guard.BlocksHit(target.transform.position, DamageDelivery.Primary), Is.False);
+    }
+
+    [Test]
+    public void ShieldTurnDelayDoesNotAffectOtherEnemyCombatRoles()
+    {
+        EnemyController enemy = Guard(out _);
+        enemy.CombatRole = EnemyCombatRole.AimedRanged;
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+    }
+
+    [UnityEngine.TestTools.UnityTest]
+    public System.Collections.IEnumerator ShieldTurnDelayUsesRealGameplayTimeAndThenTurns()
+    {
+        UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+            UnityEditor.SceneManagement.NewSceneMode.Single);
+        yield return new UnityEngine.TestTools.EnterPlayMode();
+        var enemy = Guard(out EnemyShieldGuard guard);
+        float start = Time.time;
+        float deadline = Time.realtimeSinceStartup + 4f;
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        while (Time.time - start < .7f)
+        {
+            Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+            EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+            yield return null;
+        }
+        while (EnemyFacingUtil.GetFacingSign(enemy.transform) > 0f)
+        {
+            Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+            EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+            yield return null;
+        }
+        Assert.That(Time.time - start, Is.GreaterThanOrEqualTo(.9f));
+        enemy.gameObject.SetActive(false); enemy.gameObject.SetActive(true);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, 1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+        yield return new UnityEngine.TestTools.ExitPlayMode();
     }
 
     private EnemyController Guard(out EnemyShieldGuard guard)

@@ -793,6 +793,7 @@ MonoBehaviour:
   guardWaitDuration: 2.5
   lastEnemyWaitDuration: 1
   advanceSpeed: 3
+  followTurnDelay: 0.9
   rearRecheckDelay: 0.75
   turnDuration: 0.45
 --- !u!114 &3498977337664649580
