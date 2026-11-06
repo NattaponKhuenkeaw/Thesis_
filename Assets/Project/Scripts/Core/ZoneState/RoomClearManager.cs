@@ -110,12 +110,7 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
-            RoomKind kind = room != null ? room.RoomKind : RoomKind.Combat;
-            if (enemies != null && enemies.Exists(enemy => enemy != null
-                && enemy.GetComponent<Project.AIBehaviour.Boss.BossPatternController>() != null))
-                kind = RoomKind.Boss;
-            runEndController.NotifyRoomCleared(kind);
+            runEndController.NotifyRoomCleared();
         }
     }
 }

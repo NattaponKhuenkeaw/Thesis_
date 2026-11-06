@@ -6654,8 +6654,8 @@ MonoBehaviour:
     - rid: 7900270000000000004
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 1
-        activeFrames: 3
+        startFrameOffset: 0
+        activeFrames: 13
         elementType: 0
         damageTags: 0
         suppressImpactFeedback: 0

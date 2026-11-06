@@ -223,7 +223,7 @@ public class ShopEconomyBalanceTests
     {
         WithClearManagers(null, (runEnd, waves) => {
             int before = inventory.currency;
-            runEnd.NotifyRoomCleared(kind);
+            runEnd.NotifyRoomCleared(awardLegacyCurrency: kind == RoomKind.Boss);
             Assert.That(inventory.currency, Is.EqualTo(before + expected));
         });
     }
