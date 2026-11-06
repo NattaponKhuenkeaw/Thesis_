@@ -22,6 +22,7 @@ namespace Project.AIBehaviour.Boss
         [SerializeField] private AnimationHandler_Enemy animHandler;
         [SerializeField] private Rigidbody2D rb;
         [SerializeField] private BossGroundTelegraph groundTelegraph;
+        [SerializeField] private EnemyChargeTelegraph chargeTelegraph;
         [SerializeField] private string playerTag = PlayerTag;
 
         [Header("HUD")]
@@ -973,6 +974,7 @@ namespace Project.AIBehaviour.Boss
 
         private IEnumerator Telegraph(BossPatternTiming timing, BossPatternId patternId, Vector3? markerWorldPos, float markerRadius)
         {
+            chargeTelegraph?.Hide();
             // Each pattern faces its target once before entering wind-up.
             enemy.LockFacing();
             BeginArmored();
@@ -1000,18 +1002,28 @@ namespace Project.AIBehaviour.Boss
             }
 
             float t = 0f;
+            float chargeTravel = patternId == BossPatternId.BullCharge ? ResolveChargeTravelDistance(GetFacingSign()) : 0f;
             while (t < timing.telegraphDuration)
             {
                 if (!CanContinuePattern())
                     yield break;
 
                 t += Time.deltaTime;
+                if (patternId == BossPatternId.BullCharge && chargeTelegraph != null && enemy.bodyCollider != null)
+                {
+                    Bounds bounds = enemy.bodyCollider.bounds;
+                    float facing = GetFacingSign();
+                    Vector3 start = new Vector3(facing > 0f ? bounds.max.x : bounds.min.x, bounds.center.y, transform.position.z);
+                    chargeTelegraph.ShowLane(start, start + Vector3.right * (facing * chargeTravel), bounds.size.y,
+                        t / Mathf.Max(.001f, timing.telegraphDuration));
+                }
                 if (patternId == BossPatternId.BullCharge)
                     animHandler?.SetBossChargePhase(Mathf.Min(.2999f, t));
                 if (patternId == BossPatternId.AlternatingCleave)
                     animHandler?.SampleBossCleave(0f);
                 yield return null;
             }
+            chargeTelegraph?.Hide();
         }
 
         private float ResolveSmashMarkerRadius()
@@ -1102,6 +1114,7 @@ namespace Project.AIBehaviour.Boss
 
         private void CleanupAttackState()
         {
+            chargeTelegraph?.Hide();
             if (samplingCleaveSequence)
             {
                 samplingCleaveSequence = false;

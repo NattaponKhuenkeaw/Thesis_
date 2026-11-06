@@ -109,6 +109,9 @@ public class BossFacingRuntimeTests
             var telegraph = typeof(BossPatternController).GetMethod("Telegraph", Flags);
             var cleanup = typeof(BossPatternController).GetMethod("CleanupAttackState", Flags);
             var faceTarget = typeof(BossPatternController).GetMethod("FaceTarget", Flags);
+            var lane = root.GetComponentInChildren<EnemyChargeTelegraph>();
+            Assert.That(lane, Is.Not.Null);
+            var background = lane.transform.Find("background").GetComponent<LineRenderer>();
             foreach (BossPatternId pattern in new[] { BossPatternId.HeavyCleave, BossPatternId.JumpSmash, BossPatternId.BullCharge })
             {
                 foreach (float facing in new[] { 1f, -1f })
@@ -128,12 +131,23 @@ public class BossFacingRuntimeTests
                         Assert.That(enemy.FacingLocked, Is.True, pattern.ToString());
                         Assert.That(EnemyFacingUtil.GetFacingSign(root.transform), Is.EqualTo(facing));
                         Assert.That(EnemyFacingUtil.GetFacingSign(sprite), Is.EqualTo(facing));
+                        Assert.That(background.enabled, Is.EqualTo(pattern == BossPatternId.BullCharge));
+                        if (pattern == BossPatternId.BullCharge)
+                        {
+                            Vector3 delta = background.GetPosition(1) - background.GetPosition(0);
+                            Assert.That(Mathf.Sign(delta.x), Is.EqualTo(facing));
+                            Assert.That(delta.y, Is.Zero.Within(.001f));
+                            Assert.That(background.startWidth, Is.EqualTo(enemy.bodyCollider.bounds.size.y).Within(.001f));
+                            Assert.That(enemy.attackHitbox.enabled, Is.False);
+                        }
                         frames++;
                         yield return null;
                     }
                     Assert.That(frames, Is.GreaterThan(0));
                     Assert.That(enemy.FacingLocked, Is.True, "The active attack still owns its direction after wind-up");
                     cleanup.Invoke(boss, null);
+                    foreach (var line in lane.GetComponentsInChildren<LineRenderer>())
+                        Assert.That(line.enabled, Is.False, "An interrupted windup must hide its entire warning.");
                     Assert.That(enemy.FacingLocked, Is.False);
                     faceTarget.Invoke(boss, null);
                     Assert.That(EnemyFacingUtil.GetFacingSign(root.transform), Is.EqualTo(-facing));
