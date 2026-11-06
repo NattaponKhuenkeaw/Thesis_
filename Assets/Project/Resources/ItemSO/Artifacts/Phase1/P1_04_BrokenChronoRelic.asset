@@ -17,7 +17,7 @@ MonoBehaviour:
   description: In the Cursed Realm, time is your ultimate executioner. Run faster,
     kill faster, or forget your name.
   icon: {fileID: 21300000, guid: 3ed122e6e9a0b0e428a23d53ba9f97a6, type: 3}
-  price: 300
+  price: 850
   isEquippable: 1
   passiveDescription: Skill damage marks one enemy. The next eligible hit consumes
     the mark, creates Explosion Splash and Bleed, then grants Claw. 14s mark cooldown.

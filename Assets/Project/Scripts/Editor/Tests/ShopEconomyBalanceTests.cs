@@ -10,6 +10,7 @@ using Project.InventorySystem.Items;
 using Project.ShopSystem;
 using Project.ShopSystem.UI;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public class ShopEconomyBalanceTests
@@ -23,15 +24,15 @@ public class ShopEconomyBalanceTests
 
     private static IEnumerable<TestCaseData> ArtifactPrices()
     {
-        yield return new TestCaseData("P1_01_BlindsBoundlessRibbon", 160);
-        yield return new TestCaseData("P1_02_FiendFleshMask", 100);
-        yield return new TestCaseData("P1_03_SoulMerchantsScales", 180);
-        yield return new TestCaseData("P1_04_BrokenChronoRelic", 300);
-        yield return new TestCaseData("P1_05_AuraResonatingShard", 140);
-        yield return new TestCaseData("P1_06_RivalsBrokenCrest", 240);
-        yield return new TestCaseData("P1_07_ShroudOfDeprivation", 80);
-        yield return new TestCaseData("P1_08_MemoryDrainingUrn", 120);
-        yield return new TestCaseData("P1_09_ShinsRustyDagger", 220);
+        yield return new TestCaseData("P1_01_BlindsBoundlessRibbon", 650);
+        yield return new TestCaseData("P1_02_FiendFleshMask", 500);
+        yield return new TestCaseData("P1_03_SoulMerchantsScales", 650);
+        yield return new TestCaseData("P1_04_BrokenChronoRelic", 850);
+        yield return new TestCaseData("P1_05_AuraResonatingShard", 650);
+        yield return new TestCaseData("P1_06_RivalsBrokenCrest", 850);
+        yield return new TestCaseData("P1_07_ShroudOfDeprivation", 500);
+        yield return new TestCaseData("P1_08_MemoryDrainingUrn", 500);
+        yield return new TestCaseData("P1_09_ShinsRustyDagger", 650);
     }
 
     [SetUp]
@@ -48,6 +49,7 @@ public class ShopEconomyBalanceTests
         var settings = new SerializedObject(offer);
         settings.FindProperty("itemType").enumValueIndex = (int)ShopItemListType.Artifact;
         settings.ApplyModifiedPropertiesWithoutUndo();
+        shop.RegisterItemList(offer);
     }
 
     [TearDown]
@@ -101,8 +103,9 @@ public class ShopEconomyBalanceTests
         }
     }
 
-    [Test]
-    public void TwoMinimumMediumRewardsFundCameraGirlAndOneStarterArtifact()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void TwoMinimumMediumRewardsRequireChoosingCameraGirlOrArtifacts(bool buyCharacter)
     {
         var tables = Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables");
         var profile = tables.GetProfile(RouteDifficulty.Medium);
@@ -119,11 +122,21 @@ public class ShopEconomyBalanceTests
                 CallWave(waves, "TryGrantActiveRouteReward");
             }
         });
-        Assert.That(shop.TryPurchase(character, 1, OfferPrice(character)), Is.True);
-        Assert.That(shop.TryPurchase(artifact, 1, OfferPrice(artifact)), Is.True);
-        Assert.That(inventory.HasItem(character), Is.True);
-        Assert.That(inventory.GetItemCount(artifact), Is.EqualTo(1));
-        Assert.That(inventory.currency, Is.EqualTo(60));
+        Assert.That(inventory.currency, Is.EqualTo(1240));
+        if (buyCharacter)
+        {
+            Assert.That(shop.TryPurchase(character, 1, OfferPrice(character)), Is.True);
+            Assert.That(shop.TryPurchase(artifact, 1, OfferPrice(artifact)), Is.False);
+            Assert.That(inventory.HasItem(character), Is.True);
+            Assert.That(inventory.currency, Is.EqualTo(140));
+        }
+        else
+        {
+            Assert.That(shop.TryPurchase(artifact, 1, OfferPrice(artifact)), Is.True);
+            Assert.That(shop.TryPurchase(LoadArtifact("P1_02_FiendFleshMask")), Is.True);
+            Assert.That(shop.TryPurchase(character, 1, OfferPrice(character)), Is.False);
+            Assert.That(inventory.currency, Is.EqualTo(240));
+        }
     }
 
     [Test]
@@ -134,10 +147,10 @@ public class ShopEconomyBalanceTests
         var hard = tables.GetProfile(RouteDifficulty.Hard);
         var artifacts = shop.codexInventory.allItems.OfType<ArtifactDefinition>().ToArray();
         Assert.That(artifacts.Length, Is.EqualTo(9));
-        Assert.That(artifacts.Min(item => item.price), Is.LessThanOrEqualTo(easy.minCoins + easy.maxCoins),
-            "Two average Easy rewards should cover an entry artifact, excluding the initial budget.");
-        Assert.That(artifacts.Max(item => item.price), Is.LessThanOrEqualTo(2 * hard.minCoins),
-            "Two minimum Hard rewards should cover any artifact at its base price.");
+        Assert.That(artifacts.Select(item => item.price).Distinct().OrderBy(price => price), Is.EqualTo(new[] { 500, 650, 850 }));
+        Assert.That(inventory.currency, Is.EqualTo(1000));
+        Assert.That(artifacts.Min(item => item.price) * 3, Is.GreaterThan(inventory.currency + 2 * hard.maxCoins),
+            "Even saving the starting budget and two maximum Hard rewards cannot buy three artifacts at the first act shop.");
         Assert.That(easy.minCoins, Is.EqualTo(80));
         Assert.That(easy.maxCoins, Is.EqualTo(100));
         Assert.That(hard.minCoins, Is.EqualTo(180));
@@ -147,16 +160,133 @@ public class ShopEconomyBalanceTests
     [TestCase(0)]
     [TestCase(1)]
     [TestCase(2)]
-    public void RerollKeepsExistingFifteenPercentMarkupOnNewBasePrices(int rerolls)
+    public void RerollOnlyChangesItsOwnCostNotItemPrices(int rerolls)
     {
         typeof(ShopManager).GetField("rerollCount", Private).SetValue(shop, rerolls);
-        float multiplier = 1f + .15f * rerolls;
-        Assert.That(shop.CurrentRerollPriceMultiplier, Is.EqualTo(multiplier).Within(.0001f));
+        Assert.That(shop.CurrentRerollCost, Is.EqualTo(80 + 40 * rerolls));
         foreach (BaseItem item in shop.codexInventory.allItems.Where(item =>
             item is ArtifactDefinition || item is CharacterItem character && character.availableInShop))
         {
-            Assert.That(OfferPrice(item), Is.EqualTo(Mathf.CeilToInt(item.price * multiplier)), item.name);
+            Assert.That(OfferPrice(item), Is.EqualTo(item.price), item.name);
         }
+    }
+
+    [Test]
+    public void RerollsChargeEightyThenOneTwentyThenOneSixtyAndResetAtANewShop()
+    {
+        var changes = new List<int>();
+        shop.OnRerollCostChanged += changes.Add;
+        int currencyChanges = 0;
+        inventory.OnCurrencyChanged += _ => currencyChanges++;
+        foreach (int cost in new[] { 80, 120, 160 })
+        {
+            int before = inventory.currency;
+            Assert.That(shop.CurrentRerollCost, Is.EqualTo(cost));
+            offer.MarkSold();
+            Assert.That(shop.TryRerollOffers(), Is.True);
+            Assert.That(inventory.currency, Is.EqualTo(before - cost));
+            Assert.That(offer.IsSold, Is.False);
+            Assert.That(offer.CurrentItem, Is.Not.Null);
+            Assert.That(offer.CurrentPrice, Is.EqualTo(offer.CurrentItem.price));
+        }
+        Assert.That(inventory.currency, Is.EqualTo(640));
+        Assert.That(currencyChanges, Is.EqualTo(3));
+        Assert.That(changes, Is.EqualTo(new[] { 120, 160, 200 }));
+        shop.ResetShopState();
+        Assert.That(shop.CurrentRerollCost, Is.EqualTo(80));
+        Assert.That(inventory.currency, Is.EqualTo(640));
+        Assert.That(currencyChanges, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void FailedRerollPreservesMoneyOffersSoldStateAndNextCost()
+    {
+        var artifact = LoadArtifact("P1_07_ShroudOfDeprivation");
+        offer.Populate(artifact, 1, artifact.price); offer.MarkSold();
+        shop.currentShopItems.Add(artifact);
+        inventory.currency = 79;
+        var state = Random.state;
+        int changes = 0;
+        shop.OnShopOffersChanged += () => changes++;
+        shop.OnRerollCostChanged += _ => changes++;
+        Assert.That(shop.TryRerollOffers(), Is.False);
+        Assert.That(inventory.currency, Is.EqualTo(79));
+        Assert.That(shop.CurrentRerollCost, Is.EqualTo(80));
+        Assert.That(offer.CurrentItem, Is.SameAs(artifact));
+        Assert.That(offer.IsSold, Is.True);
+        Assert.That(shop.currentShopItems, Is.EqualTo(new[] { artifact }));
+        Assert.That(Random.state, Is.EqualTo(state));
+        Assert.That(changes, Is.Zero);
+        inventory.AddCurrency(1);
+        Assert.That(shop.TryRerollOffers(), Is.True);
+        Assert.That(inventory.currency, Is.Zero);
+        Assert.That(shop.CurrentRerollCost, Is.EqualTo(120));
+    }
+
+    [Test]
+    public void RerollDoesNotChargeWhenNothingCanBeRolled()
+    {
+        var empty = ScriptableObject.CreateInstance<CodexInventory>();
+        try
+        {
+            shop.codexInventory = empty;
+            Assert.That(shop.TryRerollOffers(), Is.False);
+            Assert.That(inventory.currency, Is.EqualTo(1000));
+            Assert.That(shop.CurrentRerollCost, Is.EqualTo(80));
+            empty.allItems.Add(Resources.Load<CharacterItem>("ItemSO/char_1_CameraGIrl"));
+            Assert.That(shop.TryRerollOffers(), Is.False, "Character-only inventory cannot populate an Artifact offer.");
+            Assert.That(inventory.currency, Is.EqualTo(1000));
+            Assert.That(shop.CurrentRerollCost, Is.EqualTo(80));
+        }
+        finally { Object.DestroyImmediate(empty); }
+    }
+
+    [Test]
+    public void RerollPromptShowsTheNextSoulCostRatherThanAMarkup()
+    {
+        host.SetActive(true);
+        var promptHost = new GameObject("Reroll prompt check");
+        try
+        {
+            var ui = promptHost.AddComponent<InteractableWorldUI>();
+            var type = typeof(InteractableWorldUI).GetNestedType("PromptConfig", BindingFlags.NonPublic);
+            var prompt = System.Activator.CreateInstance(type, true);
+            type.GetField("interactionType").SetValue(prompt, InteractableWorldUI.InteractionType.ShopReroll);
+            type.GetField("descriptionString").SetValue(prompt, "Reroll");
+            var method = typeof(InteractableWorldUI).GetMethod("GetDisplayDescription", Private);
+            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll 80 SOUL"));
+            Assert.That(shop.TryRerollOffers(), Is.True);
+            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll 120 SOUL"));
+            inventory.currency = 119;
+            Assert.That(shop.TryRerollOffers(), Is.False);
+            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll 120 SOUL"));
+        }
+        finally { Object.DestroyImmediate(promptHost); }
+    }
+
+    [Test]
+    public void AuthoredShopUsesTheSameFeesAndBasePricesAsTheTransactions()
+    {
+        var scene = EditorSceneManager.OpenPreviewScene(AssetDatabase.GUIDToAssetPath("d36c77798e07625409da16f442bc42f5"));
+        try
+        {
+            var liveShop = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<ShopManager>(true)).Single();
+            liveShop.playerInventory = inventory;
+            using var data = new SerializedObject(liveShop);
+            Assert.That(data.FindProperty("rerollBaseCost").intValue, Is.EqualTo(80));
+            Assert.That(data.FindProperty("rerollCostStep").intValue, Is.EqualTo(40));
+            liveShop.ResetShopState();
+            Assert.That(liveShop.TryRerollOffers(), Is.True);
+            Assert.That(inventory.currency, Is.EqualTo(920));
+            Assert.That(liveShop.CurrentRerollCost, Is.EqualTo(120));
+            foreach (var list in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<ShopItemListUI>(true)))
+            {
+                if (list.CurrentItem == null) continue;
+                int expected = list.CurrentItem is Item ? list.CurrentItem.price * list.CurrentQuantity : list.CurrentItem.price;
+                Assert.That(list.CurrentPrice, Is.EqualTo(expected));
+            }
+        }
+        finally { EditorSceneManager.ClosePreviewScene(scene); }
     }
 
     [TestCase(RouteDifficulty.Easy, 80, 100)]
