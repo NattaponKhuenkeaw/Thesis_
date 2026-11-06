@@ -46,13 +46,6 @@ public static class EnemyFacingUtil
         if (controller != null && controller.FacingLocked)
             return;
 
-        if (controller != null && controller.CombatRole == EnemyCombatRole.ShieldGuard)
-        {
-            var guard = controller.ShieldGuard != null ? controller.ShieldGuard : controller.GetComponent<EnemyShieldGuard>();
-            if (guard != null && guard.enabled && !guard.AllowsFacingChange(directionX))
-                return;
-        }
-
         // Position-driven flight has no Rigidbody velocity for graph-facing nodes to read.
         EnemyLocomotion locomotion = controller != null ? controller.GetComponent<EnemyLocomotion>() : null;
         if (locomotion != null && locomotion.TryGetFlightTravelFacing(out float travelDirectionX))

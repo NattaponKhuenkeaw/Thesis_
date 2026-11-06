@@ -52,26 +52,6 @@ namespace Project.Core.ZoneState
             return EncounterTypePicker.RollFromPrefabs(result, result.Count, EncounterTypePickMode.ShuffleBag, randomRange);
         }
 
-        public static bool ApplyFinalChamberElite(
-            IReadOnlyList<EncounterSO> encounters, IReadOnlyList<List<GameObject>> quotas)
-        {
-            if (encounters == null || quotas == null) return false;
-            for (int i = quotas.Count - 1; i >= 0; i--)
-            {
-                var quota = quotas[i];
-                if (quota == null || quota.Count == 0) continue;
-                var encounter = i < encounters.Count ? encounters[i] : null;
-                if (encounter == null || encounter.FinalChamberElite == null || encounter.EliteReplaces == null)
-                    return false;
-                if (quota.Contains(encounter.FinalChamberElite)) return true;
-                int replaceIndex = quota.IndexOf(encounter.EliteReplaces);
-                if (replaceIndex < 0) return false;
-                quota[replaceIndex] = encounter.FinalChamberElite;
-                return true;
-            }
-            return false;
-        }
-
         public static bool HasRotationTeam(CharacterInventoryState inventory)
         {
             if (inventory == null) return false;

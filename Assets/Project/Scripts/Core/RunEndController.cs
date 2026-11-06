@@ -81,13 +81,7 @@ namespace Project.Core.RunEnd
 
         public void NotifyRoomCleared()
         {
-            RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
-            NotifyRoomCleared(room != null ? room.RoomKind : RoomKind.Combat);
-        }
-
-        public void NotifyRoomCleared(RoomKind roomKind)
-        {
-            NotifyRoomCleared(awardLegacyCurrency: roomKind != RoomKind.Combat && roomKind != RoomKind.Elite);
+            NotifyRoomCleared(awardLegacyCurrency: true);
         }
 
         public void NotifyRoomCleared(bool awardLegacyCurrency)

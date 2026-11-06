@@ -45,12 +45,6 @@ namespace Project.Core.ZoneState
         [Tooltip("Shuffle Bag deals a shuffled mix from weights. Weighted Random rolls each spawn independently.")]
         [SerializeField] private EncounterTypePickMode typePickMode = EncounterTypePickMode.ShuffleBag;
 
-        [Header("Final Chamber Replacement (Optional)")]
-        [SerializeField] private GameObject finalChamberElite;
-        [SerializeField] private GameObject eliteReplaces;
-        public GameObject FinalChamberElite => finalChamberElite;
-        public GameObject EliteReplaces => eliteReplaces;
-
         [Header("Waves (boss / fallback)")]
         [SerializeField] private List<Wave> waves = new List<Wave>();
         [SerializeField] [Min(0f)] private float delayBetweenWaves = 1.5f;

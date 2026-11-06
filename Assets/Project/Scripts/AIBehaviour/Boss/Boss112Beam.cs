@@ -14,7 +14,6 @@ namespace Project.AIBehaviour.Boss
         [SerializeField, Min(.05f)] private float warningWidth = .504f;
         [SerializeField, Min(.1f)] private float activeWidth = 2.8f;
         private bool damaging;
-        private EnemyColorVariants appearance;
         private Vector2 groundAnchor;
         public bool IsDamaging => damaging && damageCollider != null && damageCollider.enabled;
         public BoxCollider2D DamageCollider => damageCollider;
@@ -26,8 +25,6 @@ namespace Project.AIBehaviour.Boss
             float height = Mathf.Max(.1f, top.y - floor);
             Sprite sprite = active ? activeSprite : warningFrames != null && warningFrames.Length > 0
                 ? warningFrames[(int)(clock * 8f) % warningFrames.Length] : activeSprite;
-            if (appearance == null) appearance = GetComponentInParent<EnemyColorVariants>();
-            if (appearance != null) sprite = appearance.ResolveProjectileSprite(sprite);
             if (visual != null && sprite != null)
             {
                 visual.sprite = sprite;

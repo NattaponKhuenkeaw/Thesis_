@@ -165,8 +165,6 @@ public class EnemyChargeTelegraphTests
     public void LaneMatchesWorldChargeDirectionAndDoesNotScaleTheNineUnitReach(float facing, float scale)
     {
         host.transform.localScale = Vector3.one * scale;
-        // This fixture tests the locked lane, not the separate rear-facing turn delay.
-        host.transform.rotation = Quaternion.Euler(0f, facing < 0f ? 180f : 0f, 0f);
         target.transform.position = Vector3.right * (facing * 5f);
         Physics2D.SyncTransforms();
         BeginWarning();

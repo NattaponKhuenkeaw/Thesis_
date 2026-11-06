@@ -70,12 +70,9 @@ public class RoomExitLightTests
         try
         {
             var exits = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<TransitionTrigger>(true)).ToArray();
-            var lights = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<RoomExitLight>(true)).ToArray();
             Assert.That(exits.Length, Is.GreaterThan(0));
-            Assert.That(lights.Length, Is.EqualTo(exits.Length));
             foreach (var exit in exits)
-                Assert.That(lights.Count(light => light.Exit == exit), Is.EqualTo(1),
-                    "A light may be placed at the scene root, but must remain bound to exactly one exit.");
+                Assert.That(exit.GetComponentInChildren<RoomExitLight>(true)?.Exit, Is.EqualTo(exit));
         }
         finally { EditorSceneManager.CloseScene(scene, true); }
     }

@@ -68,10 +68,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private Vector2 m_OriginalHitboxOffset;
     private readonly RaycastHit2D[] m_ChargeHits = new RaycastHit2D[16];
     private bool m_ChargeBlocked;
-    private int m_RemainingCharges;
-    private bool m_RepeatChargePending;
-    private float m_RepeatChargeAt;
-    private EnemyChargeTelegraph m_ChargeTelegraph;
     private bool IsBodyCharge => m_Controller != null && m_Controller.Kit != null && m_Controller.Kit.BodyCharge;
 
     protected override Status OnStart()
@@ -81,8 +77,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             return Status.Failure;
 
         m_Controller = Agent.Value.GetComponent<EnemyController>();
-        m_ChargeTelegraph = m_Controller != null && m_Controller.Kit != null && m_Controller.Kit.ChargesPerAttack > 1
-            ? Agent.Value.GetComponentInChildren<EnemyChargeTelegraph>(true) : null;
         m_AnimHandler = Agent.Value.GetComponentInChildren<AnimationHandler_Enemy>();
         m_Body = Agent.Value.GetComponent<Rigidbody2D>();
         m_Locomotion = Agent.Value.GetComponent<EnemyLocomotion>();
@@ -135,8 +129,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_AttackStartTime = 0f;
         m_PhaseEndTime = 0f;
         m_AttackStarted = false;
-        m_RemainingCharges = IsBodyCharge && m_Controller.Kit != null ? m_Controller.Kit.ChargesPerAttack - 1 : 0;
-        m_RepeatChargePending = false;
         m_HitboxDisabled = true;
         m_Committed = false;
         m_OwnsAttackArmor = false;
@@ -160,7 +152,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         if (m_Controller.UninterruptibleOnceWindup)
             BeginCommitment();
 
-        ShowChargeWarning(0f);
         return Status.Running;
     }
 
@@ -229,22 +220,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         m_Timer += Time.deltaTime;
-        if (m_RepeatChargePending)
-        {
-            StopChargeMotion();
-            float duration = Mathf.Max(.0001f, m_Controller.Kit.RepeatChargeWarning);
-            ShowChargeWarning(1f - (m_RepeatChargeAt - m_Timer) / duration);
-            if (m_Timer < m_RepeatChargeAt)
-                return Status.Running;
-            m_RepeatChargePending = false;
-            m_ChargeBlocked = false;
-            StartActualAttack();
-        }
         if (IsBodyCharge && !m_AttackStarted)
-        {
             StopChargeMotion();
-            ShowChargeWarning(telegraphDuration > 0f ? m_Timer / telegraphDuration : 1f);
-        }
 
         if (!m_AttackStarted && m_Timer >= telegraphDuration)
             StartActualAttack();
@@ -256,10 +233,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         float hitWindow = ResolveHitWindow();
-        // Repeated bites finish their strike pose even when movement has hit a wall.
-        bool finishBlockedCharge = m_ChargeBlocked
-            && (m_Controller.Kit == null || m_Controller.Kit.ChargesPerAttack <= 1);
-        if (m_AttackStarted && m_PlantUntil <= 0f && ((m_Timer - m_AttackStartTime) >= hitWindow || finishBlockedCharge))
+        if (m_AttackStarted && m_PlantUntil <= 0f && ((m_Timer - m_AttackStartTime) >= hitWindow || m_ChargeBlocked))
         {
             m_Controller.SetAttackHitboxActive(false);
             m_HitboxDisabled = true;
@@ -269,17 +243,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
                 EndCommitment();
                 RestoreChargeHitbox();
                 m_AnimHandler?.EndBodyChargePose();
-                if (m_RemainingCharges > 0)
-                {
-                    m_RemainingCharges--;
-                    m_RepeatChargePending = true;
-                    float warning = m_Controller.Kit.RepeatChargeWarning;
-                    m_RepeatChargeAt = m_Timer + warning;
-                    m_Controller.TriggerAttackWarning(warning);
-                    m_AnimHandler?.PlayBodyChargePose(false);
-                    ShowChargeWarning(0f);
-                    return Status.Running;
-                }
                 m_PhaseEndTime = m_Timer + Mathf.Max(ResolveRecovery(), ResolvePlantDuration());
             }
             float plant = ResolvePlantDuration();
@@ -307,7 +270,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     protected override void OnEnd()
     {
-        m_ChargeTelegraph?.Hide();
         if (m_OwnsFlightAttack)
         {
             m_Locomotion?.EndFlightAttack(m_Interrupted || !m_AttackStarted);
@@ -461,7 +423,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     private void StartActualAttack()
     {
-        m_ChargeTelegraph?.Hide();
         // Ordinary committed swings keep windup-only armor. Body charges retain it
         // through active movement, and release it as soon as recovery begins.
         if (m_Controller != null && m_Controller.UninterruptibleOnceWindup && !IsBodyCharge)
@@ -507,17 +468,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             m_LungeDir = EnemyFacingUtil.GetFacingSign(Agent.Value.transform);
 
         m_LungeStartX = m_Body != null ? m_Body.position.x : Agent.Value.transform.position.x;
-    }
-
-    private void ShowChargeWarning(float progress)
-    {
-        if (m_ChargeTelegraph == null || m_Controller == null || m_Controller.bodyCollider == null)
-            return;
-        Bounds body = m_Controller.bodyCollider.bounds;
-        float facing = EnemyFacingUtil.GetFacingSign(m_Controller.transform);
-        Vector3 start = new Vector3(facing > 0f ? body.max.x : body.min.x,
-            body.center.y, m_Controller.transform.position.z);
-        m_ChargeTelegraph.ShowLane(start, start + Vector3.right * (facing * ResolveLunge()), body.size.y, progress);
     }
 
     private void TickLunge()
