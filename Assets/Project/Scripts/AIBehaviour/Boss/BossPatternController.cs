@@ -142,9 +142,11 @@ namespace Project.AIBehaviour.Boss
         [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float jumpLandSfxVolume = 1f;
 
         [Header("Jump Smash")]
-        [SerializeField] private float jumpArcHeight = 3.5f;
+        [SerializeField] private float jumpArcHeight = 5f;
         [SerializeField] private float jumpTravelDuration = 0.75f;
         [Tooltip("Fallback world radius when hitboxSizeOverride is unset. Prefer deriving from jump smash hitbox.")]
+        [Tooltip("Separate height for the stationary shockwave jumps; does not follow the traveling jump tuning.")]
+        [SerializeField, Min(0f)] private float seismicJumpArcHeight = 3.5f;
         [SerializeField] private float smashMarkerRadius = 1.6f;
 
         [Header("Bull Charge")]
@@ -227,6 +229,7 @@ namespace Project.AIBehaviour.Boss
         public float JumpLandSfxVolume => GameAudioManager.ClampSFXGain(jumpLandSfxVolume);
         public float JumpArcHeight => jumpArcHeight;
         public float JumpTravelDuration => jumpTravelDuration;
+        public float SeismicJumpArcHeight => seismicJumpArcHeight;
         public float ChargeSpeed => chargeSpeed;
         public float ChargeStopAnimationDuration => chargeStopAnimationDuration;
 
@@ -823,7 +826,7 @@ namespace Project.AIBehaviour.Boss
             StopTelegraphFlash();
             animHandler?.SetBossJumpPhase(0f);
             animHandler?.TriggerBossPattern(BossPatternId.JumpSmash);
-            yield return JumpArc(lockPoint);
+            yield return JumpArc(lockPoint, seismic ? seismicJumpArcHeight : jumpArcHeight);
 
             // MovePosition is applied by physics; don't show impact on its request frame.
             yield return waitFixed;
@@ -1289,7 +1292,7 @@ namespace Project.AIBehaviour.Boss
             hasCachedHitboxSize = false;
         }
 
-        private IEnumerator JumpArc(Vector3 landPoint)
+        private IEnumerator JumpArc(Vector3 landPoint, float arcHeight)
         {
             CachePhysics();
             if (rb != null)
@@ -1318,7 +1321,7 @@ namespace Project.AIBehaviour.Boss
                 float u = Mathf.Clamp01(t);
                 animHandler?.SetBossJumpPhase(u * duration < .1f ? 0f : 0.25f);
                 Vector2 pos = Vector2.Lerp(start, end, u);
-                pos.y += jumpArcHeight * 4f * u * (1f - u);
+                pos.y += Mathf.Max(0f, arcHeight) * 4f * u * (1f - u);
                 MoveBossPosition(pos);
                 yield return waitFixed;
             }

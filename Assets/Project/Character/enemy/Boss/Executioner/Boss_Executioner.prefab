@@ -2049,10 +2049,11 @@ MonoBehaviour:
   jumpTakeoffSfxVolume: 1
   jumpLandSfx: {fileID: 8300000, guid: 088f6f638d9e76544953d526859c9bc3, type: 3}
   jumpLandSfxVolume: 1
-  jumpArcHeight: 3.5
-  jumpTravelDuration: 0.75
+  jumpArcHeight: 8
+  jumpTravelDuration: 0.9
+  seismicJumpArcHeight: 5
   smashMarkerRadius: 1.9
-  chargeSpeed: 16
+  chargeSpeed: 20
   chargeDistance: 40
   chargeWallPadding: 0.35
   chargeStopAnimationDuration: 0.8
