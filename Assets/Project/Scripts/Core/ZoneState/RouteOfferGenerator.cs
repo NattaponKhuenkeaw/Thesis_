@@ -196,15 +196,16 @@ namespace Project.Core.ZoneState
 
         private static RouteReward BuildReward(RouteOfferTables.DifficultyProfile profile, RouteOfferTables tables)
         {
+            int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
             if (profile.difficulty == RouteDifficulty.Hard && tables.HardRewardPatterns.Count > 0 &&
-                TryBuildHardReward(tables.HardRewardPatterns, out RouteReward patterned))
+                TryBuildHardReward(tables.HardRewardPatterns, biome, out RouteReward patterned))
                 return patterned;
 
             int minCoins = Mathf.Min(profile.minCoins, profile.maxCoins);
             int maxCoins = Mathf.Max(profile.minCoins, profile.maxCoins);
             RouteReward reward = new RouteReward
             {
-                Coins = Random.Range(minCoins, maxCoins + 1)
+                Coins = ScaleCombatSoul(Random.Range(minCoins, maxCoins + 1), biome)
             };
 
             if (!tables.GrantArtifacts)
@@ -229,7 +230,13 @@ namespace Project.Core.ZoneState
             return reward;
         }
 
-        private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns,
+        private static int ScaleCombatSoul(int baseSoul, int biomeIndex)
+        {
+            double scaled = (double)Mathf.Max(0, baseSoul) * (1d + 0.4d * Mathf.Max(0, biomeIndex));
+            return (int)System.Math.Min(int.MaxValue, System.Math.Round(scaled, System.MidpointRounding.AwayFromZero));
+        }
+
+        private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns, int biome,
             out RouteReward reward)
         {
             reward = null;
@@ -252,9 +259,8 @@ namespace Project.Core.ZoneState
                 if (remaining <= 0f) break;
             }
 
-            int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
             reward = RouteReward.Patterned(
-                Random.Range(Mathf.Min(selected.minSoul, selected.maxSoul), Mathf.Max(selected.minSoul, selected.maxSoul) + 1),
+                ScaleCombatSoul(Random.Range(Mathf.Min(selected.minSoul, selected.maxSoul), Mathf.Max(selected.minSoul, selected.maxSoul) + 1), biome),
                 Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome);
             return true;
         }
