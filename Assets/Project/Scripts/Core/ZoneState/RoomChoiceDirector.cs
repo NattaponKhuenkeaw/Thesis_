@@ -69,6 +69,7 @@ namespace Project.Core.ZoneState
 
         public int OfferCount => offerCount;
         public int ActIndex => actIndex;
+        public int OfferedActIndex => pendingActOfferIndex;
         public bool HasVisitedShopThisAct => biomeHadShop;
         public IReadOnlyList<BiomeActNode> BiomeTemplate => biomeTemplate;
         public IReadOnlyList<RoomChoiceOffer> LastOffers => offerBuffer;
