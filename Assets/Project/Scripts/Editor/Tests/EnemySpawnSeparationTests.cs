@@ -115,7 +115,7 @@ public class EnemySpawnSeparationTests
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
         yield return new EnterPlayMode();
-        foreach (string mode in new[] {"Pressure","Burst","Legacy"})
+        foreach (string mode in new[] {"Pressure","Burst","Batched","Legacy"})
         {
             var fixture=new GameObject(mode+" Spawn Retry Test");
             EncounterSO encounter=ScriptableObject.CreateInstance<EncounterSO>();
@@ -135,7 +135,8 @@ public class EnemySpawnSeparationTests
                     .First(p=>EncounterSpawnSlotPicker.PrefersFarSlot(p));
                 using (var data=new SerializedObject(encounter))
                 {
-                    data.FindProperty("spawnMode").enumValueIndex=(int)(mode=="Pressure" ? EncounterSpawnMode.Pressure : EncounterSpawnMode.Burst);
+                    data.FindProperty("spawnMode").enumValueIndex=(int)(mode=="Pressure" ? EncounterSpawnMode.Pressure
+                        : mode=="Batched" ? EncounterSpawnMode.Batched : EncounterSpawnMode.Burst);
                     data.FindProperty("aliveCap").intValue=3; data.FindProperty("spawnInterval").floatValue=0;
                     data.ApplyModifiedPropertiesWithoutUndo();
                 }

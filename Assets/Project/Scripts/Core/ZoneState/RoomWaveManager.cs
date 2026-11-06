@@ -183,7 +183,11 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            if (ShouldUsePressure())
+            if (ShouldUseBatches())
+            {
+                waveRoutine = StartCoroutine(BatchedRoutine());
+            }
+            else if (ShouldUsePressure())
             {
                 waveRoutine = StartCoroutine(PressureRoutine());
             }
@@ -228,6 +232,13 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            if (ShouldUseBatches())
+            {
+                if (chamberEncounter != null) runtimeDelayBetweenWaves = chamberEncounter.DelayBetweenWaves;
+                waveRoutine = StartCoroutine(BatchedRoutine());
+                return;
+            }
+
             if (ShouldUsePressure())
             {
                 waveRoutine = StartCoroutine(PressureRoutine());
@@ -235,6 +246,41 @@ namespace Project.Core.ZoneState
             }
 
             waveRoutine = StartCoroutine(BurstChamberRoutine(quota));
+        }
+
+        private bool ShouldUseBatches() => runtimeSpawnMode == EncounterSpawnMode.Batched
+            && !useBossDeathFlow && !IsCurrentRoomBoss() && pressureDirector != null;
+
+        private IEnumerator BatchedRoutine()
+        {
+            if (pressureDirector == null) yield break;
+            int batchCap = Mathf.Clamp(runtimeAliveCap, 1, 5);
+            while (pressureDirector.Remaining > 0)
+            {
+                int count = Mathf.Min(batchCap, pressureDirector.Remaining);
+                int spawned = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    GameObject prefab = pressureDirector.DequeueNext();
+                    if (TrySpawnPrefab(prefab, pickSlotByRole: true) != SpawnResult.Spawned)
+                    {
+                        pressureDirector.Requeue(prefab);
+                        // A crowded opening becomes a smaller group, never a delayed refill.
+                        break;
+                    }
+                    spawned++;
+                }
+
+                if (spawned == 0)
+                {
+                    yield return null;
+                    continue;
+                }
+                while (HasLivingEnemies()) yield return null;
+                if (pressureDirector.Remaining > 0 && runtimeDelayBetweenWaves > 0f)
+                    yield return new WaitForSeconds(runtimeDelayBetweenWaves);
+            }
+            FinishCurrentEncounterSegment();
         }
 
         private IEnumerator PressureRoutine()

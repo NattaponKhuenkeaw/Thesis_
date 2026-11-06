@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RouteOfferTables
   defaultSpawnSlotCount: 3
   delayBetweenWaves: 1.1
-  aliveCap: 3
+  aliveCap: 5
   spawnInterval: 0.35
   grantArtifacts: 0
   profiles:
@@ -24,7 +24,7 @@ MonoBehaviour:
     maxWaves: 1
     minEnemiesPerWave: 4
     maxEnemiesPerWave: 4
-    aliveCap: 3
+    aliveCap: 5
     minCoins: 80
     maxCoins: 100
     artifactChance: 0.05
@@ -41,7 +41,7 @@ MonoBehaviour:
     maxWaves: 1
     minEnemiesPerWave: 6
     maxEnemiesPerWave: 6
-    aliveCap: 3
+    aliveCap: 5
     minCoins: 120
     maxCoins: 150
     artifactChance: 0.28
@@ -58,7 +58,7 @@ MonoBehaviour:
     maxWaves: 1
     minEnemiesPerWave: 8
     maxEnemiesPerWave: 8
-    aliveCap: 4
+    aliveCap: 5
     minCoins: 180
     maxCoins: 220
     artifactChance: 0.55
