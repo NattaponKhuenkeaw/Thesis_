@@ -36,8 +36,7 @@ namespace Project.ShopSystem
         [SerializeField, Range(0f, 1f)] private float purchaseFailureVolume = 1f;
 
         [Header("Reroll")]
-        [SerializeField, Min(0)] private int rerollBaseCost = 80;
-        [SerializeField, Min(0)] private int rerollCostStep = 40;
+        [SerializeField, Min(0f)] private float rerollPriceIncreasePercent = 15f;
 
         [HideInInspector]
         public List<BaseItem> currentShopItems = new List<BaseItem>();
@@ -47,9 +46,11 @@ namespace Project.ShopSystem
 
         public event Action OnShopOffersChanged;
         public event Action<int> OnRerollCostChanged;
+        public event Action<float> OnRerollPriceMultiplierChanged;
 
-        public int CurrentRerollCost => (int)Math.Min(int.MaxValue,
-            (long)Mathf.Max(0, rerollBaseCost) + (long)Mathf.Max(0, rerollCostStep) * rerollCount);
+        public int CurrentRerollCost => 0;
+        public float CurrentRerollPriceIncreasePercent => rerollCount * Mathf.Max(0f, rerollPriceIncreasePercent);
+        public float CurrentRerollPriceMultiplier => 1f + CurrentRerollPriceIncreasePercent / 100f;
 
         private void Start()
         {
@@ -69,6 +70,7 @@ namespace Project.ShopSystem
             rerollCount = 0;
             PopulateShopItemLists(reserveEarlyArtifact: true);
             OnRerollCostChanged?.Invoke(CurrentRerollCost);
+            OnRerollPriceMultiplierChanged?.Invoke(CurrentRerollPriceMultiplier);
         }
 
         public void RegisterItemList(ShopItemListUI itemList)
@@ -91,9 +93,7 @@ namespace Project.ShopSystem
 
         public bool TryRerollOffers()
         {
-            int cost = CurrentRerollCost;
-            if (playerInventory == null || !playerInventory.CanAfford(cost)
-                || codexInventory == null || codexInventory.allItems.Count == 0)
+            if (playerInventory == null || codexInventory == null || codexInventory.allItems.Count == 0)
             {
                 PlayPurchaseAudio(false);
                 return false;
@@ -106,11 +106,11 @@ namespace Project.ShopSystem
                 return false;
             }
 
-            playerInventory.SpendCurrency(cost);
             rerollCount++;
             PopulateShopItemLists();
             OnRerollCostChanged?.Invoke(CurrentRerollCost);
-            Debug.Log($"Rerolled shop offers for {cost} Soul. Next reroll costs {CurrentRerollCost} Soul.");
+            OnRerollPriceMultiplierChanged?.Invoke(CurrentRerollPriceMultiplier);
+            Debug.Log($"Rerolled shop offers for free. Shop prices increased by {CurrentRerollPriceIncreasePercent:0.#}%.");
             return true;
         }
 
@@ -641,7 +641,7 @@ namespace Project.ShopSystem
 
             int itemPrice = Mathf.Max(0, item.price);
             int basePrice = item is Item ? itemPrice * Mathf.Max(1, quantity) : itemPrice;
-            return basePrice;
+            return Mathf.CeilToInt(basePrice * CurrentRerollPriceMultiplier);
         }
 
         private bool CanAcquire(BaseItem item, int quantity)

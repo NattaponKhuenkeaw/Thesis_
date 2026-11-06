@@ -163,67 +163,82 @@ public class ShopEconomyBalanceTests
     [TestCase(0)]
     [TestCase(1)]
     [TestCase(2)]
-    public void RerollOnlyChangesItsOwnCostNotItemPrices(int rerolls)
+    [TestCase(3)]
+    public void FreeRerollsRaiseOfferPricesByFifteenPercentOfBaseEachTime(int rerolls)
     {
-        typeof(ShopManager).GetField("rerollCount", Private).SetValue(shop, rerolls);
-        Assert.That(shop.CurrentRerollCost, Is.EqualTo(80 + 40 * rerolls));
+        for (int i = 0; i < rerolls; i++) Assert.That(shop.TryRerollOffers(), Is.True);
+        Assert.That(shop.CurrentRerollCost, Is.Zero);
+        Assert.That(shop.CurrentRerollPriceIncreasePercent, Is.EqualTo(15f * rerolls));
+        Assert.That(shop.CurrentRerollPriceMultiplier, Is.EqualTo(1f + .15f * rerolls).Within(.0001f));
         foreach (BaseItem item in shop.codexInventory.allItems.Where(item =>
             item is ArtifactDefinition || item is CharacterItem character && character.availableInShop))
         {
-            Assert.That(OfferPrice(item), Is.EqualTo(item.price), item.name);
+            Assert.That(OfferPrice(item), Is.EqualTo(Mathf.CeilToInt(item.price * shop.CurrentRerollPriceMultiplier)), item.name);
         }
     }
 
     [Test]
-    public void RerollsChargeEightyThenOneTwentyThenOneSixtyAndResetAtANewShop()
+    public void RepeatedRerollsAreFreeEvenWithZeroSoulAndResetSoldOffers()
     {
         var changes = new List<int>();
         shop.OnRerollCostChanged += changes.Add;
+        var multipliers = new List<float>();
+        shop.OnRerollPriceMultiplierChanged += multipliers.Add;
         int currencyChanges = 0;
         inventory.OnCurrencyChanged += _ => currencyChanges++;
-        foreach (int cost in new[] { 80, 120, 160 })
+        inventory.currency = 0;
+        for (int i = 0; i < 20; i++)
         {
             int before = inventory.currency;
-            Assert.That(shop.CurrentRerollCost, Is.EqualTo(cost));
+            Assert.That(shop.CurrentRerollCost, Is.Zero);
             offer.MarkSold();
             Assert.That(shop.TryRerollOffers(), Is.True);
-            Assert.That(inventory.currency, Is.EqualTo(before - cost));
+            Assert.That(inventory.currency, Is.EqualTo(before));
             Assert.That(offer.IsSold, Is.False);
             Assert.That(offer.CurrentItem, Is.Not.Null);
-            Assert.That(offer.CurrentPrice, Is.EqualTo(offer.CurrentItem.price));
+            Assert.That(shop.CurrentRerollPriceIncreasePercent, Is.EqualTo(15f * (i + 1)));
+            Assert.That(offer.CurrentPrice, Is.EqualTo(Mathf.CeilToInt(offer.CurrentItem.price * shop.CurrentRerollPriceMultiplier)));
         }
-        Assert.That(inventory.currency, Is.EqualTo(640));
-        Assert.That(currencyChanges, Is.EqualTo(3));
-        Assert.That(changes, Is.EqualTo(new[] { 120, 160, 200 }));
+        Assert.That(inventory.currency, Is.Zero);
+        Assert.That(currencyChanges, Is.Zero);
+        Assert.That(changes.Count, Is.EqualTo(20));
+        Assert.That(changes.All(cost => cost == 0), Is.True);
+        Assert.That(multipliers.Count, Is.EqualTo(20));
+        Assert.That(multipliers.Last(), Is.EqualTo(4f));
         shop.ResetShopState();
-        Assert.That(shop.CurrentRerollCost, Is.EqualTo(80));
-        Assert.That(inventory.currency, Is.EqualTo(640));
-        Assert.That(currencyChanges, Is.EqualTo(3));
+        Assert.That(shop.CurrentRerollCost, Is.Zero);
+        Assert.That(inventory.currency, Is.Zero);
+        Assert.That(currencyChanges, Is.Zero);
+        Assert.That(shop.CurrentRerollPriceMultiplier, Is.EqualTo(1f));
+        Assert.That(offer.CurrentPrice, Is.EqualTo(offer.CurrentItem.price));
+        Assert.That(multipliers.Last(), Is.EqualTo(1f));
     }
 
     [Test]
-    public void FailedRerollPreservesMoneyOffersSoldStateAndNextCost()
+    public void MissingInventoryRerollPreservesOffersSoldStateAndRandomState()
     {
         var artifact = LoadArtifact("P1_07_ShroudOfDeprivation");
         offer.Populate(artifact, 1, artifact.price); offer.MarkSold();
         shop.currentShopItems.Add(artifact);
-        inventory.currency = 79;
+        inventory.currency = 0;
+        shop.playerInventory = null;
         var state = Random.state;
         int changes = 0;
         shop.OnShopOffersChanged += () => changes++;
         shop.OnRerollCostChanged += _ => changes++;
         Assert.That(shop.TryRerollOffers(), Is.False);
-        Assert.That(inventory.currency, Is.EqualTo(79));
-        Assert.That(shop.CurrentRerollCost, Is.EqualTo(80));
+        Assert.That(inventory.currency, Is.Zero);
+        Assert.That(shop.CurrentRerollCost, Is.Zero);
         Assert.That(offer.CurrentItem, Is.SameAs(artifact));
+        Assert.That(shop.CurrentRerollPriceMultiplier, Is.EqualTo(1f));
         Assert.That(offer.IsSold, Is.True);
         Assert.That(shop.currentShopItems, Is.EqualTo(new[] { artifact }));
         Assert.That(Random.state, Is.EqualTo(state));
         Assert.That(changes, Is.Zero);
-        inventory.AddCurrency(1);
+        shop.playerInventory = inventory;
         Assert.That(shop.TryRerollOffers(), Is.True);
         Assert.That(inventory.currency, Is.Zero);
-        Assert.That(shop.CurrentRerollCost, Is.EqualTo(120));
+        Assert.That(shop.CurrentRerollCost, Is.Zero);
     }
 
     [Test]
@@ -235,17 +250,17 @@ public class ShopEconomyBalanceTests
             shop.codexInventory = empty;
             Assert.That(shop.TryRerollOffers(), Is.False);
             Assert.That(inventory.currency, Is.EqualTo(1000));
-            Assert.That(shop.CurrentRerollCost, Is.EqualTo(80));
+            Assert.That(shop.CurrentRerollCost, Is.Zero);
             empty.allItems.Add(Resources.Load<CharacterItem>("ItemSO/char_1_CameraGIrl"));
             Assert.That(shop.TryRerollOffers(), Is.False, "Character-only inventory cannot populate an Artifact offer.");
             Assert.That(inventory.currency, Is.EqualTo(1000));
-            Assert.That(shop.CurrentRerollCost, Is.EqualTo(80));
+            Assert.That(shop.CurrentRerollCost, Is.Zero);
         }
         finally { Object.DestroyImmediate(empty); }
     }
 
     [Test]
-    public void RerollPromptShowsTheNextSoulCostRatherThanAMarkup()
+    public void RerollPromptShowsFreeEvenWithZeroSoul()
     {
         host.SetActive(true);
         var promptHost = new GameObject("Reroll prompt check");
@@ -257,18 +272,18 @@ public class ShopEconomyBalanceTests
             type.GetField("interactionType").SetValue(prompt, InteractableWorldUI.InteractionType.ShopReroll);
             type.GetField("descriptionString").SetValue(prompt, "Reroll");
             var method = typeof(InteractableWorldUI).GetMethod("GetDisplayDescription", Private);
-            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll 80 SOUL"));
+            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll FREE (+0%)"));
             Assert.That(shop.TryRerollOffers(), Is.True);
-            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll 120 SOUL"));
-            inventory.currency = 119;
-            Assert.That(shop.TryRerollOffers(), Is.False);
-            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll 120 SOUL"));
+            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll FREE (+15%)"));
+            inventory.currency = 0;
+            Assert.That(shop.TryRerollOffers(), Is.True);
+            Assert.That(method.Invoke(ui, new[] { prompt }), Is.EqualTo("Reroll FREE (+30%)"));
         }
         finally { Object.DestroyImmediate(promptHost); }
     }
 
     [Test]
-    public void AuthoredShopUsesTheSameFeesAndBasePricesAsTheTransactions()
+    public void AuthoredShopRerollsForFreeAndAppliesTheOriginalFifteenPercentMarkup()
     {
         var scene = EditorSceneManager.OpenPreviewScene(AssetDatabase.GUIDToAssetPath("d36c77798e07625409da16f442bc42f5"));
         try
@@ -276,20 +291,42 @@ public class ShopEconomyBalanceTests
             var liveShop = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<ShopManager>(true)).Single();
             liveShop.playerInventory = inventory;
             using var data = new SerializedObject(liveShop);
-            Assert.That(data.FindProperty("rerollBaseCost").intValue, Is.EqualTo(80));
-            Assert.That(data.FindProperty("rerollCostStep").intValue, Is.EqualTo(40));
+            Assert.That(data.FindProperty("rerollBaseCost"), Is.Null);
+            Assert.That(data.FindProperty("rerollCostStep"), Is.Null);
+            Assert.That(data.FindProperty("rerollPriceIncreasePercent").floatValue, Is.EqualTo(15f));
             liveShop.ResetShopState();
             Assert.That(liveShop.TryRerollOffers(), Is.True);
-            Assert.That(inventory.currency, Is.EqualTo(920));
-            Assert.That(liveShop.CurrentRerollCost, Is.EqualTo(120));
+            Assert.That(inventory.currency, Is.EqualTo(1000));
+            Assert.That(liveShop.CurrentRerollCost, Is.Zero);
             foreach (var list in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<ShopItemListUI>(true)))
             {
                 if (list.CurrentItem == null) continue;
                 int expected = list.CurrentItem is Item ? list.CurrentItem.price * list.CurrentQuantity : list.CurrentItem.price;
-                Assert.That(list.CurrentPrice, Is.EqualTo(expected));
+                Assert.That(list.CurrentPrice, Is.EqualTo(Mathf.CeilToInt(expected * liveShop.CurrentRerollPriceMultiplier)));
             }
         }
         finally { EditorSceneManager.ClosePreviewScene(scene); }
+    }
+
+    [Test]
+    public void RerolledArtifactPurchaseChargesTheDisplayedMarkupOnceWithoutChangingTheAsset()
+    {
+        Assert.That(shop.TryRerollOffers(), Is.True);
+        var item = (ArtifactDefinition)offer.CurrentItem;
+        int assetPrice = item.price;
+        int quoted = offer.CurrentPrice;
+        Assert.That(quoted, Is.EqualTo(Mathf.CeilToInt(assetPrice * 1.15f)));
+        inventory.currency = quoted - 1;
+        Assert.That(shop.TryPurchaseOffer(offer), Is.False);
+        Assert.That(inventory.currency, Is.EqualTo(quoted - 1));
+        Assert.That(offer.IsSold, Is.False);
+        inventory.AddCurrency(1);
+        Assert.That(shop.TryPurchaseOffer(offer), Is.True);
+        Assert.That(inventory.currency, Is.Zero);
+        Assert.That(inventory.GetItemCount(item), Is.EqualTo(1));
+        Assert.That(shop.TryPurchaseOffer(offer), Is.False);
+        Assert.That(inventory.currency, Is.Zero);
+        Assert.That(item.price, Is.EqualTo(assetPrice));
     }
 
     [TestCase(RouteDifficulty.Easy, 80, 100)]
