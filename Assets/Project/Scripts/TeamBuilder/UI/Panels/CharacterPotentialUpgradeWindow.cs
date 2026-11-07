@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Project.InventorySystem.Items;
 using Project.Progression;
+using Project.UI;
 
 namespace Project.TeamBuilder.UI.Panels
 {
@@ -78,6 +79,46 @@ namespace Project.TeamBuilder.UI.Panels
             if (nodeIcon == null) return;
             nodeIcon.sprite = icon;
             nodeIcon.enabled = icon != null;
+        }
+
+        internal Button ShowMemoryPreview(PotentialTrack family, string title, string step, string description,
+            string status, Sprite icon, Action close, Action select = null)
+        {
+            BindUpgradeHandler(select == null ? null : _ => select());
+            BindCloseHandler(close);
+            PlaceForTrack(family);
+            gameObject.SetActive(true);
+            if (nodeNameText != null) nodeNameText.text = title;
+            if (nodeLevelText != null) nodeLevelText.text = step;
+            if (descriptionText != null) descriptionText.text = description;
+            if (stateText != null) stateText.text = status;
+            SetIcon(icon);
+            SetFragmentRequirementVisible(false);
+            if (upgradeButton != null)
+            {
+                upgradeButton.gameObject.SetActive(select != null);
+                if (select != null)
+                {
+                    upgradeButton.interactable = true;
+                    if (upgradeButton.TryGetComponent<CanvasGroup>(out var group))
+                    {
+                        group.alpha = 1f;
+                        group.interactable = group.blocksRaycasts = true;
+                    }
+                    if (upgradeButtonText != null) upgradeButtonText.text = "Select";
+                }
+            }
+            if (upgradedStateObject != null) upgradedStateObject.SetActive(false);
+
+            Button dismiss = closeButton != null && closeButton.isActiveAndEnabled ? closeButton : cancelButton;
+            if (dismiss == null)
+            {
+                cancelButton = dismiss = CreateRuntimeButton("Close Preview", "Close preview");
+                dismiss.onClick.AddListener(HandleClose);
+            }
+            if (select == null || upgradeButton == null) return dismiss;
+            CharacterMemoryPanel.BindNavigation(new[] { new Selectable[] { upgradeButton, dismiss } });
+            return upgradeButton;
         }
 
         public void Show(

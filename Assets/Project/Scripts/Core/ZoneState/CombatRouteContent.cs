@@ -52,13 +52,22 @@ namespace Project.Core.ZoneState
         public static bool TryResolveActiveDifficultyPalette(out EncounterSO palette)
         {
             palette = null;
+            if (!TryGetActiveDifficulty(out RouteDifficulty difficulty)) return false;
+
+            palette = LoadPalette(difficulty);
+            return palette != null && palette.HasTypePool;
+        }
+
+        public static bool TryGetActiveDifficulty(out RouteDifficulty difficulty)
+        {
+            difficulty = default;
             if (!ActiveRouteOffer.HasSelection)
             {
                 return false;
             }
 
             RoomChoiceOffer offer = ActiveRouteOffer.Current;
-            if (!offer.ShowsDifficulty)
+            if (!offer.UsesCombatPalette)
             {
                 return false;
             }
@@ -77,8 +86,18 @@ namespace Project.Core.ZoneState
                 }
             }
 
-            palette = LoadPalette(offer.Difficulty);
-            return palette != null && palette.HasTypePool;
+            difficulty = offer.Difficulty;
+            return true;
+        }
+
+        public static int GetRoomEnemyBudget(RouteDifficulty difficulty)
+        {
+            return difficulty switch
+            {
+                RouteDifficulty.Hard => 20,
+                RouteDifficulty.Medium => 16,
+                _ => 12
+            };
         }
 
         public static EncounterSO ResolveChamberEncounter(EncounterSO chamberEncounter)

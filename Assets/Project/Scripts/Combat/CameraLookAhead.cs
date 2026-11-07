@@ -158,6 +158,52 @@ public class CameraLookAhead : MonoBehaviour
         );
     }
 
+<<<<<<< Updated upstream
+=======
+    private bool TryResolvePlayerRigidbody()
+    {
+        if (playerRigidbody == null)
+        {
+            if (Time.unscaledTime < nextPlayerSearchTime)
+                return false;
+
+            nextPlayerSearchTime = Time.unscaledTime + PlayerSearchInterval;
+            GameObject playerObject = GameObject.FindWithTag("Player");
+            if (playerObject != null)
+            {
+                PlayerMovement movement = playerObject.GetComponent<PlayerMovement>()
+                    ?? playerObject.GetComponentInChildren<PlayerMovement>(true);
+                Rigidbody2D body = movement != null ? movement.RB : null;
+                BindPlayerRigidbody(body != null ? body : playerObject.GetComponent<Rigidbody2D>());
+            }
+
+            if (playerRigidbody == null)
+            {
+                PlayerMovement movement = Object.FindFirstObjectByType<PlayerMovement>();
+                if (movement != null)
+                    BindPlayerRigidbody(movement.RB);
+            }
+        }
+
+        return playerRigidbody != null;
+    }
+
+    public void BindPlayerRigidbody(Rigidbody2D playerBody)
+    {
+        if (playerBody == null)
+            return;
+
+        playerRigidbody = playerBody;
+        if (initializedPlayerRigidbody != playerRigidbody)
+        {
+            initializedPlayerRigidbody = playerRigidbody;
+            currentProxyX = playerRigidbody.position.x;
+            proxyVelocityX = 0f;
+            CheckFacingDirection(true);
+        }
+    }
+
+>>>>>>> Stashed changes
     /// <summary>
     /// Fade horizontal look-ahead as the player approaches a room wall so the
     /// tracking target does not pull the camera past the confiner.
@@ -196,7 +242,11 @@ public class CameraLookAhead : MonoBehaviour
     public void ResetHorizontalForCharacterSwap(Rigidbody2D incomingBody, float centerSeconds)
     {
         if (incomingBody == null) return;
+<<<<<<< Updated upstream
         playerRigidbody = incomingBody;
+=======
+        BindPlayerRigidbody(incomingBody);
+>>>>>>> Stashed changes
         if (tweenId >= 0 && LeanTween.isTweening(tweenId)) LeanTween.cancel(tweenId);
         tweenId = -1;
         if (directionalCueRoutine != null) StopCoroutine(directionalCueRoutine);

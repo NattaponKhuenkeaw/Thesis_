@@ -140,9 +140,11 @@ public class PassiveTriggerFilter
 
     [Tooltip("Only accepted on-field manual starts qualify; excludes free QTE intros and missing/stale execution provenance.")]
     public bool requireManualOnFieldActionStart;
+    public bool requireInitialActionStep;
 
     public bool Matches(PassiveEventContext context)
     {
+        if (requireInitialActionStep && context.isAutoChainStep) return false;
         if (requireManualOnFieldActionStart)
         {
             CombatExecutionContext execution = context.actionStartExecution;
@@ -1145,9 +1147,31 @@ public class PotentialNodeDefinition : CharacterEffectSetDefinition
     [Tooltip("Kit entry changes. Target an entry ID, independently of this node's Potential track.")]
     public List<CharacterKitPresentationDefinition.Patch> kitInfoPatches = new List<CharacterKitPresentationDefinition.Patch>();
     public PotentialTrack track = PotentialTrack.Passive;
-    [Range(0, CharacterKitDefinition.MaxPotentialLevel)] public int level = 1;
+    [Range(0, Project.Progression.CharacterMemoryProgress.UpgradesPerFamily)] public int level = 1;
     [Min(0)] public int fragmentCost = 1;
     public bool unlockedByDefault = false;
+    [Tooltip("Optional hit recipe used by custom projectile logic for this upgrade.")]
+    public RuntimeEffectRecipe projectileHitEffect;
+
+    [Header("Main Memory Projectile Effects")]
+    [Tooltip("Skill Lv4 summoned Dark Chain settings. Only consumed by Main's Memory runtime.")]
+    public DarkChainSummonSettings darkChainSummon;
+    [Tooltip("Passive Lv5 additional damage, restricted to the final melee hit of Jailbreak Punisher and Execution Breakdown. Source stat refers to Main.")]
+    public AdditionalDamageEffectDefinition ultimateFinisherDamage;
+
+    [Serializable]
+    public class DarkChainSummonSettings
+    {
+        [Tooltip("Optional summon visual/hitbox template. Empty reuses the cast Dark Chain projectile.")]
+        public ProjectileData projectile;
+        [Min(.1f)] public float durationSeconds = 12f;
+        [Min(.1f)] public float intervalSeconds = 2.5f;
+        [Min(.1f)] public float strikeLifetimeSeconds = 2f;
+        public ProjectileReferencePointMode referencePoint = ProjectileReferencePointMode.GroundProjection;
+        [Min(0f)] public float attackRatio = 2f;
+        [Tooltip("Damage ratio of Main's Max HP, not the enemy's.")]
+        [Min(0f)] public float maxHpRatio = .08f;
+    }
 }
 
 [Serializable]
@@ -1350,6 +1374,7 @@ public class CharacterKitDefinition : ISerializationCallbackReceiver
 public struct PassiveEventContext
 {
     [NonSerialized] public CombatExecutionContext actionStartExecution;
+    [NonSerialized] public bool isAutoChainStep;
     public AttackCategory category;
     public string actionId;
     public string actionName;

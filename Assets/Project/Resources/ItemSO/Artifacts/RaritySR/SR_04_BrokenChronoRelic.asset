@@ -18,8 +18,28 @@ MonoBehaviour:
     kill faster, or forget your name.
   icon: {fileID: 21300000, guid: 3ed122e6e9a0b0e428a23d53ba9f97a6, type: 3}
   price: 1200
-  rarity: 2
   isEquippable: 1
-  passiveDescription: 'Skill damage marks an enemy for 10s. The next eligible hit consumes it and triggers a Bleed explosion. 14s cooldown.'
+  rarity: 2
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: "Skill damage apply <color=#00ffff>Chrono Mark</color></size>
+    to enemy for <b><color=#FFA500>10s</color></b> \r\n\r\n<size=18><color=#C0C0C0>Chrono
+    Mark: The next eligible hit consumes it and triggers a <b><color=#FF1E1E>Bleed
+    explosion</color></b> that deal <b><color=#FFA500>35%</color></b> of Snappshotted
+    DMG Dealt. <size=17><color=#C0C0C0>(14s cooldown)</color></size></color></size>"
   passiveSet: {fileID: 11400000, guid: 896424bd7d8148aba8a8c34ccb17b531, type: 2}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

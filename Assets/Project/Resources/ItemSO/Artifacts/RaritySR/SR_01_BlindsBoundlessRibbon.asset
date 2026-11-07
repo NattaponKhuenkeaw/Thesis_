@@ -18,8 +18,25 @@ MonoBehaviour:
     lose yourself to the fog."
   icon: {fileID: 21300000, guid: ed8fd30f185d0b743a8b3a9b2cdc2e7f, type: 3}
   price: 950
-  rarity: 2
   isEquippable: 1
-  passiveDescription: 'Ultimate has a 35% chance per cast to convert its eligible damage to Darkness.'
+  rarity: 2
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: Ultimate has a <b><color=#FFA500>75%</color></b> chance per
+    cast to convert its eligible damage to <b><color=#B659E5>Darkness</color></b>
   passiveSet: {fileID: 11400000, guid: 6e01a1d747104b1aa21bb9aa0e5e2e06, type: 2}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

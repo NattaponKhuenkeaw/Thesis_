@@ -281,6 +281,154 @@ MonoBehaviour:
       level: 0
       fragmentCost: 0
       unlockedByDefault: 1
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     baseUltimateNode:
       meterCapacityModifiers: []
       counterGainModifiers: []
@@ -316,6 +464,154 @@ MonoBehaviour:
       level: 0
       fragmentCost: 0
       unlockedByDefault: 1
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     basePassiveNode:
       meterCapacityModifiers: []
       counterGainModifiers: []
@@ -341,6 +637,7 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         counterId: main.shadow
         operation: 4
         value: 20
@@ -373,53 +670,126 @@ MonoBehaviour:
       level: 0
       fragmentCost: 0
       unlockedByDefault: 1
-    potentialNodes:
-    - meterCapacityModifiers: []
-      counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers:
-      - consumeRequiredTagsOnUse: 1
-        startingComboStepNameOverride: 
-        category: 1
-        actionId: main.skill.dark_chain
-        actionName: 
-        stepName: 
-        unlocked: 1
-        priorityBonus: 0
-        replacementActionId: 
-        replacementActionName: 
-        startingComboDepthOverride: 0
-        requiredTags: []
-        requiredCounters: []
-        damageMultiplierOperation: 0
-        damageMultiplierValue: 0
-        criticalRateOperation: 0
-        criticalRateValue: 0
-        criticalDamageOperation: 0
-        criticalDamageValue: 0
-        finalDamageOperation: 0
-        finalDamageValue: 0
-        finalDamageRequiresCriticalHit: 0
-        auraEnergyRewardAdd: 5
-        cooldownOperation: 0
-        cooldownValue: 0
-        energyCostOperation: 0
-        energyCostValue: 0
-        ignoreDefense: 0
-        ignoreDefenseRequiresCriticalHit: 0
-        ignoreDamageResistance: 0
-        ignoreTypeReduction: 0
-        hitboxScaleMultiplier: 1
-        projectileScaleMultiplier: 1
-        replacementProjectileType: 0
-        replacementProjectileData: {fileID: 0}
-      runtimeTagEffects: []
-      runtimeEffects:
-      - trigger: 3
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
         filter:
-          filterByCategory: 1
-          category: 1
+          filterByCategory: 0
+          category: 0
           filterByActionId: 0
           actionId: 
           filterByActionName: 0
@@ -431,138 +801,31 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
+          requireInitialActionStep: 0
         chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: main.skill.damage_taken
-          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-          presentation:
-            effectId: main.skill.damage_taken
-            displayName: Damage Taken Increase
-            showRemainingTime: 0
-            icon: {fileID: 0}
-            fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
-          policy:
-            kind: 1
-            appliesOn: 1
-            durationType: 0
-            durationSeconds: 17
-            stackMode: 1
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 0
-            removeOnOwnerDamaged: 0
-            stackKey: main.skill.damage_taken
-          parameters:
-            overrideDefense: 0
-            evasionChanceAdd: 0
-            overrideStatModifiers: 0
-            statModifiers: []
-            overrideDamageModifier: 1
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 20
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              applyNativeDot: 0
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 0
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+    potentialNodes:
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -575,34 +838,169 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.skill.lv1
-      nodeName: Chain Reward
-      description: Increase enemy damage taken by 20% for 17 seconds, and increase
-        AE Reward by 5.
-      skillPanelDescriptionOverride: 'Unleash a chain across the field, Inflict DMG
-        <b><color=#a382ed>350%</color></b> of ATK
-
-
-
-        <size=20><color=#C0C0C0>-
-        Debuff Target with Increased Damage Taken <b><color=#a382ed>20%</color></b>
-        for <b><color=#a382ed>17 seconds</color></b></color></size>'
+      nodeName: Skill Memory Lv.1
+      description: Dark Chain increases enemy damage taken by <b><color=#a382ed>+20%</color></b>
+        for <b><color=#a382ed>10 seconds</color></b>.
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.skill.dark_chain
-        noteId: 
+        noteId: main.skill.lv1
         priority: 1
-        appendNote: 0
-        description: 'Unleash a chain across the field, Inflict DMG <b><color=#a382ed>350%</color></b>
-          of ATK
-
-
-
-          <size=20><color=#C0C0C0>- Debuff Target with Increased
-          Damage Taken <b><color=#a382ed>20%</color></b> for <b><color=#a382ed>17
-          seconds</color></b></color></size>'
+        appendNote: 1
+        description: Dark Chain increases enemy damage taken by <b><color=#a382ed>+20%</color></b>
+          for <b><color=#a382ed>10 seconds</color></b>.
       track: 0
       level: 1
-      fragmentCost: 1
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: main.memory.chain_exposure
+        definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+        presentation:
+          effectId: main.memory.chain_exposure
+          displayName: Dark Chain - Damage Taken
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
+        policy:
+          kind: 1
+          appliesOn: 1
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 1
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: main.memory.chain_exposure
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 1
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 20
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
       statModifiers: []
@@ -657,46 +1055,139 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.skill.lv2
-      nodeName: Magnetic Chain
-      description: Dark Chain constantly pulls surrounding enemies gently toward
-        its center.
-      skillPanelDescriptionOverride: 'Unleash a chain across the field Which have
-        a <b><color=#a382ed>Weak Magnetism</color></b>, Inflict DMG <b><color=#a382ed>350%</color></b>
-        of ATK
-
-
-
-        <size=20><color=#C0C0C0>- Debuff Target with Increased
-        Damage Taken <b><color=#a382ed>20%</color></b> for <b><color=#a382ed>17 seconds</color></b></color></size>'
+      nodeName: Skill Memory Lv.2
+      description: Dark Chain gently pulls nearby enemies toward its center.
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.skill.dark_chain
-        noteId: 
+        noteId: main.skill.lv2
         priority: 2
-        appendNote: 0
-        description: 'Unleash a chain across the field Which have a <b><color=#a382ed>Weak
-          Magnetism</color></b>, Inflict DMG <b><color=#a382ed>350%</color></b> of
-          ATK
-
-
-
-          <size=20><color=#C0C0C0>- Debuff Target with Increased
-          Damage Taken <b><color=#a382ed>20%</color></b> for <b><color=#a382ed>17
-          seconds</color></b></color></size>'
+        appendNote: 1
+        description: Dark Chain gently pulls nearby enemies toward its center.
       track: 0
       level: 2
-      fragmentCost: 1
+      fragmentCost: 0
       unlockedByDefault: 0
-    - meterCapacityModifiers: []
-      counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects: []
-      runtimeEffects:
-      - trigger: 3
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
         filter:
-          filterByCategory: 1
-          category: 1
+          filterByCategory: 0
+          category: 0
           filterByActionId: 0
           actionId: 
           filterByActionName: 0
@@ -708,416 +1199,29 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
+          requireInitialActionStep: 0
         chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: main.skill.damage_taken
-          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-          presentation:
-            effectId: main.skill.damage_taken
-            displayName: Damage Taken Increase
-            showRemainingTime: 0
-            icon: {fileID: 0}
-            fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
-          policy:
-            kind: 1
-            appliesOn: 1
-            durationType: 0
-            durationSeconds: 17
-            stackMode: 1
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 0
-            removeOnOwnerDamaged: 0
-            stackKey: main.skill.damage_taken
-          parameters:
-            overrideDefense: 0
-            evasionChanceAdd: 0
-            overrideStatModifiers: 0
-            statModifiers: []
-            overrideDamageModifier: 1
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 40
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              applyNativeDot: 0
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 0
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      coordinatedActionEffects: []
-      passiveHookTypeName: 
-      nodeId: main.skill.lv3
-      nodeName: Exposed Dimension
-      description: Increase enemy damage taken by 40% for 17 seconds.
-      skillPanelDescriptionOverride: 'Unleash a chain across the field Which have
-        a <b><color=#a382ed>Weak Magnetism</color></b>, Inflict DMG <b><color=#a382ed>350%</color></b>
-        of ATK
-
-
-
-        <size=20><color=#C0C0C0>- Debuff Target with Increased
-        Damage Taken <b><color=#a382ed>40%</color></b> for <b><color=#a382ed>17 seconds</color></b></color></size>'
-      kitInfoPatches:
-      - entryId: main.skill.dark_chain
-        noteId: 
-        priority: 3
-        appendNote: 0
-        description: 'Unleash a chain across the field Which have a <b><color=#a382ed>Weak
-          Magnetism</color></b>, Inflict DMG <b><color=#a382ed>350%</color></b> of
-          ATK
-
-
-
-          <size=20><color=#C0C0C0>- Debuff Target with Increased
-          Damage Taken <b><color=#a382ed>40%</color></b> for <b><color=#a382ed>17
-          seconds</color></b></color></size>'
-      track: 0
-      level: 3
-      fragmentCost: 1
-      unlockedByDefault: 0
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
-      runtimeEffects:
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 1
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        enableRandomBuffSelection: 0
-        minRandomBuffCount: 1
-        maxRandomBuffCount: 1
-        allowDuplicateRandomBuffs: 0
-        randomBuffPool: []
-        recipe:
-          recipeId: main.skill.team_mastery
-          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
-          presentation:
-            effectId: main.skill.team_mastery
-            displayName: DOT Mastery and Additional Damage Increase
-            showRemainingTime: 0
-            icon: {fileID: 21300000, guid: 50e134dab34d29b46956f7a61a913a76, type: 3}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 0
-            appliesOn: 2
-            durationType: 0
-            durationSeconds: 17
-            stackMode: 1
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 0
-            removeOnOwnerDamaged: 0
-            stackKey: main.skill.team_mastery
-          parameters:
-            overrideDefense: 0
-            evasionChanceAdd: 0
-            overrideStatModifiers: 1
-            statModifiers:
-            - target: 4
-              operation: 3
-              sourceStat: 1
-              statRatioValueSource: 0
-              value: 0.125
-            - target: 11
-              operation: 3
-              sourceStat: 1
-              statRatioValueSource: 0
-              value: 0.125
-            overrideDamageModifier: 0
-            damageModifier:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreTypeReduction: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              applyNativeDot: 0
-              filter:
-                filterByDelivery: 0
-                delivery: 0
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 0
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      coordinatedActionEffects: []
-      passiveHookTypeName: 
-      nodeId: main.skill.lv4
-      nodeName: Shared Dimension
-      description: Increase all allies' DM and ADI by 1% per 8 of Main's ATK for
-        17 seconds.
-      skillPanelDescriptionOverride: 'Unleash a chain across the field Which have
-        a <b><color=#a382ed>Weak Magnetism</color></b>, Inflict DMG <b><color=#a382ed>350%</color></b>
-        of ATK
-
-
-
-        <size=20><color=#C0C0C0>- Debuff Target with Increased
-        Damage Taken <b><color=#a382ed>40%</color></b> for <b><color=#a382ed>17 seconds</color></b></color></size>
-
-        <size=20><color=#C0C0C0>-
-        All allies gain <b><color=#a382ed>1% DM / ADI per 8 of Shin''s ATK</color></b>
-        for <b><color=#a382ed>17 seconds</color></b></color></size>'
-      kitInfoPatches:
-      - entryId: main.skill.dark_chain
-        noteId: 
-        priority: 4
-        appendNote: 0
-        description: 'Unleash a chain across the field Which have a <b><color=#a382ed>Weak
-          Magnetism</color></b>, Inflict DMG <b><color=#a382ed>350%</color></b> of
-          ATK
-
-
-
-          <size=20><color=#C0C0C0>- Debuff Target with Increased
-          Damage Taken <b><color=#a382ed>40%</color></b> for <b><color=#a382ed>17
-          seconds</color></b></color></size>
-
-          <size=20><color=#C0C0C0>-
-          All allies gain <b><color=#a382ed>1% DM / ADI per 8 of Shin''s ATK</color></b>
-          for <b><color=#a382ed>17 seconds</color></b></color></size>'
-      track: 0
-      level: 4
-      fragmentCost: 1
-      unlockedByDefault: 0
-    - meterCapacityModifiers: []
-      counterGainModifiers: []
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects:
-      - trigger: 1
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionId: 1
-          actionId: main.ultimate.jailbreak_punisher
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-          requireManualOnFieldActionStart: 0
-        tag: main.void_area
-        addTag: 1
-        duration: 20
-        rememberEnemyTarget: 0
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
@@ -1130,28 +1234,354 @@ MonoBehaviour:
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
-      nodeId: main.ultimate.lv1
-      nodeName: Void Area
-      description: Jailbreak Punisher opens a 20 seconds Void Area timing window.
-      skillPanelDescriptionOverride: "Grab the Enemy then Perform a Jailbreak Punisher,
-        Inflict DMG <b><color=#a382ed>500%</color></b> of ATK\r\n\r\n<size=20><color=#C0C0C0>-
-        AfterJailbreak Punisher will open <color=#8B3DFF>Void Area</color> for 20
-        seconds</color></size>\r\n\r\n<size=19><color=#00ffff> \u2022 Void Area:
-        Deal <color=#8B3DFF>Void</color> DMG 100% of own ATK every 5 seconds</color></size> "
+      nodeId: main.skill.lv3
+      nodeName: Skill Memory Lv.3
+      description: Dark Chain increases enemy damage taken by <b><color=#a382ed>+40%</color></b>
+        for <b><color=#a382ed>10 seconds</color></b>, and pulls more strongly.
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
-      - entryId: main.ultimate.jailbreak_punisher
-        noteId: 
-        priority: 1
-        appendNote: 0
-        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
-          <b><color=#a382ed>500%</color></b> of ATK\r\n\r\n<size=20><color=#C0C0C0>-
-          AfterJailbreak Punisher will open <color=#8B3DFF>Void Area</color> for
-          20 seconds</color></size>\r\n\r\n<size=19><color=#00ffff> \u2022 Void Area:
-          Deal <color=#8B3DFF>Void</color> DMG 100% of own ATK every 5 seconds</color></size> "
-      track: 1
-      level: 1
-      fragmentCost: 1
+      - entryId: main.skill.dark_chain
+        noteId: main.skill.lv3
+        priority: 3
+        appendNote: 1
+        description: Dark Chain increases enemy damage taken by <b><color=#a382ed>+40%</color></b>
+          for <b><color=#a382ed>10 seconds</color></b>, and pulls more strongly.
+      track: 0
+      level: 3
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: main.memory.chain_exposure
+        definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+        presentation:
+          effectId: main.memory.chain_exposure
+          displayName: Dark Chain - Damage Taken
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
+        policy:
+          kind: 1
+          appliesOn: 1
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 1
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: main.memory.chain_exposure
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 1
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 40
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.skill.lv4
+      nodeName: Skill Memory Lv.4
+      description: Summon a Dark Chain for <b><color=#a382ed>12 seconds</color></b>.
+        It attacks the nearest enemy every <b><color=#a382ed>2.5 seconds</color></b>
+        for Darkness DMG equal to <b><color=#a382ed>200% ATK + 8% Max HP</color></b>.
+      skillPanelDescriptionOverride: 
+      kitInfoPatches:
+      - entryId: main.skill.dark_chain
+        noteId: main.skill.lv4
+        priority: 4
+        appendNote: 1
+        description: Summon a Dark Chain for <b><color=#a382ed>12 seconds</color></b>.
+          It attacks the nearest enemy every <b><color=#a382ed>2.5 seconds</color></b>
+          for Darkness DMG equal to <b><color=#a382ed>200% ATK + 8% Max HP</color></b>.
+      track: 0
+      level: 4
+      fragmentCost: 0
+      unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 11400000, guid: a52aedf2b9dab6f44ad3f0980de374c1, type: 2}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
       statModifiers: []
@@ -1159,21 +1589,22 @@ MonoBehaviour:
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects:
-      - trigger: 3
+      - trigger: 1
         filter:
           filterByCategory: 1
-          category: 2
-          filterByActionId: 0
-          actionId: 
+          category: 1
+          filterByActionId: 1
+          actionId: main.skill.dark_chain
           filterByActionName: 0
           actionName: 
-          filterByStepName: 1
-          stepName: Void Area
+          filterByStepName: 0
+          stepName: 
           filterByElement: 0
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 1
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1189,35 +1620,45 @@ MonoBehaviour:
         allowDuplicateRandomBuffs: 0
         randomBuffPool: []
         recipe:
-          recipeId: lv2.main.ult
+          recipeId: main.memory.chain_allies
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
           presentation:
-            effectId: 
-            displayName: Defense Decrease
+            effectId: main.memory.chain_allies
+            displayName: Dark Chain - Ally Buff
             showRemainingTime: 0
-            icon: {fileID: 21300000, guid: b25b01306d317ba46894db2b7dfed19b, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
-            kind: 1
-            appliesOn: 1
+            kind: 0
+            appliesOn: 2
             durationType: 0
-            durationSeconds: 7
-            stackMode: 0
+            durationSeconds: 10
+            stackMode: 1
             stackLimit: 1
             refreshDurationOnReapply: 1
             stackable: 0
             removeOnOwnerDamaged: 0
-            stackKey: 
+            stackKey: main.memory.chain_allies
           parameters:
             overrideDefense: 0
             evasionChanceAdd: 0
             overrideStatModifiers: 1
             statModifiers:
-            - target: 2
-              operation: 1
-              sourceStat: 2
+            - target: 11
+              operation: 3
+              sourceStat: 0
               statRatioValueSource: 0
-              value: 0.85
+              value: 0.008333334
+            - target: 4
+              operation: 3
+              sourceStat: 0
+              statRatioValueSource: 0
+              value: 0.008333334
+            - target: 8
+              operation: 3
+              sourceStat: 0
+              statRatioValueSource: 0
+              value: 0.008333334
             overrideDamageModifier: 0
             damageModifier:
               filter:
@@ -1304,11 +1745,11 @@ MonoBehaviour:
         applicationMode: 0
         applicationCount: 1
         effect: {fileID: 0}
-        scope: 2
-        stackMode: 1
+        scope: 0
+        stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
-        durationOverride: 7
+        durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
       runtimeEffectStackLimitModifiers: []
@@ -1322,34 +1763,172 @@ MonoBehaviour:
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
-      nodeId: main.ultimate.lv2
-      nodeName: Void Area Break
-      description: Enemies damaged by Void Area take increased damage for 7 seconds,
-        unstackable.
-      skillPanelDescriptionOverride: "Grab the Enemy then Perform a Jailbreak Punisher,
-        Inflict DMG <b><color=#a382ed>500%</color></b> of ATK\r\n\r\n<size=20><color=#C0C0C0>-
-        AfterJailbreak Punisher will open <color=#8B3DFF>Void Area</color> for 20
-        seconds</color></size>\r\n<size=20><color=#C0C0C0>- Enemies damaged by <b><color=#8B3DFF>Void
-        Area</color></b> will <b>Their Defense Decrease -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i></color></size>\r\n\r\n<size=19><color=#00ffff>
-        \u2022 Void Area: Deal <color=#8B3DFF>Void</color> DMG 100% of own ATK every
-        5 seconds</color></size> "
+      nodeId: main.memory.skill.lv5
+      nodeName: Skill Memory Lv.5
+      description: On Dark Chain cast, allies gain <b><color=#a382ed>+1% ADI, DM,
+        and DI</color></b> per <b><color=#a382ed>120 of Main's Max HP</color></b>
+        for <b><color=#a382ed>10 seconds</color></b>.
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
-      - entryId: main.ultimate.jailbreak_punisher
-        noteId: 
-        priority: 2
-        appendNote: 0
-        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
-          <b><color=#a382ed>500%</color></b> of ATK\r\n\r\n<size=20><color=#C0C0C0>-
-          AfterJailbreak Punisher will open <color=#8B3DFF>Void Area</color> for
-          20 seconds</color></size>\r\n<size=20><color=#C0C0C0>- Enemies damaged
-          by <b><color=#8B3DFF>Void Area</color></b> will <b>Their Defense Decrease
-          -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i></color></size>\r\n\r\n<size=19><color=#00ffff>
-          \u2022 Void Area: Deal <color=#8B3DFF>Void</color> DMG 100% of own ATK
-          every 5 seconds</color></size> "
-      track: 1
-      level: 2
-      fragmentCost: 1
+      - entryId: main.skill.dark_chain
+        noteId: main.memory.skill.lv5
+        priority: 5
+        appendNote: 1
+        description: On Dark Chain cast, allies gain <b><color=#a382ed>+1% ADI, DM,
+          and DI</color></b> per <b><color=#a382ed>120 of Main's Max HP</color></b>
+          for <b><color=#a382ed>10 seconds</color></b>.
+      track: 0
+      level: 5
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
       statModifiers: []
@@ -1357,10 +1936,10 @@ MonoBehaviour:
       actionModifiers:
       - consumeRequiredTagsOnUse: 1
         startingComboStepNameOverride: 
-        category: 2
-        actionId: main.ultimate.jailbreak_punisher
+        category: 1
+        actionId: main.skill.dark_chain
         actionName: 
-        stepName: Void Area
+        stepName: 
         unlocked: 1
         priorityBonus: 0
         replacementActionId: 
@@ -1378,8 +1957,8 @@ MonoBehaviour:
         finalDamageValue: 0
         finalDamageRequiresCriticalHit: 0
         auraEnergyRewardAdd: 0
-        cooldownOperation: 0
-        cooldownValue: 0
+        cooldownOperation: 3
+        cooldownValue: 10
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
@@ -1389,7 +1968,554 @@ MonoBehaviour:
         hitboxScaleMultiplier: 1
         projectileScaleMultiplier: 1
         replacementProjectileType: 0
-        replacementProjectileData: {fileID: 11400000, guid: b74c4e0c5df54290a0f8d610fd6fd7a1, type: 2}
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.memory.skill.lv6
+      nodeName: Skill Memory Lv.6
+      description: Dark Chain's base cooldown becomes <b><color=#a382ed>10 seconds</color></b>.
+      skillPanelDescriptionOverride: 
+      kitInfoPatches:
+      - entryId: main.skill.dark_chain
+        noteId: main.memory.skill.lv6
+        priority: 6
+        appendNote: 1
+        description: Dark Chain's base cooldown becomes <b><color=#a382ed>10 seconds</color></b>.
+      track: 0
+      level: 6
+      fragmentCost: 0
+      unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.ultimate.lv1
+      nodeName: Ultimate Memory Lv.1
+      description: Jailbreak Punisher creates a Void Area for <b><color=#a382ed>20
+        seconds</color></b>. It deals Void DMG equal to <b><color=#a382ed>200% ATK</color></b>
+        every <b><color=#a382ed>5 seconds</color></b>.
+      skillPanelDescriptionOverride: 
+      kitInfoPatches:
+      - entryId: main.ultimate.jailbreak_punisher
+        noteId: main.ultimate.lv1
+        priority: 1
+        appendNote: 1
+        description: Jailbreak Punisher creates a Void Area for <b><color=#a382ed>20
+          seconds</color></b>. It deals Void DMG equal to <b><color=#a382ed>200%
+          ATK</color></b> every <b><color=#a382ed>5 seconds</color></b>.
+      track: 1
+      level: 1
+      fragmentCost: 0
+      unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.ultimate.lv2
+      nodeName: Ultimate Memory Lv.2
+      description: Enemies damaged by Void Area take <b><color=#a382ed>+15% damage</color></b>
+        for <b><color=#a382ed>7 seconds</color></b>. Repeated hits refresh the effect.
+      skillPanelDescriptionOverride: 
+      kitInfoPatches:
+      - entryId: main.ultimate.jailbreak_punisher
+        noteId: main.ultimate.lv2
+        priority: 2
+        appendNote: 1
+        description: Enemies damaged by Void Area take <b><color=#a382ed>+15% damage</color></b>
+          for <b><color=#a382ed>7 seconds</color></b>. Repeated hits refresh the
+          effect.
+      track: 1
+      level: 2
+      fragmentCost: 0
+      unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: main.memory.void_exposure
+        definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+        presentation:
+          effectId: main.memory.void_exposure
+          displayName: Void Area - Damage Taken
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 1
+          appliesOn: 1
+          durationType: 0
+          durationSeconds: 7
+          stackMode: 1
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: main.memory.void_exposure
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 1
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 15
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -1404,72 +2530,174 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.ultimate.lv3
-      nodeName: Void Area Collapse
-      description: Void DMG from Void Area deals 500% of ATK.
-      skillPanelDescriptionOverride: "Grab the Enemy then Perform a Jailbreak Punisher,
-        Inflict DMG <b><color=#a382ed>500%</color></b> of ATK\r\n\r\n<size=20><color=#C0C0C0>-
-        AfterJailbreak Punisher will open <color=#8B3DFF>Void Area</color> for 20
-        seconds</color></size>\r\n<size=20><color=#C0C0C0>- Enemies damaged by <b><color=#8B3DFF>Void
-        Area</color></b> will <b>Their Defense Decrease -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i></color></size>\r\n\r\n<size=19><color=#00ffff>
-        \u2022 Void Area: Deal <color=#8B3DFF>Void</color> DMG 500% of own ATK every
-        5 seconds</color></size> "
+      nodeName: Ultimate Memory Lv.3
+      description: Main gains <b><color=#a382ed>5 AE</color></b> whenever a Void
+        Area pulse deals damage.
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.ultimate.jailbreak_punisher
-        noteId: 
+        noteId: main.ultimate.lv3
         priority: 3
-        appendNote: 0
-        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
-          <b><color=#a382ed>500%</color></b> of ATK\r\n\r\n<size=20><color=#C0C0C0>-
-          AfterJailbreak Punisher will open <color=#8B3DFF>Void Area</color> for
-          20 seconds</color></size>\r\n<size=20><color=#C0C0C0>- Enemies damaged
-          by <b><color=#8B3DFF>Void Area</color></b> will <b>Their Defense Decrease
-          -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i></color></size>\r\n\r\n<size=19><color=#00ffff>
-          \u2022 Void Area: Deal <color=#8B3DFF>Void</color> DMG 500% of own ATK
-          every 5 seconds</color></size> "
+        appendNote: 1
+        description: Main gains <b><color=#a382ed>5 AE</color></b> whenever a Void
+          Area pulse deals damage.
       track: 1
       level: 3
-      fragmentCost: 1
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
-      actionModifiers:
-      - consumeRequiredTagsOnUse: 1
-        startingComboStepNameOverride: 
-        category: 2
-        actionId: main.ultimate.jailbreak_punisher
-        actionName: 
-        stepName: Void Area
-        unlocked: 1
-        priorityBonus: 0
-        replacementActionId: 
-        replacementActionName: 
-        startingComboDepthOverride: 0
-        requiredTags: []
-        requiredCounters: []
-        damageMultiplierOperation: 0
-        damageMultiplierValue: 0
-        criticalRateOperation: 0
-        criticalRateValue: 0
-        criticalDamageOperation: 0
-        criticalDamageValue: 0
-        finalDamageOperation: 0
-        finalDamageValue: 0
-        finalDamageRequiresCriticalHit: 0
-        auraEnergyRewardAdd: 0
-        cooldownOperation: 0
-        cooldownValue: 0
-        energyCostOperation: 0
-        energyCostValue: 0
-        ignoreDefense: 0
-        ignoreDefenseRequiresCriticalHit: 0
-        ignoreDamageResistance: 0
-        ignoreTypeReduction: 0
-        hitboxScaleMultiplier: 1
-        projectileScaleMultiplier: 1
-        replacementProjectileType: 0
-        replacementProjectileData: {fileID: 11400000, guid: 886ff6f25759d6747834ef2a7532fa16, type: 2}
+      actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -1484,33 +2712,534 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.ultimate.lv4
-      nodeName: Lasting Void Area
-      description: Void Area lasts for 40 seconds.
-      skillPanelDescriptionOverride: "Grab the Enemy then Perform a Jailbreak Punisher,
-        Inflict DMG <b><color=#a382ed>500%</color></b> of ATK\r\n\r\n<size=20><color=#C0C0C0>-
-        AfterJailbreak Punisher will open <color=#8B3DFF>Void Area</color> for 40
-        seconds</color></size>\r\n<size=20><color=#C0C0C0>- Enemies damaged by <b><color=#8B3DFF>Void
-        Area</color></b> will <b>Their Defense Decrease -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i></color></size>\r\n\r\n<size=19><color=#00ffff>
-        \u2022 Void Area: Deal <color=#8B3DFF>Void</color> DMG 500% of own ATK every
-        5 seconds</color></size> "
+      nodeName: Ultimate Memory Lv.4
+      description: Void Area damage increases to <b><color=#a382ed>500% ATK + 6%
+        Max HP</color></b>.
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.ultimate.jailbreak_punisher
-        noteId: 
+        noteId: main.ultimate.lv4
         priority: 4
-        appendNote: 0
-        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
-          <b><color=#a382ed>500%</color></b> of ATK\r\n\r\n<size=20><color=#C0C0C0>-
-          AfterJailbreak Punisher will open <color=#8B3DFF>Void Area</color> for
-          40 seconds</color></size>\r\n<size=20><color=#C0C0C0>- Enemies damaged
-          by <b><color=#8B3DFF>Void Area</color></b> will <b>Their Defense Decrease
-          -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i></color></size>\r\n\r\n<size=19><color=#00ffff>
-          \u2022 Void Area: Deal <color=#8B3DFF>Void</color> DMG 500% of own ATK
-          every 5 seconds</color></size> "
+        appendNote: 1
+        description: Void Area damage increases to <b><color=#a382ed>500% ATK + 6%
+          Max HP</color></b>.
       track: 1
       level: 4
-      fragmentCost: 1
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.memory.ultimate.lv5
+      nodeName: Ultimate Memory Lv.5
+      description: Void Area lasts <b><color=#a382ed>40 seconds</color></b>.
+      skillPanelDescriptionOverride: 
+      kitInfoPatches:
+      - entryId: main.ultimate.jailbreak_punisher
+        noteId: main.memory.ultimate.lv5
+        priority: 5
+        appendNote: 1
+        description: Void Area lasts <b><color=#a382ed>40 seconds</color></b>.
+      track: 1
+      level: 5
+      fragmentCost: 0
+      unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.memory.ultimate.lv6
+      nodeName: Ultimate Memory Lv.6
+      description: Void Area damage increases to <b><color=#a382ed>1000% ATK + 12%
+        Max HP</color></b>.
+      skillPanelDescriptionOverride: 
+      kitInfoPatches:
+      - entryId: main.ultimate.jailbreak_punisher
+        noteId: main.memory.ultimate.lv6
+        priority: 6
+        appendNote: 1
+        description: Void Area damage increases to <b><color=#a382ed>1000% ATK +
+          12% Max HP</color></b>.
+      track: 1
+      level: 6
+      fragmentCost: 0
+      unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+    - meterCapacityModifiers:
+      - counterId: main.shadow
+        additionalBoxes: 1
       counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
@@ -1529,25 +3258,169 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv1
-      nodeName: Chain Release
-      description: Shadow Meter stores 3 boxes. Unlock Basic Attack stages 4-6.
-      skillPanelDescriptionOverride: Successful actions generate different amounts
-        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
-        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
-        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
-        Unlocks NA 4-6.
+      nodeName: Passive Memory Lv.1
+      description: "Shadow Meter capacity <b><color=#a382ed>+1 box</color></b>. Unlocks
+        <b><color=#a382ed>Normal Attack stages 4\u20135</color></b>."
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: passive
-        noteId: 
+        noteId: main.passive.lv1
         priority: 1
-        appendNote: 0
-        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
-          3 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
-          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
+        appendNote: 1
+        description: "Shadow Meter capacity <b><color=#a382ed>+1 box</color></b>.
+          Unlocks <b><color=#a382ed>Normal Attack stages 4\u20135</color></b>."
       track: 2
       level: 1
-      fragmentCost: 1
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers:
       - counterId: main.shadow
         additionalBoxes: 1
@@ -1604,32 +3477,171 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv2
-      nodeName: Shadow Edge
-      description: Shadow Meter capacity +1. Dimension Cut gains +15% CRIT RATE and
-        its critical hits ignore enemy Defense.
-      skillPanelDescriptionOverride: Successful actions generate different amounts
-        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
-        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
-        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
+      nodeName: Passive Memory Lv.2
+      description: Shadow Meter capacity <b><color=#a382ed>+1 box</color></b>. Dimension
+        Cut gains <b><color=#a382ed>+15% CRIT Rate</color></b> and ignores Defense
+        on a critical hit.
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: passive
-        noteId: 
+        noteId: main.passive.lv2
         priority: 2
-        appendNote: 0
-        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
-          4 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
-          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
-      - entryId: main.dash.dimension_cut
-        noteId: main.dash.dimension_cut.lv-2
-        priority: 1
-        appendNote: 0
-        description: Dash through the target with a perfect cut, Inflict <b><color=#a382ed>350%</color></b>
-          of own ATK, <b><color=#a382ed>+15%</color></b> CRIT Rate and when Critically
-          Hit, <b><color=#a382ed>Ignore Defense</color></b>
+        appendNote: 1
+        description: Shadow Meter capacity <b><color=#a382ed>+1 box</color></b>.
+          Dimension Cut gains <b><color=#a382ed>+15% CRIT Rate</color></b> and ignores
+          Defense on a critical hit.
       track: 2
       level: 2
-      fragmentCost: 1
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
       statModifiers: []
@@ -1660,6 +3672,7 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1681,29 +3694,174 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv3
-      nodeName: Shadow Restoration
-      description: Unlock Execution Breakdown, When Using said action will grant
-        enormous of Shadow Meter and Regenerate own 8% of Max HP
-      skillPanelDescriptionOverride: Successful actions generate different amounts
-        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
-        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 3 boxes.
-        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
-        Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt.
+      nodeName: Passive Memory Lv.3
+      description: Unlocks <b><color=#a382ed>Execution Breakdown</color></b>. It
+        generates <b><color=#a382ed>5 Shadow per hit</color></b> and restores <b><color=#a382ed>8%
+        Max HP</color></b> when the action ends.
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: passive
-        noteId: 
+        noteId: main.passive.lv3
         priority: 3
-        appendNote: 0
-        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
-          4 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
-          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
+        appendNote: 1
+        description: Unlocks <b><color=#a382ed>Execution Breakdown</color></b>. It
+          generates <b><color=#a382ed>5 Shadow per hit</color></b> and restores <b><color=#a382ed>8%
+          Max HP</color></b> when the action ends.
       track: 2
       level: 3
-      fragmentCost: 1
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
     - meterCapacityModifiers:
       - counterId: main.shadow
-        additionalBoxes: 2
+        additionalBoxes: 1
       counterGainModifiers:
       - counterId: main.shadow
         multiplier: 2
@@ -1771,6 +3929,7 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 1
+          requireInitialActionStep: 0
         requiredTags:
         - tag: main.dimension_slash.ready
           expectedValue: 0
@@ -1794,6 +3953,7 @@ MonoBehaviour:
             requireRuntimeTag: 0
             runtimeTag: 
             requireManualOnFieldActionStart: 0
+            requireInitialActionStep: 0
           counterId: main.dimension_slash.cut_count
           operation: 1
           value: 1
@@ -1814,6 +3974,7 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 1
+          requireInitialActionStep: 0
         requiredTags:
         - tag: main.dimension_slash.ready
           expectedValue: 0
@@ -1839,6 +4000,7 @@ MonoBehaviour:
             requireRuntimeTag: 0
             runtimeTag: 
             requireManualOnFieldActionStart: 0
+            requireInitialActionStep: 0
           tag: main.dimension_slash.ready
           addTag: 1
           duration: 5
@@ -1859,6 +4021,7 @@ MonoBehaviour:
             requireRuntimeTag: 0
             runtimeTag: 
             requireManualOnFieldActionStart: 0
+            requireInitialActionStep: 0
           counterId: main.dimension_slash.cut_count
           operation: 3
           value: 0
@@ -1879,6 +4042,7 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1899,6 +4063,7 @@ MonoBehaviour:
             requireRuntimeTag: 0
             runtimeTag: 
             requireManualOnFieldActionStart: 0
+            requireInitialActionStep: 0
           tag: main.dimension_slash.ready
           addTag: 0
           duration: 0
@@ -1913,39 +4078,732 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv4
-      nodeName: Shadow Domain
-      description: Shadow Meter capacity +1, reaching 5 boxes. Main gains 2x Shadow
-        Meter while inside Void Area. Perform 5 paid Dimension Cuts to open a 5s
-        Skill follow-up for Judgment Cut.
-      skillPanelDescriptionOverride: Successful actions generate different amounts
-        of Shadow Meter; Execution Breakdown grants 5 per hit. Dash spends a full
-        box to cache Dimension Cut; Normal Attack spends cached cuts. Stores 5 boxes.
-        Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy Defense.
-        Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt. Shadow Meter
-        gain is doubled while Main is inside Void Area. Perform 5 paid Dimension
-        Cuts to open a 5s Skill follow-up for Judgment Cut.
+      nodeName: Passive Memory Lv.4
+      description: "Shadow Meter reaches <b><color=#a382ed>5 boxes</color></b>. Five
+        paid Dimension Cuts open a <b><color=#a382ed>5-second</color></b> Skill follow-up
+        for Judgment Cut. Main gains <b><color=#a382ed>2\xD7 Shadow</color></b> inside
+        Void Area."
+      skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: passive
-        noteId: 
+        noteId: main.passive.lv4
         priority: 4
-        appendNote: 0
-        description: 'Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
-          5 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
-          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
-
-
-
-          <size=19><color=#787878>While
-          self within <b><color=#a382ed>Void Area</color></b> will Increase Shadow
-          Meter Gain Rate</color></size>
-
-          <size=19><color=#787878>When
-          Consumed Dimension Cut, will unlock a 5 seconds of <b><color=#a382ed>Dimension
-          Slash</color></b></color></size>'
+        appendNote: 1
+        description: "Shadow Meter reaches <b><color=#a382ed>5 boxes</color></b>.
+          Five paid Dimension Cuts open a <b><color=#a382ed>5-second</color></b>
+          Skill follow-up for Judgment Cut. Main gains <b><color=#a382ed>2\xD7 Shadow</color></b>
+          inside Void Area."
       track: 2
       level: 4
-      fragmentCost: 1
+      fragmentCost: 0
       unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
+        actionId: main.skill.dimension_slash
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 8.5
+        criticalRateOperation: 0
+        criticalRateValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.memory.passive.lv5
+      nodeName: Passive Memory Lv.5
+      description: Judgment Cut deals <b><color=#a382ed>850% ATK</color></b>. The
+        final hit of Jailbreak Punisher and Execution Breakdown deals additional
+        Darkness DMG equal to <b><color=#a382ed>20% Max HP</color></b>.
+      skillPanelDescriptionOverride: 
+      kitInfoPatches:
+      - entryId: passive
+        noteId: main.memory.passive.lv5
+        priority: 5
+        appendNote: 1
+        description: Judgment Cut deals <b><color=#a382ed>850% ATK</color></b>. The
+          final hit of Jailbreak Punisher and Execution Breakdown deals additional
+          Darkness DMG equal to <b><color=#a382ed>20% Max HP</color></b>.
+      - entryId: main.skill.dimension_slash
+        noteId: 
+        priority: 5
+        appendNote: 0
+        description: Cut all enemies in range for <b><color=#a382ed>850% ATK</color></b>.
+      track: 2
+      level: 5
+      fragmentCost: 0
+      unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0
+        sourceStatDamageSource: 9
+        sourceStatRatio: 0.2
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 3
+        consumeRuntimeTagOnTrigger: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 1
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
+        recipe:
+          recipeId: main.memory.ultimate_hp
+          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          presentation:
+            effectId: main.memory.ultimate_hp
+            displayName: Ultimate - Max HP
+            showRemainingTime: 0
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 12
+            stackMode: 1
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: main.memory.ultimate_hp
+          parameters:
+            overrideDefense: 0
+            evasionChanceAdd: 0
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 0
+              operation: 1
+              sourceStat: 1
+              statRatioValueSource: 0
+              value: 1.4
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              applyNativeDot: 0
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: main.memory.passive.lv6
+      nodeName: Passive Memory Lv.6
+      description: Using an Ultimate grants Main <b><color=#a382ed>+40% Max HP</color></b>
+        for <b><color=#a382ed>12 seconds</color></b>. Recasting refreshes the effect.
+      skillPanelDescriptionOverride: 
+      kitInfoPatches:
+      - entryId: passive
+        noteId: main.memory.passive.lv6
+        priority: 6
+        appendNote: 1
+        description: Using an Ultimate grants Main <b><color=#a382ed>+40% Max HP</color></b>
+          for <b><color=#a382ed>12 seconds</color></b>. Recasting refreshes the effect.
+      track: 2
+      level: 6
+      fragmentCost: 0
+      unlockedByDefault: 0
+      projectileHitEffect:
+        recipeId: 
+        definition: {fileID: 0}
+        presentation:
+          effectId: 
+          displayName: 
+          showRemainingTime: 0
+          icon: {fileID: 0}
+          fieldVisualPrefab: {fileID: 0}
+        policy:
+          kind: 0
+          appliesOn: 0
+          durationType: 0
+          durationSeconds: 10
+          stackMode: 0
+          stackLimit: 1
+          refreshDurationOnReapply: 1
+          stackable: 0
+          removeOnOwnerDamaged: 0
+          stackKey: 
+        parameters:
+          overrideDefense: 0
+          evasionChanceAdd: 0
+          overrideStatModifiers: 0
+          statModifiers: []
+          overrideDamageModifier: 0
+          damageModifier:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            outgoingDamagePercentAdd: 0
+            incomingDamageTakenPercentAdd: 0
+          overrideDamageInput: 0
+          damageInput:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            defenderDefensePercentAdd: 0
+            defenderDamageResistancePercentAdd: 0
+            ignoreDefense: 0
+            ignoreDamageResistance: 0
+            ignoreTypeReduction: 0
+          overridePeriodicHeal: 0
+          periodicHeal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+            tickInterval: 1
+          overrideHeal: 0
+          heal:
+            valueSource: 1
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+          overrideLifesteal: 0
+          lifesteal:
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            damageDealtRatio: 0.5
+            lowHpThreshold: 0.3
+            lowHpMultiplier: 2
+          overrideAdditionalDamage: 0
+          additionalDamage:
+            applyNativeDot: 0
+            filter:
+              filterByDelivery: 0
+              delivery: 0
+              filterByElement: 0
+              elementType: 0
+              filterByCategory: 0
+              category: 0
+            chance: 1
+            internalCooldown: 0
+            attackRatio: 0.2
+            sourceStatDamageSource: 0
+            sourceStatRatio: 0
+            targetMaxHpRatio: 0
+            sourceRuntimeEffectStackKey: 
+            attackRatioPerSourceRuntimeEffectStack: 0
+            maxSourceRuntimeEffectStacks: 0
+            capTargetMaxHpDamage: 0
+            targetMaxHpDamageCapSource: 1
+            targetMaxHpDamageCapRatio: 1
+            elementType: 0
+          overrideStatus: 0
+          status:
+            status: 5
+          overrideShield: 0
+          shield:
+            valueSource: 0
+            valueRatio: 0.1
+            flatValue: 0
+            useSourceStats: 1
+        childRecipes: []
+      darkChainSummon:
+        projectile: {fileID: 0}
+        durationSeconds: 12
+        intervalSeconds: 2.5
+        strikeLifetimeSeconds: 2
+        referencePoint: 2
+        attackRatio: 2
+        maxHpRatio: 0.08
+      ultimateFinisherDamage:
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0.3
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
   qteSwap:
     enabled: 1
     triggerOnCriticalHit: 0

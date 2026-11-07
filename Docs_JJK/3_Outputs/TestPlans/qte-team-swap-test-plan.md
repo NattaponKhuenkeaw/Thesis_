@@ -58,6 +58,7 @@ Prepared 2026-10-27. Not yet run: this is a design-stage test plan, not a QA pas
 | Outgoing continuation | Executor begins at captured frame and animation phase. No already-processed hit or once-only AE reward replays. Damage retains outgoing source attribution. |
 | Long outgoing animation | Executor remains until legitimate action/animation completion, including durations beyond its current three-second safety cap. |
 | Ordinary swap regression | Without readiness, existing recovery gate, cooldown, clone and locomotion behavior remain correct. |
+| Goenitz grab release | With a prepared teammate, land Yamidokoku and Shin Yaotome on surviving targets. A grab-breaking reaction drops the released target from the throw session. Verify the swap during grounded Recover while readiness remains. With multiple grabbed targets, the swap stays locked until the last held target is released. |
 
 ## Environment and lifecycle
 

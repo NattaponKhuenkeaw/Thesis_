@@ -56,7 +56,7 @@ public class CombatRouteContentTests
     }
 
     [Test]
-    public void CombatOfferShowsDifficultyWithoutGeneratedWaves()
+    public void CombatOfferUsesPaletteWithoutGeneratedWaves()
     {
         RoomData room = ScriptableObject.CreateInstance<RoomData>();
         try
@@ -64,7 +64,7 @@ public class CombatRouteContentTests
             SetRoomKind(room, RoomKind.Combat);
             var offer = new RoomChoiceOffer(room, RouteDifficulty.Hard, null, new RouteReward { Coins = 200 });
             Assert.That(offer.HasGeneratedCombat, Is.False);
-            Assert.That(offer.ShowsDifficulty, Is.True);
+            Assert.That(offer.UsesCombatPalette, Is.True);
             Assert.That(offer.Difficulty, Is.EqualTo(RouteDifficulty.Hard));
         }
         finally
@@ -81,7 +81,7 @@ public class CombatRouteContentTests
         {
             SetRoomKind(room, RoomKind.Shop);
             var offer = new RoomChoiceOffer(room);
-            Assert.That(offer.ShowsDifficulty, Is.False);
+            Assert.That(offer.UsesCombatPalette, Is.False);
         }
         finally
         {
@@ -136,10 +136,10 @@ public class CombatRouteContentTests
         Assert.That(CombatRouteContent.UsesAuthoredChambers(room.LayoutPrefab), Is.True);
 
         RoomChoiceOffer offer = RouteOfferGenerator.BuildOffer(room);
-        Assert.That(offer.ShowsDifficulty, Is.True);
+        Assert.That(offer.UsesCombatPalette, Is.True);
         Assert.That(offer.HasGeneratedCombat, Is.False);
         Assert.That(offer.Reward, Is.Not.Null);
-        Assert.That(offer.Reward.Coins, Is.GreaterThan(0));
+        Assert.That(offer.Reward.Coins > 0 || offer.Reward.ArtifactPulls > 0, Is.True);
     }
 
     private static void AddType(EncounterSO encounter, GameObject prefab)

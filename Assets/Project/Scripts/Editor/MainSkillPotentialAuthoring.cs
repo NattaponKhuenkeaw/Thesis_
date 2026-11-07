@@ -7,9 +7,17 @@ public static class MainSkillPotentialAuthoring
 {
     private const string Folder = "Assets/Project/Character/Hero/test_0_Main/";
 
+    [MenuItem("Tools/Project/Combat/Apply Main Skill Potential Revision", true)]
+    private static bool CanApply()
+    {
+        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(Folder + "CharacterObject_main.asset");
+        return character?.kitDefinition != null && character.kitDefinition.GetNodeById("main.memory.skill.lv5") == null;
+    }
+
     [MenuItem("Tools/Project/Combat/Apply Main Skill Potential Revision")]
     public static void Apply()
     {
+        if (!CanApply()) return;
         var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(Folder + "CharacterObject_main.asset");
         var projectile = AssetDatabase.LoadAssetAtPath<ProjectileData>(Folder + "ProjectileData_main_skill_lv2.asset");
         var kit = character.kitDefinition;

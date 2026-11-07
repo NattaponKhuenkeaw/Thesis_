@@ -20,17 +20,15 @@ MonoBehaviour:
   hardRewardPatterns:
   - weight: 25
     artifactPulls: 2
-    minSoul: 0
-    maxSoul: 0
+    grantsMemory: 1
   - weight: 50
     artifactPulls: 1
-    minSoul: 180
-    maxSoul: 280
+    grantsMemory: 1
   - weight: 25
     artifactPulls: 0
-    minSoul: 300
-    maxSoul: 400
+    grantsMemory: 1
   profiles:
+<<<<<<< Updated upstream
   - difficulty: 0
     rollWeight: 40
     minWaves: 1
@@ -48,16 +46,23 @@ MonoBehaviour:
       weight: 1
     - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
       weight: 1
+=======
+>>>>>>> Stashed changes
   - difficulty: 1
-    rollWeight: 35
+    rollWeight: 40
     minWaves: 1
     maxWaves: 1
     minEnemiesPerWave: 6
     maxEnemiesPerWave: 6
+<<<<<<< Updated upstream
     aliveCap: 3
     minCoins: 120
     maxCoins: 150
     artifactChance: 0.28
+=======
+    aliveCap: 5
+    artifactChance: 0
+>>>>>>> Stashed changes
     enemyPool:
     - prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
       weight: 3
@@ -66,14 +71,18 @@ MonoBehaviour:
     - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
       weight: 1
   - difficulty: 2
-    rollWeight: 25
+    rollWeight: 60
     minWaves: 1
     maxWaves: 1
     minEnemiesPerWave: 8
     maxEnemiesPerWave: 8
+<<<<<<< Updated upstream
     aliveCap: 4
     minCoins: 180
     maxCoins: 220
+=======
+    aliveCap: 5
+>>>>>>> Stashed changes
     artifactChance: 0.55
     enemyPool:
     - prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}

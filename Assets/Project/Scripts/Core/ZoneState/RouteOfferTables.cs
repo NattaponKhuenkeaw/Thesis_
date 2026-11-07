@@ -22,15 +22,19 @@ namespace Project.Core.ZoneState
         [Serializable]
         public sealed class DifficultyProfile
         {
-            public RouteDifficulty difficulty = RouteDifficulty.Easy;
+            public RouteDifficulty difficulty = RouteDifficulty.Medium;
             [Range(0f, 100f)] public float rollWeight = 40f;
             [Min(1)] public int minWaves = 1;
             [Min(1)] public int maxWaves = 1;
             [Min(1)] public int minEnemiesPerWave = 1;
             [Min(1)] public int maxEnemiesPerWave = 2;
+<<<<<<< Updated upstream
             [Min(1)] public int aliveCap = 3;
             [Min(0)] public int minCoins = 40;
             [Min(0)] public int maxCoins = 80;
+=======
+            [Min(1)] public int aliveCap = 5;
+>>>>>>> Stashed changes
             [Range(0f, 1f)] public float artifactChance = 0.1f;
             public List<EnemyEntry> enemyPool = new List<EnemyEntry>();
         }
@@ -40,8 +44,7 @@ namespace Project.Core.ZoneState
         {
             [Min(0f)] public float weight;
             [Min(0)] public int artifactPulls;
-            [Min(0)] public int minSoul;
-            [Min(0)] public int maxSoul;
+            public bool grantsMemory;
         }
 
         [Header("Spawn")]
@@ -49,7 +52,7 @@ namespace Project.Core.ZoneState
         [SerializeField, Min(0f)] private float delayBetweenWaves = 1.25f;
         [SerializeField, Min(1)] private int aliveCap = 3;
         [SerializeField, Min(0f)] private float spawnInterval = 0.35f;
-        [Tooltip("When false, route clears never grant artifacts (coins only).")]
+        [Tooltip("Allows direct artifact drops when a Hard reward pattern is unavailable.")]
         [SerializeField] private bool grantArtifacts = false;
 
         [Header("Difficulty Profiles")]
@@ -77,7 +80,6 @@ namespace Project.Core.ZoneState
                 }
             }
 
-            // Do not silently substitute Easy for Hard/Medium — callers treat null as bare room.
             return null;
         }
 
@@ -98,6 +100,7 @@ namespace Project.Core.ZoneState
             {
                 new DifficultyProfile
                 {
+<<<<<<< Updated upstream
                     difficulty = RouteDifficulty.Easy,
                     rollWeight = 40f,
                     minWaves = 1,
@@ -111,28 +114,39 @@ namespace Project.Core.ZoneState
                 },
                 new DifficultyProfile
                 {
+=======
+>>>>>>> Stashed changes
                     difficulty = RouteDifficulty.Medium,
-                    rollWeight = 35f,
+                    rollWeight = 40f,
                     minWaves = 1,
                     maxWaves = 1,
                     minEnemiesPerWave = 6,
                     maxEnemiesPerWave = 6,
+<<<<<<< Updated upstream
                     aliveCap = 3,
                     minCoins = 120,
                     maxCoins = 150,
                     artifactChance = 0.28f
+=======
+                    aliveCap = 5,
+                    artifactChance = 0f
+>>>>>>> Stashed changes
                 },
                 new DifficultyProfile
                 {
                     difficulty = RouteDifficulty.Hard,
-                    rollWeight = 25f,
+                    rollWeight = 60f,
                     minWaves = 1,
                     maxWaves = 1,
                     minEnemiesPerWave = 8,
                     maxEnemiesPerWave = 8,
+<<<<<<< Updated upstream
                     aliveCap = 4,
                     minCoins = 180,
                     maxCoins = 220,
+=======
+                    aliveCap = 5,
+>>>>>>> Stashed changes
                     artifactChance = 0.55f
                 }
             };

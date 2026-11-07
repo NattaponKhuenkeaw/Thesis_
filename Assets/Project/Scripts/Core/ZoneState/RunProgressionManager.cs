@@ -14,6 +14,16 @@ namespace Project.Core.ZoneState
         private const string DefaultMapResourcePath = "MapSO/Test_MapSO";
         private const string DefaultBossRoomId = "Boss_01";
         private const float DefaultBiomeStatBonus = 0.20f;
+<<<<<<< Updated upstream
+=======
+        private const float DefaultNormalEnemyHealthBonus = 0.18f;
+        private const float DefaultNormalEnemyAttackBonus = 0.15f;
+        private const int LastTunedBiomeIndex = 9;
+        private static readonly float[] BossHealthMultipliers =
+        {
+            2f, 4f, 6f, 6.625f, 7.25f, 7.875f, 8.5f, 9.125f, 9.75f, 10.5f
+        };
+>>>>>>> Stashed changes
 
         public static RunProgressionManager Instance { get; private set; }
 
@@ -29,7 +39,11 @@ namespace Project.Core.ZoneState
         public int roomsBeforeBoss = 4;
 
         [Header("Difficulty Curve")]
+<<<<<<< Updated upstream
         [Tooltip("Enemy basic stats (HP / ATK / DEF) gain this fraction per biome. Biome 0 = 1.0x, Biome 1 = 1.20x.")]
+=======
+        [Tooltip("Boss ATK and DEF gain this fraction of base stats per cleared level. Boss HP follows separate biome milestones.")]
+>>>>>>> Stashed changes
         [SerializeField, Min(0f)] private float biomeBasicStatBonus = DefaultBiomeStatBonus;
 
         [Header("Room Pool")]
@@ -49,10 +63,35 @@ namespace Project.Core.ZoneState
         public float BiomeBasicStatBonus => Mathf.Max(0f, biomeBasicStatBonus);
 
         /// <summary>
+<<<<<<< Updated upstream
         /// Multiplier for enemy basic stats in the current biome.
         /// Biome 0 = 1.0, Biome 1 = 1.20, Biome 2 = 1.40, ...
         /// </summary>
         public float EnemyBasicStatMultiplier => ResolveEnemyBasicStatMultiplier(CurrentBiomeIndex, BiomeBasicStatBonus);
+=======
+        /// Linear boss attack and defense multiplier.
+        /// Biome 0 = 1.0, Biome 1 = 1.20, Biome 2 = 1.40, ...
+        /// </summary>
+        public float EnemyBasicStatMultiplier => ResolveEnemyBasicStatMultiplier(CurrentBiomeIndex, BiomeBasicStatBonus);
+        public float BossHealthMultiplier => ResolveBossHealthMultiplier(CurrentBiomeIndex);
+        public float NormalEnemyHealthMultiplier => ResolveNormalEnemyHealthMultiplier(CurrentBiomeIndex, normalEnemyHealthBonusPerLevel);
+        public float NormalEnemyAttackMultiplier => ResolveNormalEnemyAttackMultiplier(CurrentBiomeIndex, normalEnemyAttackBonusPerLevel);
+
+        public static float ResolveNormalEnemyHealthMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyHealthBonus)
+        {
+            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Clamp(biomeIndex, 0, LastTunedBiomeIndex));
+        }
+
+        public static float ResolveBossHealthMultiplier(int biomeIndex)
+        {
+            return BossHealthMultipliers[Mathf.Clamp(biomeIndex, 0, BossHealthMultipliers.Length - 1)];
+        }
+
+        public static float ResolveNormalEnemyAttackMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyAttackBonus)
+        {
+            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Max(0, biomeIndex));
+        }
+>>>>>>> Stashed changes
 
         public static float ResolveEnemyBasicStatMultiplier(int biomeIndex, float bonusPerBiome = DefaultBiomeStatBonus)
         {
@@ -68,7 +107,11 @@ namespace Project.Core.ZoneState
         }
 
         /// <summary>
+<<<<<<< Updated upstream
         /// Scales enemy HP / ATK / DEF for the active biome. No-op at biome 0.
+=======
+        /// Normal enemies and bosses use separate health curves.
+>>>>>>> Stashed changes
         /// </summary>
         public static void ApplyBiomeDifficultyToEnemy(EnemyController enemy)
         {
@@ -77,6 +120,7 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+<<<<<<< Updated upstream
             float multiplier = GetActiveEnemyBasicStatMultiplier();
             if (Mathf.Approximately(multiplier, 1f))
             {
@@ -84,6 +128,20 @@ namespace Project.Core.ZoneState
             }
 
             enemy.ApplyBasicStatMultiplier(multiplier);
+=======
+            RunProgressionManager progression = Instance ?? EnsureInstance();
+            if (progression == null) return;
+
+            // Elite variants use the normal enemy curve.
+            if (enemy.HasBossDriver)
+            {
+                float basicMultiplier = progression.EnemyBasicStatMultiplier;
+                enemy.ApplyStatMultipliers(progression.BossHealthMultiplier, basicMultiplier, basicMultiplier);
+                return;
+            }
+
+            enemy.ApplyStatMultipliers(progression.NormalEnemyHealthMultiplier, progression.NormalEnemyAttackMultiplier, 1f);
+>>>>>>> Stashed changes
         }
 
         private void Awake()
@@ -155,7 +213,12 @@ namespace Project.Core.ZoneState
                 currentBiomeIndex = Mathf.Max(0, currentBiomeIndex + 1);
                 Debug.Log(
                     $"[RunProgressionManager] Boss cleared. Biome -> {currentBiomeIndex} " +
+<<<<<<< Updated upstream
                     $"(enemy basic stats x{EnemyBasicStatMultiplier:0.##}).",
+=======
+                    $"(normal HP x{NormalEnemyHealthMultiplier:0.###}, ATK x{NormalEnemyAttackMultiplier:0.###}, " +
+                    $"boss HP x{BossHealthMultiplier:0.###}, ATK and DEF x{EnemyBasicStatMultiplier:0.##}).",
+>>>>>>> Stashed changes
                     this);
                 return;
             }

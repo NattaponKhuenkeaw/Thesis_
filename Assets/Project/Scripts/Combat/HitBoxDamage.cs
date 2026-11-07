@@ -228,6 +228,15 @@ public class HitBoxDamage : MonoBehaviour
             currentDamageResult,
             reactionData,
             true);
+        if (reactionData.breaksGrab && enemy.LastHitAppliedReaction && !enemy.IsGrabbed)
+        {
+            PlayerCombat grabOwner = execution == null ? playerCombat : null;
+            if (execution?.IsOnField == true)
+                grabOwner = execution.owner;
+
+            grabOwner?.ForgetReleasedGrabTarget(enemy);
+        }
+
         bool hasDamageSource = HasDamageSource();
 
         if (hasDamageSource && primaryDamageDealt > 0f)
@@ -236,6 +245,7 @@ public class HitBoxDamage : MonoBehaviour
             {
                 ApplyAdditionalDamage(enemy, attackerPosition, direction);
             }
+            projectileOwner?.ApplyMemoryHitEffects(enemy, currentAttackerStats);
         }
 
         HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
@@ -273,17 +283,6 @@ public class HitBoxDamage : MonoBehaviour
                 activePlayerCombat?.RegisterGrabbedEnemy(enemy, GetGrabSocket(), reactionData.grabOffset);
             else
                 activePlayerCombat?.ClearGrabbedEnemy(enemy);
-        }
-        else if (playerCombat != null && playerCombat.IsHoldingEnemy(enemy))
-        {
-            // CRITICAL: Do NOT clear the grab just because the enemy's reaction
-            // state changed. During a throw sequence, slam hitboxes intentionally
-            // change the enemy from Grabbed → Knockback/Knockup. The GrabSession
-            // in ThrowContext is the authority on whether the enemy is still held.
-            //
-            // The session will be ended explicitly by:
-            //   - ThrowContext.ReleaseClean() when the throw finishes normally
-            //   - ThrowContext.ForceRelease() when the player is interrupted
         }
 
         TriggerConfiguredImpactFeedback();
@@ -337,6 +336,12 @@ public class HitBoxDamage : MonoBehaviour
             ignoreTypeReduction = damageInput.ignoreTypeReduction,
             provenance = new DamageProvenance(0, 0, 0, 0, null, ResolveDamageTags())
         };
+        if (elementType == ElementType.Void)
+        {
+            currentDamageRequest.procPolicy = currentDamageRequest.ResolveProcPolicy() &
+                ~(DamageProcPolicy.ApplyElementDot | DamageProcPolicy.GrantAuraEnergy);
+            currentDamageRequest.hasExplicitProcPolicy = true;
+        }
         currentDamageResult = CombatDamageProcessor.Resolve(currentDamageRequest);
         float finalDamage = currentDamageResult.Damage;
         currentIsCrit = currentDamageResult.IsCriticalHit;
@@ -355,13 +360,15 @@ public class HitBoxDamage : MonoBehaviour
         Vector2 attackerPosition,
         Vector2 direction)
     {
-        if (enemy == null
-            || !enemy.IsAlive
-            || currentAdditionalDamageEffects == null
-            || currentAdditionalDamageEffects.Length == 0)
+        if (enemy == null || !enemy.IsAlive)
         {
             return;
         }
+        var finisher = Project.Progression.MainMemoryKit.ResolveFinisher(rewardCharacter, passiveController, sourceActionId,
+            sourceStepData, currentNormalHitbox, projectileOwner);
+        int effectsCount = currentAdditionalDamageEffects?.Length ?? 0;
+        int totalEffects = effectsCount + (finisher != null ? 1 : 0);
+        if (totalEffects == 0) return;
 
         PassiveEventContext context = new PassiveEventContext
         {
@@ -377,9 +384,9 @@ public class HitBoxDamage : MonoBehaviour
             isCriticalHit = currentIsCrit
         };
 
-        for (int i = 0; i < currentAdditionalDamageEffects.Length; i++)
+        for (int i = 0; i < totalEffects; i++)
         {
-            AdditionalDamageEffectDefinition effect = currentAdditionalDamageEffects[i];
+            AdditionalDamageEffectDefinition effect = i == effectsCount ? finisher : currentAdditionalDamageEffects[i];
             if (effect == null || !enemy.IsAlive || !effect.CanTrigger(context))
                 continue;
 

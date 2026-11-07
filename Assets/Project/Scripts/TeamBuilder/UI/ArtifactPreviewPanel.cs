@@ -23,6 +23,8 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TMP_Text qualityText;
         [SerializeField] private Button equipButton;
         [SerializeField] private TMP_Text equipLabel;
+        [SerializeField] private ScrollRect detailsScroll;
+        [SerializeField] private RectTransform detailsContent;
 
 
         [Header("Behavior Settings")]
@@ -150,10 +152,7 @@ namespace Project.TeamBuilder.UI
                 descriptionText.text = "Select an artifact to view its stats and effects.";
             }
 
-            if (loreText != null)
-            {
-                loreText.text = string.Empty;
-            }
+            if (loreText != null) loreText.gameObject.SetActive(false);
 
             if (qualityText != null)
             {
@@ -162,6 +161,7 @@ namespace Project.TeamBuilder.UI
 
 
             ClearStatItems();
+            ResetDetailsScroll();
         }
 
         public void Close()
@@ -177,10 +177,12 @@ namespace Project.TeamBuilder.UI
         {
             if (statItemContainer != null)
             {
-                foreach (Transform child in statItemContainer)
+                for (int i = statItemContainer.childCount - 1; i >= 0; i--)
                 {
+                    Transform child = statItemContainer.GetChild(i);
                     child.gameObject.SetActive(false);
-                    Destroy(child.gameObject);
+                    if (Application.isPlaying) Destroy(child.gameObject);
+                    else DestroyImmediate(child.gameObject);
                 }
             }
         }
@@ -195,7 +197,20 @@ namespace Project.TeamBuilder.UI
             artifactNameText ??= FindTextByName(texts, "Name", "Title", "ArtifactName", "p_Text");
             descriptionText ??= FindTextByName(texts, "Description", "Passive", "Effect", "Info", "p_Desc");
             loreText ??= FindTextByName(texts, "Lore", "Flavor");
+<<<<<<< Updated upstream
             qualityText ??= FindTextByName(texts, "Quality", "RollQuality", "headlv");
+=======
+            if (loreText != null) loreText.gameObject.SetActive(false);
+            if (descriptionText != null)
+            {
+                descriptionText.richText = true;
+                descriptionText.textWrappingMode = TextWrappingModes.Normal;
+                descriptionText.overflowMode = TextOverflowModes.Overflow;
+            }
+            TMP_Text legacyQualityText = FindTextByName(texts, "Quality", "RollQuality", "headlv");
+            if (legacyQualityText != null)
+                legacyQualityText.gameObject.SetActive(false);
+>>>>>>> Stashed changes
             artifactIcon ??= FindImageByName(images, "Icon", "ArtifactIcon", "p_Icon");
 
             for (int i = 0; i < buttons.Length; i++)
@@ -215,6 +230,132 @@ namespace Project.TeamBuilder.UI
                 Transform statsRoot = FindChildByName(transform, "Stats", "StatContainer", "Stat Item Container", "Content", "StatPanel");
                 statItemContainer = statsRoot != null ? statsRoot : transform;
             }
+<<<<<<< Updated upstream
+=======
+            if (statItemContainer != null && statItemContainer.TryGetComponent(out VerticalLayoutGroup statLayout))
+            {
+                statLayout.childControlWidth = true;
+                statLayout.childForceExpandWidth = true;
+            }
+            ConfigureDetailsScroll();
+        }
+
+        private void ConfigureDetailsScroll()
+        {
+            if (descriptionText == null || statItemContainer == null || panelRect == null) return;
+            if (detailsScroll == null)
+            {
+                var viewportObject = new GameObject("Artifact Details Viewport", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
+                viewportObject.layer = gameObject.layer;
+                viewportObject.transform.SetParent(transform, false);
+                detailsScroll = viewportObject.GetComponent<ScrollRect>();
+            }
+
+            RectTransform viewport = (RectTransform)detailsScroll.transform;
+            if (viewport.GetComponent<Image>() == null) viewport.gameObject.AddComponent<Image>();
+            if (viewport.GetComponent<RectMask2D>() == null) viewport.gameObject.AddComponent<RectMask2D>();
+            viewport.anchorMin = Vector2.zero;
+            viewport.anchorMax = Vector2.one;
+            viewport.pivot = new Vector2(.5f, .5f);
+            RectTransform headerRect = artifactIcon != null
+                ? artifactIcon.rectTransform
+                : artifactNameText != null ? artifactNameText.rectTransform : null;
+            GetLocalVerticalBounds(headerRect, out float iconBottom, out _);
+            float topInset = Mathf.Max(0f, panelRect.rect.yMax - iconBottom + 8f);
+            float bottomInset = 48f;
+            if (equipButton != null && equipButton.transform is RectTransform equipRect)
+            {
+                GetLocalVerticalBounds(equipRect, out _, out float buttonTop);
+                bottomInset = Mathf.Max(0f, buttonTop - panelRect.rect.yMin + 8f);
+            }
+            viewport.offsetMin = new Vector2(12f, bottomInset);
+            viewport.offsetMax = new Vector2(-12f, -topInset);
+            var surface = viewport.GetComponent<Image>();
+            surface.color = Color.clear;
+            surface.raycastTarget = true;
+
+            if (detailsContent == null)
+            {
+                var contentObject = new GameObject("Artifact Details Content", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+                contentObject.layer = gameObject.layer;
+                contentObject.transform.SetParent(viewport, false);
+                detailsContent = (RectTransform)contentObject.transform;
+            }
+            else if (detailsContent.parent != viewport)
+            {
+                detailsContent.SetParent(viewport, false);
+            }
+            if (detailsContent.GetComponent<VerticalLayoutGroup>() == null)
+                detailsContent.gameObject.AddComponent<VerticalLayoutGroup>();
+            if (detailsContent.GetComponent<ContentSizeFitter>() == null)
+                detailsContent.gameObject.AddComponent<ContentSizeFitter>();
+
+            detailsContent.anchorMin = new Vector2(0f, 1f);
+            detailsContent.anchorMax = Vector2.one;
+            detailsContent.pivot = new Vector2(.5f, 1f);
+            detailsContent.sizeDelta = Vector2.zero;
+            var stack = detailsContent.GetComponent<VerticalLayoutGroup>();
+            stack.childControlWidth = true;
+            stack.childControlHeight = true;
+            stack.childForceExpandWidth = true;
+            stack.childForceExpandHeight = false;
+            stack.childAlignment = TextAnchor.UpperLeft;
+            stack.spacing = 8f;
+            stack.padding = new RectOffset(2, 16, 2, 2);
+            detailsContent.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            if (descriptionText.transform.parent != detailsContent) descriptionText.transform.SetParent(detailsContent, false);
+            if (statItemContainer != detailsContent && statItemContainer.parent != detailsContent)
+                statItemContainer.SetParent(detailsContent, false);
+            descriptionText.alignment = TextAlignmentOptions.TopLeft;
+            descriptionText.enableAutoSizing = false;
+            descriptionText.textWrappingMode = TextWrappingModes.Normal;
+            descriptionText.overflowMode = TextOverflowModes.Overflow;
+            descriptionText.raycastTarget = false;
+            var descriptionSizing = descriptionText.GetComponent<LayoutElement>() ?? descriptionText.gameObject.AddComponent<LayoutElement>();
+            descriptionSizing.minHeight = 0f;
+            descriptionSizing.flexibleHeight = 0f;
+            var statSizing = statItemContainer.GetComponent<LayoutElement>() ?? statItemContainer.gameObject.AddComponent<LayoutElement>();
+            statSizing.minHeight = 0f;
+            statSizing.flexibleHeight = 0f;
+
+            detailsScroll.viewport = viewport;
+            detailsScroll.content = detailsContent;
+            detailsScroll.horizontal = false;
+            detailsScroll.vertical = true;
+            detailsScroll.movementType = ScrollRect.MovementType.Clamped;
+            detailsScroll.scrollSensitivity = 30f;
+            detailsScroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            viewport.SetAsLastSibling();
+            if (equipButton != null) equipButton.transform.SetAsLastSibling();
+        }
+
+        private void GetLocalVerticalBounds(RectTransform target, out float bottom, out float top)
+        {
+            bottom = panelRect.rect.yMin;
+            top = panelRect.rect.yMax;
+            if (target == null) return;
+
+            Vector3[] corners = new Vector3[4];
+            target.GetWorldCorners(corners);
+            bottom = float.PositiveInfinity;
+            top = float.NegativeInfinity;
+            for (int i = 0; i < corners.Length; i++)
+            {
+                float y = panelRect.InverseTransformPoint(corners[i]).y;
+                bottom = Mathf.Min(bottom, y);
+                top = Mathf.Max(top, y);
+            }
+        }
+
+        private void ResetDetailsScroll()
+        {
+            if (detailsScroll == null) return;
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(detailsContent);
+            detailsScroll.StopMovement();
+            detailsScroll.verticalNormalizedPosition = 1f;
+>>>>>>> Stashed changes
         }
 
         private void PopulateData()
@@ -235,6 +376,11 @@ namespace Project.TeamBuilder.UI
             // Clear existing stat items
             ClearStatItems();
 
+            ArtifactRoll fixedBonus = currentDefinition.fixedStatBonus;
+            if (fixedBonus.valueUnits != 0 && ArtifactStatCatalog.IsPlayerVisible(fixedBonus.statKind))
+                AddStatItemIfNonZero(ArtifactStatCatalog.GetLabel(fixedBonus.statKind), fixedBonus.Value,
+                    ArtifactStatCatalog.GetFormatKey(fixedBonus.statKind));
+
             if (statItemContainer != null && statItemPrefab != null && currentArtifact.rolls != null)
             {
                 for (int i = 0; i < currentArtifact.rolls.Count; i++)
@@ -254,14 +400,22 @@ namespace Project.TeamBuilder.UI
                     ? $"Roll Quality {quality * 100f:0.##}"
                     : "Roll Quality —";
                 descriptionText.text = string.IsNullOrWhiteSpace(currentDefinition.passiveDescription)
+<<<<<<< Updated upstream
                     ? qualityLabel
                     : $"{qualityLabel}\n{currentDefinition.passiveDescription}";
+=======
+                    ? string.Empty
+                    : currentDefinition.passiveDescription;
+>>>>>>> Stashed changes
             }
 
-            if (loreText != null)
+            var statsSizing = statItemContainer != null ? statItemContainer.GetComponent<LayoutElement>() : null;
+            if (statsSizing != null)
             {
-                loreText.text = currentDefinition.description;
+                statsSizing.minHeight = statItemContainer.childCount * 34f;
+                statsSizing.preferredHeight = statsSizing.minHeight;
             }
+            ResetDetailsScroll();
 
             if (qualityText != null)
             {

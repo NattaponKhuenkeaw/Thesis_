@@ -61,6 +61,73 @@ namespace Project.TeamBuilder.UI.Panels
         {
             _node = node;
             _onSelected = onSelected;
+            ApplyAppearance(state, selected, icon);
+            if (selectButton != null) selectButton.interactable = node != null;
+        }
+
+        internal Button BindMemoryPreview(string caption, Sprite icon, CharacterPotentialNodeState state, Action preview,
+            bool unavailable)
+        {
+            ResolveReferences();
+            if (iconImage == null)
+            {
+                var host = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+                host.transform.SetParent(transform, false);
+                iconImage = host.GetComponent<Image>();
+                iconImage.rectTransform.anchorMin = Vector2.one * .15f;
+                iconImage.rectTransform.anchorMax = Vector2.one * .85f;
+                iconImage.rectTransform.offsetMin = iconImage.rectTransform.offsetMax = Vector2.zero;
+                iconImage.preserveAspect = true;
+                iconImage.raycastTarget = false;
+            }
+            if (stateLabel == null)
+            {
+                var host = new GameObject("StateLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+                host.transform.SetParent(transform, false);
+                stateLabel = host.GetComponent<TMP_Text>();
+                stateLabel.rectTransform.anchorMin = new Vector2(-.6f, -.35f);
+                stateLabel.rectTransform.anchorMax = new Vector2(1.6f, 0);
+                stateLabel.rectTransform.offsetMin = stateLabel.rectTransform.offsetMax = Vector2.zero;
+                stateLabel.fontSize = 16;
+                stateLabel.alignment = TextAlignmentOptions.Center;
+                stateLabel.raycastTarget = false;
+            }
+            ApplyAppearance(state, false, icon);
+            stateLabel.text = caption;
+            if (unavailable) AddUnavailableOverlay();
+            Transform level = transform.Find("Level");
+            if (level != null) level.gameObject.SetActive(false);
+            selectButton.interactable = true;
+            selectButton.onClick.AddListener(() => preview());
+            return selectButton;
+        }
+
+        private void AddUnavailableOverlay()
+        {
+            var host = new GameObject("Unavailable", typeof(RectTransform), typeof(Image));
+            host.transform.SetParent(transform, false);
+            var shade = host.GetComponent<Image>();
+            shade.rectTransform.anchorMin = Vector2.zero;
+            shade.rectTransform.anchorMax = Vector2.one;
+            shade.rectTransform.offsetMin = shade.rectTransform.offsetMax = Vector2.zero;
+            shade.color = new Color(0f, 0f, 0f, .82f);
+            shade.raycastTarget = false;
+
+            var label = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            label.transform.SetParent(host.transform, false);
+            var text = label.GetComponent<TMP_Text>();
+            text.rectTransform.anchorMin = Vector2.zero;
+            text.rectTransform.anchorMax = Vector2.one;
+            text.rectTransform.offsetMin = text.rectTransform.offsetMax = Vector2.zero;
+            text.font = stateLabel.font;
+            text.fontSize = 19f;
+            text.alignment = TextAlignmentOptions.Center;
+            text.text = "Unavailable";
+            text.raycastTarget = false;
+        }
+
+        private void ApplyAppearance(CharacterPotentialNodeState state, bool selected, Sprite icon)
+        {
             ResolveReferences();
 
             Color resolvedColor = selected ? selectedColor : ResolveStateColor(state);
@@ -103,10 +170,6 @@ namespace Project.TeamBuilder.UI.Panels
                     : new Color(1f, 1f, 1f, 0.28f);
             }
 
-            if (selectButton != null)
-            {
-                selectButton.interactable = node != null;
-            }
         }
 
         public static CharacterPotentialNodeUI CreateRuntimeNode(Transform parent)

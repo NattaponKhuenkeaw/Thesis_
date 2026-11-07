@@ -38,6 +38,12 @@ public static class ArtifactIsolatedVisualTestRunner
         RunIsolated("Temp/ArtifactInventoryTests.xml", "ArtifactInstanceSystemTests");
     }
 
+    [MenuItem("Tools/Project/Field Effects/Run Artifact UI Tests")]
+    public static void RunArtifactUiTests()
+    {
+        RunIsolated("Temp/ArtifactUiTests.xml", "ArtifactUiPolishTests");
+    }
+
     [MenuItem("Tools/Project/Field Effects/Run Artifact Regression Tests")]
     public static void RunRegression()
     {
@@ -58,7 +64,7 @@ public static class ArtifactIsolatedVisualTestRunner
             var picker = UnityEngine.Object.Instantiate(Resources.Load<Project.UI.ArtifactRewardPickerUI>(
                 Project.UI.ArtifactRewardPickerUI.ResourcePath));
             string[] paths = { "RarityR/R_RustedOathRing", "RaritySR/SR_10_ProtectionOfJoseph",
-                "Phase1/P1_04_BrokenChronoRelic" };
+                "RaritySSR/P1_04_BrokenChronoRelic" };
             var choices = new Project.InventorySystem.Artifacts.ArtifactInstance[3];
             var generator = new Project.InventorySystem.Artifacts.ArtifactRollGenerator(inventory.ArtifactRollTable);
             for (int i = 0; i < choices.Length; i++)
@@ -68,6 +74,7 @@ public static class ArtifactIsolatedVisualTestRunner
                 choices[i] = generator.Generate(definition, i, 160 + i, 2);
             }
             picker.Present(choices, inventory, 1, 2, _ => false).MoveNext();
+            foreach (Transform child in picker.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = 5;
             for (int i = 1; i <= 3; i++) picker.transform.Find($"Card{i}").gameObject.SetActive(true);
             MethodInfo capture = typeof(TeamBuilderInventoryValidation).GetMethod("Capture", BindingFlags.Static | BindingFlags.NonPublic);
             capture.Invoke(null, new object[] { picker.gameObject, "artifact-rarity-picker", 1920, 1080 });

@@ -89,6 +89,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837992
+    requiresSkillHold: 0
+    skillHoldDuration: 0.35
     cooldown: 7
   - actionId: cg.skill.ex
     actionName: Shadow Attack
@@ -115,6 +117,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 7060639382869639287
+    requiresSkillHold: 0
+    skillHoldDuration: 0.35
     cooldown: 0
   ultimateActions:
   - actionId: cg.ult
@@ -143,6 +147,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837993
+    requiresSkillHold: 0
+    skillHoldDuration: 0.35
     cooldown: 24
     inputTrigger: 0
     holdDuration: 0.35
@@ -911,7 +917,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 1588256193077838005
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1481,6 +1487,7 @@ MonoBehaviour:
           rid: -2
         priority: 0
         allowImmediateInterrupt: 0
+        followUpOnly: 0
     - rid: 3612912864477839461
       type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -1834,7 +1841,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 8312694097921703938
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1873,7 +1880,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 8312694097921703939
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1912,7 +1919,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 8312694097921703940
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1951,7 +1958,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 8312694097921703941
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -1990,7 +1997,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-        breaksArmor: 0
+        breaksArmor: 1
     - rid: 8312694097921703942
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
       data:

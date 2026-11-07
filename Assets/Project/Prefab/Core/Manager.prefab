@@ -146,13 +146,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomChoiceDirector
   mapData: {fileID: 0}
   offerCount: 3
-  biomeTemplate: 0000000000000000010000000000000002000000000000000300000004000000
+  optionalSafeRoomChance: 0.2
+  biomeTemplate: 0000000000000000050000000000000005000000000000000500000004000000
   actIndex: 0
   pendingPostBossRest: 0
   biomeHadShop: 0
-  biomeHadLevel: 0
-  biomeHadRest: 0
-  lastSafeKindConsumed: -1
 --- !u!114 &1219802680302595215
 MonoBehaviour:
   m_ObjectHideFlags: 0

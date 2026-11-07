@@ -127,7 +127,8 @@ namespace Project.Training
                     characterId = character.characterId,
                     skill = Progression.GetPotentialLevel(character, PotentialTrack.Skill),
                     ultimate = Progression.GetPotentialLevel(character, PotentialTrack.Ultimate),
-                    passive = Progression.GetPotentialLevel(character, PotentialTrack.Passive)
+                    passive = Progression.GetPotentialLevel(character, PotentialTrack.Passive),
+                    memory = Progression.CaptureMemory(character.characterId)
                 });
             }
             return result;
@@ -156,9 +157,10 @@ namespace Project.Training
                 if (character == null || !seen.Add(value.characterId)
                     || value.skill < 0 || value.skill > GetMaxPotentialLevel(character, PotentialTrack.Skill)
                     || value.ultimate < 0 || value.ultimate > GetMaxPotentialLevel(character, PotentialTrack.Ultimate)
-                    || value.passive < 0 || value.passive > GetMaxPotentialLevel(character, PotentialTrack.Passive))
+                    || value.passive < 0 || value.passive > GetMaxPotentialLevel(character, PotentialTrack.Passive)
+                    || (value.memory != null && value.memory.CharacterId != value.characterId))
                 {
-                    validationError = "Choose valid potential tiers for deployed characters.";
+                    validationError = "Choose valid upgrades for deployed characters.";
                     return false;
                 }
             }

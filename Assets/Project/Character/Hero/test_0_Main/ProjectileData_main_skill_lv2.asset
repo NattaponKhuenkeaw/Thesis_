@@ -36,6 +36,7 @@ MonoBehaviour:
   trackingRadius: 0
   speed: 0
   lifetime: 3
+  hitIntervalSeconds: 0
   maxHits: 5
   hitCountMode: 1
   routineHitbox:
@@ -55,6 +56,7 @@ MonoBehaviour:
   centerGrabbedTargets: 0
   grabCenterOffset: {x: 0, y: 0}
   magnetismSpeed: 1.5
+  magnetismRange: 0
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []

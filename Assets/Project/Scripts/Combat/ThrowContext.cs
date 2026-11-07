@@ -198,6 +198,12 @@ namespace CombatCore
             ClearInternal();
         }
 
+        internal void RemoveTarget(EnemyController enemy)
+        {
+            if (grabbedEnemies.Remove(enemy) && grabbedEnemies.Count == 0)
+                ClearInternal();
+        }
+
         // ─── Internal ──────────────────────────────────────────
 
         private void ClearInternal()

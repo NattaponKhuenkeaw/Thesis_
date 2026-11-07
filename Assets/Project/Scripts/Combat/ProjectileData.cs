@@ -250,6 +250,8 @@ public class ProjectileData : ScriptableObject
     [Header("Magnetism")]
     [Tooltip("Horizontal pull speed toward the routine hitbox center. Zero disables pull. Independent of damage ticks and hit quota.")]
     [Min(0f)] public float magnetismSpeed;
+    [Tooltip("Extra horizontal pull reach beyond the routine hitbox, in world units per side. Pull does not apply damage or grab outside the hitbox. Zero uses the hitbox bounds.")]
+    [Min(0f)] public float magnetismRange;
 
     [Header("Area Effects")]
     public bool trackAreaOccupants = false;
@@ -405,4 +407,5 @@ public struct ProjectileSpawnContext
     public PlayerCombat sourceCombat;
     public CharacterObject sourceCharacter;
     public float sizeMultiplier;
+    internal Project.Progression.MainMemoryKit.ProjectileEffects memoryEffects;
 }

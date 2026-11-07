@@ -6487,12 +6487,11 @@ MonoBehaviour:
         allowImmediateInterrupt: 0
         followUpOnly: 0
     - rid: 3612912864477839451
-      type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
+      type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
       data:
-        tagType: 0
-        tag: main.void_area
-        shouldExist: 1
-        applyOnActionStart: 0
+        track: 1
+        comparison: 3
+        level: 1
     - rid: 3612912864477839452
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -6568,7 +6567,7 @@ MonoBehaviour:
       data:
         track: 2
         comparison: 3
-        level: 2
+        level: 1
     - rid: 5456672870199459961
       type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -6623,7 +6622,7 @@ MonoBehaviour:
           passThroughDistance: 1.2
           horizontalOnly: 1
           alignTargetToDashPlane: 1
-          minimumTravelDistance: 4
+          minimumTravelDistance: 2
           holdTargetAtAnchor: 1
           targetAnchorOffset: {x: -1.5, y: 0}
           faceTargetOnArrival: 0

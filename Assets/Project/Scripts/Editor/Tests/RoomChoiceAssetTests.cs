@@ -63,7 +63,7 @@ public class RoomChoiceAssetTests
             Assert.That(GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(item.gameObject), Is.Zero, item.name);
     }
 
-    [TestCase(RoomKind.Combat, "Defeat all enemies", "COMBAT REWARD", true)]
+    [TestCase(RoomKind.Combat, "Defeat all enemies", "COMBAT REWARD", false)]
     [TestCase(RoomKind.Boss, "Defeat the boss", "FINAL ENCOUNTER", true)]
     [TestCase(RoomKind.Rest, "Recover your team", "RECOVERY", false)]
     [TestCase(RoomKind.Shop, "Browse and buy items", "MERCHANT", false)]
@@ -220,7 +220,8 @@ public class RoomChoiceAssetTests
             Assert.That(Get<Image>(card, "soulIcon").sprite,
                 Is.EqualTo(AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Project/UI/Room/UI_Soul.PNG")));
             Assert.That(Get<Image>(card, "rewardFrame").enabled, Is.False);
-            Assert.That(Get<TMP_Text>(card, "difficultyLabel").text, Is.EqualTo("HARD"));
+            Assert.That(Get<GameObject>(card, "difficultyRoot").activeSelf, Is.False);
+            Assert.That(Get<Image>(card, "borderImage").color, Is.EqualTo(Get<TMP_Text>(card, "rewardOrZoneLabel").color));
             yield return new WaitForSecondsRealtime(.35f);
             Capture(ui.GetComponent<Canvas>(), "Rest_Combat_Shop", 1920, 1080);
             Capture(ui.GetComponent<Canvas>(), "Rest_Combat_Shop_720p", 1280, 720);

@@ -124,6 +124,7 @@ public partial class PlayerMovement : MonoBehaviour
     private bool usesWorldTargetMotion;
     private EnemyController actionMotionTarget;
     private Vector2 actionTargetPosition;
+    private int actionTargetApproachSide;
     private readonly Dictionary<EnemyController, Transform> dashHitAnchors = new();
     private Vector2 targetDashStart;
     private int targetDashApproachSide;
@@ -142,8 +143,12 @@ public partial class PlayerMovement : MonoBehaviour
         ClearActionMotionTarget();
         actionMotionTarget = target;
         actionTargetPosition = target != null ? (Vector2)target.transform.position : rb.position;
-        if (target != null && Mathf.Abs(actionTargetPosition.x - transform.position.x) > 0.001f)
-            SnapFacingDirection(actionTargetPosition.x >= transform.position.x ? 1 : -1);
+        actionTargetApproachSide = ResolveActionTargetFacing(target);
+        if (target != null)
+        {
+            SnapFacingDirection(actionTargetApproachSide);
+            hasPerformedInitialLockOnForCurrentStep = true;
+        }
     }
 
     public void ClearActionMotionTarget()
@@ -498,7 +503,7 @@ public partial class PlayerMovement : MonoBehaviour
         }
 
         Vector2 previousPosition = rb.position;
-        float travel = ClipHorizontalTravel(targetX - previousPosition.x, true);
+        float travel = ClipGroundedActionTravel(ClipHorizontalTravel(targetX - previousPosition.x, true));
         Vector2 nextPosition = new Vector2(previousPosition.x + travel, previousPosition.y);
         Vector2 currentVelocity = rb.linearVelocity;
 
@@ -1037,8 +1042,11 @@ public partial class PlayerMovement : MonoBehaviour
         float movementVelocityY = ResolveVerticalVelocity(baseVerticalVelocity, motionVelocityY);
 
         Vector2 velocity = new Vector2(movementVelocityX + motionVelocityX, movementVelocityY + motionVelocityY);
-        rb.linearVelocity = usesWorldTargetMotion ? ClipTargetMotionVelocity(velocity)
+        velocity = usesWorldTargetMotion ? ClipTargetMotionVelocity(velocity)
             : new Vector2(ClipHorizontalVelocity(velocity.x), velocity.y);
+        if (usesWorldTargetMotion)
+            velocity.x = ClipGroundedActionVelocity(velocity.x);
+        rb.linearVelocity = velocity;
         lastAppliedMotionVelocityY = motionVelocityY;
     }
 
@@ -1082,8 +1090,11 @@ public partial class PlayerMovement : MonoBehaviour
     private float ClipHorizontalVelocity(float velocity)
     {
         float step = Mathf.Max(Time.fixedDeltaTime, attackMotionIgnoresSlowMotion && !useUnscaledAttackMotion ? 0.000001f : 0.001f);
-        return ClipHorizontalTravel(velocity * step,
-            isAttackMotionActive || (IsDashing && !IsDashLocomotionOpen)) / step;
+        bool committedMotion = isAttackMotionActive || (IsDashing && !IsDashLocomotionOpen);
+        float travel = ClipHorizontalTravel(velocity * step, committedMotion);
+        if (committedMotion || combat?.IsActiveCombat() == true)
+            travel = ClipGroundedActionTravel(travel);
+        return travel / step;
     }
 
     private float ClipHorizontalTravel(float travel, bool stopAtSlopes = false)
@@ -1208,9 +1219,9 @@ public partial class PlayerMovement : MonoBehaviour
         if (attackFacingLockOnCancelledForCurrentAttack || combat == null || !combat.IsAttacking() || Mathf.Abs(horizontalInput) >= AttackFacingCancelInputThreshold) return false;
         EnemyController target = GetAttackFacingLockOnTarget();
         if (target == null || !target.IsAlive) return false;
-        float dx = target.transform.position.x - transform.position.x;
-        if (Mathf.Abs(dx) <= AttackFacingCancelInputThreshold) return false;
-        SetFacingDirection(dx >= 0f ? 1 : -1); hasPerformedInitialLockOnForCurrentStep = true; return true;
+        SetFacingDirection(ResolveActionTargetFacing(target));
+        hasPerformedInitialLockOnForCurrentStep = true;
+        return true;
     }
 
     private EnemyController GetAttackFacingLockOnTarget()
@@ -1336,10 +1347,10 @@ public partial class PlayerMovement : MonoBehaviour
                 EnemyController targetEnemy = actionMotionTarget != null && actionMotionTarget.IsTargetable
                     ? actionMotionTarget : (combat as PlayerCombat)?.FindNearestEnemyTarget(k.targetRadius);
                 targetDashStart = start;
-                targetDashApproachSide = (int)dir;
                 if (targetEnemy != null)
                 {
                     if (actionMotionTarget != targetEnemy) SetActionMotionTarget(targetEnemy);
+                    dir = actionTargetApproachSide;
                     usesWorldTargetMotion = true;
                     Vector2 anchor = k.ResolveTargetDashAnchor(start, actionTargetPosition, (int)dir);
                     totalDelta = k.ResolveTargetDashDestination(start, anchor, (int)dir) - start;
@@ -1349,6 +1360,7 @@ public partial class PlayerMovement : MonoBehaviour
                 else totalDelta = k.horizontalOnly
                     ? new Vector2(Mathf.Max(k.minimumTravelDistance, Mathf.Abs(k.position.x)) * dir, 0f)
                     : new Vector2(k.position.x * dir, k.position.y);
+                targetDashApproachSide = (int)dir;
                 break;
             case MotionTaskType.Relative:
                 totalDelta = new Vector2(k.position.x * dir, k.position.y);

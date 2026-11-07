@@ -67,6 +67,9 @@ namespace Project.Core
         public GameRunPhase CurrentPhase => currentPhase;
         public bool IsBoundaryLoading => isBoundaryLoading;
         public string LobbySceneName => lobbySceneName;
+        public double PlaytimeSeconds { get; private set; }
+        public int CurrentRoomNumber { get; private set; }
+        public int CurrentRoomBiomeIndex { get; private set; }
         public CharacterInventoryState RunInventory => Project.Training.CharacterStateContext.ResolveInventory(runInventory);
         public CharacterProgressionState MetaProgression => Project.Training.CharacterStateContext.ResolveProgression(metaProgression);
 
@@ -126,6 +129,8 @@ namespace Project.Core
             EnsureBoundaryFadeOverlay();
             ApplyPhaseForScene(SceneManager.GetActiveScene().name, notify: false);
             ApplyZoneStateForScene(SceneManager.GetActiveScene().name);
+            if (currentPhase == GameRunPhase.InRun)
+                RecordDungeonRoomEntry();
         }
 
         private void Start()
@@ -144,6 +149,40 @@ namespace Project.Core
         private void OnEnable()
         {
             SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        private void Update()
+        {
+            if (!Project.Training.TrainingSession.IsTrainingContext && !isBoundaryLoading
+                && (SceneTransitionManager.Instance == null || !SceneTransitionManager.Instance.IsTransitioning))
+            {
+                PlaytimeSeconds += GameFreezeManager.GameplayUnscaledDeltaTime;
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            SaveCheckpointIfInLobby();
+        }
+
+        internal void SaveCheckpointIfInLobby()
+        {
+            if (!Project.Training.TrainingSession.IsTrainingContext
+                && SceneManager.GetActiveScene().handle == lobbyPreparedSceneHandle)
+            {
+                RunInventory?.SaveBossLobbyCheckpoint();
+            }
+        }
+
+        internal void RecordDungeonRoomEntry()
+        {
+            if (currentPhase != GameRunPhase.InRun || Project.Training.TrainingSession.IsTrainingContext)
+                return;
+
+            int biomeIndex = RunProgressionManager.Instance != null
+                ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
+            CurrentRoomNumber = biomeIndex == CurrentRoomBiomeIndex ? CurrentRoomNumber + 1 : 1;
+            CurrentRoomBiomeIndex = biomeIndex;
         }
 
         private void OnDisable()
@@ -196,14 +235,16 @@ namespace Project.Core
                 return;
 
             lobbyPreparedSceneHandle = scene.handle;
-            RestoreBossLobbyBiome();
+            CurrentRoomNumber = 0;
+            RestoreLobbyCheckpoint();
             ResolveDependencies();
             int progressionIndex = RunProgressionManager.EnsureInstance().CurrentBiomeIndex;
             RoomBiomeEnvironment.ApplyInScene(scene, mapData, progressionIndex);
         }
 
-        private static void RestoreBossLobbyBiome()
+        private void RestoreLobbyCheckpoint()
         {
+            PlaytimeSeconds = 0d;
             CharacterInventoryState inventory = Project.Training.CharacterStateContext.ResolveInventory();
             if (inventory != null && inventory.DeathForcesLevelOne)
             {
@@ -212,9 +253,10 @@ namespace Project.Core
                 return;
             }
 
-            if (inventory != null && inventory.TryReadBossLobbyBiome(out int biomeIndex))
+            if (inventory != null && inventory.TryReadBossLobbyCheckpoint(out int biomeIndex, out double playtimeSeconds))
             {
                 RunProgressionManager.EnsureInstance()?.SetCurrentBiomeIndex(biomeIndex);
+                PlaytimeSeconds = playtimeSeconds;
             }
         }
 
@@ -375,6 +417,7 @@ namespace Project.Core
                 ApplyZoneStateForScene(sceneName);
                 // Restore the saved round and switch authored scenery while the screen is still black.
                 PrepareLobbyBiome(sceneName);
+                RecordDungeonRoomEntry();
                 // Death/abandon return skips SceneTransitionManager, so SafeZone exits
                 // (Lobby) would stay physically/logically locked without this.
                 ConfigureSafeZoneExitForScene(sceneName);

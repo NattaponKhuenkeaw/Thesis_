@@ -55,11 +55,11 @@ public static class CharacterKitInfoBuilder
     private static string SectionLevel(CharacterKitPresentationDefinition.Section section,
         List<CharacterKitPresentationDefinition.Entry> entries, CharacterObject character, KitInfoContext context)
     {
-        if (section.showPotentialLevel) return "Lv." + Mathf.Clamp(Level(character, context, section.potentialTrack), 0, CharacterKitDefinition.MaxPotentialLevel);
+        if (section.showPotentialLevel) return "Lv." + Level(character, context, section.potentialTrack);
         // Existing authored kits stored the association on their primary entry.
         foreach (var entry in entries)
             if (entry.sectionId == section.sectionId && (entry.showPotentialLevel || entry.passive))
-                return "Lv." + Mathf.Clamp(Level(character, context, entry.passive ? PotentialTrack.Passive : entry.potentialTrack), 0, CharacterKitDefinition.MaxPotentialLevel);
+                return "Lv." + Level(character, context, entry.passive ? PotentialTrack.Passive : entry.potentialTrack);
         return string.Empty;
     }
 
@@ -269,8 +269,7 @@ public static class CharacterKitInfoBuilder
             || (table.ultimateActions?.Count > 0 && ReferenceEquals(table.ultimateActions[0], action)));
 
     private static int Level(CharacterObject character, KitInfoContext context, PotentialTrack track) =>
-        Mathf.Clamp(context.Progression != null ? context.Progression.GetPotentialLevel(character, track) : 0,
-            0, CharacterKitDefinition.MaxPotentialLevel);
+        context.Progression?.GetCombatPotentialLevel(character, track) ?? 0;
 
     private static bool HasStep(ComboNode node, string name, HashSet<ComboNode> visited)
     {

@@ -16,6 +16,7 @@ namespace Project.Training
                 progress.SetLevel(PotentialTrack.Skill, value.skill);
                 progress.SetLevel(PotentialTrack.Ultimate, value.ultimate);
                 progress.SetLevel(PotentialTrack.Passive, value.passive);
+                SetPracticeMemory(value.memory);
             }
             InvalidatePotentialCache();
             if (notify) NotifyChanged();

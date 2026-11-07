@@ -436,7 +436,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.UI.ArtifactRewardPickerUI
   pullLabel: {fileID: 0}
+<<<<<<< Updated upstream
   confirm: {fileID: 0}
+=======
+  statItemPrefab: {fileID: 5645857564016916016, guid: 86eea606ced3fc943aa51c64a2dfb767, type: 3}
+>>>>>>> Stashed changes
   cards: []
   revealSound: {fileID: 8300000, guid: 1c77220349ae4ac29282d588a77e0693, type: 3}
   confirmSound: {fileID: 8300000, guid: d532de19063c45cf84ed497e15f27d29, type: 3}

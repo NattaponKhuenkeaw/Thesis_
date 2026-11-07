@@ -20,6 +20,14 @@ namespace Project.TeamBuilder.UI
         [Header("UI References")]
         [SerializeField] private Image artifactIcon;
         [SerializeField] private Image slotBackground;
+<<<<<<< Updated upstream
+=======
+        [Tooltip("Non-interactive overlay showing the destination for inventory equipment.")]
+        [SerializeField] private Image selectionOverlay;
+        [Header("Selection Pulse (starting values)")]
+        [SerializeField, Min(.2f)] private float selectionPulsePeriod = 1.2f;
+        [SerializeField, Range(0f, .15f)] private float selectionPulseScale = .06f;
+>>>>>>> Stashed changes
 
         [Header("Visual Settings")]
         [SerializeField] private Color emptySlotColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
@@ -35,6 +43,16 @@ namespace Project.TeamBuilder.UI
         private bool isDropHighlighted;
         private bool isSelectionDestination;
         private TMP_Text emptySlotLabel;
+        private float selectionStartedAt;
+
+        private void Update()
+        {
+            if (selectionOverlay == null || !selectionOverlay.gameObject.activeSelf) return;
+            // Inventory also operates while gameplay time is paused.
+            float pulse = .5f + .5f * Mathf.Cos((Time.unscaledTime - selectionStartedAt) * Mathf.PI * 2f / Mathf.Max(.2f, selectionPulsePeriod));
+            selectionOverlay.color = new Color(1f, .99f, .72f, Mathf.Lerp(.82f, 1f, pulse));
+            selectionOverlay.rectTransform.localScale = Vector3.one * (1f + selectionPulseScale * pulse);
+        }
 
         // =========================================================
         // Properties
@@ -144,8 +162,68 @@ namespace Project.TeamBuilder.UI
 
         public void SetSelectionDestination(bool selected)
         {
+<<<<<<< Updated upstream
             isSelectionDestination = selected;
+=======
+            if (selected && selectionOverlay == null)
+            {
+                var overlay = new GameObject("Selection Overlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Outline), typeof(LayoutElement));
+                overlay.layer = gameObject.layer;
+                overlay.transform.SetParent(transform, false);
+                selectionOverlay = overlay.GetComponent<Image>();
+                var rect = selectionOverlay.rectTransform;
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = rect.offsetMax = Vector2.zero;
+                selectionOverlay.sprite = slotBackground != null ? slotBackground.sprite : null;
+                selectionOverlay.type = Image.Type.Sliced;
+                selectionOverlay.fillCenter = false;
+                selectionOverlay.color = new Color(1f, .99f, .72f, 1f);
+                selectionOverlay.raycastTarget = false;
+                var outline = overlay.GetComponent<Outline>();
+                outline.effectColor = new Color(1f, .96f, .3f, 1f);
+                outline.effectDistance = new Vector2(3f, 3f);
+                outline.useGraphicAlpha = false;
+                var glow = overlay.AddComponent<Shadow>();
+                glow.effectColor = new Color(1f, .82f, .18f, .7f);
+                glow.effectDistance = new Vector2(5f, 5f);
+                glow.useGraphicAlpha = false;
+                overlay.GetComponent<LayoutElement>().ignoreLayout = true;
+                // Solid outer edges stay bright even when the source frame artwork is dark.
+                AddSelectionEdge(rect, "Top Glow", new Vector2(0f, 1f), Vector2.one, new Vector2(0f, 2f), new Vector2(4f, 2f));
+                AddSelectionEdge(rect, "Bottom Glow", Vector2.zero, new Vector2(1f, 0f), new Vector2(0f, -2f), new Vector2(4f, 2f));
+                AddSelectionEdge(rect, "Left Glow", Vector2.zero, new Vector2(0f, 1f), new Vector2(-2f, 0f), new Vector2(2f, 4f));
+                AddSelectionEdge(rect, "Right Glow", new Vector2(1f, 0f), Vector2.one, new Vector2(2f, 0f), new Vector2(2f, 4f));
+            }
+            if (selectionOverlay != null)
+            {
+                // The outer glow edges replace the legacy sprite-based selection frame.
+                selectionOverlay.enabled = false;
+                selectionOverlay.gameObject.SetActive(selected);
+                selectionOverlay.transform.SetAsLastSibling();
+                selectionStartedAt = Time.unscaledTime;
+                selectionOverlay.color = new Color(1f, .99f, .72f, 1f);
+                selectionOverlay.rectTransform.localScale = Vector3.one;
+            }
+>>>>>>> Stashed changes
             RefreshBackground();
+        }
+
+        private static void AddSelectionEdge(RectTransform parent, string name, Vector2 min, Vector2 max, Vector2 position, Vector2 size)
+        {
+            var edge = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            edge.layer = parent.gameObject.layer;
+            edge.transform.SetParent(parent, false);
+            var image = edge.GetComponent<Image>();
+            image.color = new Color(1f, .99f, .72f, 1f);
+            image.raycastTarget = false;
+            var glow = edge.AddComponent<Outline>();
+            glow.effectColor = new Color(1f, .95f, .5f, .3f);
+            glow.effectDistance = new Vector2(2f, 2f);
+            image.rectTransform.anchorMin = min;
+            image.rectTransform.anchorMax = max;
+            image.rectTransform.anchoredPosition = position;
+            image.rectTransform.sizeDelta = size;
         }
 
         // =========================================================

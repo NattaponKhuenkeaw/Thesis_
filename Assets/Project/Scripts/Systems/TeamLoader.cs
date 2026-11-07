@@ -1659,6 +1659,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (subscribedMetaProgression != null)
         {
             subscribedMetaProgression.OnPotentialChanged += HandlePotentialChanged;
+            subscribedMetaProgression.OnMemoryChanged += HandlePotentialChanged;
         }
     }
 
@@ -1670,6 +1671,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         subscribedMetaProgression.OnPotentialChanged -= HandlePotentialChanged;
+        subscribedMetaProgression.OnMemoryChanged -= HandlePotentialChanged;
         subscribedMetaProgression = null;
     }
 
@@ -2098,6 +2100,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         CharacterStats stats = runInventory != null && character != null
             ? runInventory.GetCharacterBaseStats(character)
             : (character != null ? character.GetLeveledStats() : new CharacterStats());
+        if (runInventory == null) metaProgression?.ApplyMemoryBaseStats(character, stats);
 
         if (includeArtifacts && runInventory != null)
         {

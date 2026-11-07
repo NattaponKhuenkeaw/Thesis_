@@ -14,10 +14,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.ArtifactDefinition
   id: ART-SR-010
   itemName: Protection of Joseph
+  description: 
   icon: {fileID: 21300000, guid: 617a139b13ca83642963dc59f06ec87d, type: 3}
   price: 1000
-  rarity: 2
   isEquippable: 1
-  passiveDescription: 'Skill heals living allies for 50% of the wearer''s ATK every second for 5s. 120s cooldown.'
+  rarity: 2
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: Skill <b><color=#74C365>Regenerate HP</color></b> of living
+    allies for <b><color=#74C365>50% of the wearer's ATK</color></b> every second
+    for <color=#FFA500>5s</color>. <size=18><color=#C0C0C0>(120s cooldown)</color></size>
   passiveSet: {fileID: 11400000, guid: 2ece42a4cf8849daaa169726e44be2bd, type: 2}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

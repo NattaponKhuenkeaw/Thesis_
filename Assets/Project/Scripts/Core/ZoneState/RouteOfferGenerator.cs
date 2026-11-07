@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using Project.InventorySystem.Items;
-using Project.UI;
 using UnityEngine;
 
 namespace Project.Core.ZoneState
 {
     /// <summary>
     /// Rolls difficulty + reward for a RouteOffer.
-    /// Chamber layouts spawn from Easy/Medium/Hard Encounter palettes;
+    /// Chamber layouts spawn from Medium/Hard encounter palettes;
     /// generated waves are only attached for single-room combat fallback.
     /// </summary>
     public static class RouteOfferGenerator
@@ -42,16 +41,10 @@ namespace Project.Core.ZoneState
                 return new RoomChoiceOffer(room);
             }
 
-            RouteDifficulty difficulty = RollDifficulty(room.RoomKind, tables);
-            if (room.RoomKind == RoomKind.Elite && difficulty == RouteDifficulty.Easy)
-            {
-                difficulty = RouteDifficulty.Medium;
-            }
-
-            RouteOfferTables.DifficultyProfile profile = tables.GetProfile(difficulty);
+            RouteOfferTables.DifficultyProfile profile = RollProfile(tables);
             if (profile == null)
             {
-                Debug.LogWarning($"[RouteOfferGenerator] Missing profile for {difficulty}; offering bare room '{room.RoomId}'.");
+                Debug.LogWarning($"[RouteOfferGenerator] Missing combat profiles; offering bare room '{room.RoomId}'.");
                 return new RoomChoiceOffer(room);
             }
 
@@ -69,7 +62,7 @@ namespace Project.Core.ZoneState
                     tables.SpawnInterval);
             }
 
-            return new RoomChoiceOffer(room, difficulty, encounter, reward);
+            return new RoomChoiceOffer(room, profile.difficulty, encounter, reward);
         }
 
         public static bool NeedsGeneratedCombat(RoomKind kind)
@@ -77,48 +70,15 @@ namespace Project.Core.ZoneState
             return kind == RoomKind.Combat || kind == RoomKind.Elite;
         }
 
-        private static RouteDifficulty RollDifficulty(RoomKind kind, RouteOfferTables tables)
+        private static RouteOfferTables.DifficultyProfile RollProfile(RouteOfferTables tables)
         {
-            if (kind == RoomKind.Elite)
-            {
-                // Elite biases toward Hard while still allowing Medium.
-                float eliteRoll = Random.value;
-                return eliteRoll < 0.55f ? RouteDifficulty.Hard : RouteDifficulty.Medium;
-            }
-
-            float total = 0f;
-            IReadOnlyList<RouteOfferTables.DifficultyProfile> profiles = tables.Profiles;
-            for (int i = 0; i < profiles.Count; i++)
-            {
-                if (profiles[i] != null)
-                {
-                    total += Mathf.Max(0f, profiles[i].rollWeight);
-                }
-            }
-
-            if (total <= 0f)
-            {
-                return RouteDifficulty.Easy;
-            }
-
-            float roll = Random.Range(0f, total);
-            float cursor = 0f;
-            for (int i = 0; i < profiles.Count; i++)
-            {
-                RouteOfferTables.DifficultyProfile profile = profiles[i];
-                if (profile == null)
-                {
-                    continue;
-                }
-
-                cursor += Mathf.Max(0f, profile.rollWeight);
-                if (roll <= cursor)
-                {
-                    return profile.difficulty;
-                }
-            }
-
-            return profiles[profiles.Count - 1].difficulty;
+            RouteOfferTables.DifficultyProfile medium = tables.GetProfile(RouteDifficulty.Medium);
+            RouteOfferTables.DifficultyProfile hard = tables.GetProfile(RouteDifficulty.Hard);
+            float mediumWeight = Mathf.Max(0f, medium?.rollWeight ?? 0f);
+            float hardWeight = Mathf.Max(0f, hard?.rollWeight ?? 0f);
+            if (hardWeight <= 0f) return medium ?? hard;
+            if (mediumWeight <= 0f) return hard;
+            return Random.value * (mediumWeight + hardWeight) < mediumWeight ? medium : hard;
         }
 
         public static int CountEncounterEnemies(GeneratedEncounter encounter)
@@ -196,6 +156,7 @@ namespace Project.Core.ZoneState
 
         private static RouteReward BuildReward(RouteOfferTables.DifficultyProfile profile, RouteOfferTables tables)
         {
+<<<<<<< Updated upstream
             if (profile.difficulty == RouteDifficulty.Hard && tables.HardRewardPatterns.Count > 0 &&
                 TryBuildHardReward(tables.HardRewardPatterns, out RouteReward patterned))
                 return patterned;
@@ -206,8 +167,17 @@ namespace Project.Core.ZoneState
             {
                 Coins = Random.Range(minCoins, maxCoins + 1)
             };
+=======
+            int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
+            int coins = ResolveCombatSoul(profile.difficulty, biome);
+            if (profile.difficulty == RouteDifficulty.Hard && tables.HardRewardPatterns.Count > 0 &&
+                TryBuildHardReward(tables.HardRewardPatterns, biome, coins, out RouteReward patterned))
+                return patterned;
 
-            if (!tables.GrantArtifacts)
+            RouteReward reward = new RouteReward { Coins = coins };
+>>>>>>> Stashed changes
+
+            if (profile.difficulty == RouteDifficulty.Medium || !tables.GrantArtifacts)
             {
                 return reward;
             }
@@ -229,12 +199,21 @@ namespace Project.Core.ZoneState
             return reward;
         }
 
+<<<<<<< Updated upstream
         private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns,
+=======
+        private static int ResolveCombatSoul(RouteDifficulty difficulty, int biomeIndex)
+        {
+            int baseline = biomeIndex < 3 ? 175 : biomeIndex < 6 ? 250 : 350;
+            return difficulty == RouteDifficulty.Hard ? Mathf.CeilToInt(baseline * 1.25f) : baseline;
+        }
+
+        private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns, int biome, int coins,
+>>>>>>> Stashed changes
             out RouteReward reward)
         {
             reward = null;
-            ArtifactRewardPickerUI picker = Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath);
-            if (picker == null || !picker.IsConfigured || Project.Training.TrainingSession.IsTrainingContext)
+            if (Project.Training.TrainingSession.IsTrainingContext)
                 return false;
 
             float total = 0f;
@@ -254,8 +233,12 @@ namespace Project.Core.ZoneState
 
             int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
             reward = RouteReward.Patterned(
+<<<<<<< Updated upstream
                 Random.Range(Mathf.Min(selected.minSoul, selected.maxSoul), Mathf.Max(selected.minSoul, selected.maxSoul) + 1),
                 Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome);
+=======
+                coins, Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome, selected.grantsMemory);
+>>>>>>> Stashed changes
             return true;
         }
 

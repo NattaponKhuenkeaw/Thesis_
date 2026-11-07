@@ -147,10 +147,11 @@ namespace Project.Core.ZoneState
             }
 
             slices = new List<GameObject>[chambers.Length];
+            int[] routeCounts = BuildRouteChamberCounts();
             for (int i = 0; i < chambers.Length; i++)
             {
                 Chamber chamber = chambers[i];
-                int count = ResolveChamberCount(chamber);
+                int count = routeCounts != null ? routeCounts[i] : ResolveChamberCount(chamber);
                 slices[i] = RollChamberQuota(chamber, stageQuota, count);
                 if (count > 0 && slices[i].Count == 0)
                 {
@@ -166,6 +167,35 @@ namespace Project.Core.ZoneState
             fighting = false;
             ArmEnterSensors();
             return BindAndStart(0);
+        }
+
+        private int[] BuildRouteChamberCounts()
+        {
+            if (!CombatRouteContent.TryGetActiveDifficulty(out RouteDifficulty difficulty)) return null;
+
+            int combatChambers = 0;
+            foreach (Chamber chamber in chambers)
+            {
+                if (chamber != null && chamber.enemyCount > 0) combatChambers++;
+            }
+            if (combatChambers == 0) return null;
+
+            // Give each playable chamber at least one enemy, including custom layouts with more chambers.
+            int budget = Mathf.Max(combatChambers, CombatRouteContent.GetRoomEnemyBudget(difficulty));
+            int baseCount = budget / combatChambers;
+            int extra = budget % combatChambers;
+            var counts = new int[chambers.Length];
+            for (int i = 0; i < chambers.Length; i++)
+            {
+                if (chambers[i] == null || chambers[i].enemyCount <= 0) continue;
+                counts[i] = baseCount;
+                if (extra > 0)
+                {
+                    counts[i]++;
+                    extra--;
+                }
+            }
+            return counts;
         }
 
         private static int ResolveChamberCount(Chamber chamber)
@@ -251,6 +281,27 @@ namespace Project.Core.ZoneState
             int nextIndex = currentIndex + 1;
             waitingForIndex = nextIndex;
             OpenCorridorToward(nextIndex);
+        }
+
+        internal void OpenChambersForPlaytest()
+        {
+            fighting = false;
+            waitingForIndex = -1;
+            if (chambers == null || boundary == null) return;
+
+            for (int i = 0; i < chambers.Length; i++)
+            {
+                Chamber chamber = chambers[i];
+                if (chamber == null) continue;
+
+                if (i > 0) boundary.OpenDivider(chamber.entranceWall);
+                boundary.OpenDivider(chamber.exitWall);
+                if (chamber.additionalExitWalls == null) continue;
+                foreach (Collider2D wall in chamber.additionalExitWalls)
+                {
+                    boundary.OpenDivider(wall);
+                }
+            }
         }
 
         private void ReleaseAdditionalExitWalls()

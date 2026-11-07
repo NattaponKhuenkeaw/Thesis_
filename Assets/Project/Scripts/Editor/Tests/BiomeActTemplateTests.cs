@@ -111,8 +111,6 @@ public class BiomeActRouteProgressionTests
     public void LobbyToBossMatchesTemplateAcrossThreeConsecutiveBiomes(int seed)
     {
         Random.InitState(seed);
-        var expected = new[] { RoomKind.Combat, RoomKind.Combat, RoomKind.Shop,
-            RoomKind.Combat, RoomKind.Level, RoomKind.Combat, RoomKind.Rest, RoomKind.Boss };
         for (int biome = 0; biome < 3; biome++)
         {
             RoomData current = map.GetRoomById("Test_Lobby");
@@ -121,9 +119,11 @@ public class BiomeActRouteProgressionTests
             {
                 var offers = OffersFrom(current);
                 Assert.That(offers, Is.Not.Empty);
-                var next = offers.FirstOrDefault(o => o.Kind == RoomKind.Shop
-                    || o.Kind == RoomKind.Level || o.Kind == RoomKind.Rest);
-                if (!next.IsValid) next = offers[0];
+                BiomeActNode node = director.BiomeTemplate[step];
+                if (node == BiomeActNode.SafeRoom)
+                    Assert.That(offers.All(o => o.Room.ZoneMode == ZoneMode.SafeZone), Is.True);
+                var next = node == BiomeActNode.Combat
+                    ? offers.First(o => o.Kind == RoomKind.Combat) : offers[0];
                 director.NotifyLeavingRoom(current.RoomId);
                 EnterRoom(next.RoomId);
                 current = next.Room;
@@ -131,7 +131,8 @@ public class BiomeActRouteProgressionTests
                 if (next.Kind == RoomKind.Combat)
                     Assert.That(next.Room.BiomeIndex, Is.EqualTo(biome % 2));
             }
-            Assert.That(entered, Is.EqualTo(expected), $"Biome {biome}: extra or missing route node");
+            Assert.That(entered.Count, Is.EqualTo(8), $"Biome {biome}: extra or missing route node");
+            Assert.That(entered.Last(), Is.EqualTo(RoomKind.Boss));
             Assert.That(progression.currentRoomDepth, Is.EqualTo(4));
             Assert.That(director.ActIndex, Is.EqualTo(7));
             var afterBoss = director.GenerateOffersAfterClear(current.RoomId);
@@ -143,16 +144,45 @@ public class BiomeActRouteProgressionTests
     }
 
     [Test]
+    public void CombatPrizesGuaranteeSoulAndFavorHardOverMedium()
+    {
+        Random.InitState(203);
+        RoomData combat = map.Rooms.First(room => room != null && room.RoomKind == RoomKind.Combat);
+        int medium = 0;
+        int hard = 0;
+        for (int i = 0; i < 256; i++)
+        {
+            RoomChoiceOffer offer = RouteOfferGenerator.BuildOffer(combat);
+            Assert.That(offer.Reward, Is.Not.Null);
+            if (offer.Difficulty == RouteDifficulty.Hard)
+            {
+                Assert.That(offer.Reward.Coins, Is.EqualTo(219));
+                hard++;
+                continue;
+            }
+            Assert.That(offer.Difficulty, Is.EqualTo(RouteDifficulty.Medium));
+            Assert.That(offer.Reward.Coins, Is.EqualTo(175));
+            Assert.That(offer.Reward.ArtifactPulls, Is.Zero);
+            Assert.That(offer.Reward.GrantsArtifact, Is.False);
+            medium++;
+        }
+        Assert.That(medium, Is.Positive);
+        Assert.That(hard, Is.GreaterThan(medium));
+    }
+
+    [Test]
     public void ReopeningOffersAndRetryingTransitionDoesNotConsumeNodesOrCountClearsTwice()
     {
         RoomData lobby = map.GetRoomById("Test_Lobby");
-        var first = director.GenerateLeaveOffersFromSafeRoom(lobby.RoomId)[0];
+        director.GenerateLeaveOffersFromSafeRoom(lobby.RoomId);
+        var first = director.LastOffers.First(o => o.Kind == RoomKind.Combat);
+        var firstCard = director.LastOffers[0];
         for (int i = 0; i < 3; i++)
         {
             director.GenerateLeaveOffersFromSafeRoom(lobby.RoomId);
             director.NotifyLeavingRoom(lobby.RoomId);
             Assert.That(director.ActIndex, Is.Zero, "Preparing/aborting a transition must not consume a node");
-            Assert.That(director.LastOffers[0].RoomId, Is.EqualTo(first.RoomId));
+            Assert.That(director.LastOffers[0].RoomId, Is.EqualTo(firstCard.RoomId));
         }
         EnterRoom(first.RoomId);
         Assert.That(director.ActIndex, Is.EqualTo(1));
@@ -163,7 +193,7 @@ public class BiomeActRouteProgressionTests
             director.GenerateOffersAfterClear(first.RoomId);
             Assert.That(director.ActIndex, Is.EqualTo(1));
             Assert.That(progression.currentRoomDepth, Is.EqualTo(1));
-            Assert.That(director.LastOffers.All(o => o.Kind == RoomKind.Combat), Is.True);
+            Assert.That(director.LastOffers.Any(o => o.Kind == RoomKind.Combat), Is.True);
         }
     }
 
@@ -195,23 +225,29 @@ public class BiomeActRouteProgressionTests
     }
 
     [Test]
-    public void SafeNodeCanStillBeReplacedByCombatWithoutAddingAnotherRouteSlot()
+    public void OptionalSafeConsumesOneNodeAndGuaranteedSafesStillHaveADestination()
     {
+        typeof(RoomChoiceDirector).GetField("optionalSafeRoomChance", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(director, 1f);
         RoomData current = map.GetRoomById("Test_Lobby");
-        var entered = new List<RoomKind>();
-        for (int step = 0; step < 16 && current.RoomKind != RoomKind.Boss; step++)
+        for (int step = 0; step < director.BiomeTemplate.Count; step++)
         {
             var offers = OffersFrom(current);
-            var next = offers.FirstOrDefault(o => o.Kind == RoomKind.Combat);
-            if (!next.IsValid) next = offers[0];
+            var safeOffers = offers.Where(o => o.Room.ZoneMode == ZoneMode.SafeZone).ToArray();
+            if (director.BiomeTemplate[step] == BiomeActNode.SafeRoom)
+                Assert.That(safeOffers.Length, Is.EqualTo(offers.Count).And.GreaterThan(0));
+            if (step == 0)
+            {
+                Assert.That(safeOffers.Length, Is.EqualTo(2));
+                Assert.That(offers.Count(o => o.Kind == RoomKind.Combat), Is.EqualTo(1));
+            }
+            var next = safeOffers.Length > 0 ? safeOffers[0] : offers[0];
             director.NotifyLeavingRoom(current.RoomId);
             EnterRoom(next.RoomId);
             current = next.Room;
-            entered.Add(next.Kind);
+            Assert.That(director.ActIndex, Is.EqualTo(Mathf.Min(step + 1, director.BiomeTemplate.Count - 1)));
         }
-        Assert.That(entered.Count, Is.EqualTo(8));
-        Assert.That(entered.Count(k => k == RoomKind.Combat), Is.EqualTo(7));
-        Assert.That(entered.Last(), Is.EqualTo(RoomKind.Boss));
+        Assert.That(current.RoomKind, Is.EqualTo(RoomKind.Boss));
     }
 
     private IReadOnlyList<RoomChoiceOffer> OffersFrom(RoomData room)

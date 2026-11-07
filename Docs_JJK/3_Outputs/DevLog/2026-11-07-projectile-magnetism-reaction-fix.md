@@ -1,0 +1,11 @@
+# 2026-11-07 — Projectile magnetism and Main Normal Attack
+
+Workflow: `/fix-bug`. Task: `../Specs/projectile-magnetism-reaction-fix-task-card.md`.
+
+The user removed the stun requirement for Main. Removed the runtime Memory stun, its node field and all Main node descriptions mentioning it. The previous stun used EnemyController.ApplyStun, whose status reaction blocks field pull during its freeze and can request normal-attack spacing. No change to the global stun or enemy movement motor was needed after the requirement changed.
+
+Goenitz's intended targets were outside the tornado hitbox. Existing magnetism iterated only damage-tracked enemies touching that hitbox, so it could not pull those targets. The shared projectile magnetism now queries its pull area independently using a reusable overlap buffer. Extra horizontal reach is authored on ProjectileData and exposed in the action editor. Damage/grab occupancy remains in the original hitbox. Goenitz's four ultimate variants start with 2 world units of extra reach per side and retain their authored speed of 10. This is a starting reach pending visual playtest, not a balance claim. Actual physics checks ruled out the initial suspicion of a position-motor composition fault.
+
+Main Skill Lv4 had a blank action modifier with Normal category, no action ID/name and unlocked=false. It matched and locked both base Normal actions. Removed that no-op entry. Reproduced the block at Skill ranks 4 and 6 before removal. Resolver tests verify ground/air entry, three base stages, stage 4 at Passive Memory 1, and stage 5 only through the captured-enemy trigger. Dimension Cut routing is unchanged.
+
+Verification: Unity compiled without errors. `Tools/Project/Combat/Validate Main Memory Fixes`: **79 passed, 0 failed**, `Temp/main-memory-fixes-tests.xml`. Includes simulated physics, left/right pulls, dynamic/kinematic detection, outside-hitbox exclusion from damage/grab tracking, range boundaries, reaction arcs, terrain/immunity, expiry/reset, Memory and finisher regressions. Changed-script whitespace checks passed. Human PC playtest is in `../TestPlans/projectile-magnetism-reaction-fix-regression.md`. No commit, merge, publishing or configuration changes.

@@ -146,10 +146,82 @@ namespace Project.Core.ZoneState
             return TryBeginTransition(ResolveRoom(sceneName), sceneName, entranceId);
         }
 
+        public bool TryTravelToRoomForPlaytest(string roomId)
+        {
+            RoomData room = ResolveRoom(roomId);
+            return room != null && !WasExitWalkAbortedByDeath()
+                && TryBeginTransition(room, roomId, room.DefaultEntranceId, skipExitWalk: true);
+        }
+
+        public bool TryClearCombatRoomAndTeleportToExit()
+        {
+            if (isTransitioning || Project.Training.TrainingSession.IsTrainingContext
+                || zoneStateProvider == null || zoneStateProvider.Clearing == ClearingState.Resolving)
+            {
+                return false;
+            }
+
+            RoomLayoutHost host = RoomLayoutHost.Instance;
+            RoomData room = (host != null ? host.ActiveRoom : null) ?? zoneStateProvider.CurrentRoom;
+            if (room == null || room.RoomKind != RoomKind.Combat || room.ZoneMode != ZoneMode.CombatZone)
+            {
+                return false;
+            }
+
+            PlayerCharacter player = PlayerCharacter.Instance;
+            if (WasExitWalkAbortedByDeath(player) || player == null)
+            {
+                return false;
+            }
+
+            SceneBoundaryController boundary = ResolveCurrentBoundaryController();
+            TransitionTrigger exit = boundary != null ? boundary.ExitTrigger : null;
+            Collider2D exitCollider = exit != null ? exit.ExitCollider : null;
+            GameObject layout = host != null ? host.ActiveLayoutInstance : null;
+            RoomWaveManager waves = layout != null
+                ? layout.GetComponentInChildren<RoomWaveManager>()
+                : FindFirstObjectByType<RoomWaveManager>();
+            if (exitCollider == null || !exitCollider.isActiveAndEnabled || waves == null)
+            {
+                return false;
+            }
+
+            waves.ClearForPlaytest(zoneStateProvider);
+            foreach (EnemyController enemy in FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+            {
+                if (enemy.gameObject.scene != waves.gameObject.scene) continue;
+                enemy.gameObject.SetActive(false);
+                Destroy(enemy.gameObject);
+            }
+            ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
+
+            Vector3 previousPosition = player.transform.position;
+            Vector3 target = exitCollider.bounds.center;
+            target.z = previousPosition.z;
+            player.StateMachine?.ChangeState(player.StateMachine.IdleState);
+            player.StateMachine?.InputBuffer?.ClearAll();
+            player.Movement?.SetHorizontalInput(0f);
+            player.transform.position = target;
+            Rigidbody2D body = player.GetComponent<Rigidbody2D>();
+            if (body != null)
+            {
+                body.position = target;
+                body.linearVelocity = Vector2.zero;
+            }
+            Physics2D.SyncTransforms();
+            CameraManager.instance?.SnapToPlayerForRoomEnter(target - previousPosition);
+            return true;
+        }
+
         /// <summary>
         /// Starts a room transition when idle. Returns false if a transition is already running.
         /// </summary>
         public bool TryBeginTransition(RoomData room, string fallbackKey, string entranceId)
+        {
+            return TryBeginTransition(room, fallbackKey, entranceId, skipExitWalk: false);
+        }
+
+        private bool TryBeginTransition(RoomData room, string fallbackKey, string entranceId, bool skipExitWalk)
         {
             if (Project.Training.TrainingSession.IsTrainingContext) return false;
             if (isTransitioning)
@@ -174,7 +246,7 @@ namespace Project.Core.ZoneState
 
             bool useLayoutSwap = CanSwapLayout(room);
             Debug.Log($"[SceneTransitionManager] Transition requested: {SceneManager.GetActiveScene().name} -> '{loadKey}' (room={(room != null ? room.RoomId : "missing")}, layoutSwap={useLayoutSwap}), entrance='{targetEntrance}'.");
-            StartCoroutine(TransitionRoutine(loadKey, room, targetEntrance, useLayoutSwap));
+            StartCoroutine(TransitionRoutine(loadKey, room, targetEntrance, useLayoutSwap, skipExitWalk));
             return true;
         }
 
@@ -238,7 +310,8 @@ namespace Project.Core.ZoneState
                 System.StringComparison.Ordinal);
         }
 
-        private IEnumerator TransitionRoutine(string sceneName, RoomData targetRoom, string entranceId, bool useLayoutSwap)
+        private IEnumerator TransitionRoutine(
+            string sceneName, RoomData targetRoom, string entranceId, bool useLayoutSwap, bool skipExitWalk)
         {
             isTransitioning = true;
             Time.timeScale = 1f;
@@ -254,6 +327,7 @@ namespace Project.Core.ZoneState
 
             try
             {
+                GameRunManager.Instance?.SaveCheckpointIfInLobby();
                 EnsureFadeOverlay();
 
                 if (transitionOutSFX != null && GameAudioManager.Instance != null)
@@ -269,7 +343,10 @@ namespace Project.Core.ZoneState
                 // Fade runs alongside the walk-out. Waiting for the walk first left the player
                 // visibly parked against the exit wall for the whole fade.
                 Coroutine exitFade = StartCoroutine(FadeOverlayRoutine(0f, 1f));
-                yield return StartCoroutine(PlayExitWalkRoutine());
+                if (!skipExitWalk)
+                {
+                    yield return StartCoroutine(PlayExitWalkRoutine());
+                }
                 if (WasExitWalkAbortedByDeath())
                 {
                     StopCoroutine(exitFade);
@@ -410,6 +487,7 @@ namespace Project.Core.ZoneState
 
                 yield return StartCoroutine(RevealEntranceRoutine(player, targetEntrance));
                 reachedDestination = true;
+                GameRunManager.Instance?.RecordDungeonRoomEntry();
                 if (targetRoom != null)
                 {
                     RoomChoiceDirector.Instance?.NotifyRoomEntered(targetRoom.RoomId);

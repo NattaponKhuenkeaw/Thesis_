@@ -18,11 +18,18 @@ MonoBehaviour:
     to let go gave birth to his Aura.
   icon: {fileID: 21300000, guid: 25f44d725976c2f46a83e2ad93aca1a9, type: 3}
   price: 4100
-  rarity: 3
   isEquippable: 1
-  passiveDescription: Critical hits grant Focus (+5% Crit Damage per stack, max 5
-    stacks). At 5 stacks, creates a Thunder Strike dealing 250% ATK (+30% Crit Damage
-    scaling) Additional Damage and consumes all Focus.
+  rarity: 3
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: "Critical hits grant <color=#00ffff>Focus</color><size=18><color=#C0C0C0>(up
+    to 5 stacks)</color></size>\r\n\r\n<size=18><color=#C0C0C0>\u2022 Focus: Increasing
+    Crit Damage by 5% per stack. At 5 stacks, creates a Thunder Strike dealing <b><color=#FFE800>Additional
+    Lightning DMG</color></b><size=18><color=#C0C0C0></color>(Increase multiplier
+    based on own 30% Crit Damage)</size> <color=#FFA500>250%</color> of own ATK 
+    and consumes all Focus</color></size>"
   passiveSet: {fileID: 11400000, guid: 8d882d18f636f6b4eabc11e00f9b6ca0, type: 2}
   additionalDamageEffects: []
   legacyBonusStats:

@@ -1,0 +1,2 @@
+PASS: 88 assertions.
+Screenshots: Logs/TeamBuilderInventoryPreviews

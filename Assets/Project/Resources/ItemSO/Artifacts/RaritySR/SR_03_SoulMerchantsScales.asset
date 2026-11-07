@@ -18,8 +18,28 @@ MonoBehaviour:
     price here, kid... even memories."
   icon: {fileID: 21300000, guid: e2b7d67300e2d1f4db453175ba4cf300, type: 3}
   price: 800
-  rarity: 2
   isEquippable: 1
-  passiveDescription: 'Skill summons a 6s Throne Barrier that follows the wearer and deals 50% ATK every 2s. 20s cooldown.'
+  rarity: 2
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: "Skill summons a <color=#00ffff>Throne Barrier</color> for
+    <b><color=#FFA500>6s</color></b>\n\n<size=18><color=#C0C0C0>\u2022 Throne Barrier:
+    Anchor to the wearer and follow them, Inflict <b><color=#A38BFD>Additional DMG</color></b>
+    <b><color=#FFA500>50%</color></b> ATK every <b><color=#FFA500>2s</color></b>
+    <size=17><color=#C0C0C0>(20s cooldown)</color></size></color></size>"
   passiveSet: {fileID: 11400000, guid: fcf6c57f0ee44f37bfa64c2f2fe50237, type: 2}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

@@ -18,6 +18,22 @@ public static class TeamBuilderInventoryAuthoring
     private static readonly Color Accent = new Color(1f, .9f, .15f);
     private const string UIArt = "Assets/Project/UI/MainMenu/";
 
+    [MenuItem("Tools/Neo-JJK/UI/Author Artifact Owner Portraits")]
+    public static void AuthorArtifactOwnerPortraits()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Author outside Play Mode.");
+        foreach (string path in new[] { ArtifactCardPath, "Assets/Project/Prefab/UI/ItemListIcon.prefab" })
+        {
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                root.GetComponent<ArtifactGridItemUI>().SetEquippedOwner(null);
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+    }
+
     [MenuItem("Tools/Neo-JJK/UI/Apply TeamBuilder Inventory Layout")]
     public static void Apply()
     {
@@ -152,10 +168,15 @@ public static class TeamBuilderInventoryAuthoring
         {
             var cell = root.gameObject.AddComponent<ArtifactGridItemUI>();
             Set(cell, "iconImage", icon); Set(cell, "frameImage", frame); Set(cell, "nameText", name);
+<<<<<<< Updated upstream
             Set(cell, "rollSummaryText", summary); Set(cell, "equippedBadge", badge.gameObject); SetFloat(cell, "equippedAlpha", .7f);
+=======
+            Set(cell, "equippedBadge", badge.gameObject);
+>>>>>>> Stashed changes
             Set(cell, "selectedFrameSprite", Sprite("UI_BlackBox_YellowBorder_NoOutLine.PNG"));
             Set(cell, "normalFrameSprite", frame.sprite);
-            SetColor(cell, "normalFrameColor", Color.white); SetColor(cell, "equippedFrameColor", Color.white);
+            SetColor(cell, "normalFrameColor", Color.white);
+            cell.SetEquippedOwner(null);
             badge.text = "EQUIPPED";
         }
         badge.gameObject.SetActive(false);

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElementDefinition
   elementType: 4
   displayName: Particle
-  damageTextColor: {r: 0.78, g: 0.72, b: 1, a: 1}
+  damageTextColor: {r: 0.64045894, g: 0.54668033, b: 0.990566, a: 1}
   icon: {fileID: 0}
   dotDuration: 5
   dotDamageRatio: 0.3

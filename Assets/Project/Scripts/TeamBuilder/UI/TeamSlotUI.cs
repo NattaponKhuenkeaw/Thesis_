@@ -21,6 +21,22 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TMP_Text characterNameText;
         [SerializeField] private TMP_Text levelText;
         [SerializeField] private Button changeCharacterButton;
+        private bool isEditLocked;
+
+        private void RefreshContentVisibility()
+        {
+            bool occupied = currentCharacter != null;
+            if (changeCharacterButton != null) changeCharacterButton.gameObject.SetActive(occupied && !isEditLocked);
+            foreach (var slot in artifactSlots)
+                if (slot != null) slot.gameObject.SetActive(occupied);
+            if (atkText != null && defText != null && hpText != null)
+            {
+                Transform bounds = atkText.transform.parent;
+                while (bounds != null && bounds != transform && (!defText.transform.IsChildOf(bounds) || !hpText.transform.IsChildOf(bounds)))
+                    bounds = bounds.parent;
+                if (bounds != null && bounds != transform) bounds.gameObject.SetActive(occupied);
+            }
+        }
 
         [Header("Stat Texts")]
         [SerializeField] private TMP_Text atkText;
@@ -170,6 +186,7 @@ namespace Project.TeamBuilder.UI
             }
             if (emptySlotLabel != null) emptySlotLabel.gameObject.SetActive(false);
 
+            RefreshContentVisibility();
             RecalculateStats();
         }
 
@@ -221,6 +238,7 @@ namespace Project.TeamBuilder.UI
             if (hpText != null) hpText.text = string.Empty;
 
             SetActiveState(false);
+            RefreshContentVisibility();
         }
 
         private void EnsureEmptySlotLabel()
@@ -259,7 +277,8 @@ namespace Project.TeamBuilder.UI
 
         public void SetLockedVisualState(bool isLocked)
         {
-            if (changeCharacterButton != null) changeCharacterButton.gameObject.SetActive(!isLocked);
+            isEditLocked = isLocked;
+            RefreshContentVisibility();
             if (lockedOverlay != null)
             {
                 lockedOverlay.SetActive(isLocked);
@@ -355,7 +374,8 @@ namespace Project.TeamBuilder.UI
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            // Character selection has its own button; portrait input retains drag and inspect behavior.
+            if (currentCharacter == null && !isEditLocked && (eventData == null || eventData.button == PointerEventData.InputButton.Left))
+                ChangeCharacter();
         }
 
         public void ChangeCharacter() => parentBuilder?.BeginCharacterSwitch(slotIndex);

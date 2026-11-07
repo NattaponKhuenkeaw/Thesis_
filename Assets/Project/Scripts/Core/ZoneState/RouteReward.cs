@@ -14,20 +14,27 @@ namespace Project.Core.ZoneState
         public int RewardSeed { get; private set; }
         public int BiomeIndex { get; private set; }
         public bool IncludesBasePayout { get; private set; }
+        public bool GrantsMemory { get; private set; }
 
-        public static RouteReward Patterned(int coins, int pulls, int seed, int biomeIndex) => new RouteReward
+        public static RouteReward Patterned(int coins, int pulls, int seed, int biomeIndex, bool grantsMemory = false) => new RouteReward
         {
             Coins = coins,
             ArtifactPulls = pulls,
             RewardSeed = seed,
             BiomeIndex = biomeIndex,
-            IncludesBasePayout = true
+            IncludesBasePayout = true,
+            GrantsMemory = grantsMemory
         };
 
         public string BuildLabel()
         {
             if (IncludesBasePayout)
-                return ArtifactPulls > 0 ? $"{Coins} Soul + {ArtifactPulls} Artifact picks" : $"{Coins} Soul";
+            {
+                string label = $"{Coins} Soul";
+                if (ArtifactPulls > 0) label += $" + {ArtifactPulls} Artifact picks";
+                if (GrantsMemory) label += " + Memory";
+                return label;
+            }
             if (GrantsArtifact && Artifact != null && Coins > 0)
             {
                 return $"Reward [artifact + coin {Coins}]";

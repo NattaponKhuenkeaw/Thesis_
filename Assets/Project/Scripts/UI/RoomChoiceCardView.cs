@@ -83,33 +83,28 @@ namespace Project.UI
                 nameLabel.text = offer.DisplayName;
             }
 
-            bool hasTag = offer.ShowsDifficulty || offer.Kind == RoomKind.Boss || offer.Kind == RoomKind.Level;
+            bool hasTag = offer.Kind == RoomKind.Boss || offer.Kind == RoomKind.Level;
             if (difficultyRoot != null) difficultyRoot.SetActive(hasTag);
             if (difficultyLabel != null)
             {
-                difficultyLabel.gameObject.SetActive(difficultyRoot == null || hasTag);
-                if (offer.ShowsDifficulty)
-                {
-                    difficultyLabel.text = offer.Difficulty.ToString().ToUpperInvariant();
-                    difficultyLabel.color = ResolveDifficultyColor(offer.Difficulty);
-                }
-                else
-                {
-                    difficultyLabel.text = offer.Kind == RoomKind.Boss ? "FINAL BATTLE"
-                        : offer.Kind == RoomKind.Level ? "RANDOM LEVEL UP" : ResolveSecondaryTag(offer.Kind);
-                    difficultyLabel.color = offer.Kind == RoomKind.Boss ? new Color(.9f, .29f, .32f) : accent;
-                }
+                difficultyLabel.gameObject.SetActive(hasTag);
+                difficultyLabel.text = offer.Kind == RoomKind.Boss ? "FINAL BATTLE" : "RANDOM LEVEL UP";
+                difficultyLabel.color = offer.Kind == RoomKind.Boss ? new Color(.9f, .29f, .32f) : accent;
             }
 
             if (descriptionLabel != null) descriptionLabel.text = Description(offer.Kind);
 
+            bool hasReward = HasReward(offer);
+            Color prizeColor = hasReward ? ResolvePrizeColor(offer.Reward) : Color.white;
             if (rewardOrZoneLabel != null)
             {
                 rewardOrZoneLabel.gameObject.SetActive(true);
                 rewardOrZoneLabel.text = Footer(offer);
-                rewardOrZoneLabel.color = HasReward(offer) ? new Color(1f, .87f, .28f) : new Color(.64f, .65f, .71f);
+                rewardOrZoneLabel.color = hasReward ? prizeColor : new Color(.64f, .65f, .71f);
             }
-            if (rewardFrame != null) rewardFrame.enabled = !HasReward(offer);
+            if (rewardFrame != null) rewardFrame.enabled = !hasReward;
+            if (borderImage != null) borderImage.color = prizeColor;
+            if (hasReward) accent = prizeColor;
             if (soulIcon != null)
                 soulIcon.gameObject.SetActive(offer.Reward != null && offer.Reward.Coins > 0);
 
@@ -226,22 +221,21 @@ namespace Project.UI
         }
 
         private static bool HasReward(RoomChoiceOffer offer) => offer.Reward != null
-            && (offer.Reward.Coins > 0 || offer.Reward.ArtifactPulls > 0 ||
+            && (offer.Reward.Coins > 0 || offer.Reward.ArtifactPulls > 0 || offer.Reward.GrantsMemory ||
                 (offer.Reward.GrantsArtifact && offer.Reward.Artifact != null));
 
         private static string Footer(RoomChoiceOffer offer)
         {
             if (HasReward(offer))
             {
-                if (offer.Reward.ArtifactPulls > 0)
-                {
-                    string picks = offer.Reward.ArtifactPulls == 1 ? "1 ARTIFACT PICK" : $"{offer.Reward.ArtifactPulls} ARTIFACT PICKS";
-                    return offer.Reward.Coins > 0 ? $"{offer.Reward.Coins:N0} SOUL + {picks}" : picks;
-                }
-                bool artifact = offer.Reward.GrantsArtifact && offer.Reward.Artifact != null;
-                if (offer.Reward.Coins > 0)
-                    return $"{offer.Reward.Coins:N0} SOUL" + (artifact ? " + ARTIFACT" : "");
-                return "ARTIFACT";
+                RouteReward reward = offer.Reward;
+                string label = reward.Coins > 0 ? $"{reward.Coins:N0} SOUL" : string.Empty;
+                string artifact = reward.ArtifactPulls > 0
+                    ? (reward.ArtifactPulls == 1 ? "1 ARTIFACT PICK" : $"{reward.ArtifactPulls} ARTIFACT PICKS")
+                    : reward.GrantsArtifact && reward.Artifact != null ? "ARTIFACT" : string.Empty;
+                if (artifact.Length > 0) label += label.Length > 0 ? " + " + artifact : artifact;
+                if (reward.GrantsMemory) label += label.Length > 0 ? "\n+ MEMORY" : "MEMORY";
+                return label;
             }
             switch (offer.Kind)
             {
@@ -253,29 +247,11 @@ namespace Project.UI
             }
         }
 
-        private static string ResolveSecondaryTag(RoomKind kind)
+        private static Color ResolvePrizeColor(RouteReward reward)
         {
-            switch (kind)
-            {
-                case RoomKind.Shop: return "SAFE";
-                case RoomKind.Level: return "SAFE";
-                case RoomKind.Rest: return "SAFE";
-                case RoomKind.Reward: return "SAFE";
-                case RoomKind.Boss: return "BOSS";
-                case RoomKind.Elite: return "ELITE";
-                default: return "ROUTE";
-            }
-        }
-
-        private static Color ResolveDifficultyColor(RouteDifficulty difficulty)
-        {
-            switch (difficulty)
-            {
-                case RouteDifficulty.Easy: return new Color(0.35f, 0.85f, 0.45f, 1f);
-                case RouteDifficulty.Medium: return new Color(0.95f, 0.86f, 0.28f, 1f);
-                case RouteDifficulty.Hard: return new Color(1f, 0.55f, 0.2f, 1f);
-                default: return Color.white;
-            }
+            bool hasArtifact = reward.ArtifactPulls > 0 || (reward.GrantsArtifact && reward.Artifact != null);
+            if (!hasArtifact) return new Color(1f, .87f, .28f);
+            return reward.Coins > 0 ? new Color(1f, .65f, .35f) : new Color(.82f, .65f, 1f);
         }
 
         private static Color ResolveKindColor(RoomKind kind)

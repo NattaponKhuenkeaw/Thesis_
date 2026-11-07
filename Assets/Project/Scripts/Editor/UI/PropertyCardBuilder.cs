@@ -270,6 +270,12 @@ namespace CombatEditor.UI
                     data.magnetismSpeed = Mathf.Max(0f, value);
                     MarkDirty();
                 });
+                AddFloatField(body, "Magnetism Extra Reach", data.magnetismRange, value =>
+                {
+                    RecordUndo("Edit Magnetism Extra Reach");
+                    data.magnetismRange = Mathf.Max(0f, value);
+                    MarkDirty();
+                });
                 AddToggle(body, "Stop on Impact", data.stopOnImpact, value =>
                 {
                     RecordUndo("Toggle Stop on Impact");

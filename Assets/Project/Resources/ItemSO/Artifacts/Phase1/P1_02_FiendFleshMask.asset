@@ -17,11 +17,16 @@ MonoBehaviour:
   description: Carved from a freshly slain Fiend, who was once one of the 50 players
     left behind in the death game.
   icon: {fileID: 21300000, guid: d5a382783dfb61c4292b7cd32ac523e9, type: 3}
-  price: 1800
-  rarity: 3
+  price: 4800
   isEquippable: 1
+  rarity: 3
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
   passiveDescription: When this wearer's Particle pulse deals damage, allies gain
-    +3% ATK for 3s, up to 10 stacks. One stack per pulse.
+    <color=#FFA500>+3%</color> ATK for <color=#FFA500>3s</color>, <size=18><color=#C0C0C0>(up
+    to 10 stacks)</color></size>
   passiveSet: {fileID: 11400000, guid: 1dba35e51e89389479bec2ea595f2450, type: 2}
   additionalDamageEffects: []
   legacyBonusStats:

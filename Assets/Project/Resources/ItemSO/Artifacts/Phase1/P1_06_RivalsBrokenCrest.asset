@@ -16,11 +16,18 @@ MonoBehaviour:
   itemName: Rival's Broken Crest
   description: Broken Chrono-Relic
   icon: {fileID: 21300000, guid: 1abe204fa8edc784b9cff53a0e619fe7, type: 3}
-  price: 2350
-  rarity: 3
+  price: 3350
   isEquippable: 1
-  passiveDescription: Skill damage summons a 5s enemy-following Wrath of Demon. Enemies
-    inside take +10% damage and 200% ATK Additional damage every 2s. 10s cooldown.
+  rarity: 3
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: Skill damage marks one enemy with <color=#00ffff>Wrath of Demon
+    </color> for <color=#FFA500>5s</color>, enemy inside it got Increase Damage Taken
+    by <color=#FFA500>+10%</color> dealing <b><color=#A38BFD>Additional DMG</color></b>
+    <color=#C0C0C0>200%</color> ATK every <color=#FFA500>2s</color> <size=18><color=#C0C0C0>(10s
+    cooldown)</color></size>
   passiveSet: {fileID: 11400000, guid: 0432e34e27b9fc84ea8d325d0e4b45cf, type: 2}
   additionalDamageEffects: []
   legacyBonusStats:

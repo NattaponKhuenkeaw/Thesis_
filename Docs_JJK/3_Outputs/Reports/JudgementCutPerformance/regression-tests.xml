@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="1873" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.334918" total="22" passed="22" failed="0" inconclusive="0" skipped="0" asserts="0">
+  <properties>
+    <property name="platform" value="EditMode" />
+  </properties>
+  <test-suite type="Assembly" id="3271" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="1873" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.324177" total="22" passed="22" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="_PID" value="10504" />
+      <property name="_APPDOMAIN" value="Unity Child Domain" />
+      <property name="platform" value="EditMode" />
+      <property name="EditorOnly" value="True" />
+    </properties>
+    <test-suite type="TestFixture" id="1016" name="ActionVfxLifetimeTests" fullname="ActionVfxLifetimeTests" classname="ActionVfxLifetimeTests" runstate="Runnable" testcasecount="22" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.322481" total="22" passed="22" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-case id="1037" name="AnotherFieldCannotOverwriteAnExistingFieldsMesh" fullname="ActionVfxLifetimeTests.AnotherFieldCannotOverwriteAnExistingFieldsMesh" methodname="AnotherFieldCannotOverwriteAnExistingFieldsMesh" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="398818226" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.078687" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1022" name="CleanupDoesNotReleaseAnInstanceAlreadyReusedByAnotherPlayback" fullname="ActionVfxLifetimeTests.CleanupDoesNotReleaseAnInstanceAlreadyReusedByAnotherPlayback" methodname="CleanupDoesNotReleaseAnInstanceAlreadyReusedByAnotherPlayback" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1479741347" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.016747" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1027" name="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback" fullname="ActionVfxLifetimeTests.CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback" classname="ActionVfxLifetimeTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.014418" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1023" name="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback(&quot;reset&quot;)" fullname="ActionVfxLifetimeTests.CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback(&quot;reset&quot;)" methodname="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="110675709" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.004514" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1024" name="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback(&quot;step&quot;)" fullname="ActionVfxLifetimeTests.CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback(&quot;step&quot;)" methodname="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1748731500" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.002878" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1025" name="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback(&quot;cancel&quot;)" fullname="ActionVfxLifetimeTests.CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback(&quot;cancel&quot;)" methodname="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="120892570" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.002684" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1026" name="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback(&quot;disable&quot;)" fullname="ActionVfxLifetimeTests.CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback(&quot;disable&quot;)" methodname="CombatCleanupReleasesTimelineVisualWithoutStoppingItsPlayback" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="973211258" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.002709" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1041" name="FacingMirrorsBarrageAndFullscreenGeometry" fullname="ActionVfxLifetimeTests.FacingMirrorsBarrageAndFullscreenGeometry" classname="ActionVfxLifetimeTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.007782" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1039" name="FacingMirrorsBarrageAndFullscreenGeometry(False)" fullname="ActionVfxLifetimeTests.FacingMirrorsBarrageAndFullscreenGeometry(False)" methodname="FacingMirrorsBarrageAndFullscreenGeometry" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="254091687" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.004549" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1040" name="FacingMirrorsBarrageAndFullscreenGeometry(True)" fullname="ActionVfxLifetimeTests.FacingMirrorsBarrageAndFullscreenGeometry(True)" methodname="FacingMirrorsBarrageAndFullscreenGeometry" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1075024542" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.003068" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1038" name="FullscreenThenBarrageDoesNotRetainStaleBufferEntries" fullname="ActionVfxLifetimeTests.FullscreenThenBarrageDoesNotRetainStaleBufferEntries" methodname="FullscreenThenBarrageDoesNotRetainStaleBufferEntries" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1816659020" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.003584" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1028" name="LocalVisualDetachesWithCapturedTrajectorySpace" fullname="ActionVfxLifetimeTests.LocalVisualDetachesWithCapturedTrajectorySpace" methodname="LocalVisualDetachesWithCapturedTrajectorySpace" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1674925374" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.008164" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1020" name="LostExecutionAutomaticallyHandsOffWithoutRehidingNewAction" fullname="ActionVfxLifetimeTests.LostExecutionAutomaticallyHandsOffWithoutRehidingNewAction" methodname="LostExecutionAutomaticallyHandsOffWithoutRehidingNewAction" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="78567150" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.005268" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1032" name="MaxCancelPixelSequenceSlidesGlowsDriftsExitsAndRestarts" fullname="ActionVfxLifetimeTests.MaxCancelPixelSequenceSlidesGlowsDriftsExitsAndRestarts" methodname="MaxCancelPixelSequenceSlidesGlowsDriftsExitsAndRestarts" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1863161453" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.064212" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1036" name="MaximumRibbonCountsFitBuffersAndKeepDepthPartition" fullname="ActionVfxLifetimeTests.MaximumRibbonCountsFitBuffersAndKeepDepthPartition" classname="ActionVfxLifetimeTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.061498" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1033" name="MaximumRibbonCountsFitBuffersAndKeepDepthPartition(0.0f)" fullname="ActionVfxLifetimeTests.MaximumRibbonCountsFitBuffersAndKeepDepthPartition(0.0f)" methodname="MaximumRibbonCountsFitBuffersAndKeepDepthPartition" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="418170596" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.035500" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1034" name="MaximumRibbonCountsFitBuffersAndKeepDepthPartition(0.5f)" fullname="ActionVfxLifetimeTests.MaximumRibbonCountsFitBuffersAndKeepDepthPartition(0.5f)" methodname="MaximumRibbonCountsFitBuffersAndKeepDepthPartition" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="271610897" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.012746" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1035" name="MaximumRibbonCountsFitBuffersAndKeepDepthPartition(1.0f)" fullname="ActionVfxLifetimeTests.MaximumRibbonCountsFitBuffersAndKeepDepthPartition(1.0f)" methodname="MaximumRibbonCountsFitBuffersAndKeepDepthPartition" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="652018087" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.013046" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1031" name="QteTailSurvivesOwnerDisableAndExpiresWithoutInventingContact" fullname="ActionVfxLifetimeTests.QteTailSurvivesOwnerDisableAndExpiresWithoutInventingContact" classname="ActionVfxLifetimeTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.036975" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1029" name="QteTailSurvivesOwnerDisableAndExpiresWithoutInventingContact(False)" fullname="ActionVfxLifetimeTests.QteTailSurvivesOwnerDisableAndExpiresWithoutInventingContact(False)" methodname="QteTailSurvivesOwnerDisableAndExpiresWithoutInventingContact" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="309041546" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.027657" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1030" name="QteTailSurvivesOwnerDisableAndExpiresWithoutInventingContact(True)" fullname="ActionVfxLifetimeTests.QteTailSurvivesOwnerDisableAndExpiresWithoutInventingContact(True)" methodname="QteTailSurvivesOwnerDisableAndExpiresWithoutInventingContact" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1471050346" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.009080" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1021" name="ReleasedCutRetainsRefractionThroughSwapAndPauseUntilExpiry" fullname="ActionVfxLifetimeTests.ReleasedCutRetainsRefractionThroughSwapAndPauseUntilExpiry" methodname="ReleasedCutRetainsRefractionThroughSwapAndPauseUntilExpiry" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="812114666" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.003645" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1019" name="ReleasedFieldKeepsItsLifetimeAndRestoresActorImmediately" fullname="ActionVfxLifetimeTests.ReleasedFieldKeepsItsLifetimeAndRestoresActorImmediately" classname="ActionVfxLifetimeTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.005053" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1017" name="ReleasedFieldKeepsItsLifetimeAndRestoresActorImmediately(False)" fullname="ActionVfxLifetimeTests.ReleasedFieldKeepsItsLifetimeAndRestoresActorImmediately(False)" methodname="ReleasedFieldKeepsItsLifetimeAndRestoresActorImmediately" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1168472906" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.002945" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1018" name="ReleasedFieldKeepsItsLifetimeAndRestoresActorImmediately(True)" fullname="ActionVfxLifetimeTests.ReleasedFieldKeepsItsLifetimeAndRestoresActorImmediately(True)" methodname="ReleasedFieldKeepsItsLifetimeAndRestoresActorImmediately" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="2105334268" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.001969" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1044" name="WarmGenerationHasNoManagedAllocationEvents" fullname="ActionVfxLifetimeTests.WarmGenerationHasNoManagedAllocationEvents" classname="ActionVfxLifetimeTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.006894" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1042" name="WarmGenerationHasNoManagedAllocationEvents(False)" fullname="ActionVfxLifetimeTests.WarmGenerationHasNoManagedAllocationEvents(False)" methodname="WarmGenerationHasNoManagedAllocationEvents" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1141405135" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.004617" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1043" name="WarmGenerationHasNoManagedAllocationEvents(True)" fullname="ActionVfxLifetimeTests.WarmGenerationHasNoManagedAllocationEvents(True)" methodname="WarmGenerationHasNoManagedAllocationEvents" classname="ActionVfxLifetimeTests" runstate="Runnable" seed="1725411680" result="Passed" start-time="2026-11-06 19:19:43Z" end-time="2026-11-06 19:19:43Z" duration="0.002157" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-suite>

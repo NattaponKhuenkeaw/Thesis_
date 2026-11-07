@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.ArtifactDefinition
   id: ART-R-009
   itemName: Echo Bell
+  description: 
   icon: {fileID: 21300000, guid: 72b32f581ae5349448a72b3a2ace5e07, type: 3}
   price: 325
   isEquippable: 1
@@ -22,6 +23,19 @@ MonoBehaviour:
     statKind: 26
     valueUnits: 500
     source: 0
-  passiveDescription: +5% Additional Damage Increase while equipped.
+  passiveDescription: <b><color=#FFA500>+5%</color></b> Additional Damage Increase
+    while equipped
   passiveSet: {fileID: 0}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

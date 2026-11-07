@@ -1,0 +1,21 @@
+Unity 6000.3.4f1; AMD Radeon(TM) Graphics; 1920x1080; saved settings scale=5.5, ribbons=31; seed=1234
+Editor presentation only: eight static enemy prefabs + CombatBackground_B1; no live AI, physics contacts or damage. SynchronizedRender includes submission + GPU completion/readback, not pure GPU time.
+Warm Begin: 0.0300 ms/cast; GC.Alloc events/cast=0.0; recorder valid=True.
+Frame -1: render median=5.015 ms, p95=5.807 ms.
+  Baseline median=4.859 ms, p95=5.313 ms.
+  RGB8 comparison: max delta=0, mean delta=0.000000, changed pixels=0/2073600.
+Frame 0: render median=4.956 ms, p95=5.530 ms.
+  Baseline median=6.078 ms, p95=20.445 ms.
+  RGB8 comparison: max delta=0, mean delta=0.000000, changed pixels=0/2073600.
+Frame 24: render median=7.571 ms, p95=8.133 ms.
+  Baseline median=8.270 ms, p95=8.859 ms.
+  RGB8 comparison: max delta=0, mean delta=0.000000, changed pixels=0/2073600.
+Frame 42: render median=7.558 ms, p95=19.793 ms.
+  Baseline median=7.944 ms, p95=8.867 ms.
+  RGB8 comparison: max delta=0, mean delta=0.000000, changed pixels=0/2073600.
+Frame 64: render median=7.232 ms, p95=13.785 ms.
+  Baseline median=8.132 ms, p95=19.527 ms.
+  RGB8 comparison: max delta=0, mean delta=0.000000, changed pixels=0/2073600.
+Frame 75: render median=6.023 ms, p95=7.258 ms.
+  Baseline median=6.662 ms, p95=20.417 ms.
+  RGB8 comparison: max delta=0, mean delta=0.000000, changed pixels=0/2073600.

@@ -131,10 +131,7 @@ namespace Project.UI
 
         public void OpenPauseMenu()
         {
-            if (isLeaving) return;
-            if (!isPaused) TryPause();
-            if (!isPaused || isLeaving) return;
-            ShowSettings(true);
+            TryPause();
         }
 
         public void OnReturnToTitleClicked()

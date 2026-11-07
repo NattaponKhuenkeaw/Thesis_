@@ -17,8 +17,27 @@ MonoBehaviour:
   description: Broken Chrono-Relic
   icon: {fileID: 21300000, guid: 1abe204fa8edc784b9cff53a0e619fe7, type: 3}
   price: 1050
-  rarity: 2
   isEquippable: 1
-  passiveDescription: 'Skill damage marks one enemy with Wrath of Demon for 5s, dealing 200% ATK Additional damage every 2s. 10s cooldown.'
+  rarity: 2
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: Skill damage marks one enemy with <color=#00ffff>Wrath of Demon
+    </color> for <color=#FFA500>5s</color>, dealing <b><color=#A38BFD>Additional
+    DMG</color></b> <color=#C0C0C0>200%</color> ATK every <color=#FFA500>2s</color>.
+    <size=18><color=#C0C0C0>(10s cooldown)</color></size>
   passiveSet: {fileID: 11400000, guid: 01a8ff312b4140c8a9e96b5e83e1a2ae, type: 2}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

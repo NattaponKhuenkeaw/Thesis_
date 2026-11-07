@@ -167,15 +167,21 @@ public static class CharacterInspectorFolderAuthoring
             Set(info, fields[i], value);
         }
         var potentialRoot = Panel(content, "PotentialSummary", "MainMenu/UI_BlackBox_YellowBorder_NoOutLine.PNG"); Height(potentialRoot.rectTransform, 180);
-        var title = Text(potentialRoot.transform, "PotentialTitle", "POTENTIAL", font, 28, true); Box(title.rectTransform, 18, 12, 500, 38);
+        var title = Text(potentialRoot.transform, "PotentialTitle", "MEMORY", font, 28, true); Box(title.rectTransform, 18, 12, 500, 38);
         var count = Text(potentialRoot.transform, "PotentialCount", "", font, 32, true); Anchor(count.rectTransform, .025f, .30f, .57f, .73f);
-        var upgrade = Button(potentialRoot.transform, "PotentialButton", "UPGRADE POTENTIAL", font, true); Anchor((RectTransform)upgrade.transform, .60f, .23f, .975f, .74f);
-        var segmentRoot = Rect(potentialRoot.transform, "PotentialSegments"); Anchor(segmentRoot, .025f, .10f, .55f, .24f);
-        var segments = new Image[12];
+        var upgrade = Button(potentialRoot.transform, "PotentialButton", "MEMORY", font, true); Anchor((RectTransform)upgrade.transform, .60f, .23f, .975f, .74f);
+        var segmentRoot = Rect(potentialRoot.transform, "PotentialSegments"); Anchor(segmentRoot, .025f, .05f, .55f, .25f);
+        const int boxesPerRow = 9;
+        var segments = new Image[Project.Progression.CharacterMemoryProgress.MajorUpgradeCount];
         for (int i = 0; i < segments.Length; i++)
         {
             var segment = Panel(segmentRoot, "Potential" + (i + 1), null);
-            Anchor(segment.rectTransform, i / 12f, 0, (i + 1) / 12f - .012f, 1); segment.raycastTarget = false; segments[i] = segment;
+            int column = i % boxesPerRow;
+            bool topRow = i < boxesPerRow;
+            Anchor(segment.rectTransform, column / (float)boxesPerRow, topRow ? .55f : 0f,
+                (column + 1) / (float)boxesPerRow - .012f, topRow ? 1f : .45f);
+            segment.raycastTarget = false;
+            segments[i] = segment;
         }
         Set(info, "potentialText", count); Set(info, "potentialPanelButton", upgrade); Array(info, "potentialSegments", segments);
         Set(info, "potentialFilledSprite", null); Set(info, "potentialEmptySprite", null);

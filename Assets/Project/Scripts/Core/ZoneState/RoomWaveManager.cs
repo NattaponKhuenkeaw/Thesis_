@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Project.Core.RunEnd;
 using Project.InventorySystem.Artifacts;
+using Project.InventorySystem.Items;
+using Project.Progression;
 using Project.ShopSystem;
+using Project.Training;
 using Project.UI;
 
 namespace Project.Core.ZoneState
@@ -63,6 +66,7 @@ namespace Project.Core.ZoneState
         private float runtimeDelayBetweenWaves = 1.5f;
         private bool hasStarted;
         private bool roomCleared;
+        private bool skippedForPlaytest;
         private bool spawnedAnyEnemy;
         private bool spawnedBossEnemy;
         private CombatStageController stageController;
@@ -132,7 +136,7 @@ namespace Project.Core.ZoneState
 
         public void StartEncounter()
         {
-            if (hasStarted && startOnlyOnce)
+            if (skippedForPlaytest || (hasStarted && startOnlyOnce))
             {
                 return;
             }
@@ -204,6 +208,35 @@ namespace Project.Core.ZoneState
             else
             {
                 waveRoutine = StartCoroutine(WaveRoutine());
+            }
+        }
+
+        internal void ClearForPlaytest(ZoneStateProvider clearing)
+        {
+            if (skippedForPlaytest) return;
+
+            bool needsExitReveal = !roomCleared || clearing.Clearing != ClearingState.Accessible;
+            skippedForPlaytest = true;
+            roomCleared = true;
+
+            if (waveRoutine != null)
+            {
+                StopCoroutine(waveRoutine);
+                waveRoutine = null;
+            }
+            if (rewardRoutine != null)
+            {
+                StopCoroutine(rewardRoutine);
+                rewardRoutine = null;
+            }
+            ReleaseRewardView();
+            DestroyTrackedEnemies(deactivateImmediately: true);
+
+            // Prepare the normal route offers without paying rewards for skipped combat.
+            if (needsExitReveal)
+            {
+                (stageController ?? FindStageController())?.OpenChambersForPlaytest();
+                ReleaseClearedRoom(clearing, clearing.Visit);
             }
         }
 
@@ -987,7 +1020,10 @@ namespace Project.Core.ZoneState
             {
                 // Progression + next offers still roll, but no portal / choice gate.
                 RoomExitPresenter.PrepareOffers();
-                Project.AIBehaviour.Boss.BossDeathSequence.EnsureInstance().NotifyBossRoomCleared();
+                System.Func<IEnumerator> victoryReward = null;
+                if (room?.RoomKind == RoomKind.Boss && spawnedBossEnemy && !TrainingSession.IsTrainingContext)
+                    victoryReward = () => ResolveBossMemoryReward(clearing, visit);
+                Project.AIBehaviour.Boss.BossDeathSequence.EnsureInstance().NotifyBossRoomCleared(victoryReward);
                 return;
             }
 
@@ -998,28 +1034,33 @@ namespace Project.Core.ZoneState
         {
             if (clearing != null && clearing.Visit != visit) yield break;
             CharacterInventoryState inventory = ResolveRewardInventory();
-            ArtifactRewardPickerUI prefab = terms.ArtifactPulls > 0
+            ArtifactRewardPickerUI prefab = terms.ArtifactPulls > 0 || terms.GrantsMemory
                 ? Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath)
                 : null;
             ArtifactInstance[][] draws = null;
-            if (inventory == null || (terms.ArtifactPulls > 0 &&
-                (prefab == null || !prefab.IsConfigured ||
-                 !ArtifactRewardDraft.TryPrepare(terms, inventory.ArtifactRollTable, out draws))))
+            if (inventory == null)
             {
-                Debug.LogError("[RoomWaveManager] Could not prepare the selected Hard reward. Return to the lobby to retry.", this);
+                Debug.LogError("[RoomWaveManager] Cannot pay the route reward without a run inventory.", this);
                 yield break;
+            }
+            if (terms.ArtifactPulls > 0 && (prefab == null || !prefab.IsConfigured ||
+                !ArtifactRewardDraft.TryPrepare(terms, inventory.ArtifactRollTable, out draws)))
+            {
+                draws = null;
+                Debug.LogError("[RoomWaveManager] Could not prepare artifact picks. Paying the remaining route rewards.", this);
             }
 
             NotifyRunEndRoomCleared(awardLegacyCurrency: false);
             if (terms.Coins > 0) inventory.AddCurrency(terms.Coins);
             ActiveRouteOffer.Clear();
-            if (draws != null)
+            CharacterProgressionState progression = terms.GrantsMemory ? ResolveRewardProgression() : null;
+            if (draws != null || progression != null)
             {
                 if (clearing != null && !clearing.SetClearing(visit, ClearingState.RewardPending))
                     yield break;
                 InputLockManager.Lock();
                 holdsRewardInputLock = true;
-                for (int index = 0; index < draws.Length; index++)
+                for (int index = 0; draws != null && index < draws.Length; index++)
                 {
                     ArtifactInstance[] candidates = draws[index];
                     bool committed = false;
@@ -1037,10 +1078,77 @@ namespace Project.Core.ZoneState
                     }
                     if (!committed) break;
                 }
+                if (progression != null && (clearing == null || clearing.Visit == visit))
+                    yield return ResolveMemoryReward(inventory, progression, prefab, clearing, visit);
                 ReleaseRewardView();
             }
             ReleaseClearedRoom(clearing, visit);
             rewardRoutine = null;
+        }
+
+        private IEnumerator ResolveBossMemoryReward(ZoneStateProvider clearing, int visit)
+        {
+            if (this == null || !isActiveAndEnabled || (clearing != null && clearing.Visit != visit)) yield break;
+            CharacterInventoryState inventory = ResolveRewardInventory();
+            CharacterProgressionState progression = ResolveRewardProgression();
+            if (inventory == null || progression == null) yield break;
+
+            InputLockManager.Lock();
+            holdsRewardInputLock = true;
+            try
+            {
+                var prefab = Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath);
+                yield return ResolveMemoryReward(inventory, progression, prefab, clearing, visit);
+            }
+            finally
+            {
+                ReleaseRewardView();
+            }
+        }
+
+        private IEnumerator ResolveMemoryReward(CharacterInventoryState inventory,
+            CharacterProgressionState progression, ArtifactRewardPickerUI prefab, ZoneStateProvider clearing, int visit)
+        {
+            if (prefab == null || !prefab.IsConfigured)
+            {
+                Debug.LogError("[RoomWaveManager] Could not open the Memory reward picker.", this);
+                yield break;
+            }
+            bool SameVisit() => this != null && isActiveAndEnabled && (clearing == null || clearing.Visit == visit);
+            while (SameVisit())
+            {
+                var candidates = new List<(CharacterItem item, string name, CharacterMemoryProgress progress)>();
+                var seen = new HashSet<string>();
+                foreach (var item in inventory.ownedItems)
+                {
+                    if (item is not CharacterItem owned || !inventory.HasItem(owned)) continue;
+                    CharacterObject character = owned.characterObjectData;
+                    if (character == null || character.kitDefinition == null || string.IsNullOrWhiteSpace(character.characterId) ||
+                        !seen.Add(character.characterId) || !inventory.IsRunCharacterAlive(character)) continue;
+
+                    var memory = progression.CaptureMemory(character.characterId);
+                    if (memory.CompletedSteps >= CharacterMemoryProgress.StepCount) continue;
+                    string name = character.metaData?.displayName;
+                    candidates.Add((owned, string.IsNullOrWhiteSpace(name) ? owned.itemName : name, memory));
+                }
+                if (candidates.Count == 0) yield break;
+
+                bool granted = false;
+                ArtifactRewardPickerUI picker = Instantiate(prefab);
+                picker.name = "Memory Reward";
+                activeRewardPicker = picker;
+                yield return picker.PresentMemory(candidates, (index, choice) =>
+                {
+                    var candidate = candidates[index];
+                    var character = candidate.item.characterObjectData;
+                    granted = inventory.HasItem(candidate.item) && inventory.IsRunCharacterAlive(character) &&
+                        progression.TryGrantMemory(character, candidate.progress.CompletedSteps + 1, choice);
+                    return granted;
+                }, () => SameVisit() && picker != null && picker.isActiveAndEnabled);
+                bool pickerWasActive = picker != null && picker.isActiveAndEnabled;
+                DestroyRewardView();
+                if (granted || !pickerWasActive) yield break;
+            }
         }
 
         private void ReleaseClearedRoom(ZoneStateProvider clearing, int visit)
@@ -1067,6 +1175,11 @@ namespace Project.Core.ZoneState
         {
             CharacterInventoryState inventory = TeamLoader.Instance != null ? TeamLoader.Instance.RunInventory : null;
             return inventory != null ? inventory : Project.Training.CharacterStateContext.ResolveInventory();
+        }
+
+        private static CharacterProgressionState ResolveRewardProgression()
+        {
+            return TeamLoader.Instance != null ? TeamLoader.Instance.MetaProgression : CharacterStateContext.ResolveProgression();
         }
 
         private void TryGrantActiveRouteReward(RoomData room)
@@ -1131,7 +1244,7 @@ namespace Project.Core.ZoneState
             }
         }
 
-        private void DestroyTrackedEnemies()
+        private void DestroyTrackedEnemies(bool deactivateImmediately = false)
         {
             for (int i = 0; i < activeEnemies.Count; i++)
             {
@@ -1142,6 +1255,7 @@ namespace Project.Core.ZoneState
                 }
 
                 enemy.OnDied -= HandleEnemyDied;
+                if (deactivateImmediately) enemy.gameObject.SetActive(false);
                 Destroy(enemy.gameObject);
             }
 

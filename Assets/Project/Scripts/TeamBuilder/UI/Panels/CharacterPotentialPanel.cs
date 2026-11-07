@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Project.InventorySystem.Artifacts;
@@ -84,6 +85,19 @@ namespace Project.TeamBuilder.UI.Panels
         private bool _buttonsBound;
         private bool _upgradeWindowOpen;
         private int _ignoreOutsideClickFrame = -1;
+        private CharacterMemoryPanel _memoryPanel;
+        private CharacterObject _memoryCharacter;
+        private bool _showPreviousUpgrades;
+        private RectTransform _potentialContent;
+        private float _potentialScrollSensitivity;
+        private Navigation _potentialExitNavigation;
+        private TMP_Text _panelTitle;
+        private string _potentialTitle;
+        private Button _switchUpgradeView;
+        private Button _memoryPreviewSource;
+        private CharacterMemoryProgress _practiceMemory;
+        private Selectable[] _practiceHeader;
+        private Selectable[][] _practiceFooter;
 
         private void Awake()
         {
@@ -96,9 +110,10 @@ namespace Project.TeamBuilder.UI.Panels
             ResolveReferences();
             EnsureRuntimeFallbacks();
             BindButtons();
-            BindFragmentEvents();
+            if (_practiceFooter == null) BindFragmentEvents();
             CloseUpgradeWindow();
             Refresh();
+            PresentMemoryTrack();
         }
 
         private void OnDisable()
@@ -106,6 +121,9 @@ namespace Project.TeamBuilder.UI.Panels
             UnbindButtons();
             UnbindFragmentEvents();
             CloseUpgradeWindow();
+            _showPreviousUpgrades = false;
+            _memoryCharacter = null;
+            RestorePotentialView();
         }
 
         private void Update()
@@ -115,6 +133,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         public void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts)
         {
+            if (_currentCharacterItem != character) _showPreviousUpgrades = false;
             _currentCharacterItem = character;
             _currentCharacter = character != null ? character.characterObjectData : null;
             _currentArtifacts = equippedArtifacts ?? Array.Empty<ArtifactInstance>();
@@ -129,6 +148,170 @@ namespace Project.TeamBuilder.UI.Panels
 
             CloseUpgradeWindow();
             Refresh();
+            PresentMemoryTrack();
+        }
+
+        internal void ConfigurePractice(Selectable[] header, Selectable[][] footer)
+        {
+            ResolveReferences();
+            if (exitButton != null) exitButton.gameObject.SetActive(false);
+            if (contentScrollRect != null && contentScrollRect.transform is RectTransform board)
+            {
+                board.offsetMin += new Vector2(76f, 80f);
+                board.offsetMax -= new Vector2(76f, 0f);
+            }
+            if (upgradeWindow != null && upgradeWindow.transform is RectTransform preview)
+            {
+                preview.anchorMin = new Vector2(preview.anchorMin.x, .11f);
+                preview.anchorMax = new Vector2(preview.anchorMax.x, .88f);
+                preview.sizeDelta = new Vector2(preview.sizeDelta.x, 0f);
+                preview.anchoredPosition = new Vector2(-100f, 0f);
+            }
+            _practiceHeader = header;
+            _practiceFooter = footer;
+        }
+
+        internal void ShowPracticeMemory(CharacterItem character, CharacterMemoryProgress memory)
+        {
+            if (!ReferenceEquals(_practiceMemory, memory)) _memoryCharacter = null;
+            _practiceMemory = memory;
+            PopulateData(character, null);
+            Show();
+        }
+
+        internal bool DismissPracticePreview()
+        {
+            if (_practiceFooter == null || _memoryPreviewSource == null) return false;
+            Button source = _memoryPreviewSource;
+            CloseUpgradeWindow();
+            EventSystem.current?.SetSelectedGameObject(source.gameObject);
+            return true;
+        }
+
+        private void PresentMemoryTrack((int step, PotentialTrack family)? focus = null, Vector2? scrollPosition = null)
+        {
+            if (!Application.isPlaying || !isActiveAndEnabled || _currentCharacter == null || _showPreviousUpgrades ||
+                contentScrollRect == null || contentScrollRect.content == null ||
+                (_memoryCharacter == _currentCharacter && _memoryPanel != null && _memoryPanel.gameObject.activeSelf))
+                return;
+
+            var progression = GetMetaProgression();
+            if (progression == null) return;
+            if (_memoryPanel == null)
+            {
+                _potentialContent = contentScrollRect.content;
+                _potentialScrollSensitivity = contentScrollRect.scrollSensitivity;
+                _panelTitle = transform.Find("PotentialTitle")?.GetComponent<TMP_Text>();
+                _potentialTitle = _panelTitle?.text;
+                _memoryPanel = CharacterMemoryPanel.CreateBoard(contentScrollRect);
+                if (_practiceFooter == null) CreateUpgradeViewButton();
+            }
+
+            CloseUpgradeWindow();
+            _potentialContent.gameObject.SetActive(false);
+            _memoryPanel.gameObject.SetActive(true);
+            _memoryCharacter = _currentCharacter;
+            var memory = _practiceMemory ?? progression.CaptureMemory(_currentCharacter.characterId);
+            if (_panelTitle != null)
+                _panelTitle.text = $"{ResolveCharacterDisplayName()}   /   MEMORY {memory.CompletedSteps} / {CharacterMemoryProgress.StepCount}";
+            bool canShowPrevious = _switchUpgradeView != null && !MainMemoryKit.AppliesTo(_currentCharacter);
+            if (_switchUpgradeView != null)
+                _switchUpgradeView.gameObject.SetActive(canShowPrevious);
+            if (canShowPrevious)
+                _switchUpgradeView.GetComponentInChildren<TMP_Text>(true).text = "PREVIOUS UPGRADES";
+
+            Selectable[] header = _practiceHeader != null ? ActiveControls(_practiceHeader)
+                : canShowPrevious ? new[] { exitButton, _switchUpgradeView }
+                : exitButton != null ? new[] { exitButton } : Array.Empty<Button>();
+            CharacterPotentialNodeUI major = nodeSlots.Length > 0 ? nodeSlots[0] : null;
+            CharacterPotentialNodeUI generic = nodeSlots.Length > 1 ? nodeSlots[1] : major;
+            _memoryPanel.ShowConnectedTrack(_currentCharacterItem, memory, header, major, generic,
+                _potentialContent.rect.width, ResolvePotentialIcon, OpenMemoryPreview,
+                _practiceFooter == null ? null : Array.ConvertAll(_practiceFooter, ActiveControls), focus, scrollPosition);
+        }
+
+        private static Selectable[] ActiveControls(Selectable[] controls) =>
+            Array.FindAll(controls, control => control != null && control.isActiveAndEnabled && control.IsInteractable());
+
+        private void CreateUpgradeViewButton()
+        {
+            if (exitButton == null) return;
+            _potentialExitNavigation = exitButton.navigation;
+            _switchUpgradeView = Instantiate(exitButton, transform);
+            _switchUpgradeView.name = "Switch Upgrade View";
+            _switchUpgradeView.onClick = new Button.ButtonClickedEvent();
+            _switchUpgradeView.onClick.AddListener(SwitchUpgradeView);
+            var rect = (RectTransform)_switchUpgradeView.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(1f, rect.anchorMin.y);
+            rect.pivot = new Vector2(1f, rect.pivot.y);
+            rect.anchoredPosition = new Vector2(-Mathf.Abs(rect.anchoredPosition.x), rect.anchoredPosition.y);
+            TMP_Text label = _switchUpgradeView.GetComponentInChildren<TMP_Text>(true);
+            if (label == null)
+            {
+                Destroy(_switchUpgradeView.gameObject);
+                _switchUpgradeView = null;
+                return;
+            }
+            rect.sizeDelta = new Vector2(label.GetPreferredValues("PREVIOUS UPGRADES").x + 32f, rect.sizeDelta.y);
+        }
+
+        private void SwitchUpgradeView()
+        {
+            CloseUpgradeWindow();
+            _showPreviousUpgrades = !_showPreviousUpgrades;
+            if (!_showPreviousUpgrades)
+            {
+                PresentMemoryTrack();
+                return;
+            }
+
+            RestorePotentialView();
+            EventSystem.current?.SetSelectedGameObject(_switchUpgradeView.gameObject);
+        }
+
+        private void RestorePotentialView()
+        {
+            if (_memoryPanel == null) return;
+            contentScrollRect.StopMovement();
+            contentScrollRect.content = _potentialContent;
+            contentScrollRect.scrollSensitivity = _potentialScrollSensitivity;
+            _memoryPanel.gameObject.SetActive(false);
+            _potentialContent.gameObject.SetActive(true);
+            if (_panelTitle != null) _panelTitle.text = _potentialTitle;
+            if (exitButton != null) exitButton.navigation = _potentialExitNavigation;
+            if (_switchUpgradeView != null)
+            {
+                _switchUpgradeView.GetComponentInChildren<TMP_Text>(true).text = "MEMORY TRACK";
+                _switchUpgradeView.navigation = new Navigation { mode = Navigation.Mode.Automatic };
+            }
+        }
+
+        private void OpenMemoryPreview(Button source, string title, int step, PotentialTrack family, string description,
+            string status, Sprite icon)
+        {
+            if (upgradeWindow == null) return;
+            _memoryPreviewSource = source;
+            _ignoreOutsideClickFrame = Time.frameCount;
+            contentScrollRect.StopMovement();
+            Action select = null;
+            if (_practiceMemory != null)
+            {
+                status += "\nTraining: Completes prerequisites. A full family swaps its latest upgrade.";
+                select = () =>
+                {
+                    if (!_practiceMemory.TrySelectStep(step, family)) return;
+                    _memoryCharacter = null;
+                    PresentMemoryTrack((step, family), contentScrollRect.normalizedPosition);
+                };
+            }
+            Button dismiss = upgradeWindow.ShowMemoryPreview(family, title, $"STEP {step} / {CharacterMemoryProgress.StepCount}",
+                description, status, icon, () =>
+                {
+                    CloseUpgradeWindow();
+                    EventSystem.current?.SetSelectedGameObject(source.gameObject);
+                }, select);
+            if (dismiss != null && dismiss.isActiveAndEnabled)
+                EventSystem.current?.SetSelectedGameObject(dismiss.gameObject);
         }
 
         public void UpgradeSkillPotential() => QueueLegacyUpgrade(PotentialTrack.Skill);
@@ -341,7 +524,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void RefreshUpgradeWindow()
         {
-            if (upgradeWindow == null)
+            if (upgradeWindow == null || _memoryPreviewSource != null)
             {
                 return;
             }
@@ -416,7 +599,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void HandleUpgradeWindowOutsideClick()
         {
-            if (!_upgradeWindowOpen || upgradeWindow == null || !upgradeWindow.gameObject.activeInHierarchy)
+            if ((!_upgradeWindowOpen && _memoryPreviewSource == null) || upgradeWindow == null || !upgradeWindow.gameObject.activeInHierarchy)
             {
                 return;
             }
@@ -433,14 +616,16 @@ namespace Project.TeamBuilder.UI.Panels
             }
 
             Vector2 screenPosition = pointer.position.ReadValue();
-            if (IsScreenPointInside(upgradeWindow.transform as RectTransform, screenPosition) || IsScreenPointInsideAnyNode(screenPosition))
+            if (IsScreenPointInside(upgradeWindow.transform as RectTransform, screenPosition) ||
+                (_memoryPreviewSource == null && IsScreenPointInsideAnyNode(screenPosition)))
             {
                 return;
             }
 
+            bool previewingMemory = _memoryPreviewSource != null;
             _selectedNode = null;
             CloseUpgradeWindow();
-            RefreshNodes();
+            if (!previewingMemory) RefreshNodes();
         }
 
         private bool IsScreenPointInsideAnyNode(Vector2 screenPosition)
@@ -480,6 +665,7 @@ namespace Project.TeamBuilder.UI.Panels
         private void CloseUpgradeWindow()
         {
             _upgradeWindowOpen = false;
+            _memoryPreviewSource = null;
             if (upgradeWindow != null)
             {
                 upgradeWindow.Hide();
@@ -631,6 +817,8 @@ namespace Project.TeamBuilder.UI.Panels
 
             progression.OnFragmentsChanged -= HandleFragmentsChanged;
             progression.OnFragmentsChanged += HandleFragmentsChanged;
+            progression.OnMemoryChanged -= HandleMemoryChanged;
+            progression.OnMemoryChanged += HandleMemoryChanged;
         }
 
         private void UnbindFragmentEvents()
@@ -641,6 +829,14 @@ namespace Project.TeamBuilder.UI.Panels
             }
 
             metaProgression.OnFragmentsChanged -= HandleFragmentsChanged;
+            metaProgression.OnMemoryChanged -= HandleMemoryChanged;
+        }
+
+        private void HandleMemoryChanged(string characterId)
+        {
+            if (characterId != null && _currentCharacter?.characterId != characterId) return;
+            _memoryCharacter = null;
+            PresentMemoryTrack();
         }
 
         private void HandleFragmentsChanged()

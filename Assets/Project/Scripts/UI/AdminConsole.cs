@@ -1,6 +1,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using Project.Core.ZoneState;
 using Project.Progression;
 using Project.UI;
 
@@ -290,4 +291,25 @@ public class AdminConsole : MonoBehaviour
         }
     }
 
+    public void ClearAndTeleportToExit()
+    {
+        var transition = SceneTransitionManager.Instance;
+        if (transition == null || !transition.TryClearCombatRoomAndTeleportToExit())
+        {
+            Debug.LogWarning("[AdminConsole] Clear and Teleport to Exit requires a combat room with an exit and a living player.", this);
+        }
+    }
+
+    public void GoToExecutioner() => GoToBoss("Boss_01");
+
+    public void GoToObserver() => GoToBoss("Boss_02");
+
+    private void GoToBoss(string roomId)
+    {
+        var transition = SceneTransitionManager.Instance;
+        if (transition == null || !transition.TryTravelToRoomForPlaytest(roomId))
+        {
+            Debug.LogWarning($"[AdminConsole] Could not travel to boss room '{roomId}'.", this);
+        }
+    }
 }

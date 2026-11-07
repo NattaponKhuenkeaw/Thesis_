@@ -269,7 +269,10 @@ public static class ResponsiveMovementFlowValidation
         presentation.anim.Update(0f);
         presentation.anim.Update(0.26f);
         int ticks = 0;
-        while (fixture.fsm.DashState.CurrentPhase == ActionPhase.Active && ticks++ < 100)
+        // The character asset may author startup; advance it before testing Recovery.
+        while ((fixture.fsm.DashState.CurrentPhase == ActionPhase.None
+            || fixture.fsm.DashState.CurrentPhase == ActionPhase.Startup
+            || fixture.fsm.DashState.CurrentPhase == ActionPhase.Active) && ticks++ < 100)
             fixture.fsm.DashState.FixedUpdate();
         Require(fixture.motor.IsDashLocomotionOpen, "Recovery control must be available");
         Call(presentation, "Update");
@@ -286,11 +289,15 @@ public static class ResponsiveMovementFlowValidation
         while (f.fsm.CurrentState == f.fsm.DashState && ticks++ < 200)
             f.fsm.DashState.FixedUpdate();
         Require(!f.motor.IsDashing && f.motor.DashCooldownRemaining > 0f, "Animation tail cannot delay gameplay exit/cooldown");
-        presentation.anim.Update(0.47f);
+        AnimatorStateInfo dash = presentation.anim.GetCurrentAnimatorStateInfo(0);
+        Require(dash.normalizedTime < 1f && dash.length > 0f, "Fixture must retain an unfinished dash clip at gameplay exit");
+        float remainingSeconds = dash.length * (1f - dash.normalizedTime)
+            / Mathf.Max(0.001f, dash.speed * dash.speedMultiplier);
+        presentation.anim.Update(remainingSeconds * 0.5f);
         Call(presentation, "Update");
         presentation.anim.Update(0f);
         Require(presentation.anim.GetCurrentAnimatorStateInfo(0).IsName("Dash"), "Long clip must survive natural gameplay exit");
-        presentation.anim.Update(0.2f);
+        presentation.anim.Update(remainingSeconds);
         Call(presentation, "Update");
         presentation.anim.Update(0f);
         Require(!presentation.anim.GetCurrentAnimatorStateInfo(0).IsName("Dash"), "Completed clip must return to locomotion");
