@@ -65,6 +65,16 @@ public class PauseSettingsStyleTests
     }
 
     [Test]
+    public void HudSettingButtonOpensThePauseMenu()
+    {
+        var hud = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/CombatUI/Player_UI.prefab");
+        var button = hud.GetComponentsInChildren<Button>(true).Single(b => b.name == "Setting");
+        Assert.That(button.onClick.GetPersistentEventCount(), Is.EqualTo(1));
+        Assert.That(button.onClick.GetPersistentTarget(0), Is.EqualTo(hud.GetComponentInChildren<PlayerHUD>(true)));
+        Assert.That(button.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(PlayerHUD.OpenPauseMenu)));
+    }
+
+    [Test]
     public void PauseUsesSaveArtworkAndAStoredResumeCloseBinding()
     {
         var pause = Resources.Load<PauseMenuController>("UI/PauseMenu");
@@ -103,10 +113,17 @@ public class PauseSettingsStyleTests
         float previousListenerVolume = AudioListener.volume;
         try
         {
-            Call(pause, "TryPause");
-            pause.OnSettingsClicked();
-            yield return new WaitForSecondsRealtime(.25f);
+            pause.OpenPauseMenu();
+            var main = Get<GameObject>(pause, "mainPanel");
             var settings = Get<GameObject>(pause, "settingsPanel");
+            Assert.That(PauseMenuController.IsOpen, Is.True);
+            Assert.That(main.activeInHierarchy, Is.True);
+            Assert.That(settings.activeSelf, Is.False);
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(Get<Button>(pause, "resumeButton").gameObject));
+
+            Get<Button>(pause, "settingsButton").onClick.Invoke();
+            yield return new WaitForSecondsRealtime(.25f);
+            Assert.That(settings.activeInHierarchy, Is.True);
             int authoredCount = pause.GetComponentsInChildren<Transform>(true).Count(t => t.GetComponent<TMP_SubMeshUI>() == null);
             Get<Slider>(pause, "masterSlider").value = .41f;
             Get<Slider>(pause, "bgmSlider").value = .52f;
@@ -132,7 +149,15 @@ public class PauseSettingsStyleTests
             yield return new WaitForSecondsRealtime(.25f);
             Assert.That(settings.activeSelf, Is.False);
             Assert.That(pause.GetComponentsInChildren<Transform>(true).Count(t => t.GetComponent<TMP_SubMeshUI>() == null), Is.EqualTo(authoredCount));
-            Get<GameObject>(pause, "mainPanel").transform.Find("ClosePauseButton").GetComponent<Button>().onClick.Invoke();
+            var returnButton = Get<Button>(pause, "returnToTitleButton");
+            var cancelButton = Get<Button>(pause, "confirmCancelButton");
+            returnButton.onClick.Invoke();
+            Assert.That(Get<GameObject>(pause, "confirmPanel").activeInHierarchy, Is.True);
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(cancelButton.gameObject));
+            cancelButton.onClick.Invoke();
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(returnButton.gameObject));
+
+            main.transform.Find("ClosePauseButton").GetComponent<Button>().onClick.Invoke();
             yield return new WaitForSecondsRealtime(.25f);
             Assert.That(PauseMenuController.IsOpen, Is.False);
             Assert.That(Time.timeScale, Is.EqualTo(1));

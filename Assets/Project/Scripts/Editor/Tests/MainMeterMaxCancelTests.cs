@@ -92,7 +92,7 @@ public class MainMeterMaxCancelTests
         var progression = ScriptableObject.CreateInstance<Project.Progression.PlayerMetaProgression>();
         try
         {
-            progression.SetPotentialLevel(_character, PotentialTrack.Passive, 4);
+            CharacterMemoryTests.SetMemoryRanks(progression, _character, passive: 4);
             _passive.SetMetaProgression(progression);
             _owner.SetActive(true); _player.InitializeHP();
             _passive.RuntimeState.SetCounter("main.shadow.cached_cuts", 2);

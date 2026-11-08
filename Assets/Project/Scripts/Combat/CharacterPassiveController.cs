@@ -119,7 +119,7 @@ public class CharacterPassiveController : MonoBehaviour
     {
         CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
         return metaProgression != null && character != null
-            ? metaProgression.GetPotentialLevel(character, track)
+            ? metaProgression.GetCombatPotentialLevel(character, track)
             : 0;
     }
 
@@ -928,10 +928,11 @@ public class CharacterPassiveController : MonoBehaviour
     }
 
     public void NotifyActionStarted(AttackCategory category, string actionId, string actionName, AttackStepData stepData,
-        CombatExecutionContext execution = null)
+        CombatExecutionContext execution = null, bool isAutoChainStep = false)
     {
         PassiveEventContext context = BuildContext(category, actionId, actionName, stepData, null);
         context.actionStartExecution = execution;
+        context.isAutoChainStep = isAutoChainStep;
         QteSwapDefinition entry = playerCharacter?.characterObject?.qteSwap;
         if (execution != null && execution.IsOnField && !execution.isQteIntro
             && !string.IsNullOrEmpty(entry?.entryGrantConsumeActionId)
@@ -1210,7 +1211,7 @@ public class CharacterPassiveController : MonoBehaviour
             return true;
         }
 
-        return metaProgression != null && metaProgression.GetPotentialLevel(character, node.track) >= node.level;
+        return metaProgression != null && metaProgression.GetCombatPotentialLevel(character, node.track) >= node.level;
     }
 
     private void ApplyTriggeredEffects(PassiveTriggerType trigger, PassiveEventContext context)
@@ -2538,6 +2539,7 @@ public class CharacterPassiveController : MonoBehaviour
         if (subscribedMetaProgression != null)
         {
             subscribedMetaProgression.OnPotentialChanged += HandlePotentialChanged;
+            subscribedMetaProgression.OnMemoryChanged += HandlePotentialChanged;
         }
     }
 
@@ -2549,6 +2551,7 @@ public class CharacterPassiveController : MonoBehaviour
         }
 
         subscribedMetaProgression.OnPotentialChanged -= HandlePotentialChanged;
+        subscribedMetaProgression.OnMemoryChanged -= HandlePotentialChanged;
         subscribedMetaProgression = null;
     }
 

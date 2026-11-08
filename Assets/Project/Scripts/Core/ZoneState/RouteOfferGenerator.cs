@@ -261,7 +261,7 @@ namespace Project.Core.ZoneState
 
             reward = RouteReward.Patterned(
                 ScaleCombatSoul(Random.Range(Mathf.Min(selected.minSoul, selected.maxSoul), Mathf.Max(selected.minSoul, selected.maxSoul) + 1), biome),
-                Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome);
+                Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome, selected.grantsMemory);
             return true;
         }
 

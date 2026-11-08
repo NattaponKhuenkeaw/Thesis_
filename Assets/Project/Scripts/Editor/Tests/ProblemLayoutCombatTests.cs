@@ -150,7 +150,6 @@ public class ProblemLayoutCombatTests
                 var roomData = AssetDatabase.LoadAssetAtPath<RoomData>($"Assets/Project/Resources/MapSO/LV/RoomData_LV_{level:00}.asset");
                 ActiveRouteOffer.Set(new RoomChoiceOffer(roomData, difficulty, null, null));
                 var palette = CombatRouteContent.LoadPalette(difficulty);
-                int opening = Mathf.Min(palette.AliveCap, palette.ChamberQuota);
                 player.tag = "Player"; player.layer = LayerMask.NameToLayer("Player");
                 player.AddComponent<AudioListener>();
                 var body = player.AddComponent<Rigidbody2D>(); body.bodyType = RigidbodyType2D.Kinematic;
@@ -160,8 +159,11 @@ public class ProblemLayoutCombatTests
                 var active = typeof(RoomWaveManager).GetField("activeEnemies", flags);
                 var current = typeof(CombatStageController).GetField("currentIndex", flags);
                 var waiting = typeof(CombatStageController).GetField("waitingForIndex", flags);
+                int totalQuota = difficulty == RouteDifficulty.Hard ? 20 : difficulty == RouteDifficulty.Medium ? 16 : 12;
                 for (int i = 0; i < stage.ChamberCount; i++)
                 {
+                    int quota = totalQuota / stage.ChamberCount + (i < totalQuota % stage.ChamberCount ? 1 : 0);
+                    int opening = Mathf.Min(palette.AliveCap, quota);
                     var trigger = i == 0 ? waves.GetComponent<Collider2D>() : stage.Chambers[i].enterTrigger;
                     body.position = new Vector2(trigger.bounds.center.x, trigger.bounds.min.y + 2f);
                     Physics2D.SyncTransforms();
@@ -185,7 +187,7 @@ public class ProblemLayoutCombatTests
                             if (enemy != null && enemy.IsAlive) { enemy.Die(); defeated++; }
                         yield return null;
                     }
-                    Assert.That(defeated, Is.EqualTo(palette.ChamberQuota), $"LV{level} {difficulty} Room{i + 1} did not exhaust the shared difficulty quota");
+                    Assert.That(defeated, Is.EqualTo(quota), $"LV{level} {difficulty} Room{i + 1} did not exhaust its share of the room quota");
                     Assert.That(waiting.GetValue(stage), Is.EqualTo(i + 1), "Defeating the difficulty quota did not unlock the next chamber");
                     Assert.That(stage.Chambers[i].exitWall.isTrigger, Is.True);
                 }

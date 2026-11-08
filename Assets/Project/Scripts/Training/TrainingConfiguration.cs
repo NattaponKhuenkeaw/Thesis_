@@ -17,6 +17,7 @@ namespace Project.Training
             public int skill;
             public int ultimate;
             public int passive;
+            public CharacterMemoryProgress memory;
 
             public int GetLevel(PotentialTrack track) => track switch
             {
@@ -28,7 +29,8 @@ namespace Project.Training
 
             public CharacterPotential Copy() => new CharacterPotential
             {
-                characterId = characterId, skill = skill, ultimate = ultimate, passive = passive
+                characterId = characterId, skill = skill, ultimate = ultimate, passive = passive,
+                memory = memory?.Copy()
             };
         }
     }

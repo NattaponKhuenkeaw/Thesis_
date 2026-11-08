@@ -12,6 +12,7 @@ namespace Project.Combat
         [SerializeField] private ProjectileLibrary projectileLibrary;
         [SerializeField] private GenericProjectilePlayer defaultProjectilePrefab;
         public IProjectileLibrary Library => projectileLibrary;
+        internal int ClearVersion { get; private set; }
 
         [Header("Pooling")]
         [SerializeField] private int initialPoolSize = 6;
@@ -50,6 +51,7 @@ namespace Project.Combat
 
         public void ClearAllActiveProjectiles()
         {
+            ClearVersion++;
             if (ownership.Count > 0)
             {
                 var activePlayers = new List<GenericProjectilePlayer>(ownership.Keys);

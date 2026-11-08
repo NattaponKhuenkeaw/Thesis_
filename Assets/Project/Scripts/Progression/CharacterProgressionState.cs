@@ -74,6 +74,7 @@ namespace Project.Progression
         public int metaCurrency;
         public List<ProgressionFragmentStack> fragments = new List<ProgressionFragmentStack>();
         public List<CharacterPotentialProgress> characterPotentials = new List<CharacterPotentialProgress>();
+        public List<CharacterMemoryProgress> characterMemories = new List<CharacterMemoryProgress>();
         public List<string> unlockedCharacterIds = new List<string>();
         public List<PermanentItemStack> permanentItems = new List<PermanentItemStack>();
     }
@@ -288,12 +289,14 @@ namespace Project.Progression
             EnsureData();
             fragments.Clear();
             characterPotentials.Clear();
+            _characterMemories.Clear();
             unlockedCharacterIds.Clear();
             permanentItems.Clear();
             metaCurrency = 0;
             InvalidatePotentialCache();
             SavePersistentState();
             OnPotentialChanged?.Invoke(null);
+            OnMemoryChanged?.Invoke(null);
             NotifyFragmentsChanged();
         }
 
@@ -498,7 +501,7 @@ namespace Project.Progression
 
         public PotentialNodeDefinition GetNextPotentialNode(CharacterObject character, PotentialTrack track)
         {
-            if (character == null || character.kitDefinition == null)
+            if (character == null || character.kitDefinition == null || MainMemoryKit.AppliesTo(character))
             {
                 return null;
             }
@@ -584,7 +587,7 @@ namespace Project.Progression
                 return true;
             }
 
-            return GetPotentialLevel(character, node.track) >= node.level;
+            return GetCombatPotentialLevel(character, node.track) >= node.level;
         }
 
         public void LoadPersistentStateIfNeeded()
@@ -625,6 +628,7 @@ namespace Project.Progression
             EnsureData();
             fragments.Clear();
             characterPotentials.Clear();
+            _characterMemories.Clear();
             unlockedCharacterIds.Clear();
             permanentItems.Clear();
             metaCurrency = 0;
@@ -644,7 +648,7 @@ namespace Project.Progression
                 return;
             }
 
-            ImportJson(committedJson);
+            RestoreRunCheckpoint(committedJson);
             SavePersistentState();
         }
 
@@ -672,7 +676,8 @@ namespace Project.Progression
             SavedPlayerMetaProgressionData data = new SavedPlayerMetaProgressionData
             {
                 schemaVersion = 2,
-                metaCurrency = Mathf.Max(0, metaCurrency)
+                metaCurrency = Mathf.Max(0, metaCurrency),
+                characterMemories = _characterMemories
             };
 
             for (int i = 0; i < fragments.Count; i++)
@@ -747,7 +752,7 @@ namespace Project.Progression
             ImportJsonInternal(json);
         }
 
-        private int ImportJsonInternal(string json)
+        private int ImportJsonInternal(string json, bool preserveMemory = false)
         {
             EnsureData();
             isApplyingPersistentState = true;
@@ -755,6 +760,7 @@ namespace Project.Progression
             metaCurrency = 0;
             fragments.Clear();
             characterPotentials.Clear();
+            if (!preserveMemory) _characterMemories.Clear();
             unlockedCharacterIds.Clear();
             permanentItems.Clear();
 
@@ -764,6 +770,7 @@ namespace Project.Progression
                 if (data != null)
                 {
                     metaCurrency = Mathf.Max(0, data.metaCurrency);
+                    if (!preserveMemory) ImportMemory(data.characterMemories);
 
                     if (data.fragments != null)
                     {
@@ -858,6 +865,7 @@ namespace Project.Progression
             isApplyingPersistentState = false;
             InvalidatePotentialCache();
             OnPotentialChanged?.Invoke(null);
+            if (!preserveMemory) OnMemoryChanged?.Invoke(null);
             NotifyFragmentsChanged();
             return retiredArtifactFragments;
         }

@@ -57,30 +57,40 @@ public static class Boss112RunAuthoring
         ApplyEntranceCorridor();
     }
 
-    private static void BuildBoss()
+    public static void BuildBoss()
     {
-        if (AssetDatabase.LoadAssetAtPath<GameObject>(BossPath) != null) return;
-        var root = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Boss112PrototypeAuthoring.BossPath));
+        bool existing = AssetDatabase.LoadAssetAtPath<GameObject>(BossPath) != null;
+        var root = existing ? PrefabUtility.LoadPrefabContents(BossPath)
+            : (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Boss112PrototypeAuthoring.BossPath));
         try
         {
-            root.name = "Boss112_Run";
-            var controller = root.GetComponent<Boss112Controller>();
-            using (var data = new SerializedObject(controller))
+            if (!existing)
             {
-                data.FindProperty("autoAttack").boolValue = true;
-                data.FindProperty("useRunBossFlow").boolValue = true;
-                data.ApplyModifiedPropertiesWithoutUndo();
+                root.name = "Boss112_Run";
+                var controller = root.GetComponent<Boss112Controller>();
+                using (var data = new SerializedObject(controller))
+                {
+                    data.FindProperty("autoAttack").boolValue = true;
+                    data.FindProperty("useRunBossFlow").boolValue = true;
+                    data.ApplyModifiedPropertiesWithoutUndo();
+                }
+                var enemy = root.GetComponent<EnemyController>();
+                using (var data = new SerializedObject(enemy))
+                {
+                    data.FindProperty("useSpawnPresentation").boolValue = false;
+                    data.ApplyModifiedPropertiesWithoutUndo();
+                }
+                PrefabUtility.RecordPrefabInstancePropertyModifications(controller);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(enemy);
             }
-            using (var data = new SerializedObject(root.GetComponent<EnemyController>()))
-            {
-                data.FindProperty("useSpawnPresentation").boolValue = false;
-                data.ApplyModifiedPropertiesWithoutUndo();
-            }
-            PrefabUtility.RecordPrefabInstancePropertyModifications(controller);
-            PrefabUtility.RecordPrefabInstancePropertyModifications(root.GetComponent<EnemyController>());
-            PrefabUtility.SaveAsPrefabAsset(root, BossPath);
+            if (Boss112WormTestAuthoring.AttachBody(root) || !existing)
+                PrefabUtility.SaveAsPrefabAsset(root, BossPath);
         }
-        finally { Object.DestroyImmediate(root); }
+        finally
+        {
+            if (existing) PrefabUtility.UnloadPrefabContents(root);
+            else Object.DestroyImmediate(root);
+        }
     }
 
     private static void BuildArena()

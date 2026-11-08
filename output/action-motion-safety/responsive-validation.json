@@ -1,0 +1,18 @@
+{
+    "timestamp": "2026-11-06T19:35:03.7163015Z",
+    "passed": [
+        "Immediate ground/double launch and one resource/event per press",
+        "Authored nonzero jump startup remains supported",
+        "Immediate movement, stop, and rapid facing reversal",
+        "Ground dash handoff and cooldown authority",
+        "Air dash handoff without neutral-input hover",
+        "Buffered landing jump uses refreshed ground resources",
+        "Buffered landing dash starts without a movement lock",
+        "Coyote jump remains a ground jump",
+        "All movement profiles use responsive startup/landing tuning",
+        "Goenitz neutral dash animation survives Recovery and gameplay exit",
+        "Goenitz movement interrupts dash presentation immediately",
+        "Goenitz neutral air dash retains animation without holding gravity"
+    ],
+    "failed": []
+}

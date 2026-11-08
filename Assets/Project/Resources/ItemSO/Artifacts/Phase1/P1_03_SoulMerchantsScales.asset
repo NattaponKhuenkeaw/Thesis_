@@ -17,12 +17,19 @@ MonoBehaviour:
   description: Used by the opportunist devil of the Soul Shop. "Everything has a
     price here, kid... even memories."
   icon: {fileID: 21300000, guid: e2b7d67300e2d1f4db453175ba4cf300, type: 3}
-  price: 2200
-  rarity: 3
+  price: 3200
   isEquippable: 1
-  passiveDescription: 'Skill: summon a 10s Throne Barrier that follows the wearer.
-    It mitigates damage, pulses 50% ATK damage every 2s, and heals allies for 50%
-    of confirmed pulse damage. 20s cooldown.'
+  rarity: 3
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: "Skill summons a <color=#00ffff>Throne Barrier</color> for
+    <b><color=#FFA500>10s</color></b>\n\n<size=18><color=#C0C0C0>\u2022 Throne Barrier:
+    Anchor to the wearer and follow them, Reduction Incoming DMG by -10% and Inflict
+    <b><color=#A38BFD>Additional DMG</color></b> <b><color=#FFA500>50%</color></b>
+    ATK every <b><color=#FFA500>2s</color></b> and <b><color=#74C365>Regenerate</color></b>
+    allies for 50% of confirmed pulse damage <size=17><color=#C0C0C0>(20s cooldown)</color></size></color></size>"
   passiveSet: {fileID: 11400000, guid: 450740dae0ad95345bf72bc926938642, type: 2}
   additionalDamageEffects: []
   legacyBonusStats:

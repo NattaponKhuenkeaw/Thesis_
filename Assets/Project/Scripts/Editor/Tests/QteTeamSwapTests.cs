@@ -568,6 +568,84 @@ public class QteTeamSwapTests
     }
 
     [Test]
+    public void GrabBreakingHitUnlocksPreparedRecoverySwapAfterLastHeldTarget()
+    {
+        _main.qteSwap.TryResolveIntro(_main.actionResolverTable, out CombatAction action, out _);
+        var recovery = new AttackStepData { startupFrames = 1, activeFrames = 1, recoveryFrames = 20 };
+        _fsm.ChangeState(_fsm.UltimateState);
+        _combat.BeginResolvedAction(false, action);
+        _combat.ExecuteStep(recovery, 1, false, AttackCategory.Ultimate, action.actionName, action.actionId);
+        typeof(FrameDataPlayerState).GetMethod("StartAction", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(_fsm.UltimateState, null);
+        typeof(FrameDataPlayerState).GetField("currentPhase", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(_fsm.UltimateState, ActionPhase.Recovery);
+        Publish(_combat.CurrentExecution);
+
+        var otherObject = Keep(new GameObject("Other held target", typeof(BoxCollider2D), typeof(Rigidbody2D)));
+        otherObject.transform.position = _enemy.transform.position + Vector3.right * 2f;
+        EnemyController other = EnemyLifecycleTestUtility.AddActive(otherObject);
+        int grabOwnerId = _owner.transform.root.GetInstanceID();
+        var session = new CombatCore.ThrowContext(grabOwnerId);
+        foreach (EnemyController target in new[] { _enemy, other })
+        {
+            target.currentHP = target.maxHP = 100f;
+            var handler = target.gameObject.AddComponent<EnemyHitReactionHandler>();
+            Call(handler, "Awake");
+            target.hitReactionHandler = handler;
+            handler.StartReaction(new HitReactionData
+            {
+                reactionKind = EnemyReactionKind.Grab,
+                reactionOwnerId = grabOwnerId,
+                attackerTransform = _owner.transform,
+                actionAnchor = _owner.transform,
+                grabSocket = _owner.transform,
+                reactionTiming = HitReactionData.CreateTiming(0, 60, 0)
+            }, _owner.transform.position);
+            Assert.That(target.CurrentReactionState, Is.EqualTo(EnemyReactionState.Grabbed));
+            session.BeginSession(target, _owner.transform, Vector2.zero);
+        }
+        _combat.activeThrowContext = session;
+
+        var hitbox = Keep(new GameObject("Grab finisher", typeof(HitBoxDamage))).GetComponent<HitBoxDamage>();
+        hitbox.transform.SetParent(_owner.transform, false);
+        Call(hitbox, "Awake");
+        var hit = new NormalHitbox
+        {
+            useDeterministicReaction = true,
+            reactionKind = EnemyReactionKind.Knockback,
+            knockbackFrames = 10
+        };
+        hitbox.SetHitData(1f, false, false, 0f, 1f, hit, AttackCategory.Ultimate, "Finisher", recovery, null);
+        hitbox.ConfigurePerEnemyDamageCalculation(_player.Stats, 1f, true, null, _combat, _main, null,
+            _combat.CurrentExecution);
+
+        Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.True);
+        Assert.That(Qte.CanUsePreparedTransition(), Is.False);
+        hitbox.ProcessHit(_enemy);
+        Assert.That(_enemy.IsGrabbed, Is.True);
+        Assert.That(_combat.IsHoldingEnemy(_enemy), Is.True);
+
+        hit.breaksGrab = true;
+        hitbox.ResetActivationState();
+        _enemy.ignoreHitReactions = true;
+        hitbox.ProcessHit(_enemy);
+        Assert.That(_enemy.IsGrabbed, Is.True);
+        Assert.That(_combat.IsHoldingEnemy(_enemy), Is.True);
+
+        _enemy.ignoreHitReactions = false;
+        hitbox.ResetActivationState();
+        hitbox.ProcessHit(_enemy);
+        Assert.That(_enemy.IsGrabbed, Is.False);
+        Assert.That(_combat.IsHoldingEnemy(_enemy), Is.False);
+        Assert.That(_combat.IsHoldingEnemy(other), Is.True);
+        Assert.That(Qte.CanUsePreparedTransition(), Is.False);
+
+        hitbox.ProcessHit(other);
+        Assert.That(_combat.HasGrabbedEnemy(), Is.False);
+        Assert.That(Qte.CanHandoffTo(1), Is.True);
+    }
+
+    [Test]
     public void HealthAndStatRefreshDoNotConsumeOrRestartPreparedWindow()
     {
         Publish(Execute());

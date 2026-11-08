@@ -46,6 +46,8 @@ public abstract class HitboxBase
 [System.Serializable]
 public class NormalHitbox : HitboxBase
 {
+    internal NormalHitbox Copy() => (NormalHitbox)MemberwiseClone();
+
     public override string HitboxTypeName => "Normal";
     public override Color TimelineTrackColor => new Color(1f, 0.93f, 0.56f);
 

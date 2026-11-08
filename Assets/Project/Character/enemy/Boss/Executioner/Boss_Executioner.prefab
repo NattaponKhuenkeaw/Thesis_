@@ -1941,6 +1941,13 @@ MonoBehaviour:
   positionFallAcceleration: 12
   minimumLightImpactFreeze: 3
   minimumStrongImpactFreeze: 5
+  useMomentumPositionReactions: 0
+  preserveNormalHitOrigin: 0
+  horizontalImpactResponse: 1
+  verticalImpactResponse: 1
+  momentumGravity: 20
+  momentumGroundDeceleration: 24
+  momentumAirDrag: 0.8
 --- !u!114 &6814936412620904915
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2027,6 +2034,8 @@ MonoBehaviour:
     hitboxSizeOverride: {x: 1.4, y: 1.35}
   alternatingCleaveCount: 4
   alternatingCleaveInterval: 0.36
+  alternatingCleaveFirstHold: 0.3
+  alternatingCleaveRoarDuration: 1.2
   seismicBarrage:
     telegraphDuration: 1.5
     activeDuration: 0.3
@@ -2036,6 +2045,7 @@ MonoBehaviour:
     hitboxSizeOverride: {x: 0, y: 0}
   seismicJumpCount: 3
   seismicJumpInterval: 0.65
+  seismicFirstCrouchHold: 0.3
   groundWavePrefab: {fileID: 8774167939271709899, guid: 0f51e0e3caacc1b4aa382ae24837f44f, type: 3}
   groundWaveSpeed: 14
   groundWaveDistance: 80

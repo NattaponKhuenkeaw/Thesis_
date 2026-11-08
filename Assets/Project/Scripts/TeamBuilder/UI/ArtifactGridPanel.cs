@@ -175,6 +175,7 @@ namespace Project.TeamBuilder.UI
                     cellUI.transform.SetSiblingIndex(spawnedItems.Count);
                     bool isEquipped = equippedIds.Contains(artifact.instanceId);
                     cellUI.Init(artifact, definition, rootCanvas, playerInventory.ArtifactRollTable, isEquipped);
+                    cellUI.SetEquippedOwner(ResolveOwnerPortrait(artifact));
                     cellUI.SetSelected(artifact.instanceId == selectedInstanceId);
                     cellUI.OnClicked += HandleArtifactClicked;
                     cellUI.OnDoubleClicked += HandleArtifactDoubleClicked;
@@ -203,6 +204,7 @@ namespace Project.TeamBuilder.UI
             {
                 if (item == null || item.ArtifactData == null) continue;
                 bool isEquipped = equippedIds.Contains(item.ArtifactData.instanceId);
+                item.SetEquippedOwner(ResolveOwnerPortrait(item.ArtifactData));
                 item.SetEquippedState(isEquipped);
             }
         }
@@ -278,6 +280,18 @@ namespace Project.TeamBuilder.UI
         {
             query.isNew = (ArtifactOptionalBool)Mathf.Clamp(value, 0, 2);
             RebuildQueryResults();
+        }
+
+        private Sprite ResolveOwnerPortrait(ArtifactInstance artifact)
+        {
+            var owner = parentBuilder != null ? parentBuilder.FindSlotWithArtifact(artifact)?.CurrentCharacter : null;
+            if (owner == null) return null;
+            return owner.icon;
+        }
+
+        public void SelectArtifact(ArtifactInstance artifact)
+        {
+            HandleArtifactClicked(artifact);
         }
 
         private void HandleArtifactClicked(ArtifactInstance artifact)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project.AIBehaviour.Boss;
 using UnityEngine;
 
 public class HitBoxDamage : MonoBehaviour
@@ -72,7 +73,7 @@ public class HitBoxDamage : MonoBehaviour
         EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy != null)
         {
-            ProcessHit(enemy);
+            ProcessHit(enemy, other);
         }
     }
 
@@ -187,7 +188,7 @@ public class HitBoxDamage : MonoBehaviour
         hitEnemiesThisActivation.Clear();
     }
 
-    public void ProcessHit(EnemyController enemy)
+    public void ProcessHit(EnemyController enemy, Collider2D contactCollider = null)
     {
         if (enemy == null || !enemy.IsTargetable || hitEnemiesThisActivation.Contains(enemy))
         {
@@ -201,13 +202,27 @@ public class HitBoxDamage : MonoBehaviour
 
         hitEnemiesThisActivation.Add(enemy);
 
+        Boss112WormBody worm = enemy.GetComponent<Boss112WormBody>();
+        Collider2D attack = worm != null ? GetActiveHitboxCollider() : null;
+        int segmentContacts = worm != null ? worm.GetSegmentContacts(attack, contactCollider) : 0;
+        bool hitHead = segmentContacts != 0 && worm.HitsHead(attack, contactCollider);
         Vector2 direction = GetHitDirection();
-        ResolveDamageAgainstEnemy(enemy);
+        ResolveDamageAgainstEnemy(enemy, segmentContacts != 0 && !hitHead ? worm.SegmentDamageMultiplier : 1f);
         HitReactionData reactionData = currentGrabHitbox != null
             ? BuildGrabReactionData(direction)
             : BuildReactionData(enemy, direction);
         if (currentNormalHitbox != null && currentGrabHitbox == null && projectileOwner == null)
             playerCombat?.PrepareDashHitAnchor(this, enemy, ref reactionData);
+
+        Vector2 headHitPoint = hitHead ? CalculateHitPoint(enemy, enemy.bodyCollider) : default;
+        System.Span<Vector2> segmentHitPoints = segmentContacts != 0 ? stackalloc Vector2[worm.SegmentHurtboxes.Count] : default;
+        if (segmentContacts != 0)
+        {
+            if (!hitHead) reactionData.flashFrames = 0;
+            for (int i = 0; i < segmentHitPoints.Length; i++)
+                if ((segmentContacts & (1 << i)) != 0)
+                    segmentHitPoints[i] = CalculateHitPoint(enemy, worm.SegmentHurtboxes[i]);
+        }
 
         ProjectileData grabProjectile = projectileOwner != null ? projectileOwner.ProjectileData : null;
         if (reactionData.reactionKind == EnemyReactionKind.Grab
@@ -228,6 +243,15 @@ public class HitBoxDamage : MonoBehaviour
             currentDamageResult,
             reactionData,
             true);
+        if (reactionData.breaksGrab && enemy.LastHitAppliedReaction && !enemy.IsGrabbed)
+        {
+            PlayerCombat grabOwner = execution == null ? playerCombat : null;
+            if (execution?.IsOnField == true)
+                grabOwner = execution.owner;
+
+            grabOwner?.ForgetReleasedGrabTarget(enemy);
+        }
+
         bool hasDamageSource = HasDamageSource();
 
         if (hasDamageSource && primaryDamageDealt > 0f)
@@ -236,16 +260,30 @@ public class HitBoxDamage : MonoBehaviour
             {
                 ApplyAdditionalDamage(enemy, attackerPosition, direction);
             }
+            projectileOwner?.ApplyMemoryHitEffects(enemy, currentAttackerStats);
         }
 
         HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
         DamageImpactTier resolvedTier = currentGrabHitbox != null
             ? currentGrabHitbox.impactTier
             : (currentNormalHitbox != null ? currentNormalHitbox.impactTier : DamageImpactTier.Low);
-        Vector2 hitPoint = CalculateHitPoint(enemy);
         ProjectileData projectileData = projectileOwner != null ? projectileOwner.ProjectileData : null;
 
-        HitFeedbackEvents.Raise(activeHitbox, resolvedTier, hitPoint, direction, projectileData);
+        if (segmentContacts == 0)
+            HitFeedbackEvents.Raise(activeHitbox, resolvedTier, CalculateHitPoint(enemy), direction, projectileData);
+        else
+        {
+            // Damage and hit stop belong to the boss; only the contact visuals are per segment.
+            if (hitHead) HitFeedbackEvents.Raise(activeHitbox, resolvedTier, headHitPoint, direction, projectileData);
+            bool playAudio = !hitHead;
+            for (int i = 0; i < segmentHitPoints.Length; i++)
+            {
+                if ((segmentContacts & (1 << i)) == 0) continue;
+                if (primaryDamageDealt > 0f) worm.FlashSegment(i);
+                HitFeedbackEvents.Raise(activeHitbox, resolvedTier, segmentHitPoints[i], direction, projectileData, playAudio);
+                playAudio = false;
+            }
+        }
 
         enemy.SetInCombat(true);
 
@@ -274,17 +312,6 @@ public class HitBoxDamage : MonoBehaviour
             else
                 activePlayerCombat?.ClearGrabbedEnemy(enemy);
         }
-        else if (playerCombat != null && playerCombat.IsHoldingEnemy(enemy))
-        {
-            // CRITICAL: Do NOT clear the grab just because the enemy's reaction
-            // state changed. During a throw sequence, slam hitboxes intentionally
-            // change the enemy from Grabbed → Knockback/Knockup. The GrabSession
-            // in ThrowContext is the authority on whether the enemy is still held.
-            //
-            // The session will be ended explicitly by:
-            //   - ThrowContext.ReleaseClean() when the throw finishes normally
-            //   - ThrowContext.ForceRelease() when the player is interrupted
-        }
 
         TriggerConfiguredImpactFeedback();
 
@@ -297,7 +324,7 @@ public class HitBoxDamage : MonoBehaviour
         projectileOwner?.RegisterSuccessfulHit(enemy);
     }
 
-    private void ResolveDamageAgainstEnemy(EnemyController enemy)
+    private void ResolveDamageAgainstEnemy(EnemyController enemy, float damageMultiplier)
     {
         currentResolvedDamage = currentDamage;
         if (enemy == null)
@@ -337,7 +364,16 @@ public class HitBoxDamage : MonoBehaviour
             ignoreTypeReduction = damageInput.ignoreTypeReduction,
             provenance = new DamageProvenance(0, 0, 0, 0, null, ResolveDamageTags())
         };
+        if (elementType == ElementType.Void)
+        {
+            currentDamageRequest.procPolicy = currentDamageRequest.ResolveProcPolicy() &
+                ~(DamageProcPolicy.ApplyElementDot | DamageProcPolicy.GrantAuraEnergy);
+            currentDamageRequest.hasExplicitProcPolicy = true;
+        }
         currentDamageResult = CombatDamageProcessor.Resolve(currentDamageRequest);
+        if (damageMultiplier != 1f)
+            currentDamageResult = new DamageResult(currentDamageResult.UnroundedDamage * damageMultiplier,
+                currentDamageResult.IsCriticalHit, currentDamageResult.Descriptor, currentDamageResult.AcceptedSideEffects);
         float finalDamage = currentDamageResult.Damage;
         currentIsCrit = currentDamageResult.IsCriticalHit;
 
@@ -355,13 +391,15 @@ public class HitBoxDamage : MonoBehaviour
         Vector2 attackerPosition,
         Vector2 direction)
     {
-        if (enemy == null
-            || !enemy.IsAlive
-            || currentAdditionalDamageEffects == null
-            || currentAdditionalDamageEffects.Length == 0)
+        if (enemy == null || !enemy.IsAlive)
         {
             return;
         }
+        var finisher = Project.Progression.MainMemoryKit.ResolveFinisher(rewardCharacter, passiveController, sourceActionId,
+            sourceStepData, currentNormalHitbox, projectileOwner);
+        int effectsCount = currentAdditionalDamageEffects?.Length ?? 0;
+        int totalEffects = effectsCount + (finisher != null ? 1 : 0);
+        if (totalEffects == 0) return;
 
         PassiveEventContext context = new PassiveEventContext
         {
@@ -377,9 +415,9 @@ public class HitBoxDamage : MonoBehaviour
             isCriticalHit = currentIsCrit
         };
 
-        for (int i = 0; i < currentAdditionalDamageEffects.Length; i++)
+        for (int i = 0; i < totalEffects; i++)
         {
-            AdditionalDamageEffectDefinition effect = currentAdditionalDamageEffects[i];
+            AdditionalDamageEffectDefinition effect = i == effectsCount ? finisher : currentAdditionalDamageEffects[i];
             if (effect == null || !enemy.IsAlive || !effect.CanTrigger(context))
                 continue;
 
@@ -886,18 +924,21 @@ public class HitBoxDamage : MonoBehaviour
         return Vector2.right;
     }
 
-    private Vector2 CalculateHitPoint(EnemyController enemy)
+    private Vector2 CalculateHitPoint(EnemyController enemy, Collider2D contactCollider = null)
     {
         if (enemy == null) return transform.position;
 
         Collider2D attackerCollider = GetActiveHitboxCollider();
 
-        Collider2D victimCollider = enemy.bodyCollider;
+        Collider2D victimCollider = contactCollider != null ? contactCollider : enemy.bodyCollider;
 
         if (attackerCollider == null || victimCollider == null)
         {
-            return enemy.transform.position;
+            return contactCollider != null ? contactCollider.bounds.center : enemy.transform.position;
         }
+
+        if (contactCollider != null)
+            return attackerCollider.ClosestPoint(victimCollider.bounds.center);
 
         // Get the closest points between the two colliders to approximate the hit point
         Vector2 attackerPoint = attackerCollider.bounds.center;

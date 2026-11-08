@@ -48,7 +48,7 @@ public class MainDimensionSlashTests
         Object.DestroyImmediate(_table); Object.DestroyImmediate(_progression);
     }
 
-    private void Level(int level) => _progression.SetPotentialLevel(_character, PotentialTrack.Passive, level);
+    private void Level(int level) => CharacterMemoryTests.SetMemoryRanks(_progression, _character, passive: level);
     private void Cut(bool qte = false, string action = MainDimensionSlashAuthoring.CutId, string step = "DimensionCut", bool provenance = true)
     {
         var execution = provenance ? new CombatExecutionContext(_combat, _character, _combat.FieldSession, qte) : null;
@@ -604,6 +604,9 @@ public class MainDimensionSlashTests
         Assert.That(step.animationClip.name, Is.EqualTo("main_dimension_slash_actor"));
         // This fixture has no energy-owning team; test held selection independently of AE.
         execution.energyCost = 0f;
+        Level(2);
+        Assert.That(Resolve(held: true, category: AttackCategory.Ultimate), Is.Null);
+        Level(3);
         Assert.That(Resolve(held: true, category: AttackCategory.Ultimate), Is.EqualTo(execution.actionId));
     }
 

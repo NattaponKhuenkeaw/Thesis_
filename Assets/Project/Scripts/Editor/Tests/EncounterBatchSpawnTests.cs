@@ -88,25 +88,23 @@ public sealed class EncounterBatchSpawnTests
     }
 
     [UnityTest]
-    public IEnumerator CrowdedSlotsCloseASmallerGroupInsteadOfAddingEnemiesWhenOneDies()
+    public IEnumerator CrowdedSlotsWaitForACompleteGroupInsteadOfChangingTheFourPlusFourPlan()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
         using (var f = new Fixture(3))
         {
             f.Start(8);
-            Assert.That(f.Living.Length, Is.EqualTo(3));
-            Assert.That(f.Pending, Is.EqualTo(5));
-            var first = f.Living;
-            first[0].Die();
+            Assert.That(f.Living, Is.Empty);
+            Assert.That(f.Pending, Is.EqualTo(8));
             yield return Wait(.2f);
-            Assert.That(f.Living.Length, Is.EqualTo(2));
-            Assert.That(f.Pending, Is.EqualTo(5), "A free marker must wait until the entire group is defeated.");
+            Assert.That(f.Living, Is.Empty);
+            Assert.That(f.Pending, Is.EqualTo(8));
+            f.AddRoomySlots();
+            yield return Until(() => f.Living.Length == 4);
+            Assert.That(f.Pending, Is.EqualTo(4));
             foreach (var enemy in f.Living) enemy.Die();
-            yield return Until(() => f.Living.Length == 3);
-            Assert.That(f.Pending, Is.EqualTo(2));
-            foreach (var enemy in f.Living) enemy.Die();
-            yield return Until(() => f.Living.Length == 2);
+            yield return Until(() => f.Living.Length == 4);
             Assert.That(f.Pending, Is.Zero);
             foreach (var enemy in f.Living) enemy.Die();
             yield return Until(() => !f.Running);
@@ -206,6 +204,19 @@ public sealed class EncounterBatchSpawnTests
                 data.ApplyModifiedPropertiesWithoutUndo();
             }
             Waves.StartChamber(Enumerable.Repeat(prefab, count).ToArray(), encounter);
+        }
+
+        public void AddRoomySlots()
+        {
+            var slots = new Transform[5];
+            for (int i = 0; i < slots.Length; i++)
+            {
+                slots[i] = new GameObject("Roomy_" + i).transform;
+                slots[i].SetParent(Waves.transform, false);
+                slots[i].localPosition = Vector3.right * ((i - 2) * 3f);
+            }
+            Waves.BindSpawnSlots(slots);
+            Physics2D.SyncTransforms();
         }
 
         public void Dispose() { Object.DestroyImmediate(root); Object.DestroyImmediate(encounter); }

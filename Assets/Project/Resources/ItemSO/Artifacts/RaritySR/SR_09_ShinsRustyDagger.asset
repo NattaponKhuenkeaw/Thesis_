@@ -18,8 +18,26 @@ MonoBehaviour:
     to let go gave birth to his Aura.
   icon: {fileID: 21300000, guid: 25f44d725976c2f46a83e2ad93aca1a9, type: 3}
   price: 1200
-  rarity: 2
   isEquippable: 1
-  passiveDescription: 'Non-critical hits grant Sharp, increasing Crit Rate by 5% per stack, up to 5 stacks. A critical hit removes Sharp.'
+  rarity: 2
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: "Non-critical hits grant <color=#00ffff>Sharp</color><size=18><color=#C0C0C0>(up
+    to 5 stacks)</color></size>\r\n\r\n<size=18><color=#C0C0C0>\u2022 Sharp: increasing
+    Crit Rate by 5% per stack. A critical hit removes Sharp</color></size>"
   passiveSet: {fileID: 11400000, guid: 88cf80f81f47431a8b6e0602351daf6c, type: 2}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

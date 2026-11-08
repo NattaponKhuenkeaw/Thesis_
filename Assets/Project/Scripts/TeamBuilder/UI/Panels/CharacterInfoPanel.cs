@@ -101,18 +101,20 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (potentialText != null)
             {
-                int currentPotential = GetTotalPotentialLevel(data);
-                int maxPotential = CharacterKitDefinition.MaxPotentialLevel * 3;
-                potentialText.text = $"Potential {currentPotential}/{maxPotential}";
+                var progression = Project.Training.CharacterStateContext.ResolveProgression();
+                int filled = progression != null ? progression.GetCompletedMajorMemoryUpgrades(data.characterId) : 0;
+                potentialText.text = $"Major upgrades {filled}/{CharacterMemoryProgress.MajorUpgradeCount}";
                 if (potentialSegments != null)
+                {
                     for (int i = 0; i < potentialSegments.Length; i++)
                         if (potentialSegments[i] != null)
                         {
-                            var sprite = i < currentPotential ? potentialFilledSprite : potentialEmptySprite;
+                            var sprite = i < filled ? potentialFilledSprite : potentialEmptySprite;
                             potentialSegments[i].sprite = sprite;
                             potentialSegments[i].color = sprite != null ? Color.white
-                                : i < currentPotential ? new Color(1f, .88f, .12f) : new Color(.22f, .25f, .33f);
+                                : i < filled ? new Color(1f, .88f, .12f) : new Color(.22f, .25f, .33f);
                         }
+                }
             }
 
             PopulateEquippedArtifactSlots(equippedArtifacts);
@@ -244,21 +246,6 @@ namespace Project.TeamBuilder.UI.Panels
         private static string FormatStatValue(float baseValue, float additionalValue, string statName)
         {
             return StatFormatHelper.FormatResolved(baseValue, additionalValue, statName, true);
-        }
-
-        private static int GetTotalPotentialLevel(CharacterObject data)
-        {
-            if (data == null) return 0;
-
-            CharacterProgressionState metaProgression = Project.Training.CharacterStateContext.ResolveProgression();
-            if (metaProgression == null)
-            {
-                return 0;
-            }
-
-            return metaProgression.GetPotentialLevel(data, PotentialTrack.Skill)
-                + metaProgression.GetPotentialLevel(data, PotentialTrack.Ultimate)
-                + metaProgression.GetPotentialLevel(data, PotentialTrack.Passive);
         }
 
         public void Show() { gameObject.SetActive(true); }

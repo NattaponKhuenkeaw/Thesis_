@@ -42,6 +42,7 @@ namespace Project.Core.ZoneState
             [Min(0)] public int artifactPulls;
             [Min(0)] public int minSoul;
             [Min(0)] public int maxSoul;
+            public bool grantsMemory;
         }
 
         [Header("Spawn")]

@@ -207,14 +207,9 @@ public class ArtifactInstanceSystemTests
                 RoomChoiceOffer offer = RouteOfferGenerator.BuildOffer(room);
                 if (offer.Difficulty != RouteDifficulty.Hard) continue;
                 Assert.That(offer.Reward.IncludesBasePayout, Is.True);
+                Assert.That(offer.Reward.Coins, Is.EqualTo(219));
+                Assert.That(offer.Reward.GrantsMemory, Is.True);
                 pullCounts.Add(offer.Reward.ArtifactPulls);
-                switch (offer.Reward.ArtifactPulls)
-                {
-                    case 0: Assert.That(offer.Reward.Coins, Is.InRange(300, 400)); break;
-                    case 1: Assert.That(offer.Reward.Coins, Is.InRange(180, 280)); break;
-                    case 2: Assert.That(offer.Reward.Coins, Is.Zero); break;
-                    default: Assert.Fail("Unexpected Hard reward pattern."); break;
-                }
             }
         }
         finally

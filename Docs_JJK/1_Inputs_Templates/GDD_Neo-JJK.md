@@ -182,6 +182,8 @@ Every authored combat action declares an **Input Context** (`Ground`, `Air`, or 
 - A context-change re-route always starts at the selected root; root-route shortcuts and starting-depth overrides do not skip it.
 - `MatchInput` preserves the context captured when the executing step began unless a ground-started step genuinely loses support or begins a drop-through. Physical contact must also retain support at the authored rear ground probe (`GroundC` local `x - 1`); a lingering edge-contact without that support counts as genuine departure. At completion or an accepted cancel, that cause-aware departure resolves Air instead of snapping back to Ground. Authored positive-Y MotionData does not qualify. An explicit `Ground` or `Air` output remains authoritative.
 - Authored MotionData is the sole action-motion authority. Normal locomotion gravity does not compete with MotionData during Startup, Active, Recovery, or Cancel.
+- Ground-supported action movement, committed ground dash and horizontal action teleports stop before a platform edge or unsupported gap; the action's authored phase, hit, cancel and resource timeline continues. This protection applies to displacement and gated combat steering, while ordinary locomotion, intentional jump/drop-through and airborne actions retain their existing traversal rules. Losing the actual support still uses the cause-aware Air rules above.
+- Dash Through Target captures its approach side when the target is acquired. Overlapping player/enemy bodies preserve the player's facing, and an authored enemy-anchor offset cannot reverse the committed dash. A clearly separated target can establish either approach side; optional facing on arrival remains authored.
 - Natural completion or an accepted cancel commits the authored output before the next action, locomotion state, or team switch resolves.
 - A `Ground` output snaps to valid ground and returns direct grounded control without an extra Landing lock or landing animation, including when authored MotionData left and re-contacted the floor before completion. When locomotion regains authority it forces the Grounded animation immediately instead of allowing a queued Landed/Fall transition to finish. If a physically airborne Ground/`MatchInput` action accepts a direct Jump cancel, that correction is silent and the Jump launches in the same transition without Landing/Falling or a second startup hold. Ordinary ground and double jumps also launch immediately in the responsive profiles; a separately authored nonzero startup remains supported. An `Air` output first resolves Air; if the collider is already supported, the FSM then performs `Landing -> Idle/Move`. Responsive profiles impose no landing movement recovery, and valid buffered Jump/Dash can execute after genuine contact and its resource/feedback boundary.
 - Physical contact remains observable by explicitly authored environmental triggers such as `Require Just Landed`, but it cannot change the running step's locked context by itself.
@@ -349,7 +351,7 @@ or Void independently.
 
 ### Run Global Level System
 
-Run Global Level is casual, run-scoped growth shared by the complete character roster. It is separate from permanent Character Potential.
+Run Global Level is casual, run-scoped growth shared by the complete character roster. It is separate from permanent Character Memory.
 
 - Every run starts at **Global Lv.1** and has a maximum of **Global Lv.30/30**.
 - Every character resolves stats from the same Run Global Level, including characters not acquired, inventoried, or deployed in the current run.
@@ -367,20 +369,23 @@ Run Global Level is casual, run-scoped growth shared by the complete character r
 - Leveling increases each character's own authored basic **ATK, DEF, and Max HP** growth; the shared level does not make character growth values identical.
 - After application, deployed runtime stats and visible stat/level readouts refresh from the new Run Global Level.
 - The former per-character level/EXP state, Character Level panel, and Leveling Potion remain in code only as **legacy migration paths**. They are not part of the active design and should not receive new content.
-- A character still uses the permanent Potential rank the player has unlocked for that character; Potential is not reset with Run Global Level.
+- Character Memory and previously earned upgrade ranks persist when Run Global Level resets.
 
 ---
 
-### Character Potential System
+### Character Memory System
 
 ![Character Potential Rule](https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019)
 
-#### Permanent Potential Upgrade
+#### Permanent Memory Track
 
-- Potential is the permanent character-progression system, comparable to a small constellation path.
-- Each character has three tracks: **Skill**, **Ultimate**, and **Passive**. Each track has four sequential levels, for a maximum of **4/4 per track** and **12 upgrade nodes** per character.
-- Duplicate characters convert into that character's permanent Potential Fragments. The player spends those fragments in the Character Potential panel to unlock the next node in a track.
-- A node may modify stats, action behavior, cooldowns, Aura Energy, runtime effects, or conditional passives. Each track must be upgraded in order.
+- Each character has 54 sequential Memory steps. A **Skill / Ultimate / Passive** major upgrade is followed by two generic steps. The full track contains six major upgrades in each family and 36 generic steps.
+- Clearing a patterned Hard combat room offers one Memory reward alongside the existing room payout. The player chooses a living owned character with a step available. At a major step, the player claims one of the Skill, Ultimate, or Passive cards with a rank available. A generic step shows one card.
+- Memory is permanent across runs. The Shop inspector shows the same character progress. Stock and prices use the existing Shop rules.
+- Main's six Skill, Ultimate, and Passive ranks use Character Memory in combat. His 36 generic steps improve base stats before equipment bonuses. Main's old fragment ranks no longer grant combat effects.
+- Three draws per biome gives an 18-biome estimate for one full character track. Actual session length remains a playtest target.
+- Previous upgrades remain available under **Previous upgrades**. Their three four-rank paths, duplicate fragments, and authored effects are preserved. The major-step conversion, role assignments, and generic step effects are deferred.
+- Training Config exposes all 54 steps for a deployed character. Missing prerequisites use the first available family in Skill, Ultimate, Passive order. Selecting a full family swaps with the latest matching upgrade and keeps all completed steps. Apply affects the practice session.
 
 #### Main: Dimension Slash (Approved Direction, Pending Implementation)
 
@@ -413,10 +418,15 @@ Run Global Level is casual, run-scoped growth shared by the complete character r
   - **Character Slider Panel**: For selecting characters; features a slider-like character icon selection matching standard gacha aesthetics.
   - **Character Visual Panel**: Emphasizes the character Icon, Name, Element, and Role based on the slider selection.
   - **Content Panel**: Populates based on the selected character and contains the following windows:
-    - **Character Info Panel**: Shared Run Global Level, permanent Potential, all character stats, and 3 Artifact Slots.
+    - **Character Info Panel**: Shared Run Global Level, 18 boxes for earned major Memory upgrades, all character stats, and 3 Artifact Slots.
     - **Character Skill Panel**: Ordered Skill, Ultimate, Passive, Special, and QTE sections containing learned action cards; ordinary Normal Attack entries are excluded. Single-action sections use a flat card, while sections with multiple actions nest their cards. Skill/Ultimate/Passive headers show current Lv.0–4. Potential-locked or permanently replaced actions are hidden, while learned actions remain visible during temporary combat unavailability. Ground/Airborne/Both, cooldown, and AE cost use compact header badges. QTE can reuse an ordinary action through a separate information entry. Potential patches target individual entries; conditional modifiers do not inflate unconditional values.
+<<<<<<< Updated upstream
     - **Equipment Panel**: 3 Artifact Slots. Clicking an equipped Artifact shows its definition, rolled stat lines, and numeric Roll Quality. Switching opens the Artifact inventory, where stars and frame color show rarity.
     - **Character Potential Panel**: A full-screen view exited through a back button. It contains three tracks—Skill, Ultimate, and Passive—with four sequential levels each (12 nodes total). Clicking a node shows its preview, fragment cost, and upgrade button. Character Potential Fragments are required to unlock the next level in that track.
+=======
+    - **Equipment Panel**: 3 Artifact Slots. Clicking an equipped Artifact shows its definition and rolled stat lines. Switching opens the Artifact inventory, where stars and frame color show rarity. A selection overlay identifies the destination slot; equipping keeps the inventory open. Artifact descriptions support TextMesh Pro rich text.
+    - **Character Memory Panel**: The full-screen Potential layout hosts a connected map of all 54 steps, starting from step 1 at the bottom. The map pans horizontally and vertically. Selecting a node uses the existing Potential upgrade window as a read-only preview. **Previous upgrades** switches to the fragment-based nodes.
+>>>>>>> Stashed changes
 
 > [!NOTE]
 > The former Character Level panel, EXP slider, Leveling Potion grid, and confirmation button are legacy. The active Character Inspector exposes the shared Run Global Level as read-only run information; leveling interaction happens only through the Level room event.
@@ -474,10 +484,11 @@ Run Global Level is casual, run-scoped growth shared by the complete character r
 | Character | The Characters that can use in the game. | Lose but upgraded are retain |
 | Artifact | Duplicate-able equipment instances distinguished by randomized stat rolls. | Lose |
 | Run Global Level | Shared roster power earned from Level room events. | Lose; reset to Lv.1 |
-| Fragment | Character Potential duplicate material. | Retain |
+| Memory | Permanent character progression earned in Hard combat rooms. | Retain |
+| Fragment | Duplicate material for previous character upgrades. | Retain |
 | Items | The consumable items that can use during the Cursed Realm runs. | Lose |
 
-Character Potential is permanent meta progression. Artifact instances are run equipment and have no retained upgrade level; reacquiring one produces fresh rolls.
+Character Memory and previous upgrades are permanent. Artifact instances are run equipment. Reacquiring one produces fresh rolls.
 
 ---
 
@@ -502,7 +513,15 @@ R is white with one star, one fixed stat passive and one rolled line. SR is gree
 | AER% | 7.78–38.88% |
 | DM% / DI% / ADI% | 9.32–56.23% |
 
+<<<<<<< Updated upstream
 Artifact Inventory supports search and sorting by quality, selected-stat total, line count, name, acquisition time, favourite, and equipped state. Selecting an Artifact destination first makes the next normal card click equip there. A card click previews when no destination is selected. Right-click opens per-copy Favourite and Discard actions. New and Favourite have separate icon badges. Equipped and draft-assigned copies require unequipping before discard.
+=======
+Artifact Inventory supports search and sorting by rarity, quality, selected-stat total, line count, name, acquisition time, favourite, and equipped state. A card click previews; double-click or Equip assigns it to the selected destination. Equipping retains the destination overlay and keeps inventory open. Right-click opens per-copy Favourite and Discard actions; the separate Favourite toolbar button is removed. New and Favourite have separate icon badges. Equipped and draft-assigned copies require unequipping before discard.
+
+The selected destination uses a bright pulsing border. Clicking an occupied slot previews its equipped copy; switching or reselecting destinations preserves the open inventory, grid and scroll. Equipped cards retain rarity color and show the owning character's portrait at the top right, with Favourite displayed below it.
+
+Reward cards show rarity-colored backgrounds and rich-text descriptions. Selecting a card raises it for confirmation; selecting that same card again claims the displayed copy and animates its pickup and exit. Selecting another card changes the preview without claiming. There is no separate Claim button. Each card independently rolls an eligible rarity using the existing biome R/SR reward weights, allowing mixed-rarity pulls; definitions do not repeat within a pull. SSR remains governed by the existing shop policy.
+>>>>>>> Stashed changes
 
 Passive descriptions are currently display text unless the behavior is also represented by implemented stat bonuses or an authored runtime effect.
 
@@ -902,7 +921,7 @@ Assets/Project/Scripts/
 - MainMenu's Training button loads `Test_Playground` without choosing or overwriting a save slot.
 - Training permits TeamBuilder editing and Inspector access while retaining CombatZone gameplay and the combat HUD. The existing Player_UI navigation buttons open those panels; Training does not add duplicate loadout buttons. Normal combat rooms retain their restrictions.
 - Training owns fresh practice inventory and potential state, independent of PlayerRunInventory and PlayerMetaProgression save assets. Every valid catalog CharacterItem and a usable instance of each ArtifactDefinition is available. Its authored initial team, or a catalog default team, seeds practice; saved teams and equipment are not read. Deploy applies practice equipment through the normal loadout flow. Scene exit discards the practice objects.
-- Training Configuration changes the shared Team Level and each deployed character's Skill, Ultimate and Passive potential tiers for this practice session only. Apply refreshes runtime stats/effects while preserving team-wide damage history; Cancel discards edits. Training starts at Team Level 1 and potential tier 0 for every character. Reset DMG explicitly clears the sample.
+- Training Config opens the authored Memory window. Side arrows cycle deployed characters, and the footer controls Global Level, Apply, and Cancel. Previous upgrades opens legacy rank controls for characters that use them. Apply refreshes practice stats and effects while preserving damage history. Cancel discards the draft. Training starts at Global Level 1 with no earned upgrades. Reset DMG clears the sample.
 - The passive dummy retains damage, physics, hit reactions and combat feedback while its Behavior Graph AI stays disabled across spawn/recovery.
 - `CinemachineCamera_Training` supplies the wider authored base view and resumes after temporary action/ultimate cameras.
 - Stats windows start hidden. The Stats button shows/hides enemy status, team damage contribution and DPS together; damage recording continues while hidden. Collider drawings remain off. Reset Damage clears the current sample.

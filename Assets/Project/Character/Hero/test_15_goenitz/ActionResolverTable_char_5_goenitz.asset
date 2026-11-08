@@ -1114,8 +1114,8 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 14
-          activeFrames: 34
-          recoveryFrames: 14
+          activeFrames: 19
+          recoveryFrames: 29
           cancelWindowStartFrame: 58
           loopActivePhase: 0
           stepName: Attack5
@@ -1500,10 +1500,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 10
-          activeFrames: 15
-          recoveryFrames: 20
-          cancelWindowStartFrame: 40
+          startupFrames: 1
+          activeFrames: 2
+          recoveryFrames: 18
+          cancelWindowStartFrame: 18
           loopActivePhase: 0
           stepName: Attack8
           animationClip: {fileID: 7400000, guid: 0106abd9d8bdbc94985a0afa230a1f2f, type: 2}
@@ -1537,9 +1537,9 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 27
-          activeFrames: 24
-          recoveryFrames: 22
-          cancelWindowStartFrame: 70
+          activeFrames: 4
+          recoveryFrames: 42
+          cancelWindowStartFrame: 67
           loopActivePhase: 0
           stepName: Yonokaze
           animationClip: {fileID: 7400000, guid: 6ae74e424f6da7541ac385765b953aca, type: 2}
@@ -3250,7 +3250,7 @@ MonoBehaviour:
               followHitstop: 0
               slowMotion:
                 enabled: 1
-                timeScale: 0.2
+                timeScale: 0.4
                 duration: 0.7
                 delaySeconds: 0
             cameraControl:
@@ -3638,7 +3638,7 @@ MonoBehaviour:
           startupFrames: 1
           activeFrames: 1
           recoveryFrames: 64
-          cancelWindowStartFrame: 3
+          cancelWindowStartFrame: 64
           loopActivePhase: 0
           stepName: Recover
           animationClip: {fileID: 7400000, guid: 920ce8341d962654895537b0323ca112, type: 2}
@@ -4597,9 +4597,9 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 6
+          startupFrames: 2
           activeFrames: 3
-          recoveryFrames: 546
+          recoveryFrames: 550
           cancelWindowStartFrame: 11
           loopActivePhase: 0
           stepName: Recover
@@ -5655,8 +5655,8 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 13
-          activeFrames: 23
+          startupFrames: 1
+          activeFrames: 35
           recoveryFrames: 10
           cancelWindowStartFrame: 39
           loopActivePhase: 0
@@ -5762,30 +5762,31 @@ MonoBehaviour:
       data:
         hitboxes:
         - rid: 5456672870199459981
+        - rid: 5456672950153642142
     - rid: 5456672870199459981
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 0
-        activeFrames: 23
+        activeFrames: 12
         elementType: 0
         damageTags: 0
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.6201353, y: 2.8388197}
-        size: {x: 3.6762295, y: 5.6776395}
-        damageRatio: 1
+        offset: {x: 0.75931597, y: 2.8388197}
+        size: {x: 5.397868, y: 5.6776395}
+        damageRatio: 0.3
         impactTier: 2
         useDeterministicReaction: 1
-        reactionKind: 2
-        impactFreezeFrames: 4
+        reactionKind: 1
+        impactFreezeFrames: 0
         knockbackFrames: 15
         knockupFrames: 30
         knockfallFrames: 10
         recoveryFrames: 30
         horizontalSpeed: 10
         launchSpeed: 10
-        useSnapToAnchor: 1
+        useSnapToAnchor: 0
         snapOffset: {x: 2, y: -1}
         landingBehavior: 1
         canAirJuggle: 1
@@ -6193,10 +6194,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 31
-          activeFrames: 12
-          recoveryFrames: 38
-          cancelWindowStartFrame: 122
+          startupFrames: 25
+          activeFrames: 10
+          recoveryFrames: 31
+          cancelWindowStartFrame: 99
           loopActivePhase: 0
           stepName: EX Yonokaze
           animationClip: {fileID: 7400000, guid: 22c50a1257aa9c74ca9fc923cbc7fe6d, type: 2}
@@ -6871,7 +6872,7 @@ MonoBehaviour:
         - label: SFX
           clip: {fileID: 8300000, guid: eac3ad0f9e2cf834c96b0930a5e7c8bb, type: 3}
           triggerFrame: 2
-          duration: 19
+          duration: 15
           channel: 0
           volume: 1
           pitchVariation: 1
@@ -6879,8 +6880,8 @@ MonoBehaviour:
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: f8b7ea09989c82a478645e674010a3c5, type: 3}
-          triggerFrame: 18
-          duration: 3
+          triggerFrame: 15
+          duration: 2
           channel: 1
           volume: 1
           pitchVariation: 1
@@ -6888,10 +6889,49 @@ MonoBehaviour:
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: 3e7e01924d050ab4085dc585991848ae, type: 3}
-          triggerFrame: 23
-          duration: 30
+          triggerFrame: 19
+          duration: 24
           channel: 0
           volume: 1
           pitchVariation: 1
           slowMotionAware: 0
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 5456672950153642142
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 12
+        activeFrames: 22
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.759316, y: 2.83882}
+        size: {x: 5.397868, y: 5.677639}
+        damageRatio: 0.7
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 4
+        knockbackFrames: 15
+        knockupFrames: 30
+        knockfallFrames: 10
+        recoveryFrames: 30
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 1
+        snapOffset: {x: 3, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 0

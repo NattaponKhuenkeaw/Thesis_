@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 3192552732425971919}
   - component: {fileID: 5597668265040310873}
+  - component: {fileID: 4263941908087293813}
   - component: {fileID: 8254172731060626671}
   - component: {fileID: 4679925077925056412}
-  - component: {fileID: 4263941908087293813}
   m_Layer: 0
   m_Name: CinemachineCamera_Ultimate
   m_TagString: Untagged
@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 210329590475254148}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 2.5, z: -17}
+  m_LocalPosition: {x: -0.5, y: 2.4300988, z: -17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -78,6 +78,37 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
+--- !u!114 &4263941908087293813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 210329590475254148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 886251e9a18ece04ea8e61686c173e1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachinePositionComposer
+  CameraDistance: 17
+  DeadZoneDepth: 0
+  Composition:
+    ScreenPosition: {x: 0, y: 0}
+    DeadZone:
+      Enabled: 0
+      Size: {x: 0.1, y: 0.1}
+    HardLimits:
+      Enabled: 0
+      Size: {x: 1, y: 1}
+      Offset: {x: 0, y: 0}
+  CenterOnActivate: 1
+  TargetOffset: {x: -0.5, y: 2.5, z: 0}
+  Damping: {x: 0.75, y: 2, z: 1}
+  Lookahead:
+    Enabled: 0
+    Time: 0.05
+    Smoothing: 1
+    IgnoreY: 1
 --- !u!114 &8254172731060626671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -122,37 +153,6 @@ MonoBehaviour:
     FrequencyGain: 1
     Duration: 1
     m_NoiseOffsets: {x: 43.275024, y: 969.9249, z: 231.7301}
---- !u!114 &4263941908087293813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 210329590475254148}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 886251e9a18ece04ea8e61686c173e1b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachinePositionComposer
-  CameraDistance: 17
-  DeadZoneDepth: 0
-  Composition:
-    ScreenPosition: {x: 0, y: 0}
-    DeadZone:
-      Enabled: 0
-      Size: {x: 0.1, y: 0.1}
-    HardLimits:
-      Enabled: 0
-      Size: {x: 1, y: 1}
-      Offset: {x: 0, y: 0}
-  CenterOnActivate: 1
-  TargetOffset: {x: -0.5, y: 2.5, z: 0}
-  Damping: {x: 0.75, y: 2, z: 1}
-  Lookahead:
-    Enabled: 0
-    Time: 0.05
-    Smoothing: 1
-    IgnoreY: 1
 --- !u!1 &1503833475882621764
 GameObject:
   m_ObjectHideFlags: 0
@@ -358,7 +358,7 @@ MonoBehaviour:
   _ultimateCam: {fileID: 5597668265040310873}
   _zoneStateProvider: {fileID: 11400000, guid: becbee9470c028f4a8e6ee3f1b3c6383, type: 2}
   _combatTargetGroup: {fileID: 2371794833611722877}
-  _playerTransform: {fileID: 0}
+  _playerTransform: {fileID: 8140162959712842425}
   _activePriority: 20
   _inactivePriority: 0
   _weightLerpSpeed: 2
@@ -614,7 +614,7 @@ Transform:
   m_GameObject: {fileID: 4444728088541422226}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 2.4000003, z: -17}
+  m_LocalPosition: {x: 0.5, y: 2.7000003, z: -17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -645,7 +645,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 40
-    OrthographicSize: 7
+    OrthographicSize: 8.5
     NearClipPlane: 0.1
     FarClipPlane: 5000
     Dutch: 0
@@ -798,7 +798,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 40
-    OrthographicSize: 7
+    OrthographicSize: 8.5
     NearClipPlane: 0.1
     FarClipPlane: 5000
     Dutch: 0
@@ -856,7 +856,7 @@ MonoBehaviour:
   LateralAdjustment: 0
   FovRange: {x: 1, y: 100}
   DollyRange: {x: -100, y: 100}
-  OrthoSizeRange: {x: 6.8, y: 8}
+  OrthoSizeRange: {x: 8.3, y: 9.5}
 --- !u!114 &3255408228639460198
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1059,7 +1059,7 @@ Transform:
   m_GameObject: {fileID: 8999929430782389086}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 8.35, z: -17}
+  m_LocalPosition: {x: -0.5, y: 2.4300988, z: -17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1100,7 +1100,7 @@ Camera:
   far clip plane: 5000
   field of view: 40
   orthographic: 1
-  orthographic size: 12
+  orthographic size: 5
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2

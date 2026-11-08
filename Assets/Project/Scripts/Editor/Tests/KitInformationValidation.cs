@@ -236,18 +236,21 @@ public static class KitInformationValidation
             foreach (var guid in AssetDatabase.FindAssets("t:CharacterObject", new[] { "Assets/Project/Character/Hero" }))
             {
                 var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(AssetDatabase.GUIDToAssetPath(guid));
-                for (int level = 0; level <= CharacterKitDefinition.MaxPotentialLevel; level++)
+                bool main = character.characterId == "char-0-main";
+                int maxLevel = main ? CharacterMemoryProgress.UpgradesPerFamily : CharacterKitDefinition.MaxPotentialLevel;
+                for (int level = 0; level <= maxLevel; level++)
                 {
-                    foreach (PotentialTrack track in Enum.GetValues(typeof(PotentialTrack))) progression.SetPotentialLevel(character, track, level);
+                    if (main) CharacterMemoryTests.SetMemoryRanks(progression, character, level, level, level);
+                    else foreach (PotentialTrack track in Enum.GetValues(typeof(PotentialTrack))) progression.SetPotentialLevel(character, track, level);
                     var model = CharacterKitInfoBuilder.Build(character, new KitInfoContext(progression));
                     Require(model.Diagnostics.Count == 0, character.name + ": " + string.Join("; ", model.Diagnostics));
                     if (character.characterId == "Char_2_Rugal")
                         Require(model.Sections.SelectMany(s => s.Entries).Any(e => e.ActionId == "rugal.skill.ex") == (level == 4), "Omega follow-up learns at Passive 4");
                     if (character.characterId == "char-1-camera_girl")
                         Require(model.Sections.SelectMany(s => s.Entries).Any(e => e.ActionId == "cg.skill.ex") == (level >= 1), "Shadow Assist learns at Ultimate 1");
-                    if (character.characterId == "char-0-main")
+                    if (main)
                     {
-                        Require(model.Sections.Single(s => s.Id == "ultimate").Entries.Count == 2, "Main's two Ultimates");
+                        Require(model.Sections.Single(s => s.Id == "ultimate").Entries.Count == (level >= 3 ? 2 : 1), "Execution Breakdown unlocks at Passive Memory 3");
                         Require(model.Sections.All(s => s.Id != "basic"), "Normal Attack is excluded");
                         Require(model.Sections.Single(s => s.Id == "skill").LevelLabel == "Lv." + level, "Potential level belongs to root");
                         Require(model.Sections.SelectMany(s => s.Entries).Any(e => e.ActionId == "main.skill.dimension_slash") == (level == 4), "Dimension Slash is shown only at Passive 4");

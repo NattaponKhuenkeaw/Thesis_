@@ -1,0 +1,405 @@
+#if UNITY_INCLUDE_TESTS
+using NUnit.Framework;
+using Project.Core.ZoneState;
+using Project.InventorySystem.Items;
+using Project.Progression;
+using Project.TeamBuilder.UI.Panels;
+using Project.Training;
+using Project.UI;
+using System.Collections;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
+
+public sealed class CharacterMemoryTests
+{
+    internal static void SetMemoryRanks(CharacterProgressionState progression, CharacterObject character,
+        int skill = 0, int ultimate = 0, int passive = 0)
+    {
+        var memory = new CharacterMemoryProgress(character.characterId);
+        int step = 1;
+        int[] ranks = { skill, ultimate, passive };
+        for (int family = 0; family < ranks.Length; family++)
+            for (int i = 0; i < ranks[family]; i++, step += 3)
+                memory.TrySelectStep(step, (PotentialTrack)family);
+        typeof(CharacterProgressionState).GetMethod("SetPracticeMemory",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            .Invoke(progression, new object[] { memory });
+    }
+
+    [Test]
+    public void MainUsesMemoryRanksAndGenericBonusesAsBaseStats()
+    {
+        var state = ScriptableObject.CreateInstance<CharacterProgressionState>();
+        var main = AssetDatabase.LoadAssetAtPath<CharacterObject>(
+            "Assets/Project/Character/Hero/test_0_Main/CharacterObject_main.asset");
+        try
+        {
+            state.SetPotentialLevel(main, PotentialTrack.Skill, 4);
+            Assert.That(state.GetPotentialLevel(main, PotentialTrack.Skill), Is.EqualTo(4));
+            Assert.That(state.GetCombatPotentialLevel(main, PotentialTrack.Skill), Is.Zero);
+            Assert.That(state.CanUpgradePotential(main, PotentialTrack.Passive, out _), Is.False);
+            var original = state.GetUnlockedPotentialNodes(main);
+
+            Assert.That(state.TryGrantMemory(main, 1, PotentialTrack.Skill), Is.True);
+            Assert.That(state.TryGrantMemory(main, 2, PotentialTrack.Skill), Is.True);
+            Assert.That(state.TryGrantMemory(main, 3, PotentialTrack.Skill), Is.True);
+            var stats = new CharacterStats { maxHP = 1000, critRate = 5, attack = 100 };
+            state.ApplyMemoryBaseStats(main, stats);
+            Assert.That(stats.maxHP, Is.EqualTo(1030f));
+            Assert.That(stats.critRate, Is.EqualTo(8f));
+            Assert.That(stats.attack, Is.EqualTo(100f));
+            Assert.That(state.GetUnlockedPotentialNodes(main).Count, Is.EqualTo(original.Count + 1));
+            Assert.That(state.GetCombatPotentialLevel(main, PotentialTrack.Skill), Is.EqualTo(1));
+
+            SetMemoryRanks(state, main, skill: 6, ultimate: 6, passive: 6);
+            Assert.That(state.TryGrantMemory(main, 53, PotentialTrack.Skill), Is.True);
+            Assert.That(state.TryGrantMemory(main, 54, PotentialTrack.Skill), Is.True);
+            Assert.That(state.GetUnlockedPotentialNodes(main).Count, Is.EqualTo(original.Count + 18));
+            Assert.That(state.GetCombatPotentialLevel(main, PotentialTrack.Passive), Is.EqualTo(6));
+            var fullStats = new CharacterStats { maxHP = 1000, attack = 100 };
+            state.ApplyMemoryBaseStats(main, fullStats);
+            Assert.That(fullStats.maxHP, Is.EqualTo(1270f));
+            Assert.That(fullStats.attack, Is.EqualTo(121f));
+            Assert.That(fullStats.dotMastery, Is.EqualTo(12f));
+        }
+        finally { Object.DestroyImmediate(state); }
+    }
+
+    [Test]
+    public void PracticeFillsTheFiftyFourStepTrackAndSwapsAFullFamily()
+    {
+        var memory = new CharacterMemoryProgress("character");
+        int choiceSteps = 0;
+        for (int step = 1; step <= CharacterMemoryProgress.StepCount; step++)
+            if (CharacterMemoryProgress.IsChoiceStep(step)) choiceSteps++;
+
+        Assert.That(choiceSteps, Is.EqualTo(18));
+        Assert.That(memory.TrySelectStep(54), Is.True);
+        Assert.That(memory.GetChoice(16), Is.EqualTo(PotentialTrack.Skill));
+        Assert.That(memory.GetChoice(19), Is.EqualTo(PotentialTrack.Ultimate));
+        Assert.That(memory.GetChoice(37), Is.EqualTo(PotentialTrack.Passive));
+        Assert.That(memory.TrySelectStep(1, PotentialTrack.Passive), Is.True);
+        Assert.That(memory.CompletedSteps, Is.EqualTo(54));
+        Assert.That(memory.GetChoice(1), Is.EqualTo(PotentialTrack.Passive));
+        Assert.That(memory.GetChoice(52), Is.EqualTo(PotentialTrack.Skill));
+        Assert.That(memory.TrySelectStep(55), Is.False);
+        AssertSixPerFamily(memory);
+    }
+
+    [Test]
+    public void DrawSkipsFullFamiliesAndGenericStepsDoNotIncreaseTheMajorCount()
+    {
+        var state = ScriptableObject.CreateInstance<CharacterProgressionState>();
+        var character = ScriptableObject.CreateInstance<CharacterObject>();
+        character.characterId = "character";
+        try
+        {
+            for (int step = 1; step <= 18; step++)
+                Assert.That(state.TryGrantMemory(character, step, PotentialTrack.Skill), Is.True);
+            Assert.That(state.GetCompletedMajorMemoryUpgrades(character.characterId), Is.EqualTo(6));
+            Assert.That(state.TryGrantMemory(character, 19, PotentialTrack.Skill), Is.False);
+            for (int step = 19; step <= 54; step++)
+            {
+                Assert.That(state.TryDrawMemory(character, step, 42, out PotentialTrack choice), Is.True);
+                if (CharacterMemoryProgress.IsChoiceStep(step)) Assert.That(choice, Is.Not.EqualTo(PotentialTrack.Skill));
+            }
+            Assert.That(state.TryDrawMemory(character, 55, 42, out _), Is.False);
+            Assert.That(state.GetCompletedMajorMemoryUpgrades(character.characterId), Is.EqualTo(18));
+            AssertSixPerFamily(state.CaptureMemory(character.characterId));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(state);
+        }
+    }
+
+    [Test]
+    public void OldSixtyStepSaveKeepsValidChoicesAndNormalizesOverflow()
+    {
+        var state = ScriptableObject.CreateInstance<CharacterProgressionState>();
+        try
+        {
+            state.ImportJson("{\"schemaVersion\":2,\"characterMemories\":[{\"_characterId\":\"character\"," +
+                "\"_completedSteps\":60,\"_choices\":[0,0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,2]}]}");
+            var memory = state.CaptureMemory("character");
+            Assert.That(memory.CompletedSteps, Is.EqualTo(54));
+            Assert.That(memory.GetChoice(16), Is.EqualTo(PotentialTrack.Skill));
+            Assert.That(memory.GetChoice(19), Is.EqualTo(PotentialTrack.Passive));
+            Assert.That(memory.GetChoice(22), Is.EqualTo(PotentialTrack.Ultimate));
+            AssertSixPerFamily(memory);
+        }
+        finally
+        {
+            Object.DestroyImmediate(state);
+        }
+    }
+
+    [Test]
+    public void GrantsAreSequentialAndSurviveCheckpointRestoreAndSaveRoundTrip()
+    {
+        var state = ScriptableObject.CreateInstance<CharacterProgressionState>();
+        var reloaded = ScriptableObject.CreateInstance<CharacterProgressionState>();
+        var character = ScriptableObject.CreateInstance<CharacterObject>();
+        character.characterId = "character";
+        try
+        {
+            const string oldSave = "{\"schemaVersion\":2,\"characterPotentials\":[{\"characterId\":\"character\",\"skillLevel\":2}]}";
+            state.ImportJson(oldSave);
+            state.MarkCommitted();
+            Assert.That(state.GetCompletedMemorySteps(character.characterId), Is.Zero);
+            Assert.That(state.TryGrantMemory(character, 2, PotentialTrack.Skill), Is.False);
+            Assert.That(state.TryGrantMemory(character, 1, PotentialTrack.Ultimate), Is.True);
+            Assert.That(state.TryGrantMemory(character, 1, PotentialTrack.Passive), Is.False);
+            Assert.That(state.TryGrantMemory(character, 2, PotentialTrack.Skill), Is.True);
+            state.RevertToCommitted();
+
+            reloaded.ImportJson(state.ExportJson());
+            Assert.That(reloaded.GetCompletedMemorySteps(character.characterId), Is.EqualTo(2));
+            Assert.That(reloaded.CaptureMemory(character.characterId).GetChoice(1), Is.EqualTo(PotentialTrack.Ultimate));
+            Assert.That(reloaded.GetPotentialLevel(character, PotentialTrack.Skill), Is.EqualTo(2));
+            reloaded.ImportJson(oldSave);
+            Assert.That(reloaded.GetCompletedMemorySteps(character.characterId), Is.Zero);
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(reloaded);
+            Object.DestroyImmediate(state);
+        }
+    }
+
+    [Test]
+    public void ApplyingPracticeMemoryCopiesTheDraftIntoThePracticeState()
+    {
+        var state = ScriptableObject.CreateInstance<TrainingProgressionState>();
+        try
+        {
+            var memory = state.CaptureMemory("practice");
+            memory.TrySelectStep(54);
+            Assert.That(state.GetCompletedMemorySteps("practice"), Is.Zero);
+
+            state.SetPotentials(new[] { new TrainingConfiguration.CharacterPotential { characterId = "practice", memory = memory } });
+            memory.TrySelectStep(1, PotentialTrack.Passive);
+            Assert.That(state.GetCompletedMemorySteps("practice"), Is.EqualTo(54));
+            Assert.That(state.CaptureMemory("practice").GetChoice(1), Is.EqualTo(PotentialTrack.Skill));
+        }
+        finally
+        {
+            Object.DestroyImmediate(state);
+        }
+    }
+
+    [Test]
+    public void TrainingTrackButtonsApplyPrerequisitesToTheDraft()
+    {
+        var canvas = new GameObject("Memory Test Canvas", typeof(Canvas));
+        try
+        {
+            var memory = new CharacterMemoryProgress("practice");
+            var panel = CharacterMemoryPanel.Create(canvas.transform);
+            panel.ShowTrack("Practice", memory, true, "Back", () => { });
+            Button final = panel.transform.Find("Memory Steps/Rows/Step 54/Generic Memory").GetComponent<Button>();
+            Button passive = panel.transform.Find("Memory Steps/Rows/Step 1/Passive Memory").GetComponent<Button>();
+            Assert.That(final.navigation.selectOnDown.transform.IsChildOf(panel.transform), Is.True);
+            Assert.That(passive.navigation.selectOnRight, Is.SameAs(passive));
+            final.onClick.Invoke();
+            passive.onClick.Invoke();
+            Assert.That(memory.CompletedSteps, Is.EqualTo(54));
+            Assert.That(memory.GetChoice(1), Is.EqualTo(PotentialTrack.Passive));
+        }
+        finally
+        {
+            Object.DestroyImmediate(canvas);
+        }
+    }
+
+    [Test]
+    public void InspectorHasOneBoxPerMajorUpgradeInTwoRowsOfNine()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/TeamCanvas.prefab");
+        var info = prefab.GetComponentInChildren<CharacterInfoPanel>(true);
+        var boxes = new SerializedObject(info).FindProperty("potentialSegments");
+        Assert.That(boxes.arraySize, Is.EqualTo(18));
+        for (int i = 0; i < boxes.arraySize; i++)
+        {
+            var box = (Image)boxes.GetArrayElementAtIndex(i).objectReferenceValue;
+            Assert.That(box.rectTransform.anchorMin.x, Is.EqualTo(i % 9 / 9f).Within(.001f));
+            Assert.That(box.rectTransform.anchorMin.y, Is.EqualTo(i < 9 ? .55f : 0f));
+        }
+    }
+
+    [UnityTest]
+    public IEnumerator InspectorOpensMemoryWhenThePrefabHasNoCanvasGroup()
+    {
+        yield return new EnterPlayMode();
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/TeamCanvas.prefab");
+        var canvas = new GameObject("Memory Inspector Test", typeof(RectTransform), typeof(Canvas));
+        canvas.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+        ((RectTransform)canvas.transform).sizeDelta = new Vector2(1920, 1080);
+        var panel = Object.Instantiate(prefab.GetComponentInChildren<CharacterPotentialPanel>(true), canvas.transform);
+        var state = ScriptableObject.CreateInstance<CharacterProgressionState>();
+        var character = ScriptableObject.CreateInstance<CharacterObject>();
+        var item = ScriptableObject.CreateInstance<CharacterItem>();
+        character.characterId = "character";
+        item.characterObjectData = character;
+        try
+        {
+            Assert.That(panel.TryGetComponent<CanvasGroup>(out _), Is.False);
+            var serialized = new SerializedObject(panel);
+            var scroll = (ScrollRect)serialized.FindProperty("contentScrollRect").objectReferenceValue;
+            RectTransform potentialContent = scroll.content;
+            var upgradeWindow = (CharacterPotentialUpgradeWindow)serialized.FindProperty("upgradeWindow").objectReferenceValue;
+            var nodeSlots = serialized.FindProperty("nodeSlots");
+            var potentialNode = (CharacterPotentialNodeUI)nodeSlots.GetArrayElementAtIndex(0).objectReferenceValue;
+            serialized.FindProperty("metaProgression").objectReferenceValue = state;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            panel.Show();
+            panel.PopulateData(item, null);
+            var memoryPanel = panel.GetComponentInChildren<CharacterMemoryPanel>();
+            Assert.That(memoryPanel.isActiveAndEnabled, Is.True);
+            Assert.That(scroll.content, Is.SameAs(memoryPanel.transform));
+            Assert.That(potentialContent.gameObject.activeSelf, Is.False);
+            Assert.That(scroll.horizontal && scroll.vertical, Is.True);
+            Assert.That(scroll.content.rect.width, Is.GreaterThan(scroll.viewport.rect.width));
+            Assert.That(scroll.verticalNormalizedPosition, Is.EqualTo(0f).Within(.001f));
+            Assert.That(scroll.content.Find("Connections").childCount, Is.GreaterThanOrEqualTo(53));
+            var first = (RectTransform)scroll.content.Find("Step 1/Skill Memory");
+            var final = scroll.content.Find("Step 54/Generic Memory").GetComponent<Button>();
+            Assert.That(first.sizeDelta, Is.EqualTo(((RectTransform)potentialNode.transform).sizeDelta));
+            Assert.That(((RectTransform)first.parent).anchoredPosition.y,
+                Is.LessThan(((RectTransform)final.transform.parent).anchoredPosition.y));
+            Assert.That(final.navigation.selectOnDown.transform.parent.name, Is.EqualTo("Step 53"));
+            final.onClick.Invoke();
+            Assert.That(upgradeWindow.gameObject.activeSelf, Is.True);
+            var window = new SerializedObject(upgradeWindow);
+            var upgrade = (Button)window.FindProperty("upgradeButton").objectReferenceValue;
+            Assert.That(upgrade.gameObject.activeInHierarchy, Is.False);
+            Assert.That(state.GetCompletedMemorySteps(character.characterId), Is.Zero);
+            var switchView = panel.transform.Find("Switch Upgrade View").GetComponent<Button>();
+            switchView.onClick.Invoke();
+            Assert.That(scroll.content, Is.SameAs(potentialContent));
+            Assert.That(upgradeWindow.gameObject.activeSelf, Is.False);
+            switchView.onClick.Invoke();
+            Assert.That(scroll.content, Is.SameAs(memoryPanel.transform));
+            panel.Hide();
+            panel.Show();
+            Assert.That(panel.TryGetComponent<CanvasGroup>(out _), Is.False);
+            Assert.That(panel.GetComponentInChildren<CharacterMemoryPanel>().isActiveAndEnabled, Is.True);
+            Assert.That(upgradeWindow.gameObject.activeSelf, Is.False);
+        }
+        finally
+        {
+            Object.Destroy(canvas);
+            Object.Destroy(item);
+            Object.Destroy(character);
+            Object.Destroy(state);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator RewardConfirmsOneFamilyAndCentersTheNextGenericCard()
+    {
+        yield return new EnterPlayMode();
+        var prefab = Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath);
+        var character = ScriptableObject.CreateInstance<CharacterObject>();
+        var item = ScriptableObject.CreateInstance<CharacterItem>();
+        character.characterId = "reward-test";
+        item.characterObjectData = character;
+        var progress = new CharacterMemoryProgress(character.characterId);
+        progress.TrySelectStep(18);
+        var present = typeof(ArtifactRewardPickerUI).GetMethod("PresentMemory",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        ArtifactRewardPickerUI picker = null;
+        try
+        {
+            for (int reward = 0; reward < 2; reward++)
+            {
+                int step = progress.CompletedSteps + 1;
+                int claims = 0;
+                picker = Object.Instantiate(prefab);
+                var candidates = new[] { (item, "Test Character", progress.Copy()) };
+                System.Func<int, PotentialTrack, bool> claim = (_, family) =>
+                {
+                    claims++;
+                    return progress.TrySelectStep(step, family);
+                };
+                picker.StartCoroutine((IEnumerator)present.Invoke(picker, new object[]
+                    { candidates, claim, (System.Func<bool>)(() => picker != null) }));
+                var group = picker.GetComponent<CanvasGroup>();
+                yield return WaitForMemoryInput(group);
+                var roster = picker.transform.Find("Living Characters");
+                roster.GetComponentInChildren<Button>().onClick.Invoke();
+                yield return null;
+                yield return WaitForMemoryInput(group);
+
+                var row = picker.transform.Find("Memory Choices");
+                bool major = CharacterMemoryProgress.IsChoiceStep(step);
+                var choices = row.GetComponentsInChildren<Button>();
+                Assert.That(choices.Length, Is.EqualTo(major ? 3 : 1));
+                Button chosen;
+                if (major)
+                {
+                    Assert.That(choices[0].interactable, Is.False);
+                    chosen = choices[2];
+                }
+                else
+                {
+                    chosen = choices[0];
+                    float center = row.InverseTransformPoint(chosen.transform.position).x;
+                    Assert.That(center, Is.EqualTo(0f).Within(1f));
+                }
+                chosen.onClick.Invoke();
+                Assert.That(claims, Is.Zero);
+                chosen.onClick.Invoke();
+                chosen.onClick.Invoke();
+                Assert.That(claims, Is.EqualTo(1));
+                Assert.That(progress.CompletedSteps, Is.EqualTo(step));
+                Assert.That(progress.GetChoice(19), Is.EqualTo(PotentialTrack.Passive));
+                Object.Destroy(picker.gameObject);
+                yield return null;
+            }
+        }
+        finally
+        {
+            if (picker != null) Object.Destroy(picker.gameObject);
+            Object.Destroy(item);
+            Object.Destroy(character);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    private static IEnumerator WaitForMemoryInput(CanvasGroup group)
+    {
+        float deadline = Time.realtimeSinceStartup + 4f;
+        while (!group.interactable && Time.realtimeSinceStartup < deadline) yield return null;
+        Assert.That(group.interactable, Is.True);
+    }
+
+    private static void AssertSixPerFamily(CharacterMemoryProgress memory)
+    {
+        int[] count = new int[CharacterMemoryProgress.ChoiceCount];
+        for (int step = 1; step <= memory.CompletedSteps; step++)
+            if (CharacterMemoryProgress.IsChoiceStep(step)) count[(int)memory.GetChoice(step)]++;
+        Assert.That(count, Is.All.EqualTo(6));
+    }
+
+    [Test]
+    public void AuthoredHardPatternsAdvertiseMemoryWithTheirExistingPayout()
+    {
+        var tables = Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables");
+        Assert.That(tables, Is.Not.Null);
+        Assert.That(tables.HardRewardPatterns.Count, Is.Positive);
+        foreach (RouteOfferTables.HardRewardPattern pattern in tables.HardRewardPatterns)
+        {
+            Assert.That(pattern.grantsMemory, Is.True);
+            var reward = RouteReward.Patterned(219, pattern.artifactPulls, 0, 0, pattern.grantsMemory);
+            Assert.That(reward.BuildLabel(), Does.Contain("Memory"));
+            Assert.That(reward.ArtifactPulls, Is.EqualTo(pattern.artifactPulls));
+        }
+    }
+}
+#endif

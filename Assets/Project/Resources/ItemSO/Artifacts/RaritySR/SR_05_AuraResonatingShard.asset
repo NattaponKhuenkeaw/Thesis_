@@ -18,8 +18,26 @@ MonoBehaviour:
     spirit that Fiends fear.
   icon: {fileID: 21300000, guid: cae8a6bf811d9e848ba61b1d82ac6877, type: 3}
   price: 800
-  rarity: 2
   isEquippable: 1
-  passiveDescription: 'Switch into the wearer to apply Encroach to living room enemies. Each stack reduces DEF by 3%, up to 10 stacks.'
+  rarity: 2
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: Switch into the wearer to apply Encroach to living room enemies.
+    Each stack reduces DEF by <color=#FFA500>3%</color>, <size=18><color=#C0C0C0>(up
+    to 10 stacks)</color></size>
   passiveSet: {fileID: 11400000, guid: 6104f32c2c244ccbb78ee62c24e28887, type: 2}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

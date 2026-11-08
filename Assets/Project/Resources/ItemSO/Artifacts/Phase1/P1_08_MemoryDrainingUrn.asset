@@ -18,10 +18,15 @@ MonoBehaviour:
     respawn, hardening them into armor.
   icon: {fileID: 21300000, guid: 6ac814fff57de8d4bbb93e33b6df8af8, type: 3}
   price: 2900
-  rarity: 3
   isEquippable: 1
-  passiveDescription: HP thresholds grant +17% Crit Rate and +26% Crit Damage at
-    90% HP or below, while a -10% eligible-stat curse remains only at 66% HP or above.
+  rarity: 3
+  fixedStatBonus:
+    statKind: 0
+    valueUnits: 0
+    source: 0
+  passiveDescription: HP thresholds grant <color=#FFA500>+23% </color> Crit Rate
+    and <color=#FFA500>+34%</color> Crit Damage at 90% HP or above, <size=18><color=#C0C0C0>while
+    a -10% All-Stat Curse at 66% HP or below</color></size>
   passiveSet: {fileID: 11400000, guid: a876c02352b1292439f8fd2e8febeda3, type: 2}
   additionalDamageEffects: []
   legacyBonusStats:

@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<test-run runner="Unity main-thread test executor, isolated additive scene" result="Passed" total="8" passed="8" failed="0" skipped="0" start-time="2026-11-06 21:59:27Z" end-time="2026-11-06 21:59:32Z">
+  <test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="1874" result="Passed" start-time="2026-11-06 21:59:28Z" end-time="2026-11-06 21:59:32Z" duration="4.030269" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="3272" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="1874" result="Passed" start-time="2026-11-06 21:59:28Z" end-time="2026-11-06 21:59:32Z" duration="4.003827" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="10504" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestFixture" id="1175" name="ArtifactUiPolishTests" fullname="ArtifactUiPolishTests" classname="ArtifactUiPolishTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-11-06 21:59:28Z" end-time="2026-11-06 21:59:32Z" duration="3.994261" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1184" name="ArtifactPreviewRendersRichTextAndKeepsCompactRowsInsideItsStatsPanel" fullname="ArtifactUiPolishTests.ArtifactPreviewRendersRichTextAndKeepsCompactRowsInsideItsStatsPanel" methodname="ArtifactPreviewRendersRichTextAndKeepsCompactRowsInsideItsStatsPanel" classname="ArtifactUiPolishTests" runstate="Runnable" seed="1671731437" result="Passed" start-time="2026-11-06 21:59:28Z" end-time="2026-11-06 21:59:31Z" duration="3.009888" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1182" name="DiscardDismissalImmediatelyReleasesRaycastsAndActiveReferenceOnEveryCycle" fullname="ArtifactUiPolishTests.DiscardDismissalImmediatelyReleasesRaycastsAndActiveReferenceOnEveryCycle" methodname="DiscardDismissalImmediatelyReleasesRaycastsAndActiveReferenceOnEveryCycle" classname="ArtifactUiPolishTests" runstate="Runnable" seed="1090836856" result="Passed" start-time="2026-11-06 21:59:31Z" end-time="2026-11-06 21:59:31Z" duration="0.015533" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1183" name="PassivePotentialMirrorsTheWindowLeftAndOtherTracksRestoreTheOriginalPose" fullname="ArtifactUiPolishTests.PassivePotentialMirrorsTheWindowLeftAndOtherTracksRestoreTheOriginalPose" methodname="PassivePotentialMirrorsTheWindowLeftAndOtherTracksRestoreTheOriginalPose" classname="ArtifactUiPolishTests" runstate="Runnable" seed="1399621558" result="Passed" start-time="2026-11-06 21:59:31Z" end-time="2026-11-06 21:59:31Z" duration="0.106864" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1180" name="RaritySortingUsesDefinitionRarityInBothDirections" fullname="ArtifactUiPolishTests.RaritySortingUsesDefinitionRarityInBothDirections" classname="ArtifactUiPolishTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-11-06 21:59:31Z" end-time="2026-11-06 21:59:31Z" duration="0.080153" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <test-case id="1178" name="RaritySortingUsesDefinitionRarityInBothDirections(True)" fullname="ArtifactUiPolishTests.RaritySortingUsesDefinitionRarityInBothDirections(True)" methodname="RaritySortingUsesDefinitionRarityInBothDirections" classname="ArtifactUiPolishTests" runstate="Runnable" seed="1332415282" result="Passed" start-time="2026-11-06 21:59:31Z" end-time="2026-11-06 21:59:31Z" duration="0.078062" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1179" name="RaritySortingUsesDefinitionRarityInBothDirections(False)" fullname="ArtifactUiPolishTests.RaritySortingUsesDefinitionRarityInBothDirections(False)" methodname="RaritySortingUsesDefinitionRarityInBothDirections" classname="ArtifactUiPolishTests" runstate="Runnable" seed="1991106673" result="Passed" start-time="2026-11-06 21:59:31Z" end-time="2026-11-06 21:59:31Z" duration="0.000333" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+        <test-case id="1177" name="RewardCardsRollRarityIndependentlyWithoutDuplicateDefinitionsAndKeepSeededRolls" fullname="ArtifactUiPolishTests.RewardCardsRollRarityIndependentlyWithoutDuplicateDefinitionsAndKeepSeededRolls" methodname="RewardCardsRollRarityIndependentlyWithoutDuplicateDefinitionsAndKeepSeededRolls" classname="ArtifactUiPolishTests" runstate="Runnable" seed="1771209829" result="Passed" start-time="2026-11-06 21:59:31Z" end-time="2026-11-06 21:59:31Z" duration="0.049566" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1176" name="RewardDetailsScrollLongTextWithoutClaimingAndResetOnNextDraw" fullname="ArtifactUiPolishTests.RewardDetailsScrollLongTextWithoutClaimingAndResetOnNextDraw" methodname="RewardDetailsScrollLongTextWithoutClaimingAndResetOnNextDraw" classname="ArtifactUiPolishTests" runstate="Runnable" seed="307344380" result="Passed" start-time="2026-11-06 21:59:31Z" end-time="2026-11-06 21:59:32Z" duration="0.659967" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1181" name="SelectingAnotherRewardDoesNotClaimAndFailedClaimCanBeRetriedOnce" fullname="ArtifactUiPolishTests.SelectingAnotherRewardDoesNotClaimAndFailedClaimCanBeRetriedOnce" methodname="SelectingAnotherRewardDoesNotClaimAndFailedClaimCanBeRetriedOnce" classname="ArtifactUiPolishTests" runstate="Runnable" seed="2096845188" result="Passed" start-time="2026-11-06 21:59:32Z" end-time="2026-11-06 21:59:32Z" duration="0.057787" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

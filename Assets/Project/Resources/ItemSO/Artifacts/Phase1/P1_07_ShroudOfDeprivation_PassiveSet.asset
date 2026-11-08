@@ -26,6 +26,7 @@ MonoBehaviour:
       forbiddenDamageTags: 0
       requirePositiveDamage: 1
       requireCriticalHit: 0
+      requireNonCriticalHit: 0
       requireWearerAsSource: 1
       switchRelation: 2
     conditions:
@@ -64,6 +65,7 @@ MonoBehaviour:
           presentation:
             effectId: P1-A07-SUPPORT
             displayName: P1-A07-SUPPORT
+            showRemainingTime: 0
             icon: {fileID: 21300000, guid: a0f6e0c212e97ce499d022a0d26d1794, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
@@ -78,23 +80,25 @@ MonoBehaviour:
             removeOnOwnerDamaged: 0
             stackKey: P1-A07-SUPPORT
           parameters:
+            overrideDefense: 0
+            evasionChanceAdd: 0
             overrideStatModifiers: 1
             statModifiers:
             - target: 1
               operation: 1
               sourceStat: 1
               statRatioValueSource: 0
-              value: 1.1
+              value: 1.15
             - target: 5
               operation: 0
               sourceStat: 1
               statRatioValueSource: 0
-              value: 10
+              value: 15
             - target: 6
               operation: 0
               sourceStat: 1
               statRatioValueSource: 0
-              value: 10
+              value: 15
             overrideDamageModifier: 0
             damageModifier:
               filter:
@@ -147,6 +151,7 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              applyNativeDot: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -178,9 +183,12 @@ MonoBehaviour:
               useSourceStats: 1
           childRecipes: []
         applications: 1
+        removeFromWearer: 0
+        livingAlliesOnly: 0
     - rid: 8312694232576164302
       type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
       data:
         target: 0
         operation: 4
         amount: 1
+        storedTargetEffectKey: P1-A04-MARK-INJURY

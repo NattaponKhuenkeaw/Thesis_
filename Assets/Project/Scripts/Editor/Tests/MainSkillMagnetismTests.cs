@@ -14,11 +14,14 @@ public class MainSkillMagnetismTests
     private EnemyHitReactionHandler _reaction;
     private ProjectileRuntime _runtime;
     private ProjectileData _data;
+    private SimulationMode2D _previousSimulation;
     private readonly Vector2 _origin = new Vector2(10000f, 10000f);
 
     [SetUp]
     public void SetUp()
     {
+        _previousSimulation = Physics2D.simulationMode;
+        Physics2D.simulationMode = SimulationMode2D.Script;
         _enemyHost = new GameObject("Magnetism enemy", typeof(Rigidbody2D), typeof(BoxCollider2D));
         _enemyHost.transform.position = _origin + Vector2.right * 3f;
         _enemy = _enemyHost.AddComponent<EnemyController>();
@@ -56,13 +59,95 @@ public class MainSkillMagnetismTests
         Object.DestroyImmediate(_enemyHost);
         Object.DestroyImmediate(_data);
         if (_wall != null) Object.DestroyImmediate(_wall);
+        Physics2D.simulationMode = _previousSimulation;
     }
 
     private void Tick()
     {
         typeof(ProjectileRuntime).GetMethod("FixedUpdate", Private).Invoke(_runtime, null);
         typeof(EnemyHitReactionHandler).GetMethod("FixedUpdate", Private).Invoke(_reaction, null);
+        Physics2D.Simulate(Time.fixedDeltaTime);
         Physics2D.SyncTransforms();
+    }
+
+    [TestCase(-2f)] [TestCase(2f)]
+    public void MainFlinchPullComposesWithPositionReactions(float x)
+    {
+        typeof(EnemyHitReactionHandler).GetField("usePositionReactions", Private).SetValue(_reaction, true);
+        _enemy.rb.position = _origin + Vector2.right * x;
+        Physics2D.SyncTransforms();
+        _reaction.StartReaction(new HitReactionData
+        {
+            damage = 10f, sourceCategory = AttackCategory.Skill,
+            reactionKind = EnemyReactionKind.Flinch,
+            reactionTiming = HitReactionData.CreateTiming(1, 15, 9)
+        }, _origin);
+        for (int i = 0; i < 10; i++) Tick();
+        Assert.That(Mathf.Abs(_enemy.rb.position.x - _origin.x), Is.LessThan(Mathf.Abs(x) - .1f));
+    }
+
+    [TestCase(RigidbodyType2D.Dynamic)] [TestCase(RigidbodyType2D.Kinematic)]
+    public void EnemyIsDetectedWithoutPrepopulatingTheTrackedSet(RigidbodyType2D bodyType)
+    {
+        _runtime.RegisterSuccessfulHit(_enemy);
+        ((HashSet<EnemyController>)typeof(ProjectileRuntime).GetField("trackedEnemies", Private).GetValue(_runtime)).Clear();
+        _enemy.rb.bodyType = bodyType;
+        _enemy.rb.useFullKinematicContacts = false;
+        float before = _enemy.rb.position.x;
+        for (int i = 0; i < 8; i++) Tick();
+        Assert.That(_enemy.rb.position.x, Is.LessThan(before - .05f));
+    }
+
+    [TestCase(-3f)] [TestCase(3f)]
+    public void GoenitzPullsNearbyEnemiesWithoutDamageOrGrabOutsideItsHitbox(float x)
+    {
+        var authored = AssetDatabase.LoadAssetAtPath<ProjectileData>(
+            "Assets/Project/Character/Hero/test_15_goenitz/ProjectileData_goe_ult.asset");
+        _data.magnetismSpeed = authored.magnetismSpeed;
+        _data.magnetismRange = authored.magnetismRange;
+        _data.routineHitbox.hitbox = authored.ResolveRoutineHitbox();
+        _runtime.Initialize(_projectileHost.GetComponent<GenericProjectilePlayer>(), null, ProjectileType.None,
+            _data, new ProjectileSpawnContext { origin = _origin, direction = Vector2.right, remainingHits = 1 });
+        _enemy.rb.position = _origin + Vector2.right * x;
+        Physics2D.SyncTransforms();
+        var touching = typeof(ProjectileRuntime).GetMethod("IsEnemyTouchingTrigger", Private);
+        Assert.That(touching.Invoke(_runtime, new object[] { _enemy }), Is.False);
+        float start = _enemy.rb.position.x;
+        Tick();
+        Assert.That(Mathf.Abs(_enemy.rb.position.x - _origin.x), Is.LessThan(Mathf.Abs(start - _origin.x)));
+        Assert.That(_reaction.IsInReaction, Is.False, "Pull outside the hitbox cannot apply grab or hit reactions.");
+        Assert.That(((HashSet<EnemyController>)typeof(ProjectileRuntime).GetField("trackedEnemies", Private)
+            .GetValue(_runtime)), Is.Empty, "Pull must not enroll nearby enemies for damage.");
+        _enemy.rb.position = _origin + Vector2.right * (Mathf.Sign(x) * 6f);
+        Physics2D.SyncTransforms();
+        start = _enemy.rb.position.x;
+        Tick();
+        Assert.That(_enemy.rb.position.x, Is.EqualTo(start), "Outside pull range must not move.");
+    }
+
+    [TestCase(-1.5f)] [TestCase(1.5f)]
+    public void GoenitzUltimatePullComposesWithPositionKnockup(float x)
+    {
+        var authored = AssetDatabase.LoadAssetAtPath<ProjectileData>(
+            "Assets/Project/Character/Hero/test_15_goenitz/ProjectileData_goe_ult.asset");
+        var hit = (NormalHitbox)authored.ResolveRoutineHitbox();
+        Assert.That(authored.magnetismSpeed, Is.GreaterThan(0f));
+        _data.magnetismSpeed = authored.magnetismSpeed;
+        typeof(EnemyHitReactionHandler).GetField("usePositionReactions", Private).SetValue(_reaction, true);
+        _enemy.rb.position = _origin + Vector2.right * x;
+        Physics2D.SyncTransforms();
+        _reaction.StartReaction(new HitReactionData
+        {
+            damage = 10f, sourceCategory = AttackCategory.Ultimate,
+            reactionKind = hit.reactionKind,
+            reactionTiming = HitReactionData.CreateTiming(hit.impactFreezeFrames, hit.knockupFrames, hit.recoveryFrames),
+            knockupFrames = hit.knockupFrames, knockfallFrames = hit.knockfallFrames,
+            horizontalSpeed = hit.horizontalSpeed, launchSpeed = hit.launchSpeed,
+            knockbackDirection = x < 0f ? Vector2.left : Vector2.right
+        }, _origin);
+        for (int i = 0; i < 10; i++) Tick();
+        Assert.That(Mathf.Abs(_enemy.rb.position.x - _origin.x), Is.LessThan(Mathf.Abs(x) - .5f));
+        Assert.That(_enemy.rb.position.y, Is.GreaterThan(_origin.y), "Magnetism must preserve the launch arc.");
     }
 
     [TestCase(-3f)] [TestCase(3f)] [TestCase(0f)]

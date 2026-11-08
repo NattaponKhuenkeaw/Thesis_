@@ -22,6 +22,6 @@ MonoBehaviour:
     statKind: 24
     valueUnits: 500
     source: 0
-  passiveDescription: +5% DOT Mastery while equipped.
+  passiveDescription: <b><color=#FFA500>+5%</color></b> DOT Mastery while equipped
   passiveSet: {fileID: 0}
   additionalDamageEffects: []

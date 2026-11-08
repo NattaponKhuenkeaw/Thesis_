@@ -1,0 +1,3 @@
+Unity 6000.3.4f1; AMD Radeon(TM) Graphics; 1920x1080; saved settings scale=5.5, ribbons=31; seed=1234
+Editor presentation only: eight static enemy prefabs + CombatBackground_B1; no live AI, physics contacts or damage. SynchronizedRender includes submission + GPU completion/readback, not pure GPU time.
+Warm Begin: 0.0384 ms/cast; GC.Alloc events/cast=12.0; recorder valid=True.

@@ -212,6 +212,8 @@ public partial class CameraManager : MonoBehaviour
             _cameraLookAhead = Object.FindFirstObjectByType<CameraLookAhead>();
         }
 
+        EnsurePlayerReferences();
+
         // Auto-find impulse source
         if (_impulseSource == null)
             _impulseSource = GetComponentInChildren<CinemachineImpulseSource>();
@@ -1747,6 +1749,26 @@ public partial class CameraManager : MonoBehaviour
             if (playerObj != null)
             {
                 _playerTransform = playerObj.transform;
+            }
+            else
+            {
+                PlayerMovement movement = Object.FindFirstObjectByType<PlayerMovement>();
+                if (movement != null)
+                    _playerTransform = movement.transform;
+            }
+        }
+
+        if (_cameraLookAhead != null && _playerTransform != null)
+        {
+            PlayerMovement movement = _playerTransform.GetComponent<PlayerMovement>()
+                ?? _playerTransform.GetComponentInChildren<PlayerMovement>(true);
+            Rigidbody2D playerBody = movement != null ? movement.RB : null;
+            if (playerBody == null)
+                playerBody = _playerTransform.GetComponent<Rigidbody2D>()
+                    ?? _playerTransform.GetComponentInChildren<Rigidbody2D>(true);
+            if (playerBody != null)
+            {
+                _cameraLookAhead.BindPlayerRigidbody(playerBody);
             }
         }
     }

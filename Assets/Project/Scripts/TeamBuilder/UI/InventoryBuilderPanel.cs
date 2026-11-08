@@ -74,6 +74,11 @@ namespace Project.TeamBuilder.UI
             artifactGridPanel?.ClearSelection();
         }
 
+        public void SelectArtifact(ArtifactInstance artifact)
+        {
+            artifactGridPanel?.SelectArtifact(artifact);
+        }
+
         public void SetContext(string context)
         {
             if (contextText != null) contextText.text = context;

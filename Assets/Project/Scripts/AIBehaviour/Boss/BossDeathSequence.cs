@@ -45,6 +45,7 @@ namespace Project.AIBehaviour.Boss
         private bool waitingForClick;
         private bool transitionRequested;
         private bool roomOffersPrepared;
+        private System.Func<IEnumerator> pendingVictoryReward;
 
         public bool IsRunning => sequenceRoutine != null;
         public bool IsWaitingForContinue => waitingForClick;
@@ -117,9 +118,18 @@ namespace Project.AIBehaviour.Boss
         /// <summary>
         /// Called by RoomWaveManager after a boss encounter clears so offers/progression are ready.
         /// </summary>
-        public void NotifyBossRoomCleared()
+        public void NotifyBossRoomCleared(System.Func<IEnumerator> victoryReward = null)
         {
             roomOffersPrepared = true;
+            if (victoryReward == null || transitionRequested) return;
+
+            pendingVictoryReward = victoryReward;
+            if (waitingForClick)
+            {
+                waitingForClick = false;
+                BossDeathPromptUI.Instance?.Hide();
+                sequenceRoutine = StartCoroutine(ShowContinueAfterReward());
+            }
         }
 
         private IEnumerator SequenceRoutine(EnemyController boss)
@@ -196,7 +206,28 @@ namespace Project.AIBehaviour.Boss
             // Ensure offers exist even if RoomWaveManager finished slightly later.
             EnsureNextRoomOffersPrepared();
 
-            // 3) Free movement + prompt. No automatic team heal on biome change.
+            yield return ShowContinueAfterReward();
+        }
+
+        private IEnumerator ShowContinueAfterReward()
+        {
+            // Let the encounter report its clear before showing the prompt.
+            yield return null;
+            var reward = pendingVictoryReward;
+            pendingVictoryReward = null;
+            if (reward != null)
+            {
+                RoomLayoutHost host = RoomLayoutHost.Instance;
+                GameObject arena = host != null ? host.ActiveLayoutInstance : null;
+                bool hadArena = arena != null;
+                yield return reward();
+                if (hadArena && (host == null || arena == null || host.ActiveLayoutInstance != arena))
+                {
+                    sequenceRoutine = null;
+                    yield break;
+                }
+            }
+
             BossDeathPromptUI.EnsureInstance()?.Show(continuePrompt);
             waitingForClick = true;
             sequenceRoutine = null;

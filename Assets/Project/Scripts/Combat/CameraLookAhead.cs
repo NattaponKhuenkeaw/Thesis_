@@ -158,6 +158,17 @@ public class CameraLookAhead : MonoBehaviour
         );
     }
 
+    public void BindPlayerRigidbody(Rigidbody2D playerBody)
+    {
+        if (playerBody == null || playerRigidbody == playerBody)
+            return;
+
+        playerRigidbody = playerBody;
+        currentProxyX = playerRigidbody.position.x;
+        proxyVelocityX = 0f;
+        CheckFacingDirection(true);
+    }
+
     /// <summary>
     /// Fade horizontal look-ahead as the player approaches a room wall so the
     /// tracking target does not pull the camera past the confiner.
@@ -196,7 +207,7 @@ public class CameraLookAhead : MonoBehaviour
     public void ResetHorizontalForCharacterSwap(Rigidbody2D incomingBody, float centerSeconds)
     {
         if (incomingBody == null) return;
-        playerRigidbody = incomingBody;
+        BindPlayerRigidbody(incomingBody);
         if (tweenId >= 0 && LeanTween.isTweening(tweenId)) LeanTween.cancel(tweenId);
         tweenId = -1;
         if (directionalCueRoutine != null) StopCoroutine(directionalCueRoutine);

@@ -3,14 +3,17 @@ using UnityEngine;
 
 namespace Project.AIBehaviour.Boss
 {
-    [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D))]
+    [RequireComponent(typeof(Rigidbody2D))]
     public sealed class BossGroundWave : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer visual;
         [SerializeField] private Sprite[] frames;
         private EnemyController owner;
         private Rigidbody2D body;
-        private BoxCollider2D hitbox;
+        private Collider2D hitbox;
+        private PolygonCollider2D spriteHitbox;
+        private Sprite hitboxFrame;
+        private readonly List<Vector2> shape = new List<Vector2>();
         private HashSet<int> hitTargets;
         private float speed, remaining, direction, clock;
         private bool initialized;
@@ -21,13 +24,16 @@ namespace Project.AIBehaviour.Boss
         {
             owner = source;
             body = GetComponent<Rigidbody2D>();
-            hitbox = GetComponent<BoxCollider2D>();
+            hitbox = GetComponent<Collider2D>();
+            spriteHitbox = hitbox as PolygonCollider2D;
             hitTargets = sharedTargets;
             direction = facing < 0f ? -1f : 1f;
             speed = Mathf.Max(1f, travelSpeed);
             remaining = Mathf.Max(1f, distance);
             transform.position = groundPosition + Vector2.up * .02f;
             if (visual != null) visual.flipX = direction < 0f;
+            hitboxFrame = null;
+            ApplyFrame(0);
             initialized = true;
         }
 
@@ -67,8 +73,30 @@ namespace Project.AIBehaviour.Boss
             body.MovePosition(next);
             remaining -= step;
             clock += Time.fixedDeltaTime;
-            if (visual != null && frames != null && frames.Length > 0)
-                visual.sprite = frames[(int)(clock * 10f) % frames.Length];
+            ApplyFrame((int)(clock * 10f));
+        }
+
+        private void ApplyFrame(int frameIndex)
+        {
+            if (visual == null || frames == null || frames.Length == 0) return;
+            Sprite frame = frames[frameIndex % frames.Length];
+            visual.sprite = frame;
+            if (spriteHitbox == null || hitboxFrame == frame) return;
+
+            hitboxFrame = frame;
+            spriteHitbox.pathCount = frame != null ? frame.GetPhysicsShapeCount() : 0;
+            for (int path = 0; path < spriteHitbox.pathCount; path++)
+            {
+                frame.GetPhysicsShape(path, shape);
+                // SpriteRenderer.flipX does not flip colliders.
+                if (visual.flipX)
+                {
+                    for (int i = 0; i < shape.Count; i++)
+                        shape[i] = new Vector2(-shape[i].x, shape[i].y);
+                    shape.Reverse();
+                }
+                spriteHitbox.SetPath(path, shape);
+            }
         }
 
         private void OnTriggerEnter2D(Collider2D other) => TryDamage(other);
@@ -78,7 +106,10 @@ namespace Project.AIBehaviour.Boss
         {
             if (!initialized || owner == null || !owner.IsCombatReady) return;
             PlayerCharacter player = other.GetComponentInParent<PlayerCharacter>();
-            if (player == null || !hitTargets.Add(player.transform.root.gameObject.GetInstanceID())) return;
+            if (player == null) return;
+            // Do not treat a speculative trigger contact as overlap with the visible crest.
+            if (spriteHitbox != null && !spriteHitbox.Distance(other).isOverlapped) return;
+            if (!hitTargets.Add(player.transform.root.gameObject.GetInstanceID())) return;
             if (player.TryCounter(owner.gameObject)) return;
             var context = IncomingAttackContext.FromEnemy(owner, EnemyAttackProperty.Normal, true);
             if (player.TakeDamage(Mathf.Max(0f, owner.attackDamage), context))

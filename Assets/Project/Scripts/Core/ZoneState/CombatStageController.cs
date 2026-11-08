@@ -258,6 +258,27 @@ namespace Project.Core.ZoneState
             OpenCorridorToward(nextIndex);
         }
 
+        internal void OpenChambersForPlaytest()
+        {
+            fighting = false;
+            waitingForIndex = -1;
+            if (chambers == null || boundary == null) return;
+
+            for (int i = 0; i < chambers.Length; i++)
+            {
+                Chamber chamber = chambers[i];
+                if (chamber == null) continue;
+
+                if (i > 0) boundary.OpenDivider(chamber.entranceWall);
+                boundary.OpenDivider(chamber.exitWall);
+                if (chamber.additionalExitWalls == null) continue;
+                foreach (Collider2D wall in chamber.additionalExitWalls)
+                {
+                    boundary.OpenDivider(wall);
+                }
+            }
+        }
+
         private void ReleaseAdditionalExitWalls()
         {
             if (chambers == null || currentIndex < 0 || currentIndex >= chambers.Length) return;

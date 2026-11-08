@@ -222,6 +222,7 @@ namespace Project.ShopSystem
         public int currency = 1000;
         public int globalLevel = 1;
         public int biomeIndex;
+        public double playtimeSeconds;
         public int activeTeamSlotIndex;
         public List<SavedInventoryItemRecord> items = new List<SavedInventoryItemRecord>();
         public List<SavedRunCharacterRecord> runCharacters = new List<SavedRunCharacterRecord>();
@@ -1920,7 +1921,7 @@ namespace Project.ShopSystem
                 && string.Equals(a.characterId, b.characterId, StringComparison.Ordinal);
         }
 
-        private bool IsRunCharacterAlive(CharacterObject character)
+        internal bool IsRunCharacterAlive(CharacterObject character)
         {
             if (IsCharacterUnavailable(character))
             {
@@ -2032,6 +2033,9 @@ namespace Project.ShopSystem
                 leveled.speed = character.movementProfile.moveSpeed;
             }
 
+            if (MainMemoryKit.AppliesTo(character))
+                Project.Training.CharacterStateContext.ResolveProgression(TeamLoader.Instance?.MetaProgression)
+                    ?.ApplyMemoryBaseStats(character, leveled);
             return leveled;
         }
 
@@ -2702,7 +2706,7 @@ namespace Project.ShopSystem
         }
 
         /// <summary>
-        /// Checkpoint written only when a boss clear returns to the lobby.
+        /// Checkpoint for resuming in the lobby.
         /// Death deletes it, so Continue starts at Level 1. Menu New Game deletes it too.
         /// </summary>
         public void SaveBossLobbyCheckpoint()
@@ -2714,7 +2718,10 @@ namespace Project.ShopSystem
             }
 
             SaveSlotStore.EnsureMigrated();
-            PlayerPrefs.SetString(BossLobbySaveKey, JsonUtility.ToJson(CaptureRunSnapshot()));
+            SavedPlayerRunInventoryData snapshot = CaptureRunSnapshot();
+            Project.Core.GameRunManager run = Project.Core.GameRunManager.Instance;
+            snapshot.playtimeSeconds = run != null ? run.PlaytimeSeconds : 0d;
+            PlayerPrefs.SetString(BossLobbySaveKey, JsonUtility.ToJson(snapshot));
             CharacterProgressionState meta = ResolvePersistenceProgression();
             if (meta != null)
             {
@@ -2756,7 +2763,13 @@ namespace Project.ShopSystem
 
         public bool TryReadBossLobbyBiome(out int biomeIndex)
         {
+            return TryReadBossLobbyCheckpoint(out biomeIndex, out _);
+        }
+
+        internal bool TryReadBossLobbyCheckpoint(out int biomeIndex, out double playtimeSeconds)
+        {
             biomeIndex = 0;
+            playtimeSeconds = 0d;
             SaveSlotStore.EnsureMigrated();
             string json = PlayerPrefs.GetString(BossLobbySaveKey, string.Empty);
             if (string.IsNullOrWhiteSpace(json))
@@ -2771,6 +2784,8 @@ namespace Project.ShopSystem
             }
 
             biomeIndex = Mathf.Max(0, data.biomeIndex);
+            if (!double.IsNaN(data.playtimeSeconds) && !double.IsInfinity(data.playtimeSeconds))
+                playtimeSeconds = Math.Max(0d, data.playtimeSeconds);
             return true;
         }
 
@@ -2795,7 +2810,8 @@ namespace Project.ShopSystem
                 return;
             }
 
-            meta.ImportJson(json);
+            meta.LoadPersistentStateIfNeeded();
+            meta.RestoreRunCheckpoint(json);
             meta.MarkCommitted();
             meta.SavePersistentState();
         }

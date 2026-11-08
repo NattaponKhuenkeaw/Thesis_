@@ -3,6 +3,7 @@ using System.Linq;
 using CombatCore;
 using Project.Progression;
 using Project.ShopSystem;
+using Project.TeamBuilder.UI.Panels;
 using Project.Training;
 using Project.UI;
 using Project.UI.Training;
@@ -265,6 +266,8 @@ public static class TrainingSceneAuthoring
 
     private static void LayoutPanel(TrainingConfigurationPanel panel)
     {
+        var teamCanvas = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/TeamCanvas.prefab");
+        if (teamCanvas != null) Bind(panel, "memoryWindowTemplate", teamCanvas.GetComponentInChildren<CharacterPotentialPanel>(true));
         panel.GetComponent<Canvas>().sortingOrder = 6000;
         if (panel.GetComponent<UIBlockPlayerClick>() == null) panel.gameObject.AddComponent<UIBlockPlayerClick>();
         var so = new SerializedObject(panel);

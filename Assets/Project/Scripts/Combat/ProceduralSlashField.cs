@@ -10,6 +10,15 @@ public sealed class ProceduralSlashField : MonoBehaviour
     private static readonly int EndId = Shader.PropertyToID("_EndFrame");
     private static uint _seedSequence = 0x9e3779b9;
     private static readonly List<ProceduralSlashField> ImpactFields = new List<ProceduralSlashField>();
+    // Generation and uploads run synchronously on Unity's main thread. Share bounded scratch
+    // storage across casts; each Mesh copies the data and retains its own independent contents.
+    private const int MaxRibbons = 64 + 32;
+    private static readonly Vector3[] Vertices = new Vector3[MaxRibbons * 4];
+    private static readonly Vector2[] Uvs = new Vector2[MaxRibbons * 4];
+    private static readonly Vector4[] Timings = new Vector4[MaxRibbons * 4];
+    private static readonly Vector4[] Shapes = new Vector4[MaxRibbons * 4];
+    private static readonly int[] Indices = new int[MaxRibbons * 6];
+    private static readonly int[] FrontIndices = new int[MaxRibbons * 6];
     private Mesh _mesh;
     private MeshRenderer _renderer;
     private Mesh _foregroundMesh;
@@ -29,7 +38,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
     private Transform _visualRoot;
     private Camera _camera;
     private int _capturedFacing;
-    private readonly List<CutRibbon> _cutRibbons = new List<CutRibbon>();
+    private readonly List<CutRibbon> _cutRibbons = new List<CutRibbon>(64);
     private struct CutRibbon
     {
         public Vector2 center, axis;
@@ -263,10 +272,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
     {
         int count = Mathf.Clamp(settings.slashCount, 1, 64) + Mathf.Clamp(settings.seamCount, 0, 32);
         TotalSlashCount = count; ForegroundSlashCount = Mathf.RoundToInt(count * Mathf.Clamp01(settings.foregroundFraction));
-        var vertices = new List<Vector3>(count * 4); var uv = new List<Vector2>(count * 4);
-        var timing = new List<Vector4>(count * 4); var shape = new List<Vector4>(count * 4);
-        var indices = new List<int>(count * 6);
-        var frontIndices = new List<int>(ForegroundSlashCount * 6);
+        int indexCount = 0, frontIndexCount = 0;
         Vector2 fieldCenter = settings.center;
         Vector2 fieldSpread = settings.spread;
         Vector2 lengths = settings.lengthRange;
@@ -326,27 +332,27 @@ public sealed class ProceduralSlashField : MonoBehaviour
                 axis = new Vector2(axis.x * _capturedFacing, axis.y) * reverse,
                 length = length, width = width, start = start, reveal = reveal, hold = hold, decay = decay
             });
-            int first = vertices.Count;
+            int first = i * 4;
             for (int corner = 0; corner < 4; corner++)
             {
                 float u = corner == 1 || corner == 2 ? 1f : 0f;
                 float v = corner >= 2 ? 1f : 0f;
                 Vector2 position = center + axis * ((u - 0.5f) * length) + normal * ((v - 0.5f) * width * 8f);
                 position.x *= facing >= 0 ? 1f : -1f;
-                vertices.Add(new Vector3(position.x, position.y, -0.05f)); uv.Add(new Vector2(u, v));
-                timing.Add(new Vector4(start, reveal, hold, decay));
-                shape.Add(new Vector4(length * settings.pixelsPerUnit, Mathf.Max(4f, width * 8f * settings.pixelsPerUnit), reverse, seam ? 0.4f : 1f));
+                int vertex = first + corner;
+                Vertices[vertex] = new Vector3(position.x, position.y, -0.05f); Uvs[vertex] = new Vector2(u, v);
+                Timings[vertex] = new Vector4(start, reveal, hold, decay);
+                Shapes[vertex] = new Vector4(length * settings.pixelsPerUnit, Mathf.Max(4f, width * 8f * settings.pixelsPerUnit), reverse, seam ? 0.4f : 1f);
             }
             bool foreground = (i + 1) * ForegroundSlashCount / count > i * ForegroundSlashCount / count;
-            var destination = foreground ? frontIndices : indices;
-            destination.Add(first); destination.Add(first + 1); destination.Add(first + 2);
-            destination.Add(first); destination.Add(first + 2); destination.Add(first + 3);
+            var destination = foreground ? FrontIndices : Indices;
+            int offset = foreground ? frontIndexCount : indexCount;
+            destination[offset] = first; destination[offset + 1] = first + 1; destination[offset + 2] = first + 2;
+            destination[offset + 3] = first; destination[offset + 4] = first + 2; destination[offset + 5] = first + 3;
+            if (foreground) frontIndexCount += 6; else indexCount += 6;
         }
-        _mesh.Clear(); _mesh.SetVertices(vertices); _mesh.SetUVs(0, uv); _mesh.SetUVs(1, timing);
-        _mesh.SetUVs(2, shape); _mesh.SetTriangles(indices, 0); _mesh.RecalculateBounds();
-        _foregroundMesh.Clear(); _foregroundMesh.SetVertices(vertices); _foregroundMesh.SetUVs(0, uv);
-        _foregroundMesh.SetUVs(1, timing); _foregroundMesh.SetUVs(2, shape);
-        _foregroundMesh.SetTriangles(frontIndices, 0); _foregroundMesh.RecalculateBounds();
+        UploadMesh(_mesh, count * 4, Indices, indexCount);
+        UploadMesh(_foregroundMesh, count * 4, FrontIndices, frontIndexCount);
     }
 
     private void BuildFullScreenSlash(ProceduralSlashFieldSettings settings)
@@ -365,25 +371,33 @@ public sealed class ProceduralSlashField : MonoBehaviour
         float decay = Mathf.Max(1f, settings.decayFrames.x);
         _cutRibbons.Add(new CutRibbon { center = Vector2.zero, axis = axis, length = length,
             width = thickness, start = start, reveal = reveal, hold = 1f, decay = decay });
-        var vertices = new List<Vector3>(4);
-        var timing = new List<Vector4>(4);
-        var shape = new List<Vector4>(4);
         for (int corner = 0; corner < 4; corner++)
         {
             float u = corner == 1 || corner == 2 ? 1f : 0f;
             float v = corner >= 2 ? 1f : 0f;
             Vector2 point = axis * ((u - 0.5f) * length) + normal * ((v - 0.5f) * thickness * 8f);
-            vertices.Add(new Vector3(point.x, point.y, -0.05f));
-            timing.Add(new Vector4(start, reveal, 1f, decay));
-            shape.Add(new Vector4(length * settings.pixelsPerUnit,
-                Mathf.Max(4f, thickness * 8f * settings.pixelsPerUnit), 1f, 1f));
+            Vertices[corner] = new Vector3(point.x, point.y, -0.05f);
+            Uvs[corner] = new Vector2(u, v);
+            Timings[corner] = new Vector4(start, reveal, 1f, decay);
+            Shapes[corner] = new Vector4(length * settings.pixelsPerUnit,
+                Mathf.Max(4f, thickness * 8f * settings.pixelsPerUnit), 1f, 1f);
         }
         // Use the same ribbon geometry/shader inputs for glow, reveal and refraction sampling.
-        _foregroundMesh.Clear(); _foregroundMesh.SetVertices(vertices);
-        _foregroundMesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
-        _foregroundMesh.SetUVs(1, timing); _foregroundMesh.SetUVs(2, shape);
-        _foregroundMesh.triangles = new[] { 0,1,2,0,2,3 }; _foregroundMesh.RecalculateBounds();
+        FrontIndices[0] = 0; FrontIndices[1] = 1; FrontIndices[2] = 2;
+        FrontIndices[3] = 0; FrontIndices[4] = 2; FrontIndices[5] = 3;
+        UploadMesh(_foregroundMesh, 4, FrontIndices, 6);
         _mesh.Clear(); TotalSlashCount = ForegroundSlashCount = 1;
+    }
+
+    private static void UploadMesh(Mesh mesh, int vertexCount, int[] indices, int indexCount)
+    {
+        mesh.Clear();
+        mesh.SetVertices(Vertices, 0, vertexCount);
+        mesh.SetUVs(0, Uvs, 0, vertexCount);
+        mesh.SetUVs(1, Timings, 0, vertexCount);
+        mesh.SetUVs(2, Shapes, 0, vertexCount);
+        // SetTriangles already recalculates bounds by default.
+        mesh.SetTriangles(indices, 0, indexCount, 0);
     }
 
     private static float Next(ref uint state)

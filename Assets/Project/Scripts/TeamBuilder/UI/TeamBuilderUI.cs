@@ -594,36 +594,28 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            if (selectedArtifactSwitchSlot == destinationSlot && isInventoryPanelOpen && inventoryPanel != null && inventoryPanel.IsArtifactGridOpen)
-            {
-                CloseArtifactGridPanel();
-                return;
-            }
-
+            bool gridAlreadyOpen = inventoryPanel != null && inventoryPanel.IsArtifactGridOpen;
             ClearArtifactSwitchSelection();
             selectedCharacterSwitchSlotIndex = -1;
-            ResetInventorySelection();
+            if (!gridAlreadyOpen) ResetInventorySelection();
             selectedArtifactSwitchSlot = destinationSlot;
             selectedArtifactSwitchSlot.SetSelectionDestination(true);
             isInventoryPanelOpen = true;
 
             if (inventoryPanel != null)
             {
-                inventoryPanel.SetVisible(true);
-                if (!inventoryPanel.IsArtifactGridOpen)
+                if (!gridAlreadyOpen)
                 {
+                    inventoryPanel.SetVisible(true);
                     inventoryPanel.ToggleArtifactGrid();
                     panelOpenedFrame = Time.frameCount;
                     RefreshGrid();
                 }
-                else
-                {
-                    inventoryPanel.RefreshInTeamStates();
-                }
             }
 
-            ApplyModeVisualState();
-            inventoryPanel?.SetContext($"TEAM SLOT {destinationSlot.ParentSlot.SlotIndex + 1:00} / ARTIFACT");
+            if (!gridAlreadyOpen) ApplyModeVisualState();
+            inventoryPanel?.SetContext(string.Empty);
+            inventoryPanel?.SelectArtifact(destinationSlot.CurrentArtifact);
         }
 
         public HashSet<string> GetDraftEquippedArtifactInstanceIds(HashSet<string> destination = null)
@@ -867,7 +859,7 @@ namespace Project.TeamBuilder.UI
 
         public TeamSlotUI FindSlotWithArtifact(ArtifactInstance artifact)
         {
-            if (artifact == null) return null;
+            if (artifact == null || teamSlots == null) return null;
 
             foreach (var slot in teamSlots)
             {

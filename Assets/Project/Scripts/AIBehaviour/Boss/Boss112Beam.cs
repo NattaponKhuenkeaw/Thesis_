@@ -18,6 +18,9 @@ namespace Project.AIBehaviour.Boss
         private Vector2 groundAnchor;
         public bool IsDamaging => damaging && damageCollider != null && damageCollider.enabled;
         public BoxCollider2D DamageCollider => damageCollider;
+        internal float LaneX => groundAnchor.x;
+        internal float LaneHalfWidth => activeWidth * .5f;
+        internal float MouthY => sourcePoint != null ? sourcePoint.position.y : visual.bounds.max.y;
 
         public void Show(Vector2 top, float floor, bool active, bool locked, float clock)
         {

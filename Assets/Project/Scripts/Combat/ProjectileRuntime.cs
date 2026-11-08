@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project.AIBehaviour.Boss;
 using UnityEngine;
 using Project.Combat;
 using Project.ShopSystem;
@@ -110,7 +111,7 @@ public class ProjectileRuntime : MonoBehaviour
 
             runtime.traversalStrategy.Tick(runtime, runtime.ProjectileData, runtime.spawnContext, deltaTime);
             runtime.ApplyFacingVisual();
-            runtime.ProcessTrackedEnemiesIfReady();
+            runtime.ProcessTrackedEnemiesIfReady(advanceFixedCadence: true);
             runtime.ApplyAreaEffectsIfReady(deltaTime);
         }
 
@@ -180,11 +181,13 @@ public class ProjectileRuntime : MonoBehaviour
     private bool releaseQueued;
     private bool isExpired;
     private bool hitOccurredInCurrentBatch;
+    private bool damageOccurredInCurrentBatch;
     private Transform trackedTargetTransform;
     internal int hitCooldownFramesRemaining;
     private float _hitCooldownSeconds;
 
     public ProjectileData ProjectileData { get; private set; }
+    private readonly Collider2D[] magnetismColliders = new Collider2D[128];
     public bool IsMagnetismActive => isActiveAndEnabled && !isExpired && currentState is UpdatingState
         && ProjectileData != null && ProjectileData.magnetismSpeed > 0f
         && triggerCollider != null && triggerCollider.enabled;
@@ -290,11 +293,21 @@ public class ProjectileRuntime : MonoBehaviour
     {
         if (!IsMagnetismActive) return;
 
-        float centerX = triggerCollider.bounds.center.x;
-        foreach (EnemyController enemy in trackedEnemies)
+        Bounds bounds = triggerCollider.bounds;
+        Vector2 size = bounds.size;
+        size.x += Mathf.Max(0f, ProjectileData.magnetismRange) * 2f;
+        var filter = new ContactFilter2D();
+        filter.SetLayerMask(ProjectileData.enemyLayerMask);
+        filter.useTriggers = true;
+        // Pull occupancy is separate from damage occupancy so nearby enemies can enter a trap.
+        int count = Physics2D.OverlapBox(bounds.center, size, 0f, filter, magnetismColliders);
+        for (int i = 0; i < count; i++)
         {
-            if (enemy != null && enemy.IsGameplayActive && IsEnemyTouchingTrigger(enemy))
-                enemy.hitReactionHandler?.RequestFieldPull(this, centerX, ProjectileData.magnetismSpeed);
+            Collider2D collider = magnetismColliders[i];
+            magnetismColliders[i] = null;
+            EnemyController enemy = collider != null ? collider.GetComponentInParent<EnemyController>() : null;
+            if (enemy != null && enemy.IsGameplayActive)
+                enemy.hitReactionHandler?.RequestFieldPull(this, bounds.center.x, ProjectileData.magnetismSpeed);
         }
     }
 
@@ -306,7 +319,7 @@ public class ProjectileRuntime : MonoBehaviour
     private void OnTriggerExit2D(Collider2D other)
     {
         EnemyController enemy = other != null ? other.GetComponentInParent<EnemyController>() : null;
-        if (enemy != null)
+        if (enemy != null && (!enemy.TryGetComponent<Boss112WormBody>(out _) || !IsEnemyTouchingTrigger(enemy, other)))
         {
             trackedEnemies.Remove(enemy);
         }
@@ -334,6 +347,16 @@ public class ProjectileRuntime : MonoBehaviour
                 remainingHitsByEnemy[enemyId] = Mathf.Max(0, currentRemainingHits - 1);
             }
         }
+    }
+
+    internal void ApplyMemoryHitEffects(EnemyController enemy, CharacterStats sourceStats)
+    {
+        var effects = spawnContext.memoryEffects;
+        if (effects == null) return;
+        damageOccurredInCurrentBatch = true;
+        if (!enemy.IsAlive) return;
+        if (effects.Vulnerability != null)
+            enemy.RuntimeEffects?.ApplyEffect(effects.Vulnerability, spawnContext.sourceCharacter, sourceStats);
     }
 
     public void Translate(Vector2 delta)
@@ -609,7 +632,7 @@ public class ProjectileRuntime : MonoBehaviour
             : null;
     }
 
-    private void ProcessTrackedEnemiesIfReady()
+    private void ProcessTrackedEnemiesIfReady(bool advanceFixedCadence = false)
     {
         if (processedHitsThisFrame || ProjectileData == null || isExpired || hitboxModule == null
             || (ProjectileData.hitIntervalSeconds > 0f && Time.deltaTime <= 0f))
@@ -620,6 +643,13 @@ public class ProjectileRuntime : MonoBehaviour
         if (hitCooldownFramesRemaining > 0)
         {
             return;
+        }
+
+        bool fixedCadence = spawnContext.memoryEffects?.FixedCadence == true;
+        if (fixedCadence)
+        {
+            if (!advanceFixedCadence) return;
+            StartSecondsHitCooldown();
         }
 
         if (currentHitConsumesMaxHits && ProjectileData.UsesSharedHitCount() && spawnContext.remainingHits <= 0)
@@ -645,12 +675,14 @@ public class ProjectileRuntime : MonoBehaviour
 
         processedHitsThisFrame = true;
         hitOccurredInCurrentBatch = false;
+        damageOccurredInCurrentBatch = false;
         hitboxModule.BeginHitCycle();
 
         for (int i = 0; i < trackedEnemyBuffer.Count; i++)
         {
             EnemyController enemy = trackedEnemyBuffer[i];
-            if (!CanHitEnemy(enemy))
+            if ((spawnContext.memoryEffects?.LimitToTarget == true && enemy.transform != spawnContext.targetTransform) ||
+                !CanHitEnemy(enemy))
             {
                 continue;
             }
@@ -670,12 +702,14 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
-        if (ProjectileData.hitIntervalSeconds > 0f)
+        if (damageOccurredInCurrentBatch && spawnContext.memoryEffects.AuraEnergy > 0f)
+            TeamLoader.Instance?.AddCharacterAE(spawnContext.sourceCharacter, spawnContext.memoryEffects.AuraEnergy);
+
+        if (!fixedCadence)
         {
-            _hitCooldownSeconds = Mathf.Max(-Time.deltaTime, _hitCooldownSeconds) + ProjectileData.hitIntervalSeconds;
-            hitCooldownFramesRemaining = 1;
+            if (ProjectileData.hitIntervalSeconds > 0f) StartSecondsHitCooldown();
+            else hitCooldownFramesRemaining = Mathf.Max(hitCooldownFramesRemaining, Mathf.Max(0, ProjectileData.hitIntervalFrames));
         }
-        else hitCooldownFramesRemaining = Mathf.Max(hitCooldownFramesRemaining, Mathf.Max(0, ProjectileData.hitIntervalFrames));
 
         if (ProjectileData.UsesSharedHitCount()
             && ProjectileData.destroyWhenHitsExhausted
@@ -684,6 +718,12 @@ public class ProjectileRuntime : MonoBehaviour
         {
             Expire();
         }
+    }
+
+    private void StartSecondsHitCooldown()
+    {
+        _hitCooldownSeconds = Mathf.Max(-Time.deltaTime, _hitCooldownSeconds) + ProjectileData.hitIntervalSeconds;
+        hitCooldownFramesRemaining = 1;
     }
 
     private void ApplyAreaEffectsIfReady(float deltaTime)
@@ -924,24 +964,27 @@ public class ProjectileRuntime : MonoBehaviour
         return remainingHits;
     }
 
-    private bool IsEnemyTouchingTrigger(EnemyController enemy)
+    private bool IsEnemyTouchingTrigger(EnemyController enemy, Collider2D excluded = null)
     {
         if (enemy == null || triggerCollider == null || !triggerCollider.enabled)
         {
             return false;
         }
 
-        if (enemy.bodyCollider != null)
-        {
-            return enemy.bodyCollider.IsTouching(triggerCollider)
-                || enemy.bodyCollider.bounds.Intersects(triggerCollider.bounds);
-        }
+        if (enemy.bodyCollider != null && enemy.bodyCollider != excluded
+            && (enemy.bodyCollider.IsTouching(triggerCollider) || enemy.bodyCollider.bounds.Intersects(triggerCollider.bounds)))
+            return true;
+
+        if (enemy.TryGetComponent<Boss112WormBody>(out var worm) && worm.GetSegmentContacts(triggerCollider, excluded: excluded) != 0)
+            return true;
+
+        if (enemy.bodyCollider != null) return false;
 
         Collider2D[] colliders = enemy.GetCachedColliders();
         for (int i = 0; i < colliders.Length; i++)
         {
             Collider2D collider = colliders[i];
-            if (collider != null
+            if (collider != null && collider != excluded
                 && (collider.IsTouching(triggerCollider) || collider.bounds.Intersects(triggerCollider.bounds)))
             {
                 return true;

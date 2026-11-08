@@ -4,5 +4,6 @@ public enum ElementType
     Lightning,
     Bleed,
     Darkness,
-    Particle
+    Particle,
+    Void
 }

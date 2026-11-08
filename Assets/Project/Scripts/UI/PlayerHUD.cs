@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Project.Core;
 using Project.ShopSystem;
 using Project.Core.ZoneState;
 using Project.Progression;
@@ -64,6 +65,10 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     private bool runtimeEffectsDirty = true;
     private bool runtimeEffectContainerSanitized;
     private bool healthDisplayInitialized;
+    private TMP_Text runStatusText;
+    private int displayedPlaytime = -1;
+    private int displayedBiome = -1;
+    private int displayedRoom = -1;
 
     private void Reset()
     {
@@ -95,6 +100,9 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private void OnDisable()
     {
+        if (runStatusText != null)
+            runStatusText.gameObject.SetActive(false);
+
         ReleaseRuntimeEffectOwnership();
         StopHealthLerp();
         UnbindZoneEvents();
@@ -119,11 +127,15 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private void OnDestroy()
     {
+        if (runStatusText != null)
+            Destroy(runStatusText.gameObject);
         UnbindZoneEvents();
     }
 
     private void LateUpdate()
     {
+        RefreshRunStatus();
+
         if (hudRoot == null || playerCharacter == null || targetCanvas == null)
         {
             if (Time.frameCount % 20 == 0)
@@ -150,6 +162,58 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             RebindFragmentEvents();
             RefreshFragmentDisplay();
         }
+    }
+
+    private void RefreshRunStatus()
+    {
+        GameRunManager run = GameRunManager.Instance;
+        if (run == null || targetCanvas == null || Project.Training.TrainingSession.IsTrainingContext)
+        {
+            if (runStatusText != null && runStatusText.gameObject.activeSelf)
+                runStatusText.gameObject.SetActive(false);
+            return;
+        }
+
+        if (runStatusText == null)
+        {
+            var label = new GameObject("RunStatus", typeof(RectTransform), typeof(TextMeshProUGUI));
+            label.layer = targetCanvas.gameObject.layer;
+            label.transform.SetParent(targetCanvas.transform, false);
+            runStatusText = label.GetComponent<TextMeshProUGUI>();
+            displayedPlaytime = -1;
+            RectTransform rect = runStatusText.rectTransform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
+            rect.sizeDelta = new Vector2(320f, 72f);
+            runStatusText.alignment = TextAlignmentOptions.TopRight;
+            runStatusText.fontSize = 28f;
+            runStatusText.raycastTarget = false;
+            if (hpText != null && hpText.font != null)
+                runStatusText.font = hpText.font;
+        }
+
+        if (!runStatusText.gameObject.activeSelf)
+            runStatusText.gameObject.SetActive(true);
+
+        float topInset = 24f;
+        if (navigationRoot != null && navigationRoot.activeSelf
+            && navigationRoot.transform is RectTransform navigationRect)
+        {
+            topInset += navigationRect.rect.height - navigationRect.anchoredPosition.y;
+        }
+        runStatusText.rectTransform.anchoredPosition = new Vector2(-32f, -topInset);
+
+        bool inLobby = run.CurrentPhase == GameRunPhase.Lobby;
+        int room = inLobby ? 0 : run.CurrentRoomNumber;
+        int biome = inLobby && RunProgressionManager.Instance != null
+            ? RunProgressionManager.Instance.CurrentBiomeIndex : run.CurrentRoomBiomeIndex;
+        int seconds = (int)Math.Min(run.PlaytimeSeconds, int.MaxValue);
+        if (seconds == displayedPlaytime && biome == displayedBiome && room == displayedRoom)
+            return;
+
+        displayedPlaytime = seconds;
+        displayedBiome = biome;
+        displayedRoom = room;
+        runStatusText.text = $"{seconds / 60:00}:{seconds % 60:00}\n[Biome-{biome + 1:00} : {room:00}]";
     }
 
     private void CacheReferences()

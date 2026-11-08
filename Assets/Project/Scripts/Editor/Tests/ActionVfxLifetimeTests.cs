@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Unity.Profiling;
 using Project.Combat;
 using TMPro;
 using UnityEditor;
@@ -239,6 +240,117 @@ public class ActionVfxLifetimeTests
         Assert.That(feedback.IsVisible, Is.False);
         MaxCancelFeedback.Show(_player);
         Assert.That(feedback.IsVisible, Is.True); Assert.That(content.anchoredPosition.x, Is.EqualTo(-300f));
+    }
+
+    private GameObject _host;
+    private ProceduralSlashField _field;
+    private ProceduralSlashFieldSettings _settings;
+
+    private void SetupPerformance()
+    {
+        _host = Keep(new GameObject("Procedural performance test"));
+        _field = _host.AddComponent<ProceduralSlashField>();
+        _settings = new ProceduralSlashFieldSettings
+        {
+            material = AssetDatabase.LoadAssetAtPath<Material>(MainDimensionSlashAuthoring.MainPath + "DimensionSlash/DimensionSlashRibbon.mat"),
+            fitViewport = false, seed = 1234, hideActor = false,
+            impactDistortion = new CutImpactDistortionSettings { enabled = false }
+        };
+        Assert.That(_settings.material, Is.Not.Null);
+    }
+
+    private void Begin(int facing = 1) => _field.Begin(null, _settings, Vector3.zero, facing, null, true);
+    private Mesh[] Meshes() => _field.VisualRoot.GetComponentsInChildren<MeshFilter>().Select(f => f.sharedMesh).ToArray();
+
+    [TestCase(0f)] [TestCase(0.5f)] [TestCase(1f)]
+    public void MaximumRibbonCountsFitBuffersAndKeepDepthPartition(float foreground)
+    {
+        SetupPerformance();
+        _settings.slashCount = 1000; _settings.seamCount = 1000; _settings.foregroundFraction = foreground;
+        Begin();
+        var meshes = Meshes();
+        Assert.That(_field.TotalSlashCount, Is.EqualTo(96));
+        int front = Mathf.RoundToInt(96 * foreground);
+        Assert.That(meshes[0].triangles.Length, Is.EqualTo((96 - front) * 6));
+        Assert.That(meshes[1].triangles.Length, Is.EqualTo(front * 6));
+        foreach (var mesh in meshes)
+        {
+            Assert.That(mesh.vertexCount, Is.EqualTo(96 * 4));
+            Assert.That(mesh.triangles.All(i => i >= 0 && i < mesh.vertexCount), Is.True);
+        }
+    }
+
+    [Test]
+    public void AnotherFieldCannotOverwriteAnExistingFieldsMesh()
+    {
+        SetupPerformance();
+        Begin();
+        var mesh = Meshes()[0];
+        Vector3[] vertices = mesh.vertices;
+        int[] triangles = mesh.triangles;
+        var other = new GameObject("Overlapping field");
+        try
+        {
+            _settings.seed = 4321; _settings.slashCount = 64; _settings.seamCount = 32;
+            other.AddComponent<ProceduralSlashField>().Begin(null, _settings, Vector3.zero, -1, null, true);
+            Assert.That(mesh.vertices, Is.EqualTo(vertices));
+            Assert.That(mesh.triangles, Is.EqualTo(triangles));
+        }
+        finally { Object.DestroyImmediate(other); }
+    }
+
+    [Test]
+    public void FullscreenThenBarrageDoesNotRetainStaleBufferEntries()
+    {
+        SetupPerformance();
+        Begin();
+        Vector3[] vertices = Meshes()[0].vertices;
+        int[] triangles = Meshes()[0].triangles;
+        _settings.fullScreenSlash = true; Begin();
+        var fullscreen = Meshes();
+        Assert.That(fullscreen[0].vertexCount, Is.Zero);
+        Assert.That(fullscreen[1].vertexCount, Is.EqualTo(4));
+        Assert.That(fullscreen[1].triangles, Is.EqualTo(new[] { 0, 1, 2, 0, 2, 3 }));
+        _settings.fullScreenSlash = false; Begin();
+        Assert.That(Meshes()[0].vertices, Is.EqualTo(vertices));
+        Assert.That(Meshes()[0].triangles, Is.EqualTo(triangles));
+    }
+
+    [TestCase(false)] [TestCase(true)]
+    public void FacingMirrorsBarrageAndFullscreenGeometry(bool fullscreen)
+    {
+        SetupPerformance();
+        _settings.fullScreenSlash = fullscreen;
+        Begin();
+        int layer = fullscreen ? 1 : 0;
+        var right = Meshes()[layer];
+        Vector3[] vertices = right.vertices;
+        Begin(-1);
+        var left = Meshes()[layer];
+        Vector3[] mirrored = left.vertices;
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            int original = fullscreen ? 3 - i : i;
+            Assert.That(mirrored[i].x, Is.EqualTo(-vertices[original].x).Within(0.0001f));
+            Assert.That(mirrored[i].y, Is.EqualTo(vertices[original].y).Within(0.0001f));
+        }
+    }
+
+    [TestCase(false)] [TestCase(true)]
+    public void WarmGenerationHasNoManagedAllocationEvents(bool fullscreen)
+    {
+        SetupPerformance();
+        _settings.fullScreenSlash = fullscreen;
+        for (int i = 0; i < 4; i++) Begin();
+        long events;
+        using (var recorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC.Alloc", 1,
+            ProfilerRecorderOptions.Default | ProfilerRecorderOptions.CollectOnlyOnCurrentThread))
+        {
+            for (int i = 0; i < 32; i++) Begin();
+            recorder.Stop();
+            events = recorder.Count > 0 ? recorder.GetSample(recorder.Count - 1).Count : 0;
+        }
+        Assert.That(events, Is.Zero, "Mesh construction must reuse its bounded scratch storage.");
     }
 }
 #endif

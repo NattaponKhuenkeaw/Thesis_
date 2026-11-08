@@ -228,22 +228,23 @@ namespace Project.UI
         }
 
         private static bool HasReward(RoomChoiceOffer offer) => offer.Reward != null
-            && (offer.Reward.Coins > 0 || offer.Reward.ArtifactPulls > 0 ||
+            && (offer.Reward.Coins > 0 || offer.Reward.ArtifactPulls > 0 || offer.Reward.GrantsMemory ||
                 (offer.Reward.GrantsArtifact && offer.Reward.Artifact != null));
 
         private static string Footer(RoomChoiceOffer offer)
         {
             if (HasReward(offer))
             {
+                string memory = offer.Reward.GrantsMemory ? " + MEMORY" : "";
                 if (offer.Reward.ArtifactPulls > 0)
                 {
                     string picks = offer.Reward.ArtifactPulls == 1 ? "1 ARTIFACT PICK" : $"{offer.Reward.ArtifactPulls} ARTIFACT PICKS";
-                    return offer.Reward.Coins > 0 ? $"{offer.Reward.Coins:N0} SOUL + {picks}" : picks;
+                    return (offer.Reward.Coins > 0 ? $"{offer.Reward.Coins:N0} SOUL + {picks}" : picks) + memory;
                 }
                 bool artifact = offer.Reward.GrantsArtifact && offer.Reward.Artifact != null;
                 if (offer.Reward.Coins > 0)
-                    return $"{offer.Reward.Coins:N0} SOUL" + (artifact ? " + ARTIFACT" : "");
-                return "ARTIFACT";
+                    return $"{offer.Reward.Coins:N0} SOUL" + (artifact ? " + ARTIFACT" : "") + memory;
+                return artifact ? "ARTIFACT" + memory : "MEMORY";
             }
             switch (offer.Kind)
             {

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.ArtifactDefinition
   id: ART-R-010
   itemName: Spent Aura Coil
+  description: 
   icon: {fileID: 21300000, guid: 155d7be2a90fd78418313228d21bd149, type: 3}
   price: 375
   isEquippable: 1
@@ -22,6 +23,19 @@ MonoBehaviour:
     statKind: 23
     valueUnits: 500
     source: 0
-  passiveDescription: +5% Aura Energy Recharge while equipped.
+  passiveDescription: <b><color=#FFA500>+5%</color></b> Aura Energy Recharge while
+    equipped
   passiveSet: {fileID: 0}
   additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

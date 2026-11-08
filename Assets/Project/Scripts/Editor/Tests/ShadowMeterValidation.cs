@@ -31,11 +31,29 @@ public static class ShadowMeterValidation
         RunFixtures(new[]
         {
             "MainSkillMagnetismTests", "EnemyPositionReactionTests", "CombatDamageTypeTests",
+            "CharacterMemoryTests.MainUsesMemoryRanksAndGenericBonusesAsBaseStats",
             "ShadowMeterTests.SkillThreeVulnerabilityReplacesTwentyInsteadOfStackingToSixty",
-            "ShadowMeterTests.SkillHitsSnapshotMainsAttackForAlliesMasteryAndRefreshWithoutStacking",
-            "ShadowMeterTests.SkillPotentialLevelsResolveTheNewProgression",
-            "ShadowMeterTests.ReceiverStatBuffRefreshCapturesLatestSourceSnapshot"
+            "ShadowMeterTests.SkillFiveBuffSnapshotsMaxHpForAllThreeAllyStats",
+            "ShadowMeterTests.SkillMemoryAppliesMagnetismAndCooldown",
+            "ShadowMeterTests.VoidMemoryResolvesEachRank",
+            "ShadowMeterTests.VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost",
+            "ShadowMeterTests.PassiveFiveAndSixUpgradeJudgmentAndAddOneUltimateHealthBuff",
+            "ShadowMeterTests.PassiveFiveAddsDarknessOnlyToTheAuthoredUltimateFinishers",
+            "ShadowMeterTests.ExecutionRestoresMaxHpAtPassiveThree"
         }, "Temp/main-skill-revision-tests.xml", false);
+    }
+
+    [MenuItem("Tools/Project/Combat/Validate Main Memory Fixes")]
+    public static void RunMainMemoryFixes()
+    {
+        RunFixtures(new[]
+        {
+            "MainSkillMagnetismTests", "EnemyPositionReactionTests", "CombatDamageTypeTests",
+            "ShadowMeterTests.SkillMemoryAppliesMagnetismAndCooldown",
+            "ShadowMeterTests.SummonedChainUsesAuthoredGroundProjectionAndTemplate",
+            "ShadowMeterTests.MemoryUpgradesKeepGroundAndAirNormalAttacksAvailable",
+            "ShadowMeterTests.PassiveFiveAddsDarknessOnlyToTheAuthoredUltimateFinishers"
+        }, "Temp/main-memory-fixes-tests.xml", false);
     }
 
     private static void RunFixtures(string[] fixtures, string resultPath, bool capturePreviews)
@@ -99,7 +117,7 @@ public static class ShadowMeterValidation
             MethodInfo refresh = typeof(CombatMeterUI).GetMethod("LateUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             for (int row = 0; row < 3; row++)
             {
-                progression.SetPotentialLevel(player.characterObject, PotentialTrack.Passive, row == 2 ? 4 : 0);
+                CharacterMemoryTests.SetMemoryRanks(progression, player.characterObject, passive: row == 2 ? 4 : 0);
                 passive.RuntimeState.SetCounter("main.shadow", row == 0 ? 0 : row == 1 ? 30 : 100);
                 var meterObject = new GameObject("Meter Preview " + row, typeof(RectTransform), typeof(CombatMeterUI));
                 RectTransform rect = meterObject.GetComponent<RectTransform>();

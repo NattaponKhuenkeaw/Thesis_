@@ -20,14 +20,17 @@ MonoBehaviour:
   hardRewardPatterns:
   - weight: 25
     artifactPulls: 2
+    grantsMemory: 1
     minSoul: 0
     maxSoul: 0
   - weight: 50
     artifactPulls: 1
+    grantsMemory: 1
     minSoul: 180
     maxSoul: 280
   - weight: 25
     artifactPulls: 0
+    grantsMemory: 1
     minSoul: 300
     maxSoul: 400
   profiles:

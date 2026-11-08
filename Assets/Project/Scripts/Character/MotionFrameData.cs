@@ -59,9 +59,13 @@ public class MotionKeyframe
     public Vector2 ResolveTargetDashDestination(Vector2 start, Vector2 anchor, int facingDirection)
     {
         Vector2 approach = anchor - start;
+        float side = facingDirection >= 0 ? 1f : -1f;
+        // An overlapping target's authored anchor can sit behind the actor.
+        // Keep the captured approach side authoritative for the committed dash.
+        approach.x = Mathf.Max(0f, approach.x * side) * side;
         if (horizontalOnly) approach.y = 0f;
         Vector2 direction = approach.sqrMagnitude > 0.0001f ? approach.normalized
-            : new Vector2(facingDirection >= 0 ? 1f : -1f, 0f);
+            : new Vector2(side, 0f);
         float distance = Mathf.Max(Mathf.Max(0f, minimumTravelDistance), approach.magnitude + Mathf.Max(0f, passThroughDistance));
         return start + direction * distance;
     }

@@ -4,6 +4,7 @@ using CombatCore;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Project.Combat;
+using Project.Progression;
 using Project.ShopSystem;
 
 public sealed class AuraEnergyRewardClaim
@@ -309,7 +310,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             AbilityUIManager.Instance?.PlayAbilityCommittedFeedback(slot);
         }
 
-        passiveController?.NotifyActionStarted(category, currentActionId, currentActionName, step, CurrentExecution);
+        passiveController?.NotifyActionStarted(category, currentActionId, currentActionName, step, CurrentExecution, isAutoChain);
     }
 
     public void ProcessFrameFromState(int frame, ActionPhase phase)
@@ -881,6 +882,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         activeThrowContext?.ClearTargets();
     }
 
+    internal void ForgetReleasedGrabTarget(EnemyController enemy)
+    {
+        activeThrowContext?.RemoveTarget(enemy);
+    }
+
     public bool IsHoldingEnemy(EnemyController enemy)
     {
         return activeThrowContext != null && activeThrowContext.HasTarget(enemy);
@@ -1140,7 +1146,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 currentStepData != null ? currentStepData.stepName : null)
             : 1f;
 
-        return new ProjectileSpawnContext
+        var context = new ProjectileSpawnContext
         {
             projectileType = projectileType,
             projectileData = data,
@@ -1170,6 +1176,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             sourceCharacter = sourceCharacter,
             sizeMultiplier = projectileScale
         };
+        MainMemoryKit.ConfigureProjectile(ref context, passiveController);
+        return context;
     }
 
     private void ProcessHitFrames(int frame)
@@ -1317,7 +1325,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         if (ProjectileManager.Instance != null)
         {
-            ProjectileManager.Instance.SpawnProjectile(BuildProjectileSpawnContext(projectileHitbox));
+            ProjectileManager manager = ProjectileManager.Instance;
+            ProjectileSpawnContext context = BuildProjectileSpawnContext(projectileHitbox);
+            manager.SpawnProjectile(context);
+            if (MainMemoryKit.AppliesTo(context.sourceCharacter) && context.sourceActionId == MainMemoryKit.DarkChain &&
+                passiveController != null && passiveController.GetPotentialLevel(PotentialTrack.Skill) >= 4)
+                StartCoroutine(MainMemoryKit.SummonChain(manager, context));
         }
         else
         {
@@ -1527,7 +1540,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             CombatLog($"HIT: {enemy.gameObject.name} (Damage: {hitBoxDamage?.DamageValue ?? 0f:F1})");
 
             bool wasAlreadyHeld = IsHoldingEnemy(enemy);
-            hitBoxDamage?.ProcessHit(enemy);
+            hitBoxDamage?.ProcessHit(enemy, result);
 
             if (currentGrabHitbox != null && !wasAlreadyHeld && IsHoldingEnemy(enemy))
             {
