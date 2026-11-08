@@ -20,9 +20,11 @@ MonoBehaviour:
   - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
     weight: 2
   typePickMode: 0
+  finalChamberElite: {fileID: 670217121981348719, guid: f31de676a82f62e4d96b2a1bd2f573e7, type: 3}
+  eliteReplaces: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
   waves: []
   delayBetweenWaves: 0.9
   chamberQuota: 8
-  spawnMode: 0
+  spawnMode: 2
   aliveCap: 5
   spawnInterval: 0.28

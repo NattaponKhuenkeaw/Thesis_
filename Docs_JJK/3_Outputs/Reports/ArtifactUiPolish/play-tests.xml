@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-06 10:40:00Z" end-time="2026-11-06 10:40:06Z" duration="5.939323">
+  <test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="1815" result="Passed" start-time="2026-11-06 10:40:00Z" end-time="2026-11-06 10:40:06Z" duration="5.939323" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="3197" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/AppData/Local/Temp/ThesisArtifactUiPolish/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="1815" result="Passed" start-time="2026-11-06 10:40:00Z" end-time="2026-11-06 10:40:06Z" duration="5.929387" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="20276" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestFixture" id="1161" name="ArtifactUiPolishPlayTests" fullname="ArtifactUiPolishPlayTests" classname="ArtifactUiPolishPlayTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-11-06 10:40:00Z" end-time="2026-11-06 10:40:06Z" duration="5.902992" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1162" name="RepeatedDiscardSettingsAndTwoClickPickupWorkWhileGameplayIsPaused" fullname="ArtifactUiPolishPlayTests.RepeatedDiscardSettingsAndTwoClickPickupWorkWhileGameplayIsPaused" methodname="RepeatedDiscardSettingsAndTwoClickPickupWorkWhileGameplayIsPaused" classname="ArtifactUiPolishPlayTests" runstate="Runnable" seed="8674582" result="Passed" start-time="2026-11-06 10:40:00Z" end-time="2026-11-06 10:40:06Z" duration="5.887947" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/Apricha/AppData/LocalLow/DefaultCompany/Thesis\TestResults.xml
+]]></output>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

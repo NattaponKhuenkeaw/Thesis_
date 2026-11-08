@@ -81,7 +81,6 @@ public static class ArtifactIsolatedVisualTestRunner
             capture.Invoke(null, new object[] { picker.gameObject, "artifact-rarity-picker-4x3", 1024, 768 });
 
             for (int i = 1; i <= 3; i++) picker.transform.Find($"Card{i}").gameObject.SetActive(false);
-            picker.transform.Find("Confirm").gameObject.SetActive(false);
             var tilePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/TeamArtifactInventoryCard.prefab");
             for (int i = 0; i < choices.Length; i++)
             {

@@ -1167,7 +1167,7 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
-    public void GuardKeepsCountdownButWarnsBeforeStrikingOnReturn()
+    public void GuardAdvancesAfterTimeoutButWarnsBeforeStrikingOnReturn()
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("ReturningTarget", enemy.transform.position + Vector3.right * 5f);
@@ -1176,9 +1176,9 @@ public class EnemyFlightGuardTests
         Vector3 waitingPosition = enemy.transform.position;
         target.transform.position = enemy.transform.position + Vector3.right * 20f;
         Assert.That(guard.TickGuard(2.1f), Is.True);
-        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Advancing));
         Assert.That(guard.ShieldRaised, Is.True);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.FreezePositionX));
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.None));
         Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
         Assert.That(enemy.transform.position, Is.EqualTo(waitingPosition));
         target.transform.position = enemy.transform.position + Vector3.right * 5f;
@@ -1251,7 +1251,7 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
-    public void RecoveryFacesPlayerAndRestartsFullGuardCountdown()
+    public void RecoveryKeepsTheRearOpeningAndRestartsFullGuardCountdown()
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("NextRoundTarget", enemy.transform.position + Vector3.right * 5f);
@@ -1264,8 +1264,13 @@ public class EnemyFlightGuardTests
         target.transform.position = enemy.transform.position + Vector3.left * 5f;
         guard.TickGuard(.81f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f), "Recovery must not bypass the rear opening.");
+        guard.TickGuard(.76f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Turning));
+        guard.TickGuard(.23f);
         Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
-        guard.TickGuard(4.3f);
+        guard.TickGuard(.23f);
+        guard.TickGuard(3.1f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
         guard.TickGuard(.11f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
@@ -1349,6 +1354,306 @@ public class EnemyFlightGuardTests
         Assert.That(enemy.rb.position.y, Is.EqualTo(height).Within(.002f));
     }
 
+    [Test]
+    public void GuardAdvancingVelocitySurvivesTheAttackActionUpdate()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(100f, 1f));
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("DistantGuardTarget", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        target.transform.position += Vector3.right * 15f;
+        guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Advancing));
+        Physics2D.SyncTransforms();
+        var action = new EnemyAttackAction();
+        action.Agent.Value = enemy.gameObject;
+        action.Target.Value = target;
+        typeof(EnemyAttackAction).GetField("m_Controller", Private).SetValue(action, enemy);
+        typeof(EnemyAttackAction).GetField("m_ShieldGuard", Private).SetValue(action, guard);
+        typeof(EnemyAttackAction).GetField("m_Body", Private).SetValue(action, enemy.rb);
+        typeof(EnemyAttackAction).GetField("m_Locomotion", Private).SetValue(action, enemy.GetComponent<EnemyLocomotion>());
+        typeof(EnemyAttackAction).GetMethod("OnUpdate", Private).Invoke(action, null);
+        Assert.That(enemy.rb.linearVelocity.x, Is.GreaterThan(0f));
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        guard.EndGuard();
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.None));
+    }
+
+    [Test]
+    public void LastActiveEnemyShortensGuardWaitWithoutShorteningWarning()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        EnemyController peer = Guard(out _);
+        RoomEnemyRegistry.Register(peer);
+        using (var data = new SerializedObject(guard))
+        {
+            data.FindProperty("lastEnemyWaitDuration").floatValue = 1f;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var target = Host("LastGuardTarget", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(1.1f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        peer.gameObject.SetActive(false);
+        guard.TickGuard(0f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        guard.TickGuard(.3f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.31f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+    }
+
+    [TestCase(false, false)] [TestCase(true, false)] [TestCase(false, true)] [TestCase(true, true)]
+    public void ProductionCooldownLimitsRepeatRushesEvenWhenAloneOrReengaged(bool alone, bool reengage)
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        var authored = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm103/Enemy103.prefab");
+        using (var source = new SerializedObject(authored.GetComponent<EnemyShieldGuard>()))
+        using (var settings = new SerializedObject(guard))
+        {
+            settings.CopyFromSerializedProperty(source.FindProperty("guardWaitDuration"));
+            settings.CopyFromSerializedProperty(source.FindProperty("lastEnemyWaitDuration"));
+            settings.ApplyModifiedPropertiesWithoutUndo();
+        }
+        if (!alone)
+        {
+            var peer = Guard(out _);
+            RoomEnemyRegistry.Register(peer);
+        }
+        var target = Host("Cooldown target", enemy.transform.position + Vector3.right * 5f);
+        Assert.That(guard.BeginGuard(target.transform), Is.True);
+        guard.TickGuard(5f);
+        guard.TickGuard(1.01f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        guard.TickGuard(enemy.Kit.HitWindowDuration + .01f);
+        Assert.That(guard.AttackCooldownRemaining, Is.EqualTo(5f).Within(.001f));
+        float strikeAt = -1f;
+        for (int step = 1; step <= 300; step++)
+        {
+            if (reengage && step == 50)
+            {
+                float remaining = guard.AttackCooldownRemaining;
+                guard.EndGuard();
+                guard.BeginGuard(target.transform);
+                Assert.That(guard.AttackCooldownRemaining, Is.EqualTo(remaining));
+            }
+            guard.TickGuard(.02f);
+            if (guard.Phase == EnemyShieldGuard.GuardPhase.Striking)
+            {
+                strikeAt = step * .02f;
+                break;
+            }
+            Assert.That(enemy.attackHitbox.enabled, Is.False);
+            if (guard.Phase == EnemyShieldGuard.GuardPhase.Guarding) Assert.That(guard.ShieldRaised, Is.True);
+        }
+        Assert.That(strikeAt, Is.InRange(4.99f, 5.1f), "The full cooldown must apply after every rush, not only the first round.");
+        Assert.That(guard.AttackCooldownRemaining, Is.Zero.Within(.001f));
+    }
+
+    [Test]
+    public void InterruptedRushStillArmsTheFullRepeatCooldown()
+    {
+        var enemy = Guard(out EnemyShieldGuard guard);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        using (var data = new SerializedObject(guard))
+        {
+            data.FindProperty("guardWaitDuration").floatValue = 2.5f;
+            data.FindProperty("lastEnemyWaitDuration").floatValue = 1f;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var target = Host("Interrupted rush target", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform); guard.TickGuard(5f); guard.TickGuard(1.01f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        guard.EndGuard();
+        Assert.That(guard.AttackCooldownRemaining, Is.EqualTo(5f));
+        Assert.That(guard.BeginGuard(target.transform), Is.True);
+        guard.TickGuard(2f); guard.TickGuard(1.9f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        guard.TickGuard(.11f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.51f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+    }
+
+    [Test]
+    public void CoolingGuardStillAdvancesButStopsAndWarnsWhenThePlayerReturns()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(100f, 1f));
+        var enemy = Guard(out EnemyShieldGuard guard);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        using (var data = new SerializedObject(guard))
+        {
+            data.FindProperty("guardWaitDuration").floatValue = 2.5f;
+            data.FindProperty("lastEnemyWaitDuration").floatValue = 1f;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var target = Host("Returning cooldown target", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform); guard.TickGuard(5f); guard.TickGuard(1.01f); guard.FinishStrike();
+        target.transform.position += Vector3.right * 20f;
+        guard.TickGuard(.73f); guard.TickGuard(1.6f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Advancing));
+        guard.TickGuard(.02f);
+        Assert.That(enemy.rb.linearVelocity.x, Is.GreaterThan(0f), "Cooldown must not make a distant shield stop approaching.");
+        target.transform.position = enemy.transform.position + Vector3.right * 5f;
+        guard.TickGuard(.02f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        guard.TickGuard(1.65f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.51f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+    }
+
+    [UnityEngine.TestTools.UnityTest]
+    public System.Collections.IEnumerator CooldownKeepsCountingOutsideTheGuardActionDuringARealFrameUpdate()
+    {
+        UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+            UnityEditor.SceneManagement.NewSceneMode.Single);
+        yield return new UnityEngine.TestTools.EnterPlayMode();
+        var enemy = Guard(out EnemyShieldGuard guard);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        var target = Host("Cooldown real frame target", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform); guard.TickGuard(5f); guard.TickGuard(1.01f); guard.FinishStrike();
+        guard.EndGuard();
+        float started = Time.time;
+        float deadline = Time.realtimeSinceStartup + 3f;
+        while (Time.time - started < .25f)
+        {
+            Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+            yield return null;
+        }
+        Assert.That(guard.AttackCooldownRemaining, Is.InRange(4.5f, 4.9f));
+        float remaining = guard.AttackCooldownRemaining;
+        Assert.That(guard.BeginGuard(target.transform), Is.True);
+        Assert.That(guard.AttackCooldownRemaining, Is.EqualTo(remaining).Within(.001f));
+        guard.gameObject.SetActive(false);
+        Assert.That(guard.AttackCooldownRemaining, Is.Zero, "Pooled actors must not inherit an earlier life's cooldown.");
+        yield return new UnityEngine.TestTools.ExitPlayMode();
+    }
+
+    [UnityEngine.TestTools.UnityTearDown]
+    public System.Collections.IEnumerator RestoreEditModeAfterRuntimeFailure()
+    {
+        if (Application.isPlaying) yield return new UnityEngine.TestTools.ExitPlayMode();
+    }
+
+    [Test]
+    public void ShieldTurnDelayIsAuthoredWithoutChangingRushTiming()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm103/Enemy103.prefab");
+        using var data = new SerializedObject(prefab.GetComponent<EnemyShieldGuard>());
+        Assert.That(data.FindProperty("followTurnDelay").floatValue, Is.EqualTo(.9f).Within(.001f));
+        Assert.That(data.FindProperty("rearRecheckDelay").floatValue, Is.EqualTo(.75f).Within(.001f));
+        Assert.That(data.FindProperty("turnDuration").floatValue, Is.EqualTo(.45f).Within(.001f));
+        Assert.That(Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard").AttackCooldown, Is.EqualTo(5f));
+    }
+
+    [Test]
+    public void ShieldTurnDelayCoversChaseFacingWithoutRestartingOnRepeatedRequests()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        typeof(EnemyShieldGuard).GetField("turnRequestedAt", Private).SetValue(guard, Time.time - .89f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        typeof(EnemyShieldGuard).GetField("turnRequestedAt", Private).SetValue(guard, Time.time - .91f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+    }
+
+    [Test]
+    public void ShieldTurnDelayResetsIfThePlayerReturnsToTheFront()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        typeof(EnemyShieldGuard).GetField("turnRequestedAt", Private).SetValue(guard, Time.time - .91f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, 1f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+    }
+
+    [Test]
+    public void ShieldTurnDelayAlsoProtectsTheRearWhileAdvancing()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("Advance rear target", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        target.transform.position = enemy.transform.position + Vector3.right * 20f;
+        guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Advancing));
+        target.transform.position = enemy.transform.position + Vector3.left * 3f;
+        guard.TickGuard(0f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        Assert.That(guard.BlocksHit(target.transform.position, DamageDelivery.Primary), Is.False);
+        Assert.That(guard.BlocksHit(enemy.transform.position + Vector3.right, DamageDelivery.Primary), Is.True);
+        typeof(EnemyShieldGuard).GetField("turnRequestedAt", Private).SetValue(guard, Time.time - .91f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, 1f);
+        guard.TickGuard(0f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+    }
+
+    [Test]
+    public void ShieldTurnDelaySurvivesGuardReentryWithoutAnImmediateFlip()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        var target = Host("Reentry rear target", enemy.transform.position + Vector3.left * 3f);
+        guard.BeginGuard(target.transform);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        guard.EndGuard();
+        guard.BeginGuard(target.transform);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        Assert.That(guard.BlocksHit(target.transform.position, DamageDelivery.Primary), Is.False);
+    }
+
+    [Test]
+    public void ShieldTurnDelayDoesNotAffectOtherEnemyCombatRoles()
+    {
+        EnemyController enemy = Guard(out _);
+        enemy.CombatRole = EnemyCombatRole.AimedRanged;
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+    }
+
+    [UnityEngine.TestTools.UnityTest]
+    public System.Collections.IEnumerator ShieldTurnDelayUsesRealGameplayTimeAndThenTurns()
+    {
+        UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+            UnityEditor.SceneManagement.NewSceneMode.Single);
+        yield return new UnityEngine.TestTools.EnterPlayMode();
+        var enemy = Guard(out EnemyShieldGuard guard);
+        float start = Time.time;
+        float deadline = Time.realtimeSinceStartup + 4f;
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+        while (Time.time - start < .7f)
+        {
+            Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+            EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+            yield return null;
+        }
+        while (EnemyFacingUtil.GetFacingSign(enemy.transform) > 0f)
+        {
+            Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+            EnemyFacingUtil.FaceHorizontal(enemy.transform, -1f);
+            yield return null;
+        }
+        Assert.That(Time.time - start, Is.GreaterThanOrEqualTo(.9f));
+        enemy.gameObject.SetActive(false); enemy.gameObject.SetActive(true);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, 1f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+        yield return new UnityEngine.TestTools.ExitPlayMode();
+    }
+
     private EnemyController Guard(out EnemyShieldGuard guard)
     {
         var host = Host("ShieldEnemy", new Vector3(1000f, 0f, 0f));
@@ -1358,6 +1663,12 @@ public class EnemyFlightGuardTests
         enemy.bodyCollider.offset = Vector2.up * 0.5f;
         host.AddComponent<EnemyLocomotion>();
         guard = host.AddComponent<EnemyShieldGuard>();
+        // Legacy timing fixtures keep their explicit five-second round; last-enemy timing is tested separately.
+        using (var data = new SerializedObject(guard))
+        {
+            data.FindProperty("lastEnemyWaitDuration").floatValue = 5f;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
         // EditMode AddComponent does not run this runtime component's Awake.
         typeof(EnemyShieldGuard).GetMethod("Awake", Private).Invoke(guard, null);
         var hitbox = Host("ShieldHitbox", host.transform.position + Vector3.right);

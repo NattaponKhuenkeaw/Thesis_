@@ -150,6 +150,7 @@ public partial class CameraManager : MonoBehaviour
     private Coroutine _focusReturnCoroutine;
     private CinemachineCamera _focusCam;
     private Transform _bossSpawnFocusTarget;
+    private CinemachineCamera _bossSpawnReturnCamera;
     private CinemachineBlendDefinition _focusOriginalBlend;
     private bool _hasFocusOriginalBlend;
     private Vector3 _focusReturnPosition;
@@ -463,9 +464,9 @@ public partial class CameraManager : MonoBehaviour
         return false;
     }
 
-    private bool CanSwitchRoomCameras()
+    private bool CanSwitchRoomCameras(bool allowStaticRoom = false)
     {
-        if (IsStaticCameraRoom() || _isTemporarilyFocused || _isTemporarilySnappedToPlayer)
+        if ((!allowStaticRoom && IsStaticCameraRoom()) || _isTemporarilyFocused || _isTemporarilySnappedToPlayer)
         {
             return false;
         }
@@ -906,14 +907,17 @@ public partial class CameraManager : MonoBehaviour
     /// Temporarily frames an authored Transform (Level-room display, etc.) above room cameras.
     /// Pair with <see cref="EndTemporaryFocus"/>.
     /// </summary>
-    public bool TryBeginBossSpawnFocus(Transform boss, float blendSeconds)
+    public bool TryBeginBossSpawnFocus(Transform boss, float blendSeconds, CinemachineCamera roomCamera = null)
     {
         if (boss == null || !isActiveAndEnabled || _isTemporarilyFocused || _focusReturnCoroutine != null
-            || _exploreCam == null || !CanSwitchRoomCameras())
+            || _exploreCam == null || !CanSwitchRoomCameras(roomCamera != null))
             return false;
 
         BeginTemporaryFocus(boss, blendSeconds, true);
         _bossSpawnFocusTarget = boss;
+        _bossSpawnReturnCamera = roomCamera;
+        if (_focusCam != null && roomCamera != null)
+            _focusCam.Priority = Mathf.Max(_focusCam.Priority.Value, roomCamera.Priority.Value + 1);
         return _focusCam != null;
     }
 
@@ -922,6 +926,9 @@ public partial class CameraManager : MonoBehaviour
         if (_bossSpawnFocusTarget == boss && boss != null)
             EndTemporaryFocus(blendSeconds);
     }
+
+    public bool IsBossSpawnFocusActive(Transform boss)
+        => boss != null && _bossSpawnFocusTarget == boss && _focusCam != null;
 
     public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f, bool bossSpawn = false)
     {
@@ -1052,7 +1059,8 @@ public partial class CameraManager : MonoBehaviour
             // The player can move during the reveal; return to the live gameplay camera.
             if (_bossSpawnFocusTarget != null && _exploreCam != null)
             {
-                CinemachineCamera destination = _isInCombat && _combatCam != null ? _combatCam : _exploreCam;
+                CinemachineCamera destination = _bossSpawnReturnCamera != null && _bossSpawnReturnCamera.isActiveAndEnabled
+                    ? _bossSpawnReturnCamera : _isInCombat && _combatCam != null ? _combatCam : _exploreCam;
                 _focusReturnPosition = destination.State.GetFinalPosition();
                 _focusReturnSize = destination.State.Lens.OrthographicSize;
             }
@@ -1079,6 +1087,7 @@ public partial class CameraManager : MonoBehaviour
     private void DisposeFocusCamera()
     {
         _bossSpawnFocusTarget = null;
+        _bossSpawnReturnCamera = null;
         _isTemporarilyFocused = false;
         if (_focusCam != null)
         {

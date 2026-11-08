@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace Project.UI
 {
@@ -25,21 +26,12 @@ namespace Project.UI
             public Button button;
             public Image icon;
             public Image frame;
-<<<<<<< Updated upstream
-=======
             public Image background;
             public Image iconFrame;
->>>>>>> Stashed changes
             public TMP_Text title;
             public TMP_Text stats;
             public TMP_Text passive;
             public GameObject[] stars;
-<<<<<<< Updated upstream
-        }
-
-        [SerializeField] private TMP_Text pullLabel;
-        [SerializeField] private Button confirm;
-=======
             [NonSerialized] public ScrollRect detailsScroll;
             [NonSerialized] public RectTransform detailsContent;
             [NonSerialized] public Vector2 restPosition;
@@ -50,13 +42,10 @@ namespace Project.UI
 
         [SerializeField] private TMP_Text pullLabel;
         [SerializeField] private GameObject statItemPrefab;
->>>>>>> Stashed changes
         [SerializeField] private Card[] cards;
         [SerializeField] private AudioClip revealSound;
         [SerializeField] private AudioClip confirmSound;
 
-<<<<<<< Updated upstream
-=======
         [Header("Selection Motion")]
         [Tooltip("Starting lift in canvas units; review against the header at narrow aspect ratios.")]
         [SerializeField] private float selectionLift = 28f;
@@ -67,28 +56,21 @@ namespace Project.UI
         [SerializeField] private float selectionScale = 1.08f;
         [SerializeField] private float pickupScale = 1.18f;
 
->>>>>>> Stashed changes
         private CanvasGroup group;
         private int selected = -1;
         private bool accepted;
+        private bool committing;
         private Func<int, bool> commit;
-<<<<<<< Updated upstream
-=======
         private string confirmPrompt;
         private string acquiredText;
         private Action releasePauseHold;
->>>>>>> Stashed changes
 
         public bool IsConfigured
         {
             get
             {
                 ResolveBindings();
-<<<<<<< Updated upstream
-                return pullLabel != null && confirm != null && cards != null &&
-=======
                 return statItemPrefab != null && pullLabel != null && cards != null &&
->>>>>>> Stashed changes
                     cards.Length == CardsPerPull && Array.TrueForAll(cards, card =>
                         card != null && card.button != null && card.icon != null && card.frame != null &&
                         card.title != null && card.stats != null && card.passive != null);
@@ -98,7 +80,6 @@ namespace Project.UI
         private void ResolveBindings()
         {
             pullLabel ??= transform.Find("PullLabel")?.GetComponent<TMP_Text>();
-            confirm ??= transform.Find("Confirm")?.GetComponent<Button>();
             if (cards == null || cards.Length != CardsPerPull)
                 cards = new Card[CardsPerPull];
             for (int i = 0; i < cards.Length; i++)
@@ -107,11 +88,17 @@ namespace Project.UI
                 cards[i] ??= new Card();
                 Card card = cards[i];
                 card.button ??= root?.GetComponent<Button>();
+                card.background ??= root?.GetComponent<Image>();
                 card.frame ??= root?.Find("Frame")?.GetComponent<Image>();
                 card.icon ??= root?.Find("Icon")?.GetComponent<Image>();
                 card.title ??= root?.Find("Title")?.GetComponent<TMP_Text>();
                 card.stats ??= root?.Find("Stats")?.GetComponent<TMP_Text>();
                 card.passive ??= root?.Find("Passive")?.GetComponent<TMP_Text>();
+                if (!card.hasRestPosition && card.button != null)
+                {
+                    card.restPosition = ((RectTransform)card.button.transform).anchoredPosition;
+                    card.hasRestPosition = true;
+                }
                 cards[i].stars = new GameObject[3];
                 for (int star = 0; star < cards[i].stars.Length; star++)
                     cards[i].stars[star] = root?.Find($"RarityStar{star + 1}")?.gameObject;
@@ -132,26 +119,27 @@ namespace Project.UI
             ReleasePauseHold();
             releasePauseHold = GameFreezeManager.AcquirePauseHold();
             group = GetComponent<CanvasGroup>();
-<<<<<<< Updated upstream
-            pullLabel.text = $"Select Artifact   /   {pull} of {total}";
-=======
             string pullText = $"{pull} of {total}";
             confirmPrompt = $"Select again to claim   /   {pullText}";
             acquiredText = "Artifact acquired";
             pullLabel.text = $"Select Artifact   /   {pullText}";
->>>>>>> Stashed changes
             selected = -1;
             accepted = false;
+            committing = false;
             commit = commitSelection;
-            confirm.interactable = false;
-            confirm.onClick.AddListener(Confirm);
             group.interactable = false;
+            group.blocksRaycasts = true;
             group.alpha = 0f;
             for (int i = 0; i < cards.Length; i++)
             {
                 int index = i;
                 Card card = cards[i];
-                card.button.onClick.AddListener(() => Select(index));
+                if (card.selectAction != null) card.button.onClick.RemoveListener(card.selectAction);
+                card.selectAction = () => Select(index);
+                card.button.onClick.AddListener(card.selectAction);
+                if (card.selectionMotion != null) StopCoroutine(card.selectionMotion);
+                ((RectTransform)card.button.transform).anchoredPosition = card.restPosition;
+                card.button.transform.localScale = Vector3.one;
                 Bind(card, candidates[i], inventory);
                 card.button.gameObject.SetActive(false);
             }
@@ -181,15 +169,14 @@ namespace Project.UI
             EventSystem.current?.SetSelectedGameObject(cards[0].button.gameObject);
             while (this != null && isActiveAndEnabled && !accepted)
             {
-                group.interactable = !PauseMenuController.IsOpen;
+                group.interactable = !committing && !PauseMenuController.IsOpen;
                 yield return null;
             }
             if (this == null || !isActiveAndEnabled) yield break;
+            group.interactable = false;
             if (confirmSound != null) GameAudioManager.Instance?.PlayHitSFX(confirmSound);
-            yield return new WaitForSecondsRealtime(.16f);
+            yield return PickUp(cards[selected]);
             yield return Fade(0f);
-<<<<<<< Updated upstream
-=======
             group.blocksRaycasts = false;
             ReleasePauseHold();
         }
@@ -197,19 +184,10 @@ namespace Project.UI
         internal void PlayRevealSound()
         {
             if (revealSound != null) GameAudioManager.Instance?.PlayHitSFX(revealSound);
->>>>>>> Stashed changes
         }
 
         private void Select(int index)
         {
-<<<<<<< Updated upstream
-            if (!group.interactable || accepted || PauseMenuController.IsOpen) return;
-            selected = index;
-            for (int i = 0; i < cards.Length; i++)
-                cards[i].button.transform.localScale = Vector3.one * (i == index ? 1.045f : 1f);
-            confirm.interactable = true;
-            EventSystem.current?.SetSelectedGameObject(confirm.gameObject);
-=======
             if (group == null || !group.interactable || accepted || committing || PauseMenuController.IsOpen ||
                 !cards[index].button.isActiveAndEnabled || !cards[index].button.IsInteractable()) return;
             if (selected == index)
@@ -226,17 +204,13 @@ namespace Project.UI
             }
             pullLabel.text = confirmPrompt;
             EventSystem.current?.SetSelectedGameObject(cards[index].button.gameObject);
->>>>>>> Stashed changes
         }
 
         private void Confirm()
         {
-            if (selected < 0 || accepted || PauseMenuController.IsOpen) return;
+            if (selected < 0 || accepted || committing || PauseMenuController.IsOpen) return;
+            committing = true;
             group.interactable = false;
-<<<<<<< Updated upstream
-            accepted = commit(selected);
-            if (!accepted) group.interactable = true;
-=======
             try { accepted = commit?.Invoke(selected) == true; }
             finally
             {
@@ -297,7 +271,6 @@ namespace Project.UI
                 group.interactable = false;
                 group.blocksRaycasts = false;
             }
->>>>>>> Stashed changes
         }
 
         private void ReleasePauseHold()
@@ -337,8 +310,6 @@ namespace Project.UI
             ArtifactDefinition definition = inventory.ResolveArtifactDefinition(instance.definitionId);
             card.icon.sprite = definition.icon;
             card.frame.color = RarityColor(definition.rarity);
-<<<<<<< Updated upstream
-=======
             card.frame.fillCenter = false;
             if (card.iconFrame == null)
             {
@@ -361,25 +332,12 @@ namespace Project.UI
                 card.background.sprite = null;
                 card.background.color = Color.Lerp(new Color(.08f, .09f, .13f), RarityColor(definition.rarity), .45f);
             }
->>>>>>> Stashed changes
             card.title.text = definition.itemName;
             if (card.stars != null)
             {
                 for (int i = 0; i < card.stars.Length; i++)
                     if (card.stars[i] != null) card.stars[i].SetActive(i < (int)definition.rarity);
             }
-<<<<<<< Updated upstream
-            card.passive.text = definition.passiveDescription;
-            var stats = new StringBuilder();
-            foreach (ArtifactRoll roll in instance.rolls)
-            {
-                string suffix = ArtifactRollValue.ScaleFor(roll.statKind) == 100 ? "%" : string.Empty;
-                stats.AppendLine($"+{roll.Value:0.##}{suffix} {ArtifactStatCatalog.GetLabel(roll.statKind)}");
-            }
-            if (ArtifactRollQuality.TryGetAverageQuality(instance, inventory.ArtifactRollTable, out float quality))
-                stats.Append($"Roll Quality  {quality * 100f:0.#}");
-            card.stats.text = stats.ToString();
-=======
             card.passive.richText = true;
             card.passive.text = definition.passiveDescription;
             card.passive.textWrappingMode = TextWrappingModes.Normal;
@@ -504,7 +462,6 @@ namespace Project.UI
             var sizing = row.GetComponent<LayoutElement>() ?? row.gameObject.AddComponent<LayoutElement>();
             sizing.minHeight = sizing.preferredHeight = 26f;
             sizing.flexibleHeight = 0f;
->>>>>>> Stashed changes
         }
     }
 }

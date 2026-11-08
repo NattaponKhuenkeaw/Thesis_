@@ -28,13 +28,7 @@ namespace Project.Core.ZoneState
             [Min(1)] public int maxWaves = 1;
             [Min(1)] public int minEnemiesPerWave = 1;
             [Min(1)] public int maxEnemiesPerWave = 2;
-<<<<<<< Updated upstream
-            [Min(1)] public int aliveCap = 3;
-            [Min(0)] public int minCoins = 40;
-            [Min(0)] public int maxCoins = 80;
-=======
             [Min(1)] public int aliveCap = 5;
->>>>>>> Stashed changes
             [Range(0f, 1f)] public float artifactChance = 0.1f;
             public List<EnemyEntry> enemyPool = new List<EnemyEntry>();
         }
@@ -50,7 +44,7 @@ namespace Project.Core.ZoneState
         [Header("Spawn")]
         [SerializeField, Min(1)] private int defaultSpawnSlotCount = 3;
         [SerializeField, Min(0f)] private float delayBetweenWaves = 1.25f;
-        [SerializeField, Min(1)] private int aliveCap = 3;
+        [SerializeField, Min(1)] private int aliveCap = 5;
         [SerializeField, Min(0f)] private float spawnInterval = 0.35f;
         [Tooltip("Allows direct artifact drops when a Hard reward pattern is unavailable.")]
         [SerializeField] private bool grantArtifacts = false;
@@ -100,37 +94,14 @@ namespace Project.Core.ZoneState
             {
                 new DifficultyProfile
                 {
-<<<<<<< Updated upstream
-                    difficulty = RouteDifficulty.Easy,
-                    rollWeight = 40f,
-                    minWaves = 1,
-                    maxWaves = 1,
-                    minEnemiesPerWave = 4,
-                    maxEnemiesPerWave = 4,
-                    aliveCap = 3,
-                    minCoins = 80,
-                    maxCoins = 100,
-                    artifactChance = 0.05f
-                },
-                new DifficultyProfile
-                {
-=======
->>>>>>> Stashed changes
                     difficulty = RouteDifficulty.Medium,
                     rollWeight = 40f,
                     minWaves = 1,
                     maxWaves = 1,
                     minEnemiesPerWave = 6,
                     maxEnemiesPerWave = 6,
-<<<<<<< Updated upstream
-                    aliveCap = 3,
-                    minCoins = 120,
-                    maxCoins = 150,
-                    artifactChance = 0.28f
-=======
                     aliveCap = 5,
                     artifactChance = 0f
->>>>>>> Stashed changes
                 },
                 new DifficultyProfile
                 {
@@ -140,13 +111,7 @@ namespace Project.Core.ZoneState
                     maxWaves = 1,
                     minEnemiesPerWave = 8,
                     maxEnemiesPerWave = 8,
-<<<<<<< Updated upstream
-                    aliveCap = 4,
-                    minCoins = 180,
-                    maxCoins = 220,
-=======
                     aliveCap = 5,
->>>>>>> Stashed changes
                     artifactChance = 0.55f
                 }
             };

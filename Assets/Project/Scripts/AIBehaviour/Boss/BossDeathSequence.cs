@@ -243,6 +243,8 @@ namespace Project.AIBehaviour.Boss
             }
 
             BossGroundTelegraph[] telegraphs = FindObjectsByType<BossGroundTelegraph>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var observer in FindObjectsByType<Boss112Controller>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                observer.ForceClearCombatHazards();
             for (int i = 0; i < telegraphs.Length; i++)
             {
                 telegraphs[i]?.Hide();

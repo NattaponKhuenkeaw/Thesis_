@@ -521,7 +521,7 @@ public class InteractableWorldUI : MonoBehaviour
 
         Project.ShopSystem.ShopManager shopManager = FindFirstObjectByType<Project.ShopSystem.ShopManager>();
         return shopManager != null
-            ? $"{prompt.descriptionString} +{shopManager.CurrentRerollPriceIncreasePercent:0.#}%"
-            : prompt.descriptionString;
+            ? $"{prompt.descriptionString} FREE (+{shopManager.CurrentRerollPriceIncreasePercent:0.#}%)"
+            : $"{prompt.descriptionString} FREE";
     }
 }

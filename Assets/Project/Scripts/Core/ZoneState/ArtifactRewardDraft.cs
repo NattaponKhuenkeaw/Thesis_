@@ -26,19 +26,24 @@ namespace Project.Core.ZoneState
             rare.Sort(CompareId);
             var random = new System.Random(terms.RewardSeed);
             Vector2 weights = table.GetPhaseRarityWeights(terms.BiomeIndex).hardRewardWeights;
-            float commonWeight = common.Count >= ArtifactRewardPickerUI.CardsPerPull ? Mathf.Max(0f, weights.x) : 0f;
-            float rareWeight = rare.Count >= ArtifactRewardPickerUI.CardsPerPull ? Mathf.Max(0f, weights.y) : 0f;
-            if (commonWeight + rareWeight <= 0f) return false;
+            float commonWeight = Mathf.Max(0f, weights.x);
+            float rareWeight = Mathf.Max(0f, weights.y);
+            int eligibleCount = (commonWeight > 0f ? common.Count : 0) + (rareWeight > 0f ? rare.Count : 0);
+            if (eligibleCount < ArtifactRewardPickerUI.CardsPerPull) return false;
 
             var generator = new ArtifactRollGenerator(table);
             pulls = new ArtifactInstance[terms.ArtifactPulls][];
             for (int pull = 0; pull < pulls.Length; pull++)
             {
-                bool chooseRare = random.NextDouble() * (commonWeight + rareWeight) >= commonWeight;
-                var pool = new List<ArtifactDefinition>(chooseRare ? rare : common);
+                var commonPool = new List<ArtifactDefinition>(common);
+                var rarePool = new List<ArtifactDefinition>(rare);
                 var candidates = new ArtifactInstance[ArtifactRewardPickerUI.CardsPerPull];
                 for (int card = 0; card < candidates.Length; card++)
                 {
+                    float availableCommonWeight = commonPool.Count > 0 ? commonWeight : 0f;
+                    float availableRareWeight = rarePool.Count > 0 ? rareWeight : 0f;
+                    bool chooseRare = random.NextDouble() * (availableCommonWeight + availableRareWeight) >= availableCommonWeight;
+                    var pool = chooseRare ? rarePool : commonPool;
                     int index = random.Next(pool.Count);
                     candidates[card] = generator.Generate(pool[index], 0, random.Next(), terms.BiomeIndex);
                     pool.RemoveAt(index);

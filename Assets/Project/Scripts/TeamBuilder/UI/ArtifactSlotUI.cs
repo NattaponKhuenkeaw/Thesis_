@@ -20,14 +20,11 @@ namespace Project.TeamBuilder.UI
         [Header("UI References")]
         [SerializeField] private Image artifactIcon;
         [SerializeField] private Image slotBackground;
-<<<<<<< Updated upstream
-=======
         [Tooltip("Non-interactive overlay showing the destination for inventory equipment.")]
         [SerializeField] private Image selectionOverlay;
         [Header("Selection Pulse (starting values)")]
         [SerializeField, Min(.2f)] private float selectionPulsePeriod = 1.2f;
         [SerializeField, Range(0f, .15f)] private float selectionPulseScale = .06f;
->>>>>>> Stashed changes
 
         [Header("Visual Settings")]
         [SerializeField] private Color emptySlotColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
@@ -41,7 +38,6 @@ namespace Project.TeamBuilder.UI
         private ArtifactDefinition currentDefinition;
         private TeamSlotUI parentSlot;
         private bool isDropHighlighted;
-        private bool isSelectionDestination;
         private TMP_Text emptySlotLabel;
         private float selectionStartedAt;
 
@@ -162,9 +158,6 @@ namespace Project.TeamBuilder.UI
 
         public void SetSelectionDestination(bool selected)
         {
-<<<<<<< Updated upstream
-            isSelectionDestination = selected;
-=======
             if (selected && selectionOverlay == null)
             {
                 var overlay = new GameObject("Selection Overlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Outline), typeof(LayoutElement));
@@ -205,7 +198,6 @@ namespace Project.TeamBuilder.UI
                 selectionOverlay.color = new Color(1f, .99f, .72f, 1f);
                 selectionOverlay.rectTransform.localScale = Vector3.one;
             }
->>>>>>> Stashed changes
             RefreshBackground();
         }
 
@@ -341,11 +333,7 @@ namespace Project.TeamBuilder.UI
         private void RefreshBackground()
         {
             if (slotBackground == null) return;
-            if (isSelectionDestination)
-            {
-                slotBackground.color = Color.white;
-            }
-            else if (isDropHighlighted)
+            if (isDropHighlighted)
             {
                 slotBackground.color = new Color(1f, 1f, 1f, 0.5f);
             }

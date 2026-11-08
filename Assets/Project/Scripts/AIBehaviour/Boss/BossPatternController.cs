@@ -22,6 +22,7 @@ namespace Project.AIBehaviour.Boss
         [SerializeField] private AnimationHandler_Enemy animHandler;
         [SerializeField] private Rigidbody2D rb;
         [SerializeField] private BossGroundTelegraph groundTelegraph;
+        [SerializeField] private EnemyChargeTelegraph chargeTelegraph;
         [SerializeField] private string playerTag = PlayerTag;
 
         [Header("HUD")]
@@ -142,8 +143,10 @@ namespace Project.AIBehaviour.Boss
         [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float jumpLandSfxVolume = 1f;
 
         [Header("Jump Smash")]
-        [SerializeField] private float jumpArcHeight = 3.5f;
+        [SerializeField] private float jumpArcHeight = 5f;
         [SerializeField] private float jumpTravelDuration = 0.75f;
+        [Tooltip("Separate height for the stationary shockwave jumps; does not follow the traveling jump tuning.")]
+        [SerializeField, Min(0f)] private float seismicJumpArcHeight = 3.5f;
         [Tooltip("Fallback world radius when hitboxSizeOverride is unset. Prefer deriving from jump smash hitbox.")]
         [SerializeField] private float smashMarkerRadius = 1.6f;
 
@@ -226,6 +229,7 @@ namespace Project.AIBehaviour.Boss
         public AudioClip JumpLandSfx => jumpLandSfx;
         public float JumpLandSfxVolume => GameAudioManager.ClampSFXGain(jumpLandSfxVolume);
         public float JumpArcHeight => jumpArcHeight;
+        public float SeismicJumpArcHeight => seismicJumpArcHeight;
         public float JumpTravelDuration => jumpTravelDuration;
         public float ChargeSpeed => chargeSpeed;
         public float ChargeStopAnimationDuration => chargeStopAnimationDuration;
@@ -823,7 +827,7 @@ namespace Project.AIBehaviour.Boss
             StopTelegraphFlash();
             animHandler?.SetBossJumpPhase(0f);
             animHandler?.TriggerBossPattern(BossPatternId.JumpSmash);
-            yield return JumpArc(lockPoint);
+            yield return JumpArc(lockPoint, seismic ? seismicJumpArcHeight : jumpArcHeight);
 
             // MovePosition is applied by physics; don't show impact on its request frame.
             yield return waitFixed;
@@ -970,6 +974,7 @@ namespace Project.AIBehaviour.Boss
 
         private IEnumerator Telegraph(BossPatternTiming timing, BossPatternId patternId, Vector3? markerWorldPos, float markerRadius)
         {
+            chargeTelegraph?.Hide();
             // Each pattern faces its target once before entering wind-up.
             enemy.LockFacing();
             BeginArmored();
@@ -997,18 +1002,28 @@ namespace Project.AIBehaviour.Boss
             }
 
             float t = 0f;
+            float chargeTravel = patternId == BossPatternId.BullCharge ? ResolveChargeTravelDistance(GetFacingSign()) : 0f;
             while (t < timing.telegraphDuration)
             {
                 if (!CanContinuePattern())
                     yield break;
 
                 t += Time.deltaTime;
+                if (patternId == BossPatternId.BullCharge && chargeTelegraph != null && enemy.bodyCollider != null)
+                {
+                    Bounds bounds = enemy.bodyCollider.bounds;
+                    float facing = GetFacingSign();
+                    Vector3 start = new Vector3(facing > 0f ? bounds.max.x : bounds.min.x, bounds.center.y, transform.position.z);
+                    chargeTelegraph.ShowLane(start, start + Vector3.right * (facing * chargeTravel), bounds.size.y,
+                        t / Mathf.Max(.001f, timing.telegraphDuration));
+                }
                 if (patternId == BossPatternId.BullCharge)
                     animHandler?.SetBossChargePhase(Mathf.Min(.2999f, t));
                 if (patternId == BossPatternId.AlternatingCleave)
                     animHandler?.SampleBossCleave(0f);
                 yield return null;
             }
+            chargeTelegraph?.Hide();
         }
 
         private float ResolveSmashMarkerRadius()
@@ -1099,6 +1114,7 @@ namespace Project.AIBehaviour.Boss
 
         private void CleanupAttackState()
         {
+            chargeTelegraph?.Hide();
             if (samplingCleaveSequence)
             {
                 samplingCleaveSequence = false;
@@ -1289,7 +1305,7 @@ namespace Project.AIBehaviour.Boss
             hasCachedHitboxSize = false;
         }
 
-        private IEnumerator JumpArc(Vector3 landPoint)
+        private IEnumerator JumpArc(Vector3 landPoint, float arcHeight)
         {
             CachePhysics();
             if (rb != null)
@@ -1318,7 +1334,7 @@ namespace Project.AIBehaviour.Boss
                 float u = Mathf.Clamp01(t);
                 animHandler?.SetBossJumpPhase(u * duration < .1f ? 0f : 0.25f);
                 Vector2 pos = Vector2.Lerp(start, end, u);
-                pos.y += jumpArcHeight * 4f * u * (1f - u);
+                pos.y += Mathf.Max(0f, arcHeight) * 4f * u * (1f - u);
                 MoveBossPosition(pos);
                 yield return waitFixed;
             }

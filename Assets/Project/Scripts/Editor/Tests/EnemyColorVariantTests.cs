@@ -8,6 +8,65 @@ using Object = UnityEngine.Object;
 
 public class EnemyColorVariantTests
 {
+    [TestCase('a', "SpawnGround")] [TestCase('b', "SpawnGround")] [TestCase('c', "SpawnGround")]
+    [TestCase('a', "SpawnFall")] [TestCase('b', "SpawnFall")] [TestCase('c', "SpawnFall")]
+    public void BossSpawnClipsExplicitlyHoldTheirSelectedColor(char color, string state)
+    {
+        string folder = "Assets/Project/Character/enemy/Boss/Executioner/animation/ColorVariants/";
+        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"{folder}boss_{state}_Color{char.ToUpperInvariant(color)}.anim");
+        var bindings = AnimationUtility.GetObjectReferenceCurveBindings(clip)
+            .Where(b => b.type == typeof(SpriteRenderer) && b.propertyName == "m_Sprite" && b.path == "").ToArray();
+        Assert.That(bindings.Length, Is.EqualTo(1), "An empty spawn clip can restore the prefab's default color.");
+        var frames = AnimationUtility.GetObjectReferenceCurve(clip, bindings[0]);
+        Assert.That(frames.Length, Is.EqualTo(2));
+        Assert.That(frames[0].time, Is.Zero);
+        Assert.That(frames[1].time, Is.EqualTo(1f).Within(.00001f));
+        foreach (var frame in frames)
+        {
+            Assert.That(AssetDatabase.GetAssetPath(frame.value), Is.EqualTo(EnemyColorVariantAuthoring.VariantSheetPath(111, color)));
+            Assert.That(frame.value.name, Is.EqualTo("Gif_Idle_00"));
+        }
+        Assert.That(clip.isLooping, Is.False);
+    }
+
+    [TestCase('a', "SpawnGround")] [TestCase('b', "SpawnGround")] [TestCase('c', "SpawnGround")]
+    [TestCase('a', "SpawnFall")] [TestCase('b', "SpawnFall")] [TestCase('c', "SpawnFall")]
+    public void BossAnimatorKeepsTheSameColorFromRevealThroughIdleAndWalk(char color, string spawnState)
+    {
+        const string folder = "Assets/Project/Character/enemy/Boss/Executioner/animation/ColorVariants/";
+        var controller = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+            $"{folder}ExecutionerAnimatorController_Color{char.ToUpperInvariant(color)}.overrideController");
+        var host = new GameObject("Boss reveal color fixture");
+        host.SetActive(false);
+        try
+        {
+            var renderer = host.AddComponent<SpriteRenderer>();
+            char otherColor = color == 'a' ? 'b' : 'a';
+            renderer.sprite = AssetDatabase.LoadAllAssetsAtPath(EnemyColorVariantAuthoring.VariantSheetPath(111, otherColor))
+                .OfType<Sprite>().Single(s => s.name == "Gif_Idle_00");
+            var animator = host.AddComponent<Animator>();
+            animator.runtimeAnimatorController = controller;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            host.SetActive(true);
+            animator.Rebind();
+            animator.Update(0f);
+            foreach (string state in new[] { spawnState, "Idle", "Walk" })
+            {
+                animator.SetInteger("LifecyclePhase", state.StartsWith("Spawn") ? 0 : 1);
+                animator.Play("Base Layer." + state, 0, 0f);
+                animator.Update(0f);
+                for (int frame = 0; frame < 14; frame++)
+                {
+                    Assert.That(AssetDatabase.GetAssetPath(renderer.sprite),
+                        Is.EqualTo(EnemyColorVariantAuthoring.VariantSheetPath(111, color)), $"{state}, frame {frame}");
+                    Assert.That(animator.runtimeAnimatorController, Is.SameAs(controller));
+                    animator.Update(.1f);
+                }
+            }
+        }
+        finally { Object.DestroyImmediate(host); }
+    }
+
     [TestCase('a', "Idle")] [TestCase('b', "Idle")] [TestCase('c', "Idle")]
     [TestCase('a', "Walk")] [TestCase('b', "Walk")] [TestCase('c', "Walk")]
     public void Enemy101GroundColliderMatchesVisibleSpriteBase(char color, string pose)

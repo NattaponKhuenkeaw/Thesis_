@@ -189,12 +189,12 @@ TextureImporter:
       name: ExitLight_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 724
-        height: 724
+        x: 32
+        y: 112
+        width: 666
+        height: 612
       alignment: 9
-      pivot: {x: 1, y: 0.14}
+      pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -211,12 +211,12 @@ TextureImporter:
       name: ExitLight_1
       rect:
         serializedVersion: 2
-        x: 738
-        y: 17
-        width: 710
-        height: 690
+        x: 756
+        y: 112
+        width: 666
+        height: 612
       alignment: 9
-      pivot: {x: 1, y: 0.14}
+      pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -233,13 +233,13 @@ TextureImporter:
       name: ExitLight_2
       rect:
         serializedVersion: 2
-        x: 1448
-        y: 0
-        width: 724
-        height: 724
+        x: 1480
+        y: 112
+        width: 666
+        height: 612
       alignment: 9
-      pivot: {x: 1, y: 0.14}
-      border: {x: 11, y: 0, z: 0, w: 0}
+      pivot: {x: 1, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []

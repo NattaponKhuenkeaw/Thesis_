@@ -19,6 +19,9 @@ namespace Project.TeamBuilder.UI
         private Transform windowTransform;
         private GameObject previousFocus;
         private bool closing;
+        private bool closedNotified;
+
+        public event Action<ArtifactCopyMenuUI> Closed;
 
         public static bool SkipConfirmation => PlayerPrefs.GetInt(SkipDiscardConfirmation, 0) == 1;
 
@@ -61,16 +64,17 @@ namespace Project.TeamBuilder.UI
             FindButton("Window/Discard").onClick.AddListener(() =>
             {
                 if (closing) return;
-                if (onDiscard())
+                bool skipConfirmation = skip.isOn;
+                // Finish closing before inventory events rebuild or disable the originating grid.
+                previousFocus = null;
+                Close(() =>
                 {
-                    previousFocus = null;
-                    if (skip.isOn)
+                    if (onDiscard() && skipConfirmation)
                     {
                         PlayerPrefs.SetInt(SkipDiscardConfirmation, 1);
                         PlayerPrefs.Save();
                     }
-                }
-                Close();
+                });
             });
             Open(cancel);
         }
@@ -80,6 +84,10 @@ namespace Project.TeamBuilder.UI
         private void Open(Button initialFocus)
         {
             group = GetComponent<CanvasGroup>();
+            closing = false;
+            closedNotified = false;
+            group.interactable = true;
+            group.blocksRaycasts = true;
             group.alpha = 0f;
             windowTransform = transform.Find("Window");
             active = this;
@@ -101,6 +109,19 @@ namespace Project.TeamBuilder.UI
         private void OnDisable()
         {
             if (active == this) active = null;
+            if (group != null)
+            {
+                group.interactable = false;
+                group.blocksRaycasts = false;
+            }
+            NotifyClosed();
+        }
+
+        private void NotifyClosed()
+        {
+            if (closedNotified) return;
+            closedNotified = true;
+            Closed?.Invoke(this);
         }
 
         private void Close(Action then = null)
@@ -108,6 +129,9 @@ namespace Project.TeamBuilder.UI
             if (closing || group == null) return;
             closing = true;
             group.interactable = false;
+            group.blocksRaycasts = false;
+            if (active == this) active = null;
+            NotifyClosed();
             StopAllCoroutines();
             StartCoroutine(CloseRoutine(then));
         }
@@ -118,8 +142,8 @@ namespace Project.TeamBuilder.UI
             gameObject.SetActive(false);
             if (previousFocus != null && previousFocus.activeInHierarchy)
                 EventSystem.current?.SetSelectedGameObject(previousFocus);
-            then?.Invoke();
-            Destroy(gameObject);
+            try { then?.Invoke(); }
+            finally { Destroy(gameObject); }
         }
 
         private IEnumerator Animate(float target)

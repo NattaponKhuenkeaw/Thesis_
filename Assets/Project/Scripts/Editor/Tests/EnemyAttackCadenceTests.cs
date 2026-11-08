@@ -7,7 +7,7 @@ public class EnemyAttackCadenceTests
 {
     [TestCase("Enm101/Enemy1.prefab", 3.8f, .8f)]
     [TestCase("Enm102/Enemy102.prefab", 1.5f, 1.17f)]
-    [TestCase("Enm103/Enemy103.prefab", 3.5f, .72f)]
+    [TestCase("Enm103/Enemy103.prefab", 5f, .72f)]
     public void ProductionEnemiesResolveTheirTunedRecoveryFromTheKit(string path, float cooldown, float plant)
     {
         var enemy = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/" + path).GetComponent<EnemyController>();
@@ -22,7 +22,7 @@ public class EnemyAttackCadenceTests
     {
         var root = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm103/Enemy103.prefab");
         using (var data = new SerializedObject(root.GetComponent<EnemyShieldGuard>()))
-            Assert.That(data.FindProperty("guardWaitDuration").floatValue, Is.EqualTo(4.5f));
+            Assert.That(data.FindProperty("guardWaitDuration").floatValue, Is.EqualTo(2.5f));
         var kit = root.GetComponent<EnemyController>().Kit;
         Assert.That(kit.WarningDuration, Is.EqualTo(1f));
         Assert.That(kit.HitWindowDuration, Is.EqualTo(.48f));

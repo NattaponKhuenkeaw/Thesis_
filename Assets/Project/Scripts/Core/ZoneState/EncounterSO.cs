@@ -45,6 +45,12 @@ namespace Project.Core.ZoneState
         [Tooltip("Shuffle Bag deals a shuffled mix from weights. Weighted Random rolls each spawn independently.")]
         [SerializeField] private EncounterTypePickMode typePickMode = EncounterTypePickMode.ShuffleBag;
 
+        [Header("Final Chamber Replacement (Optional)")]
+        [SerializeField] private GameObject finalChamberElite;
+        [SerializeField] private GameObject eliteReplaces;
+        public GameObject FinalChamberElite => finalChamberElite;
+        public GameObject EliteReplaces => eliteReplaces;
+
         [Header("Waves (boss / fallback)")]
         [SerializeField] private List<Wave> waves = new List<Wave>();
         [SerializeField] [Min(0f)] private float delayBetweenWaves = 1.5f;
@@ -52,8 +58,8 @@ namespace Project.Core.ZoneState
         [Header("Spawn Mode")]
         [Tooltip("Enemies in one combat chamber. Weights should add up to this so the mix is exact. 0 keeps the layout Enemy Count.")]
         [SerializeField, Min(0)] private int chamberQuota;
-        [SerializeField] private EncounterSpawnMode spawnMode = EncounterSpawnMode.Pressure;
-        [SerializeField, Min(1)] private int aliveCap = 3;
+        [SerializeField] private EncounterSpawnMode spawnMode = EncounterSpawnMode.Batched;
+        [SerializeField, Min(1)] private int aliveCap = 5;
         [Tooltip("Delay between refill spawns after the opening group. The first group appears together.")]
         [SerializeField, Min(0f)] private float spawnInterval = 0.35f;
 

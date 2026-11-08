@@ -14,167 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.PlayerRunInventory
   ownedItems:
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
-  - {fileID: 11400000, guid: 225e900f58aad0a409d9d02148d91571, type: 2}
-  - {fileID: 11400000, guid: 947559303eef7b740a2c21e5f5e600a9, type: 2}
-  artifactInstances:
-  - instanceId: 2421064071ea421d9d51efed6cf1e61c
-    definitionId: ART-P1-009
-    rolls:
-    - statKind: 0
-      valueUnits: 578
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 1
-    collectedTimestampUtc: 639294767742915007
-    generationSeed: -95978423
-    acquisitionBiomeIndex: 0
-  - instanceId: 095f53eb35634ca698270e553739b015
-    definitionId: ART-P1-002
-    rolls:
-    - statKind: 25
-      valueUnits: 1220
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 2
-    collectedTimestampUtc: 639294771589356208
-    generationSeed: -700405904
-    acquisitionBiomeIndex: 1
-  - instanceId: 9053110ed6b5442fa6b3aeb31c8ea47a
-    definitionId: ART-P1-005
-    rolls:
-    - statKind: 26
-      valueUnits: 3617
-      source: 0
-    - statKind: 0
-      valueUnits: 252
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 3
-    collectedTimestampUtc: 639294771800950320
-    generationSeed: -376904431
-    acquisitionBiomeIndex: 1
-  - instanceId: ec0fc86c9b184cd58c7b6b291ce233b5
-    definitionId: ART-P1-006
-    rolls:
-    - statKind: 24
-      valueUnits: 3314
-      source: 0
-    - statKind: 23
-      valueUnits: 2016
-      source: 0
-    - statKind: 25
-      valueUnits: 2380
-      source: 0
-    - statKind: 24
-      valueUnits: 2946
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 4
-    collectedTimestampUtc: 639294771894654406
-    generationSeed: 1242710425
-    acquisitionBiomeIndex: 1
-  - instanceId: 252d8f0558e547468159491a72b8e7ea
-    definitionId: ART-P1-007
-    rolls:
-    - statKind: 23
-      valueUnits: 3249
-      source: 0
-    - statKind: 0
-      valueUnits: 505
-      source: 0
-    - statKind: 25
-      valueUnits: 3725
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 5
-    collectedTimestampUtc: 639294774915978747
-    generationSeed: 623971251
-    acquisitionBiomeIndex: 2
-  - instanceId: fcbad4be9f084d4e9ab59599501602dc
-    definitionId: ART-P1-001
-    rolls:
-    - statKind: 23
-      valueUnits: 1892
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 6
-    collectedTimestampUtc: 639294778478868696
-    generationSeed: 1769634685
-    acquisitionBiomeIndex: 3
-  - instanceId: 1b1bfff5c82c4b699deea2377a31e5a3
-    definitionId: ART-P1-004
-    rolls:
-    - statKind: 10
-      valueUnits: 1853
-      source: 0
-    - statKind: 26
-      valueUnits: 4184
-      source: 0
-    - statKind: 24
-      valueUnits: 4502
-      source: 0
-    - statKind: 24
-      valueUnits: 3699
-      source: 0
-    isFavourite: 0
-    isNew: 1
-    acquisitionOrder: 7
-    collectedTimestampUtc: 639294794842696318
-    generationSeed: -1584526794
-    acquisitionBiomeIndex: 6
+  artifactInstances: []
   artifactRollTable: {fileID: 11400000, guid: acf4a418dd90362438e80ff299bc7b30, type: 2}
   itemStacks: []
-  currency: 1263
-  _globalLevel: 10
+  currency: 1000
+  _globalLevel: 1
   _globalMaxLevel: 30
-  runCharacters:
-  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 6.1
-      defensePerLevel: 4.2
-      maxHpPerLevel: 81
-    currentHP: 970.8753
-    currentAE: 60
-  - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 4.3
-      defensePerLevel: 4.8
-      maxHpPerLevel: 83
-    currentHP: 1325.8633
-    currentAE: 70
-  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 7
-      defensePerLevel: 3.7
-      maxHpPerLevel: 79.5
-    currentHP: 691.8701
-    currentAE: 59
+  runCharacters: []
   teamSlots:
-  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
+  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     legacyArtifacts: []
-    artifactRefs:
-    - instanceId: 
-    - instanceId: 
-    - instanceId: 
-  - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
+    artifactRefs: []
+  - character: {fileID: 0}
     legacyArtifacts: []
-    artifactRefs:
-    - instanceId: 
-    - instanceId: 
-    - instanceId: 
+    artifactRefs: []
   activeTeamSlotIndex: 0

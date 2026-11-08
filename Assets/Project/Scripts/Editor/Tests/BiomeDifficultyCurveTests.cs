@@ -1,9 +1,40 @@
 #if UNITY_INCLUDE_TESTS
+using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using Project.Core.ZoneState;
+using UnityEditor;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 public class BiomeDifficultyCurveTests
 {
+    private const string EnemyFolder = "Assets/Project/Character/enemy/enemy/";
+    private const string BossPath = "Assets/Project/Character/enemy/Boss/Executioner/Boss_Executioner.prefab";
+    private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
+    private static readonly FieldInfo InstanceField = typeof(RunProgressionManager)
+        .GetField("<Instance>k__BackingField", BindingFlags.Static | BindingFlags.NonPublic);
+    private GameObject holder;
+    private RunProgressionManager progression;
+    private RunProgressionManager previous;
+
+    [SetUp]
+    public void SetUp()
+    {
+        previous = RunProgressionManager.Instance;
+        holder = new GameObject("Inactive difficulty fixture");
+        holder.SetActive(false);
+        progression = holder.AddComponent<RunProgressionManager>();
+        InstanceField.SetValue(null, progression);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        Object.DestroyImmediate(holder);
+        InstanceField.SetValue(null, previous);
+    }
+
     [Test]
     public void BiomeZeroIsBaseline()
     {
@@ -11,11 +42,7 @@ public class BiomeDifficultyCurveTests
     }
 
     [Test]
-<<<<<<< Updated upstream
-    public void EachBiomeAddsTwentyPercent()
-=======
     public void BossAttackAndDefenseStillAddTwentyPercentOfBasePerLevel()
->>>>>>> Stashed changes
     {
         Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(1), Is.EqualTo(1.20f).Within(0.0001f));
         Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(2), Is.EqualTo(1.40f).Within(0.0001f));
@@ -27,8 +54,6 @@ public class BiomeDifficultyCurveTests
     {
         Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(-2), Is.EqualTo(1f));
     }
-<<<<<<< Updated upstream
-=======
 
     [TestCase(-2, 1f, 1f)]
     [TestCase(0, 1f, 1f)]
@@ -176,6 +201,5 @@ public class BiomeDifficultyCurveTests
         Assert.That(enemy.damageRes, Is.EqualTo(source.damageRes));
         Assert.That(enemy.Kit, Is.SameAs(source.Kit));
     }
->>>>>>> Stashed changes
 }
 #endif

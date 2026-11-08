@@ -27,6 +27,7 @@ namespace Project.UI
         [Tooltip("Fixed card slots (typically 3). Unused slots are disabled when fewer offers exist.")]
         [SerializeField] private RoomChoiceCardView[] cards;
         [SerializeField] private UIVisibilityTransition visibilityTransition;
+        [SerializeField] private RoomRouteProgressUI routeProgress;
         [SerializeField, Min(0f)] private float selectionHoldSeconds = .12f;
 
         private readonly List<RoomChoiceCardView> activeCards = new List<RoomChoiceCardView>(4);
@@ -190,6 +191,7 @@ namespace Project.UI
             }
 
             ConfigureCardNavigation();
+            RefreshRouteProgress();
 
             // Level/Rest sequences disable other canvases; ensure ours is drawable again.
             EnsureCanvasEnabled();
@@ -206,6 +208,28 @@ namespace Project.UI
             Cursor.lockState = CursorLockMode.None;
 
             Debug.Log($"[RoomChoiceUI] Showing {activeCards.Count} authored room choices.", this);
+        }
+
+        private void RefreshRouteProgress()
+        {
+            if (routeProgress == null) return;
+            var director = RoomChoiceDirector.Instance;
+            if (director == null || director.LastOffers.Count == 0)
+            {
+                routeProgress.gameObject.SetActive(false);
+                return;
+            }
+            int level = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex + 1 : 1;
+            routeProgress.Bind(director.BiomeTemplate, director.OfferedActIndex, level, director.OfferedActIndex < 0);
+            routeProgress.SetNextRoom(activeCards[0].BoundOffer);
+        }
+
+        private void LateUpdate()
+        {
+            if (routeProgress == null || !routeProgress.gameObject.activeInHierarchy || !IsShowing || EventSystem.current == null) return;
+            var selected = EventSystem.current.currentSelectedGameObject;
+            var card = selected != null ? selected.GetComponent<RoomChoiceCardView>() : null;
+            if (card != null && activeCards.Contains(card)) routeProgress.SetNextRoom(card.BoundOffer);
         }
 
         public void Hide()
@@ -307,6 +331,7 @@ namespace Project.UI
 
         private void AutoWireIfNeeded()
         {
+            if (routeProgress == null) routeProgress = GetComponentInChildren<RoomRouteProgressUI>(true);
             if (panelRoot == null)
             {
                 Transform panel = transform.Find("Panel");

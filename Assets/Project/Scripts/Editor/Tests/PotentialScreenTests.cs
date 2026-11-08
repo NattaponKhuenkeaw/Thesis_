@@ -87,7 +87,10 @@ public sealed class PotentialScreenTests
             Assert.That(slot, Is.Not.Null);
             var icon = (Image)new SerializedObject(slot).FindProperty("iconImage").objectReferenceValue;
             var kit = _item.characterObjectData.kitDefinition;
-            Assert.That(icon.sprite, Is.EqualTo(i < 4 ? kit.skill.icon : i < 8 ? kit.ultimate.icon : kit.passive.icon));
+            var art = _item.characterObjectData.potentialArtwork;
+            var expected = i < 4 ? art?.skill : i < 8 ? art?.ultimate : art?.passive;
+            if (expected == null) expected = i < 4 ? kit.skill.icon : i < 8 ? kit.ultimate.icon : kit.passive.icon;
+            Assert.That(icon.sprite, Is.EqualTo(expected));
         }
     }
 

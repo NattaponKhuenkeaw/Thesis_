@@ -38,6 +38,11 @@ namespace Project.TeamBuilder.UI.Panels
         private Action<PotentialNodeDefinition> _upgradeRequested;
         private bool _upgradeQueued;
         private Action _closeRequested;
+        private RectTransform _windowRect;
+        private Vector2 _defaultAnchorMin;
+        private Vector2 _defaultAnchorMax;
+        private Vector2 _defaultPivot;
+        private Vector2 _defaultPosition;
 
         private void Awake()
         {
@@ -131,6 +136,7 @@ namespace Project.TeamBuilder.UI.Panels
             _character = character;
             _node = node;
             _metaProgression = metaProgression;
+            PlaceForTrack(node != null ? node.track : PotentialTrack.Skill);
 
             if (!gameObject.activeSelf)
             {
@@ -138,6 +144,26 @@ namespace Project.TeamBuilder.UI.Panels
             }
 
             Refresh();
+        }
+
+        private void CachePlacement()
+        {
+            if (_windowRect != null) return;
+            _windowRect = (RectTransform)transform;
+            _defaultAnchorMin = _windowRect.anchorMin;
+            _defaultAnchorMax = _windowRect.anchorMax;
+            _defaultPivot = _windowRect.pivot;
+            _defaultPosition = _windowRect.anchoredPosition;
+        }
+
+        private void PlaceForTrack(PotentialTrack track)
+        {
+            CachePlacement();
+            bool passive = track == PotentialTrack.Passive;
+            _windowRect.anchorMin = passive ? new Vector2(1f - _defaultAnchorMax.x, _defaultAnchorMin.y) : _defaultAnchorMin;
+            _windowRect.anchorMax = passive ? new Vector2(1f - _defaultAnchorMin.x, _defaultAnchorMax.y) : _defaultAnchorMax;
+            _windowRect.pivot = passive ? new Vector2(1f - _defaultPivot.x, _defaultPivot.y) : _defaultPivot;
+            _windowRect.anchoredPosition = passive ? new Vector2(-_defaultPosition.x, _defaultPosition.y) : _defaultPosition;
         }
 
         public void Hide()

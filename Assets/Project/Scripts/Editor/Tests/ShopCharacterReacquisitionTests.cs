@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
 using Project.ShopSystem.UI;
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
@@ -21,7 +22,7 @@ public class ShopCharacterReacquisitionTests
     public void ProductionShopReacquiresDefeatedCharacterOnlyWhenFundsCoverRealPrice(
         string resource, bool enoughMoney, bool withProgression)
     {
-        var scene = EditorSceneManager.OpenPreviewScene("Assets/Project/Scenes/Test_Shop.unity");
+        var scene = EditorSceneManager.OpenPreviewScene(AssetDatabase.GUIDToAssetPath("d36c77798e07625409da16f442bc42f5"));
         var inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
         try
         {

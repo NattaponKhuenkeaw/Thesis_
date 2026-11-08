@@ -72,7 +72,7 @@ public class PlayerIntroRevealTests
         finally { Object.DestroyImmediate(player.gameObject); Object.DestroyImmediate(entrance.gameObject); Object.DestroyImmediate(profile); }
     }
 
-    private static PlayerAnimator AttachRealAnimator(PlayerCharacter player, string path)
+    internal static PlayerAnimator AttachRealAnimator(PlayerCharacter player, string path)
     {
         var character = AssetDatabase.LoadAssetAtPath<CharacterObject>($"Assets/Project/Character/Hero/{path}.asset");
         Assert.That(character, Is.Not.Null);
@@ -399,7 +399,7 @@ public class PlayerIntroRevealTests
         yield return new ExitPlayMode();
     }
 
-    private static PlayerCharacter CreatePlayer(bool activate, out MovementProfile profile)
+    internal static PlayerCharacter CreatePlayer(bool activate, out MovementProfile profile)
     {
         var host = new GameObject("Intro test player"); host.SetActive(false);
         host.layer = LayerMask.NameToLayer("Player");

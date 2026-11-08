@@ -5,14 +5,20 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyController))]
 public sealed class EnemyShieldGuard : MonoBehaviour
 {
-    public enum GuardPhase { Inactive, Guarding, Turning, Windup, Striking, Recovery }
+    public enum GuardPhase { Inactive, Guarding, Turning, Windup, Striking, Recovery, Advancing }
 
     [Header("Detection")]
     [SerializeField, Min(0.1f)] private float detectionRadius = 7f;
     [SerializeField, Min(0.01f)] private float sideDeadzone = 0.15f;
     [SerializeField, Min(0f)] private float guardWaitDuration = 5f;
+    [SerializeField, Min(0f)] private float lastEnemyWaitDuration = 1f;
+    [SerializeField, Min(0.1f)] private float advanceSpeed = 3f;
+    private readonly System.Collections.Generic.List<EnemyController> livingEnemies =
+        new System.Collections.Generic.List<EnemyController>();
 
     [Header("Rear Opening")]
+    [Tooltip("Delay before reversing chase/advance facing. Applies across guard restarts so crossing behind stays punishable.")]
+    [SerializeField, Min(0f)] private float followTurnDelay = 0.9f;
     [Tooltip("The player must remain behind this long before the shield is lowered.")]
     [SerializeField, Min(0.05f)] private float rearRecheckDelay = 0.75f;
     [Tooltip("Shield stays open while turning, then raises again after this delay.")]
@@ -26,18 +32,23 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     private float rearElapsed;
     private float guardElapsed;
     private float windupDuration;
+    private float attackCooldownRemaining;
     private bool hasTurned;
     private bool ownsPlant;
     private bool guardBroken;
+    private float pendingFacing;
+    private float turnRequestedAt;
     private RigidbodyConstraints2D originalConstraints;
 
     public GuardPhase Phase { get; private set; }
     public float WindupProgress => Phase == GuardPhase.Windup
         ? Mathf.Clamp01(phaseElapsed / Mathf.Max(.05f, windupDuration)) : 0f;
     public bool IsEngaged => Phase != GuardPhase.Inactive;
+    public float AttackCooldownRemaining => attackCooldownRemaining;
     public float EngagementRange => Mathf.Max(.1f, enemy != null
         ? enemy.ResolveAttackRange(detectionRadius) : detectionRadius);
-    public bool ShieldRaised => (Phase == GuardPhase.Guarding || Phase == GuardPhase.Windup || Phase == GuardPhase.Striking)
+    public bool ShieldRaised => (Phase == GuardPhase.Guarding || Phase == GuardPhase.Advancing
+        || Phase == GuardPhase.Windup || Phase == GuardPhase.Striking)
         && !guardBroken && enemy != null && enemy.IsGameplayActive && enemy.CurrentReactionState == EnemyReactionState.None;
 
     private void Awake()
@@ -48,7 +59,20 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     private void OnDisable()
     {
         EndGuard();
+        attackCooldownRemaining = 0f;
+        pendingFacing = 0f;
     }
+
+    private void Update()
+    {
+        // The attack action ticks engaged guards; keep cooldown time flowing during hit reactions too.
+        if (!IsEngaged) TickCooldown(Time.deltaTime);
+    }
+
+    private void TickCooldown(float deltaTime)
+        => attackCooldownRemaining = Mathf.Max(0f, attackCooldownRemaining - Mathf.Max(0f, deltaTime));
+
+    private bool CanBeginWindup => attackCooldownRemaining <= Mathf.Max(.05f, enemy.ResolveWarningDuration(.6f));
 
     private void Cache()
     {
@@ -61,6 +85,32 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     {
         return candidate != null && candidate.gameObject.activeInHierarchy
             && ((Vector2)(candidate.position - transform.position)).sqrMagnitude <= EngagementRange * EngagementRange;
+    }
+
+    public bool AllowsFacingChange(float directionX)
+    {
+        float desired = Mathf.Sign(directionX);
+        if (desired == EnemyFacingUtil.GetFacingSign(transform))
+        {
+            // Locomotion can face its travel direction while backing away from a rear target.
+            if (target == null || (target.position.x - transform.position.x) * desired >= -sideDeadzone)
+                pendingFacing = 0f;
+            return true;
+        }
+        // The planted guard already waited through its rear check before this turn animation.
+        if (Phase == GuardPhase.Turning && phaseElapsed >= turnDuration * .5f)
+        {
+            pendingFacing = 0f;
+            return true;
+        }
+        if (pendingFacing != desired)
+        {
+            pendingFacing = desired;
+            turnRequestedAt = Time.time;
+        }
+        if (Time.time - turnRequestedAt < followTurnDelay) return false;
+        pendingFacing = 0f;
+        return true;
     }
 
     public bool BeginGuard(Transform candidate)
@@ -98,6 +148,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
         }
 
         float dt = Mathf.Max(0f, deltaTime);
+        TickCooldown(dt);
         phaseElapsed += dt;
         if (Phase == GuardPhase.Guarding || Phase == GuardPhase.Turning || Phase == GuardPhase.Windup)
             guardElapsed = Mathf.Min(guardWaitDuration, guardElapsed + dt);
@@ -111,14 +162,32 @@ public sealed class EnemyShieldGuard : MonoBehaviour
                     hasTurned = false;
                     ChangePhase(GuardPhase.Turning);
                 }
-                else if (CanAttackTarget(side))
+                else if (guardElapsed >= ResolveGuardDelay())
                 {
-                    if (guardElapsed >= Mathf.Max(0f, guardWaitDuration - enemy.ResolveWarningDuration(0.6f)))
+                    if (CanAttackTarget(side))
                     {
-                        windupDuration = Mathf.Max(.05f, enemy.ResolveWarningDuration(0.6f));
-                        ChangePhase(GuardPhase.Windup);
-                        enemy.TriggerAttackWarning(windupDuration);
+                        if (CanBeginWindup) BeginWindup();
                     }
+                    else ChangePhase(GuardPhase.Advancing);
+                }
+                break;
+            case GuardPhase.Advancing:
+                enemy.ReleaseFacing();
+                EnemyFacingUtil.FaceHorizontal(transform, target.position.x - transform.position.x);
+                side = (target.position.x - transform.position.x) * EnemyFacingUtil.GetFacingSign(transform);
+                if (CanAttackTarget(side))
+                {
+                    if (CanBeginWindup) BeginWindup();
+                    else
+                    {
+                        enemy.LockFacing();
+                        ChangePhase(GuardPhase.Guarding);
+                    }
+                }
+                else if (locomotion != null)
+                {
+                    locomotion.MoveTowardsTargetRange(target, EngagementRange, advanceSpeed, dt);
+                    animationHandler?.SetSpeed(enemy.rb != null ? Mathf.Abs(enemy.rb.linearVelocity.x) : advanceSpeed);
                 }
                 break;
             case GuardPhase.Turning:
@@ -164,6 +233,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     public void FinishStrike()
     {
         if (Phase != GuardPhase.Striking) return;
+        attackCooldownRemaining = Mathf.Max(0f, enemy.ResolveAttackCooldown(.75f));
         enemy.SetAttackHitboxActive(false);
         ChangePhase(GuardPhase.Recovery);
     }
@@ -185,6 +255,27 @@ public sealed class EnemyShieldGuard : MonoBehaviour
         enemy.PlayAttackSound();
     }
 
+    private float ResolveGuardDelay()
+    {
+        float delay = Mathf.Max(0f, guardWaitDuration - enemy.ResolveWarningDuration(0.6f));
+        RoomEnemyRegistry.FillLiving(livingEnemies);
+        foreach (EnemyController other in livingEnemies)
+        {
+            if (other != enemy && other.isActiveAndEnabled && other.IsGameplayActive
+                && other.gameObject.scene == gameObject.scene)
+                return delay;
+        }
+        return Mathf.Min(delay, lastEnemyWaitDuration);
+    }
+
+    private void BeginWindup()
+    {
+        enemy.LockFacing();
+        windupDuration = Mathf.Max(.05f, enemy.ResolveWarningDuration(0.6f));
+        ChangePhase(GuardPhase.Windup);
+        enemy.TriggerAttackWarning(windupDuration);
+    }
+
     private void StartGuardRound()
     {
         enemy.HideAttackWarning();
@@ -199,6 +290,8 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     public void EndGuard()
     {
         bool wasEngaged = IsEngaged;
+        if (Phase == GuardPhase.Striking && enemy != null)
+            attackCooldownRemaining = Mathf.Max(0f, enemy.ResolveAttackCooldown(.75f));
         Phase = GuardPhase.Inactive;
         guardElapsed = 0f;
         target = null;
@@ -233,11 +326,12 @@ public sealed class EnemyShieldGuard : MonoBehaviour
         if (ownsPlant && enemy.rb != null)
         {
             bool charging = phase == GuardPhase.Striking && enemy.Kit != null && enemy.Kit.BodyCharge;
-            enemy.rb.constraints = charging ? originalConstraints
+            enemy.rb.constraints = charging || phase == GuardPhase.Advancing ? originalConstraints
                 : originalConstraints | RigidbodyConstraints2D.FreezePositionX;
             enemy.rb.linearVelocity = new Vector2(0f, enemy.rb.linearVelocity.y);
         }
         animationHandler?.SetSpeed(0f);
+        if (phase == GuardPhase.Advancing) enemy.ReleaseFacing();
         if (!guardBroken && (phase == GuardPhase.Guarding || phase == GuardPhase.Turning || phase == GuardPhase.Windup))
         {
             animationHandler?.PlayShieldGuardPose(phase != GuardPhase.Turning);

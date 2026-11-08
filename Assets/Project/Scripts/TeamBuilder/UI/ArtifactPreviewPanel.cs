@@ -20,7 +20,6 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Transform statItemContainer;
         [SerializeField] private TMP_Text descriptionText;
         [SerializeField] private TMP_Text loreText; // Optional lore/flavor text
-        [SerializeField] private TMP_Text qualityText;
         [SerializeField] private Button equipButton;
         [SerializeField] private TMP_Text equipLabel;
         [SerializeField] private ScrollRect detailsScroll;
@@ -38,7 +37,6 @@ namespace Project.TeamBuilder.UI
         private RectTransform panelRect;
         private ArtifactInstance currentArtifact;
         private ArtifactDefinition currentDefinition;
-        private ArtifactRollTable currentRollTable;
         private bool isOpen;
         private int openedFrame = -1;
 
@@ -110,7 +108,6 @@ namespace Project.TeamBuilder.UI
             gameObject.SetActive(true);
             currentArtifact = artifact;
             currentDefinition = definition;
-            currentRollTable = rollTable;
             gameObject.SetActive(true);
             isOpen = true;
             openedFrame = Time.frameCount;
@@ -130,7 +127,6 @@ namespace Project.TeamBuilder.UI
             if (!keepVisibleWhenEmpty) { Close(); return; }
             currentArtifact = null;
             currentDefinition = null;
-            currentRollTable = null;
             gameObject.SetActive(true);
             isOpen = true;
             openedFrame = Time.frameCount;
@@ -154,12 +150,6 @@ namespace Project.TeamBuilder.UI
 
             if (loreText != null) loreText.gameObject.SetActive(false);
 
-            if (qualityText != null)
-            {
-                qualityText.text = string.Empty;
-            }
-
-
             ClearStatItems();
             ResetDetailsScroll();
         }
@@ -170,7 +160,6 @@ namespace Project.TeamBuilder.UI
             isOpen = false;
             currentArtifact = null;
             currentDefinition = null;
-            currentRollTable = null;
         }
 
         public void ClearStatItems()
@@ -197,9 +186,6 @@ namespace Project.TeamBuilder.UI
             artifactNameText ??= FindTextByName(texts, "Name", "Title", "ArtifactName", "p_Text");
             descriptionText ??= FindTextByName(texts, "Description", "Passive", "Effect", "Info", "p_Desc");
             loreText ??= FindTextByName(texts, "Lore", "Flavor");
-<<<<<<< Updated upstream
-            qualityText ??= FindTextByName(texts, "Quality", "RollQuality", "headlv");
-=======
             if (loreText != null) loreText.gameObject.SetActive(false);
             if (descriptionText != null)
             {
@@ -210,7 +196,6 @@ namespace Project.TeamBuilder.UI
             TMP_Text legacyQualityText = FindTextByName(texts, "Quality", "RollQuality", "headlv");
             if (legacyQualityText != null)
                 legacyQualityText.gameObject.SetActive(false);
->>>>>>> Stashed changes
             artifactIcon ??= FindImageByName(images, "Icon", "ArtifactIcon", "p_Icon");
 
             for (int i = 0; i < buttons.Length; i++)
@@ -230,8 +215,6 @@ namespace Project.TeamBuilder.UI
                 Transform statsRoot = FindChildByName(transform, "Stats", "StatContainer", "Stat Item Container", "Content", "StatPanel");
                 statItemContainer = statsRoot != null ? statsRoot : transform;
             }
-<<<<<<< Updated upstream
-=======
             if (statItemContainer != null && statItemContainer.TryGetComponent(out VerticalLayoutGroup statLayout))
             {
                 statLayout.childControlWidth = true;
@@ -355,7 +338,6 @@ namespace Project.TeamBuilder.UI
             LayoutRebuilder.ForceRebuildLayoutImmediate(detailsContent);
             detailsScroll.StopMovement();
             detailsScroll.verticalNormalizedPosition = 1f;
->>>>>>> Stashed changes
         }
 
         private void PopulateData()
@@ -396,17 +378,9 @@ namespace Project.TeamBuilder.UI
 
             if (descriptionText != null)
             {
-                string qualityLabel = ArtifactRollQuality.TryGetAverageQuality(currentArtifact, currentRollTable, out float quality)
-                    ? $"Roll Quality {quality * 100f:0.##}"
-                    : "Roll Quality —";
                 descriptionText.text = string.IsNullOrWhiteSpace(currentDefinition.passiveDescription)
-<<<<<<< Updated upstream
-                    ? qualityLabel
-                    : $"{qualityLabel}\n{currentDefinition.passiveDescription}";
-=======
                     ? string.Empty
                     : currentDefinition.passiveDescription;
->>>>>>> Stashed changes
             }
 
             var statsSizing = statItemContainer != null ? statItemContainer.GetComponent<LayoutElement>() : null;
@@ -416,13 +390,6 @@ namespace Project.TeamBuilder.UI
                 statsSizing.preferredHeight = statsSizing.minHeight;
             }
             ResetDetailsScroll();
-
-            if (qualityText != null)
-            {
-                qualityText.text = ArtifactRollQuality.TryGetAverageQuality(currentArtifact, currentRollTable, out float quality)
-                    ? $"Roll Quality {quality * 100f:0.##}"
-                    : "Roll Quality —";
-            }
 
         }
 
@@ -439,6 +406,8 @@ namespace Project.TeamBuilder.UI
                 StatItemUI ui = obj.GetComponent<StatItemUI>();
                 if (ui != null)
                 {
+                    // The shared stat prefab may have a fixed authoring width wider than this preview.
+                    ui.FitToContainer();
                     ui.Setup(statName, value, statKey);
                 }
             }

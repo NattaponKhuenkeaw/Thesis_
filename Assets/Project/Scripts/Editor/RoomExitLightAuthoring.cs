@@ -16,15 +16,16 @@ public static class RoomExitLightAuthoring
     public const string ArtFolder = "Assets/Project/VFX/RoomExit";
     public const string SheetPath = ArtFolder + "/ExitLight_Pixel_3Frames.png";
     public const string PrefabPath = "Assets/Project/Prefab/Environment/RoomExitLight.prefab";
-    public static readonly string[] SafeScenes = {
-        "Assets/Project/Scenes/Test_Lobby.unity", "Assets/Project/Scenes/Test_Shop.unity"
+    public static string[] SafeScenes => new[] {
+        AssetDatabase.GUIDToAssetPath("a148dcd3fee0376418d8129a64e74e76"),
+        AssetDatabase.GUIDToAssetPath("d36c77798e07625409da16f442bc42f5")
     };
 
     [MenuItem("Tools/Never Night/Author Exit Lights")]
     public static void Build()
     {
         if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-        EditorSceneManager.OpenScene("Assets/Project/Scenes/MainMenu.unity", OpenSceneMode.Single);
+        EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath("4d6e8a1c3b5f7092e4a6c8d0b2f4e6a8"), OpenSceneMode.Single);
         ImportFrames();
         BuildPrefab();
         var report = new List<string>();
@@ -66,6 +67,13 @@ public static class RoomExitLightAuthoring
         Debug.Log("Exit light authoring complete: " + report.Count + " layouts/scenes, boss excluded.");
     }
 
+    [MenuItem("Tools/Never Night/Crop Exit Light Sprites Only")]
+    public static void CropFramesOnly()
+    {
+        ImportFrames();
+        Debug.Log("Exit light sprite crops updated; layouts and source artwork unchanged.");
+    }
+
     private static void ImportFrames()
     {
         AssetDatabase.ImportAsset(SheetPath, ImportAssetOptions.ForceSynchronousImport);
@@ -91,10 +99,13 @@ public static class RoomExitLightAuthoring
         provider.InitSpriteEditorDataProvider();
         var previous = provider.GetSpriteRects();
         importer.GetSourceTextureWidthAndHeight(out int width, out int height);
+        if (width != 2172 || height != 724)
+            throw new InvalidOperationException("Exit light crops require the original 2172 x 724 sheet.");
+        // Keep the beam, excluding the bright door frame and bleed from the preceding frame.
         var frames = Enumerable.Range(0, 3).Select(i => new SpriteRect {
             name = "ExitLight_" + i,
-            rect = new Rect(i * width / 3f, 0f, width / 3f, height),
-            pivot = new Vector2(1f, .14f),
+            rect = new Rect(i * 724 + 32, 112, 666, 612),
+            pivot = new Vector2(1f, 0f),
             alignment = SpriteAlignment.Custom,
             spriteID = previous.FirstOrDefault(s => s.name == "ExitLight_" + i)?.spriteID ?? GUID.Generate()
         }).ToArray();

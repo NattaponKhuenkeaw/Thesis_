@@ -244,7 +244,7 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: 84611a306d5f45ff95bc0b16cf0a6c32, type: 2}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
-      value: 127.5
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: defense
@@ -252,7 +252,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: currentHP
-      value: 127.5
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: damageRes
@@ -316,7 +316,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2382239647512492789, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 1.5
+      value: 0.364
       objectReference: {fileID: 0}
     - target: {fileID: 2775336080780312221, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -754,34 +754,6 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightSteeringAcceleration
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightPatrolSpeed
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightCatchUpSpeed
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightCatchUpEnterDistance
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightCatchUpExitDistance
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightBrakingAcceleration
-      value: 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightSideHoldTime
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightArcHeight
       value: 0.35
       objectReference: {fileID: 0}
@@ -790,16 +762,28 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: allowNonGroundMove
-      value: 1
+      propertyPath: flightPatrolSpeed
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightPostAttackRest
+      propertyPath: allowNonGroundMove
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightAttackHeight
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightCatchUpSpeed
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightSideHoldTime
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightPostAttackRest
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightHeightVariation
@@ -828,6 +812,22 @@ PrefabInstance:
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightSpawnSearchRadius
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightBrakingAcceleration
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightCatchUpExitDistance
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightCatchUpEnterDistance
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightSteeringAcceleration
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightHeightRelativeToPlayer

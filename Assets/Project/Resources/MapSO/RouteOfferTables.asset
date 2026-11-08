@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RouteOfferTables
   defaultSpawnSlotCount: 3
   delayBetweenWaves: 1.1
-  aliveCap: 3
+  aliveCap: 5
   spawnInterval: 0.35
   grantArtifacts: 0
   hardRewardPatterns:
@@ -28,41 +28,14 @@ MonoBehaviour:
     artifactPulls: 0
     grantsMemory: 1
   profiles:
-<<<<<<< Updated upstream
-  - difficulty: 0
-    rollWeight: 40
-    minWaves: 1
-    maxWaves: 1
-    minEnemiesPerWave: 4
-    maxEnemiesPerWave: 4
-    aliveCap: 3
-    minCoins: 80
-    maxCoins: 100
-    artifactChance: 0.05
-    enemyPool:
-    - prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
-      weight: 3
-    - prefab: {fileID: 4739200647295624271, guid: e102f18fe08f66f48929b12c9c6e44b4, type: 3}
-      weight: 1
-    - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
-      weight: 1
-=======
->>>>>>> Stashed changes
   - difficulty: 1
     rollWeight: 40
     minWaves: 1
     maxWaves: 1
     minEnemiesPerWave: 6
     maxEnemiesPerWave: 6
-<<<<<<< Updated upstream
-    aliveCap: 3
-    minCoins: 120
-    maxCoins: 150
-    artifactChance: 0.28
-=======
     aliveCap: 5
     artifactChance: 0
->>>>>>> Stashed changes
     enemyPool:
     - prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
       weight: 3
@@ -76,13 +49,7 @@ MonoBehaviour:
     maxWaves: 1
     minEnemiesPerWave: 8
     maxEnemiesPerWave: 8
-<<<<<<< Updated upstream
-    aliveCap: 4
-    minCoins: 180
-    maxCoins: 220
-=======
     aliveCap: 5
->>>>>>> Stashed changes
     artifactChance: 0.55
     enemyPool:
     - prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}

@@ -162,6 +162,11 @@ namespace Project.Core.ZoneState
                 }
             }
 
+            var encounters = new EncounterSO[chambers.Length];
+            for (int i = 0; i < chambers.Length; i++)
+                encounters[i] = ResolveEncounter(chambers[i]);
+            EncounterPhaseComposition.ApplyFinalChamberElite(encounters, slices);
+
             currentIndex = -1;
             waitingForIndex = -1;
             fighting = false;

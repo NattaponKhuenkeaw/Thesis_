@@ -23,7 +23,8 @@ namespace Project.InventorySystem.Items
         [Tooltip("Fixed stat bonus in roll units. Zero means the definition has no fixed bonus.")]
         public ArtifactRoll fixedStatBonus;
 
-        [TextArea(3, 5)]
+        [Tooltip("Supports TextMesh Pro rich text, for example <b>Attack</b> or <color=#FFE066>bonus</color>.")]
+        [TextArea(3, 10)]
         public string passiveDescription = "Unique passive effect description here.";
 
         [Header("Artifact Passive")]

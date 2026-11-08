@@ -57,7 +57,7 @@ namespace Project.Core.ZoneState
                     profile,
                     tables.DelayBetweenWaves,
                     slots,
-                    EncounterSpawnMode.Pressure,
+                    EncounterSpawnMode.Batched,
                     profile.aliveCap > 0 ? profile.aliveCap : tables.AliveCap,
                     tables.SpawnInterval);
             }
@@ -156,18 +156,6 @@ namespace Project.Core.ZoneState
 
         private static RouteReward BuildReward(RouteOfferTables.DifficultyProfile profile, RouteOfferTables tables)
         {
-<<<<<<< Updated upstream
-            if (profile.difficulty == RouteDifficulty.Hard && tables.HardRewardPatterns.Count > 0 &&
-                TryBuildHardReward(tables.HardRewardPatterns, out RouteReward patterned))
-                return patterned;
-
-            int minCoins = Mathf.Min(profile.minCoins, profile.maxCoins);
-            int maxCoins = Mathf.Max(profile.minCoins, profile.maxCoins);
-            RouteReward reward = new RouteReward
-            {
-                Coins = Random.Range(minCoins, maxCoins + 1)
-            };
-=======
             int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
             int coins = ResolveCombatSoul(profile.difficulty, biome);
             if (profile.difficulty == RouteDifficulty.Hard && tables.HardRewardPatterns.Count > 0 &&
@@ -175,7 +163,6 @@ namespace Project.Core.ZoneState
                 return patterned;
 
             RouteReward reward = new RouteReward { Coins = coins };
->>>>>>> Stashed changes
 
             if (profile.difficulty == RouteDifficulty.Medium || !tables.GrantArtifacts)
             {
@@ -199,9 +186,6 @@ namespace Project.Core.ZoneState
             return reward;
         }
 
-<<<<<<< Updated upstream
-        private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns,
-=======
         private static int ResolveCombatSoul(RouteDifficulty difficulty, int biomeIndex)
         {
             int baseline = biomeIndex < 3 ? 175 : biomeIndex < 6 ? 250 : 350;
@@ -209,7 +193,6 @@ namespace Project.Core.ZoneState
         }
 
         private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns, int biome, int coins,
->>>>>>> Stashed changes
             out RouteReward reward)
         {
             reward = null;
@@ -231,14 +214,8 @@ namespace Project.Core.ZoneState
                 if (remaining <= 0f) break;
             }
 
-            int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
             reward = RouteReward.Patterned(
-<<<<<<< Updated upstream
-                Random.Range(Mathf.Min(selected.minSoul, selected.maxSoul), Mathf.Max(selected.minSoul, selected.maxSoul) + 1),
-                Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome);
-=======
                 coins, Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome, selected.grantsMemory);
->>>>>>> Stashed changes
             return true;
         }
 

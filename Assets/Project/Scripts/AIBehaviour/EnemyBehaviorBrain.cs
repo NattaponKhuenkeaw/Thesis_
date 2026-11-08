@@ -28,7 +28,7 @@ public class EnemyBehaviorBrain : MonoBehaviour
 
     public BehaviorGraphAgent Agent => agent;
     public bool AllowsGameplayAI => isActiveAndEnabled && enableAgentWhenNoBossDriver
-        && GetComponent<Project.AIBehaviour.Boss.BossPatternController>() == null;
+        && !GetComponent<EnemyController>().HasBossDriver;
     public EnemyLocomotion Locomotion => locomotion;
     public EnemyMoveMode MoveMode => locomotion != null ? locomotion.MoveMode : EnemyMoveMode.Ground;
 
@@ -60,13 +60,13 @@ public class EnemyBehaviorBrain : MonoBehaviour
 
     /// <summary>
     /// Enables the normal Behavior Graph only for non-boss enemies during the Active lifecycle.
-    /// BossPatternController remains the exclusive boss driver.
+    /// Dedicated boss controllers remain the exclusive boss drivers.
     /// </summary>
     public void SetAgentActiveForGameplay(bool active)
     {
         Cache();
 
-        bool hasBossDriver = GetComponent<Project.AIBehaviour.Boss.BossPatternController>() != null;
+        bool hasBossDriver = enemy != null && enemy.HasBossDriver;
         bool canRunGraph = enableAgentWhenNoBossDriver && !hasBossDriver;
         SetAgentActive(active && canRunGraph);
     }

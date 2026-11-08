@@ -30,6 +30,9 @@ public class EnemyController : MonoBehaviour
     public float defense = 0f;
     public float damageRes = 0f;
     public bool isEliteOrBoss = false;
+    [Tooltip("Ignore ordinary stagger and launch reactions, but remain vulnerable to Grab and action anchors.")]
+    [SerializeField] private bool resistOrdinaryHitReactions;
+    public bool ResistsOrdinaryHitReactions => resistOrdinaryHitReactions;
 
     /// <summary>
     /// Scales basic combat stats (maxHP / attackDamage / defense) and syncs currentHP to the new max.
@@ -37,14 +40,21 @@ public class EnemyController : MonoBehaviour
     /// </summary>
     public void ApplyBasicStatMultiplier(float multiplier)
     {
-        if (multiplier <= 0f || Mathf.Approximately(multiplier, 1f))
+        ApplyStatMultipliers(multiplier, multiplier, multiplier);
+    }
+
+    public void ApplyStatMultipliers(float healthMultiplier, float attackMultiplier, float defenseMultiplier)
+    {
+        if (healthMultiplier <= 0f || attackMultiplier <= 0f || defenseMultiplier <= 0f
+            || (Mathf.Approximately(healthMultiplier, 1f) && Mathf.Approximately(attackMultiplier, 1f)
+                && Mathf.Approximately(defenseMultiplier, 1f)))
         {
             return;
         }
 
-        maxHP *= multiplier;
-        attackDamage *= multiplier;
-        defense *= multiplier;
+        maxHP *= healthMultiplier;
+        attackDamage *= attackMultiplier;
+        defense *= defenseMultiplier;
         currentHP = maxHP;
         NotifyHealthPresentationRefreshed();
     }
@@ -301,13 +311,15 @@ public class EnemyController : MonoBehaviour
 
     public bool UninterruptibleOnceWindup => CombatRole == EnemyCombatRole.CommitMelee;
     public bool UsesRangedAttack => CombatRole == EnemyCombatRole.RangedHold || CombatRole == EnemyCombatRole.AimedRanged;
+    public bool HasBossDriver => GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null
+        || GetComponentInChildren<Project.AIBehaviour.Boss.Boss112Controller>(true) != null;
     public bool NeverEvade => UsesRangedAttack || CombatRole == EnemyCombatRole.ShieldGuard;
     public Transform RangedMuzzle
     {
         get => rangedMuzzle;
         set => rangedMuzzle = value;
     }
-    public bool ArmorDuringCommittedSwing => CombatRole == EnemyCombatRole.CommitMelee;
+    public bool ArmorDuringCommittedSwing => CombatRole == EnemyCombatRole.CommitMelee && !resistOrdinaryHitReactions;
 
     public float ResolveAttackRange(float blackboardRange)
     {
@@ -918,10 +930,14 @@ public class EnemyController : MonoBehaviour
         }
 
         bool alreadyIgnoringReactions = ignoreHitReactions;
-        bool shouldApplyReaction = !isSeparateDamage && ShouldApplyHitReaction();
+        bool isGrab = reactionData.reactionKind == EnemyReactionKind.Grab
+            || (reactionData.actionAnchor != null && finalIncomingDamage > 0f && currentHP > 0f);
+        bool shouldApplyReaction = !isSeparateDamage && (resistOrdinaryHitReactions
+            ? isGrab && !ignoreHitReactions && !IsArmored
+            : ShouldApplyHitReaction());
         LastHitAppliedReaction = shouldApplyReaction;
 
-        if (!shouldApplyReaction && !isSeparateDamage)
+        if (!shouldApplyReaction && !isSeparateDamage && !resistOrdinaryHitReactions)
         {
             // Grant / refresh a short armor window so mash cannot re-stagger before AI attacks.
             // Duration 0 keeps legacy behavior: single resist then reset combo.
@@ -1353,7 +1369,7 @@ public class EnemyController : MonoBehaviour
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();
         if (behaviorAgent != null)
         {
-            bool hasBossDriver = GetComponent<Project.AIBehaviour.Boss.BossPatternController>() != null;
+            bool hasBossDriver = HasBossDriver;
             if (!active || !hasBossDriver)
                 behaviorAgent.enabled = active;
         }
