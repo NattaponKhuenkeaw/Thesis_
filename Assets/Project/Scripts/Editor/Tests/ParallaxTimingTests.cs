@@ -91,13 +91,26 @@ public class ParallaxTimingTests
         try
         {
             string before = SkyBackgroundRepair.ProtectedSnapshot(root);
+            // Authored sky pieces may have been edited since the original conversion.
+            SkyBackgroundRepair.ApplyToRoot(root);
+            Assert.That(SkyBackgroundRepair.ProtectedSnapshot(root), Is.EqualTo(before));
             int objects = root.GetComponentsInChildren<Transform>(true).Length;
-            Assert.That(SkyBackgroundRepair.ApplyToRoot(root), Is.False, "The saved sky conversion should already be complete");
+            var skyImages = root.GetComponentsInChildren<ParallaxBackground>(true).Where(SkyBackgroundRepair.IsSky)
+                .SelectMany(SkyBackgroundRepair.RowImages).ToArray();
+            var presentation = skyImages.Select(SkyPresentation).ToArray();
+            SkyBackgroundRepair.ApplyToRoot(root);
+            Assert.That(skyImages.Select(SkyPresentation), Is.EqualTo(presentation), "A second conversion must not alter the actual sky presentation.");
             Assert.That(SkyBackgroundRepair.ProtectedSnapshot(root), Is.EqualTo(before));
             Assert.That(root.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(objects), "Reapplying cannot keep adding duplicate sky images");
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
+
+    private static string SkyPresentation(SpriteRenderer image)
+        => image.transform.localToWorldMatrix.ToString("F6") + "|" + image.sprite.GetInstanceID()
+            + "|" + image.size.ToString("F6") + "|" + image.drawMode + "|" + image.enabled
+            + "|" + image.flipX + "|" + image.flipY + "|" + image.color.ToString("F6")
+            + "|" + image.sortingLayerID + "|" + image.sortingOrder + "|" + image.sharedMaterial.GetInstanceID();
 
     [UnityTest]
     public IEnumerator SkyTracksTheFinalCinemachinePositionInTheSameRenderedFrame()

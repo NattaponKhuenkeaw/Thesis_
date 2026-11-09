@@ -78,6 +78,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private readonly HashSet<EnemyController> grabTargetsThisStep = new HashSet<EnemyController>();
 
     private AttackStepData currentStepData;
+    private HitFrameData currentStepHitData;
     private AttackCategory currentAttackCategory = AttackCategory.Normal;
     private string currentActionId;
     private string currentActionName;
@@ -224,6 +225,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         hadGrabAtStepStart = HasGrabbedEnemy();
         currentStepData = step;
+        currentStepHitData = step.ResolveHitData(isQteIntro);
         CurrentExecution = new CombatExecutionContext(this, playerCharacter != null ? playerCharacter.characterObject : null, FieldSession, isQteIntro, currentResolvedCombatAction, CurrentCast);
         comboDepth = depth;
         isAirCombo = airCombo;
@@ -764,6 +766,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         comboDepth = 0;
         currentPhase = ActionPhase.None;
         currentStepData = null;
+        currentStepHitData = null;
         currentActionId = null;
         currentActionName = null;
         currentResolvedCombatAction = null;
@@ -1202,14 +1205,15 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         int frameInActivePhase = frame - cachedStartupFrames - 1;
-        if (currentStepData.hitData == null || currentStepData.hitData.hitboxes == null)
+        var hitboxes = currentStepHitData?.hitboxes;
+        if (hitboxes == null)
         {
             return;
         }
 
-        for (int i = 0; i < currentStepData.hitData.hitboxes.Count; i++)
+        for (int i = 0; i < hitboxes.Count; i++)
         {
-            HitboxBase hitbox = currentStepData.hitData.hitboxes[i];
+            HitboxBase hitbox = hitboxes[i];
             if (hitbox == null)
             {
                 continue;
@@ -1362,7 +1366,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         if (hitBoxController == null || currentStepData == null)
             return;
 
-        if (currentStepData.hitData == null || currentStepData.hitData.hitboxes == null)
+        var hitboxes = currentStepHitData?.hitboxes;
+        if (hitboxes == null)
             return;
 
         // Find the currently active hitbox to get its offset
@@ -1373,9 +1378,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         {
             // Find the last triggered normal hitbox
             int frameInActivePhase = currentAttackFrame - cachedStartupFrames - 1;
-            for (int i = currentStepData.hitData.hitboxes.Count - 1; i >= 0; i--)
+            for (int i = hitboxes.Count - 1; i >= 0; i--)
             {
-                var hb = currentStepData.hitData.hitboxes[i];
+                var hb = hitboxes[i];
                 if (hb != null && frameInActivePhase >= hb.startFrameOffset
                     && frameInActivePhase < hb.startFrameOffset + hb.activeFrames)
                 {
@@ -1553,7 +1558,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             CombatLog($"HIT: {enemy.gameObject.name} (Damage: {hitBoxDamage?.DamageValue ?? 0f:F1})");
 
             bool wasAlreadyHeld = IsHoldingEnemy(enemy);
-            hitBoxDamage?.ProcessHit(enemy);
+            hitBoxDamage?.ProcessHit(enemy, result);
 
             if (currentGrabHitbox != null && !wasAlreadyHeld && IsHoldingEnemy(enemy))
             {

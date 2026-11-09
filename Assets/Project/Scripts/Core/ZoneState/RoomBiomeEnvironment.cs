@@ -11,6 +11,8 @@ namespace Project.Core.ZoneState
         [SerializeField] private SpriteRenderer[] biomeOneArtwork = System.Array.Empty<SpriteRenderer>();
         [SerializeField] private ParallaxBackground[] biomeOneParallax = System.Array.Empty<ParallaxBackground>();
         [SerializeField] private GameObject biomeTwoEnvironment;
+        [SerializeField, HideInInspector] private bool[] biomeOneArtworkDefaults = System.Array.Empty<bool>();
+        [SerializeField, HideInInspector] private bool[] biomeOneParallaxDefaults = System.Array.Empty<bool>();
 
         private bool[] artworkEnabled;
         private bool[] parallaxEnabled;
@@ -46,10 +48,12 @@ namespace Project.Core.ZoneState
             {
                 artworkEnabled = new bool[biomeOneArtwork.Length];
                 for (int i = 0; i < biomeOneArtwork.Length; i++)
-                    artworkEnabled[i] = biomeOneArtwork[i] != null && biomeOneArtwork[i].enabled;
+                    artworkEnabled[i] = biomeOneArtwork[i] != null &&
+                        (biomeOneArtworkDefaults.Length == biomeOneArtwork.Length ? biomeOneArtworkDefaults[i] : biomeOneArtwork[i].enabled);
                 parallaxEnabled = new bool[biomeOneParallax.Length];
                 for (int i = 0; i < biomeOneParallax.Length; i++)
-                    parallaxEnabled[i] = biomeOneParallax[i] != null && biomeOneParallax[i].enabled;
+                    parallaxEnabled[i] = biomeOneParallax[i] != null &&
+                        (biomeOneParallaxDefaults.Length == biomeOneParallax.Length ? biomeOneParallaxDefaults[i] : biomeOneParallax[i].enabled);
             }
 
             ActiveThemeIndex = catalog != null ? catalog.ResolveAuthoredBiomeIndex(progressionBiomeIndex) : 0;

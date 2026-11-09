@@ -19,7 +19,7 @@ namespace Project.Core.ZoneState
             [Tooltip("Optional override. Leave empty so the chosen card (Easy / Medium / Hard) picks Encounter_Easy / Medium / Hard.")]
             public EncounterSO encounter;
 
-            [Tooltip("How many enemies spawn in this room.")]
+            [Tooltip("Fallback enemy count without a combat card. Zero excludes this room from the card budget.")]
             [Min(0)]
             [UnityEngine.Serialization.FormerlySerializedAs("enemyQuota")]
             public int enemyCount = 3;
@@ -179,25 +179,23 @@ namespace Project.Core.ZoneState
             if (!CombatRouteContent.TryGetActiveDifficulty(out RouteDifficulty difficulty)) return null;
 
             int combatChambers = 0;
-            foreach (Chamber chamber in chambers)
-            {
+            foreach (var chamber in chambers)
                 if (chamber != null && chamber.enemyCount > 0) combatChambers++;
-            }
-            if (combatChambers == 0) return null;
 
-            // Give each playable chamber at least one enemy, including custom layouts with more chambers.
-            int budget = Mathf.Max(combatChambers, CombatRouteContent.GetRoomEnemyBudget(difficulty));
-            int baseCount = budget / combatChambers;
-            int extra = budget % combatChambers;
             var counts = new int[chambers.Length];
+            if (combatChambers == 0) return counts;
+
+            int budget = CombatRouteContent.GetLayoutEnemyBudget(difficulty);
+            int perChamber = budget / combatChambers;
+            int remainder = budget % combatChambers;
             for (int i = 0; i < chambers.Length; i++)
             {
                 if (chambers[i] == null || chambers[i].enemyCount <= 0) continue;
-                counts[i] = baseCount;
-                if (extra > 0)
+                counts[i] = perChamber;
+                if (remainder > 0)
                 {
                     counts[i]++;
-                    extra--;
+                    remainder--;
                 }
             }
             return counts;

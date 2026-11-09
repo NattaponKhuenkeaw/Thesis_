@@ -33,7 +33,7 @@ public sealed class EncounterBatchSpawnTests
                 UnityEngine.Random.InitState(seed);
                 var offer = RouteOfferGenerator.BuildOffer(room, spawnSlotCount: 5);
                 Assert.That(offer.Encounter, Is.Not.Null);
-                Assert.That(offer.Encounter.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
+                Assert.That(offer.Encounter.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
                 Assert.That(offer.Encounter.AliveCap, Is.EqualTo(5));
                 Assert.That(RouteOfferGenerator.CountEncounterEnemies(offer.Encounter), Is.EqualTo(4 + 2 * (int)offer.Difficulty));
             }
@@ -48,8 +48,12 @@ public sealed class EncounterBatchSpawnTests
         yield return new EnterPlayMode();
         var plans = new Dictionary<int, int[]>
         {
+            { 2, new[] { 2 } },
+            { 3, new[] { 3 } },
             { 4, new[] { 4 } },
+            { 5, new[] { 5 } },
             { 6, new[] { 3, 3 } },
+            { 7, new[] { 4, 3 } },
             { 8, new[] { 4, 4 } },
             { 12, new[] { 4, 4, 4 } }
         };
@@ -58,6 +62,7 @@ public sealed class EncounterBatchSpawnTests
             int quota = plan.Key;
             using (var f = new Fixture(5))
             {
+                if (quota == 5) f.AddRoomySlots();
                 f.Start(quota, quota == 12 ? 99 : 5);
                 var seen = new HashSet<int>();
                 int remaining = quota;
@@ -88,25 +93,121 @@ public sealed class EncounterBatchSpawnTests
     }
 
     [UnityTest]
-    public IEnumerator CrowdedSlotsCloseASmallerGroupInsteadOfAddingEnemiesWhenOneDies()
+    public IEnumerator PressureLayoutsSpawnTheFullSelectedCardBudgetAtAuthoredMarkers()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var context = new GameObject("Route spawn budget audit");
+        context.AddComponent<AudioListener>();
+        var progression = context.AddComponent<RunProgressionManager>();
+        var player = new GameObject("Chamber entry probe") { tag = "Player" };
+        player.transform.SetParent(context.transform);
+        player.transform.position = Vector3.one * -1000f;
+        var entry = player.AddComponent<BoxCollider2D>();
+        var map = Resources.Load<MapSO>("MapSO/Test_MapSO");
+        var activeField = typeof(RoomWaveManager).GetField("activeEnemies", Private);
+        var originsField = typeof(RoomWaveManager).GetField("spawnOrigins", Private);
+        var pendingField = typeof(RoomWaveManager).GetField("pressureDirector", Private);
+        var routineField = typeof(RoomWaveManager).GetField("waveRoutine", Private);
+        var waitingField = typeof(CombatStageController).GetField("waitingForIndex", Private);
+        var layouts = new[] { 5, 2, 5, 3, 1 };
+        try
+        {
+            for (int depth = 0; depth < layouts.Length; depth++)
+            {
+                var room = map.GetRoomById($"Combat_{layouts[depth]:00}");
+                var difficulty = depth == 0 ? RouteDifficulty.Medium : RouteDifficulty.Hard;
+                int[] expected = layouts[depth] == 1 ? new[] { 7, 7, 6 }
+                    : depth == 0 ? new[] { 4, 4, 4, 4 } : new[] { 5, 5, 5, 5 };
+                progression.currentRoomDepth = depth;
+                ActiveRouteOffer.Set(new RoomChoiceOffer(room, difficulty, null, null));
+                var layout = Object.Instantiate(room.LayoutPrefab);
+                try
+                {
+                    var stage = layout.GetComponentInChildren<CombatStageController>();
+                    var waves = layout.GetComponentInChildren<RoomWaveManager>();
+                    var active = (List<EnemyController>)activeField.GetValue(waves);
+                    var origins = (Dictionary<EnemyController, Vector3>)originsField.GetValue(waves);
+                    yield return null;
+                    waves.StartEncounter();
+                    Assert.That(stage.ChamberCount, Is.EqualTo(expected.Length));
+                    int total = 0;
+                    for (int i = 0; i < stage.ChamberCount; i++)
+                    {
+                        var markers = stage.Chambers[i].spawnSlots.Where(slot => slot != null).Select(slot => slot.position);
+                        int spawned = 0;
+                        while (spawned < expected[i])
+                        {
+                            yield return Until(() => active.Any(e => e != null && e.IsAlive));
+                            var living = active.Where(e => e != null && e.IsAlive).ToArray();
+                            Assert.That(living.Length, Is.InRange(1, 5), $"{room.RoomId} {difficulty}, chamber {i + 1}");
+                            foreach (var enemy in living)
+                            {
+                                Assert.That(markers, Does.Contain(origins[enemy]), "Pressure must use the authored markers.");
+                                enemy.Die();
+                            }
+                            spawned += living.Length;
+                        }
+                        Assert.That(spawned, Is.EqualTo(expected[i]));
+                        Assert.That(((EncounterPressureDirector)pendingField.GetValue(waves)).Remaining, Is.Zero);
+                        total += spawned;
+                        if (i + 1 < stage.ChamberCount)
+                        {
+                            yield return Until(() => (int)waitingField.GetValue(stage) == i + 1);
+                            stage.NotifyPlayerEntered(i + 1, entry);
+                        }
+                    }
+                    yield return Until(() => routineField.GetValue(waves) == null);
+                    Assert.That(total, Is.EqualTo(depth == 0 ? 16 : 20), room.RoomId);
+                }
+                finally { Object.DestroyImmediate(layout); }
+            }
+        }
+        finally
+        {
+            ActiveRouteOffer.Clear();
+            Object.DestroyImmediate(context);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator PressureRefillsOneVacancyWhileTheOtherFourAreAlive()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        using (var f = new Fixture(5))
+        {
+            f.Start(7, cap: 99, mode: EncounterSpawnMode.Pressure);
+            var opening = f.Living;
+            Assert.That(opening.Length, Is.EqualTo(5));
+            Assert.That(f.Pending, Is.EqualTo(2));
+            opening[0].Die();
+            yield return Until(() => f.Living.Length == 5);
+            Assert.That(f.Pending, Is.EqualTo(1));
+            Assert.That(opening.Skip(1).All(e => f.Living.Contains(e)), Is.True);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator CrowdedSlotsWaitForACompleteGroupInsteadOfChangingTheFourPlusFourPlan()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
         using (var f = new Fixture(3))
         {
             f.Start(8);
-            Assert.That(f.Living.Length, Is.EqualTo(3));
-            Assert.That(f.Pending, Is.EqualTo(5));
-            var first = f.Living;
-            first[0].Die();
+            Assert.That(f.Living, Is.Empty);
+            Assert.That(f.Pending, Is.EqualTo(8));
             yield return Wait(.2f);
-            Assert.That(f.Living.Length, Is.EqualTo(2));
-            Assert.That(f.Pending, Is.EqualTo(5), "A free marker must wait until the entire group is defeated.");
+            Assert.That(f.Living, Is.Empty);
+            Assert.That(f.Pending, Is.EqualTo(8));
+            f.AddRoomySlots();
+            yield return Until(() => f.Living.Length == 4);
+            Assert.That(f.Pending, Is.EqualTo(4));
             foreach (var enemy in f.Living) enemy.Die();
-            yield return Until(() => f.Living.Length == 3);
-            Assert.That(f.Pending, Is.EqualTo(2));
-            foreach (var enemy in f.Living) enemy.Die();
-            yield return Until(() => f.Living.Length == 2);
+            yield return Until(() => f.Living.Length == 4);
             Assert.That(f.Pending, Is.Zero);
             foreach (var enemy in f.Living) enemy.Die();
             yield return Until(() => !f.Running);
@@ -196,16 +297,29 @@ public sealed class EncounterBatchSpawnTests
             Physics2D.SyncTransforms();
         }
 
-        public void Start(int count, int cap = 5)
+        public void Start(int count, int cap = 5, EncounterSpawnMode mode = EncounterSpawnMode.Batched)
         {
             using (var data = new SerializedObject(encounter))
             {
-                data.FindProperty("spawnMode").enumValueIndex = (int)EncounterSpawnMode.Batched;
+                data.FindProperty("spawnMode").enumValueIndex = (int)mode;
                 data.FindProperty("aliveCap").intValue = cap;
                 data.FindProperty("delayBetweenWaves").floatValue = .05f;
                 data.ApplyModifiedPropertiesWithoutUndo();
             }
             Waves.StartChamber(Enumerable.Repeat(prefab, count).ToArray(), encounter);
+        }
+
+        public void AddRoomySlots()
+        {
+            var slots = new Transform[5];
+            for (int i = 0; i < slots.Length; i++)
+            {
+                slots[i] = new GameObject("Roomy_" + i).transform;
+                slots[i].SetParent(Waves.transform, false);
+                slots[i].localPosition = Vector3.right * ((i - 2) * 3f);
+            }
+            Waves.BindSpawnSlots(slots);
+            Physics2D.SyncTransforms();
         }
 
         public void Dispose() { Object.DestroyImmediate(root); Object.DestroyImmediate(encounter); }

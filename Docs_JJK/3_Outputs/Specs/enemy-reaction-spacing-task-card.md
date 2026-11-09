@@ -90,6 +90,15 @@ The current implementation uses authored anchor snapping only during impact free
 - [ ] PR review before merge
 - [ ] Team status publish approval
 
+## Current Migration Pass
+
+- Runtime inventory: Shin, Rei, and L'Angelique are the playable characters available from the run shop catalog. Other character assets are not part of this pass.
+- The converted hits store an explicit displacement and launch apex. They preserve the previous recoil/launch timing independently of that authored target.
+- Dash anchors take precedence over the authored target. Anchor ownership, hold duration, and release are unchanged. Existing target-state overrides, airborne combo handoffs, and point-blank separation corrections stay compatible.
+- Projectile magnetism remains an independent movement. It translates the active recoil path by the applied pull rather than competing with the authored offset.
+- QTE: only the opening hit of Uranagi was selected. Its second hit is still Snap. Shin and Rei's QTE position data remains unchanged because its displacement varies with the contact position.
+- Snap, grabs, grab-linked finishers, gathering fields, and damage-only hits are not converted. The scripted Judgment Cut follow-up and chained ultimate paths need a full-route playtest before any additional migration.
+
 ## Router Decision
 
 Recommended workflow: `/fix-bug`

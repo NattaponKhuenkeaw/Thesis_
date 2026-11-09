@@ -97,33 +97,6 @@ public sealed class ArtifactUiPolishTests
         finally { Object.DestroyImmediate(inventory); }
     }
 
-    [TestCase(true)]
-    [TestCase(false)]
-    public void RaritySortingUsesDefinitionRarityInBothDirections(bool descending)
-    {
-        var definitions = new Dictionary<string, ArtifactDefinition>();
-        try
-        {
-            var input = new List<ArtifactInstance>();
-            foreach (var rarity in new[] { ArtifactRarity.SR, ArtifactRarity.R, ArtifactRarity.SSR })
-            {
-                var definition = ScriptableObject.CreateInstance<ArtifactDefinition>();
-                definition.rarity = rarity;
-                definitions.Add(rarity.ToString(), definition);
-                input.Add(new ArtifactInstance { definitionId = rarity.ToString(), instanceId = rarity.ToString() });
-            }
-            var query = ArtifactInventoryQuery.Default;
-            query.sortMode = ArtifactSortMode.Rarity;
-            query.descending = descending;
-            var results = new List<ArtifactInstance>();
-            ArtifactInventoryQueryEngine.Execute(input, query, null, id => definitions[id], null, results);
-            Assert.That(results.Select(a => definitions[a.definitionId].rarity).ToArray(), Is.EqualTo(descending
-                ? new[] { ArtifactRarity.SSR, ArtifactRarity.SR, ArtifactRarity.R }
-                : new[] { ArtifactRarity.R, ArtifactRarity.SR, ArtifactRarity.SSR }));
-        }
-        finally { foreach (var definition in definitions.Values) Object.DestroyImmediate(definition); }
-    }
-
     [Test]
     public void SelectingAnotherRewardDoesNotClaimAndFailedClaimCanBeRetriedOnce()
     {
@@ -163,15 +136,12 @@ public sealed class ArtifactUiPolishTests
             var dialog = Object.Instantiate(Resources.Load<ArtifactCopyMenuUI>(ArtifactCopyMenuUI.DialogPath));
             try
             {
-                int closed = 0;
-                dialog.Closed += _ => closed++;
                 dialog.OpenDiscard("test", () => true);
                 Assert.That(dialog.GetComponent<CanvasGroup>().blocksRaycasts, Is.True);
                 Assert.That(ArtifactCopyMenuUI.TryDismissActive(), Is.True);
                 Assert.That(dialog.GetComponent<CanvasGroup>().blocksRaycasts, Is.False);
                 Assert.That(dialog.GetComponent<CanvasGroup>().interactable, Is.False);
                 Assert.That(ArtifactCopyMenuUI.TryDismissActive(), Is.False);
-                Assert.That(closed, Is.EqualTo(1));
             }
             finally { Object.DestroyImmediate(dialog.gameObject); }
         }

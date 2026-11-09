@@ -7,7 +7,7 @@ namespace Project.Core.ZoneState
     public readonly struct RoomChoiceOffer
     {
         public RoomChoiceOffer(RoomData room)
-            : this(room, RouteDifficulty.Medium, null, null)
+            : this(room, RouteDifficulty.Easy, null, null)
         {
         }
 
@@ -36,6 +36,6 @@ namespace Project.Core.ZoneState
 
         public string RewardLabel => Reward != null ? Reward.BuildLabel() : string.Empty;
 
-        public bool UsesCombatPalette => IsValid && RouteOfferGenerator.NeedsGeneratedCombat(Kind);
+        public bool ShowsDifficulty => Kind == RoomKind.Combat || Kind == RoomKind.Elite;
     }
 }

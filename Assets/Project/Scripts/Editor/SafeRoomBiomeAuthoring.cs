@@ -15,6 +15,8 @@ using Object = UnityEngine.Object;
 
 public static class SafeRoomBiomeAuthoring
 {
+    public const string SharedShopPrefab = "Assets/Project/TestChar/Prefab/Shop.prefab";
+    public const string RedShopFacadeName = "ShopFacade_B1";
     public static string LayoutPath(string kind) => $"Assets/Project/Resources/RoomLayouts/RoomLayout_{kind}_01.prefab";
     public static string EnvironmentPath(string kind) => $"Assets/Project/Prefab/Environment/{kind}Environment_B2.prefab";
 
@@ -67,8 +69,9 @@ public static class SafeRoomBiomeAuthoring
             if (parent != null) host.transform.SetParent(parent, false);
             controller = host.AddComponent<RoomBiomeEnvironment>();
         }
-        var firstTheme = roots.SelectMany(r => r.GetComponentsInChildren<SpriteRenderer>(true)).Where(IsOriginalArtwork).ToArray();
         var existing = controller.transform.Find(kind + "Environment_B2");
+        var firstTheme = roots.SelectMany(r => r.GetComponentsInChildren<SpriteRenderer>(true))
+            .Where(r => (existing == null || !r.transform.IsChildOf(existing)) && IsOriginalArtwork(r)).ToArray();
         if (existing == null)
             existing = ((GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath(kind)), controller.transform)).transform;
         existing.position = new Vector3(0f, FloorHeight(roots), 0f);
@@ -131,7 +134,11 @@ public static class SafeRoomBiomeAuthoring
 
             if (kind == "Shop")
             {
-                Add(root, "FoodVendor", "IMG_4779", -14f, 0f, 1.2f);
+                var sprite = AssetDatabase.LoadAssetAtPath<GameObject>(SharedShopPrefab).GetComponent<SpriteRenderer>().sprite;
+                var facade = LobbyBiomeAuthoring.Tile(root.transform, RedShopFacadeName, sprite,
+                    new Vector2(-14.7f, -sprite.bounds.min.y), sprite.bounds.size, 2);
+                facade.drawMode = SpriteDrawMode.Simple;
+                facade.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(BiomeMaterialAuthoring.MaterialPath(2, "Facade"));
                 Add(root, "NoodleVendor", "IMG_4783", -2f, 0f, 1.2f);
                 Add(root, "GoodsShop", "IMG_4781", 12f, 0f, 1.2f);
                 Add(root, "SupplyCrates", "IMG_4782", 20f, 0f, .7f);
@@ -192,7 +199,8 @@ public static class SafeRoomBiomeAuthoring
                 var host = new GameObject("Safe room biome capture"); SceneManager.MoveGameObjectToScene(host, scene);
                 var camera = host.AddComponent<Camera>();
                 camera.enabled = false; camera.scene = scene; camera.orthographic = true; camera.orthographicSize = 9f;
-                camera.transform.position = new Vector3(0f, FloorHeight(roots) + 7.5f, -100f);
+                float cameraX = kind == "Shop" ? roots.Single(r => r.name == "Shop").transform.position.x + 5f : 0f;
+                camera.transform.position = new Vector3(cameraX, FloorHeight(roots) + 7.5f, -100f);
                 camera.GetUniversalAdditionalCameraData();
                 var map = Resources.Load<MapSO>("MapSO/Test_MapSO");
                 for (int biome = 0; biome < 2; biome++)

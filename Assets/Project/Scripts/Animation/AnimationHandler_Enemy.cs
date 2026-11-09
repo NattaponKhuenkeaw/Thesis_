@@ -364,6 +364,14 @@ public class AnimationHandler_Enemy : MonoBehaviour
             anim.SetFloat(jumpPhaseHash, phase);
     }
 
+    public void PlayBossJumpCrouch()
+    {
+        if (anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null) return;
+        int state = Animator.StringToHash("Base Layer.AttackJumpSmash");
+        SetBossJumpPhase(0f);
+        if (anim.HasState(0, state)) anim.Play(state, 0, 0f);
+    }
+
     public void SampleBossCleave(float normalizedTime)
     {
         if (anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null) return;

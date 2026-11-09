@@ -8,13 +8,15 @@ public struct HitFeedbackRequest
         DamageImpactTier tier,
         Vector2 hitPoint,
         Vector2 hitDirection,
-        ProjectileData projectileData)
+        ProjectileData projectileData,
+        bool playAudio = true)
     {
         Hitbox = hitbox;
         Tier = tier;
         HitPoint = hitPoint;
         HitDirection = hitDirection;
         ProjectileData = projectileData;
+        PlayAudio = playAudio;
     }
 
     public HitboxBase Hitbox { get; }
@@ -22,6 +24,7 @@ public struct HitFeedbackRequest
     public Vector2 HitPoint { get; }
     public Vector2 HitDirection { get; }
     public ProjectileData ProjectileData { get; }
+    public bool PlayAudio { get; }
 }
 
 public static class HitFeedbackEvents
@@ -33,8 +36,9 @@ public static class HitFeedbackEvents
         DamageImpactTier tier,
         Vector2 hitPoint,
         Vector2 hitDirection,
-        ProjectileData projectileData = null)
+        ProjectileData projectileData = null,
+        bool playAudio = true)
     {
-        FeedbackRequested?.Invoke(new HitFeedbackRequest(hitbox, tier, hitPoint, hitDirection, projectileData));
+        FeedbackRequested?.Invoke(new HitFeedbackRequest(hitbox, tier, hitPoint, hitDirection, projectileData, playAudio));
     }
 }

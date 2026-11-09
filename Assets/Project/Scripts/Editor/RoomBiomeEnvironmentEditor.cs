@@ -11,7 +11,9 @@ public class RoomBiomeEnvironmentEditor : Editor
     {
         var environment = (RoomBiomeEnvironment)target;
         EditorGUILayout.LabelField("Background Preview", EditorStyles.boldLabel);
-        using (new EditorGUI.DisabledScope(Application.isPlaying || environment.BiomeOneEnvironment == null || environment.BiomeTwoEnvironment == null))
+        var artwork = serializedObject.FindProperty("biomeOneArtwork");
+        using (new EditorGUI.DisabledScope(Application.isPlaying || environment.BiomeTwoEnvironment == null ||
+            (environment.BiomeOneEnvironment == null && artwork.arraySize == 0)))
         {
             int current = environment.BiomeTwoEnvironment != null && environment.BiomeTwoEnvironment.activeSelf ? 1 : 0;
             int selected = GUILayout.Toolbar(current, new[] { "Biome 1", "Biome 2" });
@@ -31,10 +33,55 @@ public class RoomBiomeEnvironmentEditor : Editor
         if (Application.isPlaying) return;
         var first = environment.BiomeOneEnvironment;
         var second = environment.BiomeTwoEnvironment;
-        if (first == null || second == null) return;
-        Undo.RecordObjects(new Object[] { first, second }, "Preview room biome");
-        first.SetActive(biome == 0); second.SetActive(biome == 1);
-        PrefabUtility.RecordPrefabInstancePropertyModifications(first);
+        if (second == null) return;
+        var data = new SerializedObject(environment);
+        var artwork = data.FindProperty("biomeOneArtwork");
+        var parallax = data.FindProperty("biomeOneParallax");
+        if (first == null && artwork.arraySize == 0) return;
+        if (first == null)
+        {
+            var artworkDefaults = data.FindProperty("biomeOneArtworkDefaults");
+            var parallaxDefaults = data.FindProperty("biomeOneParallaxDefaults");
+            if (artworkDefaults.arraySize != artwork.arraySize)
+            {
+                artworkDefaults.arraySize = artwork.arraySize;
+                for (int i = 0; i < artwork.arraySize; i++)
+                    artworkDefaults.GetArrayElementAtIndex(i).boolValue =
+                        ((SpriteRenderer)artwork.GetArrayElementAtIndex(i).objectReferenceValue)?.enabled ?? false;
+            }
+            if (parallaxDefaults.arraySize != parallax.arraySize)
+            {
+                parallaxDefaults.arraySize = parallax.arraySize;
+                for (int i = 0; i < parallax.arraySize; i++)
+                    parallaxDefaults.GetArrayElementAtIndex(i).boolValue =
+                        ((Project.Parallax.ParallaxBackground)parallax.GetArrayElementAtIndex(i).objectReferenceValue)?.enabled ?? false;
+            }
+            data.ApplyModifiedProperties();
+            for (int i = 0; i < artwork.arraySize; i++)
+            {
+                var renderer = (SpriteRenderer)artwork.GetArrayElementAtIndex(i).objectReferenceValue;
+                if (renderer == null) continue;
+                Undo.RecordObject(renderer, "Preview room biome");
+                renderer.enabled = biome == 0 && artworkDefaults.GetArrayElementAtIndex(i).boolValue;
+                PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+            }
+            for (int i = 0; i < parallax.arraySize; i++)
+            {
+                var background = (Project.Parallax.ParallaxBackground)parallax.GetArrayElementAtIndex(i).objectReferenceValue;
+                if (background == null) continue;
+                Undo.RecordObject(background, "Preview room biome");
+                background.enabled = biome == 0 && parallaxDefaults.GetArrayElementAtIndex(i).boolValue;
+                PrefabUtility.RecordPrefabInstancePropertyModifications(background);
+            }
+        }
+        else
+        {
+            Undo.RecordObject(first, "Preview room biome");
+            first.SetActive(biome == 0);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(first);
+        }
+        Undo.RecordObject(second, "Preview room biome");
+        second.SetActive(biome == 1);
         PrefabUtility.RecordPrefabInstancePropertyModifications(second);
         if (environment.gameObject.scene.IsValid()) EditorSceneManager.MarkSceneDirty(environment.gameObject.scene);
         SceneView.RepaintAll();

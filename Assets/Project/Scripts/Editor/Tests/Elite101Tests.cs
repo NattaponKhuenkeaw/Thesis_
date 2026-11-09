@@ -87,7 +87,7 @@ public class Elite101Tests
             Assert.That(quotas[i].Count(p => p == hard.FinalChamberElite), Is.EqualTo(i == quotas.Length - 1 ? 1 : 0));
         }
         Assert.That(hard.AliveCap, Is.EqualTo(5));
-        Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
+        Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
     }
 
     [TestCase("Encounter_Easy")]
@@ -111,8 +111,68 @@ public class Elite101Tests
     }
 
     [UnityTest] public IEnumerator RushesTwiceAndRestoresItsHitbox() => RunRush(false, false);
+    [UnityTest] public IEnumerator LeftFacingRushesOnlyDamagePlayersInsideTheirOwnWarning() => RunRush(false, false, -1f);
     [UnityTest] public IEnumerator ShortRushesStopAtWalls() => RunRush(true, false);
     [UnityTest] public IEnumerator NormalHitsDoNotStunButMainStyleAnchorInterruptsTheRush() => RunRush(false, true);
+
+    [UnityTest]
+    public IEnumerator GrabFinisherReleasesEliteInTheAirAndItFallsBackToTheFloor()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var root = new GameObject("Elite grab fixture");
+        try
+        {
+            var floor = new GameObject("Floor");
+            floor.transform.SetParent(root.transform);
+            floor.layer = LayerMask.NameToLayer("Ground");
+            floor.transform.position = Vector3.down * .5f;
+            floor.AddComponent<BoxCollider2D>().size = new Vector2(40f, 1f);
+            var enemy = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Elite101Authoring.ElitePath),
+                root.transform).GetComponent<EnemyController>();
+            enemy.SetBehaviorAgentActive(false);
+            enemy.InitializeSpawn(Vector3.zero, Quaternion.identity);
+            float deadline = Time.realtimeSinceStartup + 4f;
+            while (!enemy.IsCombatReady && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(enemy.IsCombatReady, Is.True);
+            enemy.SetBehaviorAgentActive(false);
+            var socket = new GameObject("Grab socket");
+            socket.transform.SetParent(root.transform);
+            socket.transform.position = enemy.transform.position + Vector3.up * 4f;
+            var grab = HitReactionData.Default(1f, Vector2.right, 0f);
+            grab.reactionKind = EnemyReactionKind.Grab;
+            grab.reactionTiming = HitReactionData.CreateTiming(0, 120, 12);
+            grab.grabSocket = socket.transform;
+            grab.attackerTransform = socket.transform;
+            grab.reactionOwnerId = root.GetInstanceID();
+            enemy.TakeResolvedHit(grab, Vector2.zero);
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            Assert.That(enemy.IsGrabbed, Is.True);
+            Assert.That(enemy.bodyCollider.bounds.min.y, Is.GreaterThan(1f));
+
+            var hit = HitReactionData.Default(1f, Vector2.right, 0f);
+            hit.reactionKind = EnemyReactionKind.Knockback;
+            hit.reactionTiming = HitReactionData.CreateTiming(0, 8, 8);
+            hit.reactionOwnerId = grab.reactionOwnerId;
+            enemy.TakeResolvedHit(hit, Vector2.zero);
+            Assert.That(enemy.IsGrabbed, Is.True, "Ordinary hits should not drop a held Elite.");
+
+            hit.breaksGrab = true;
+            hit.reactionOwnerId = grab.reactionOwnerId + 1;
+            enemy.TakeResolvedHit(hit, Vector2.zero);
+            Assert.That(enemy.IsGrabbed, Is.True, "Another attacker must not break this grab.");
+            hit.reactionOwnerId = grab.reactionOwnerId;
+            enemy.TakeResolvedHit(hit, Vector2.zero);
+            Assert.That(enemy.IsGrabbed, Is.False, "The owner's finisher must end the grab immediately.");
+            deadline = Time.realtimeSinceStartup + 2f;
+            while (enemy.bodyCollider.bounds.min.y > .1f && Time.realtimeSinceStartup < deadline)
+                yield return new WaitForFixedUpdate();
+            Assert.That(enemy.bodyCollider.bounds.min.y, Is.InRange(-.1f, .1f));
+        }
+        finally { Object.Destroy(root); }
+        yield return new ExitPlayMode();
+    }
 
     [UnityTest]
     public IEnumerator RealHardLayoutPlansOneEliteOnlyForItsFinalChamber()
@@ -132,10 +192,9 @@ public class Elite101Tests
             Assert.That(stage.TryBegin(waves, System.Array.Empty<GameObject>()), Is.True);
             var quotas = (List<GameObject>[])typeof(CombatStageController).GetField("slices", Private).GetValue(stage);
             var elite = Resources.Load<EncounterSO>("EncounterSO/Encounter_Hard").FinalChamberElite;
-            Assert.That(quotas.Length, Is.GreaterThan(1));
+            Assert.That(quotas.Select(quota => quota.Count), Is.EqualTo(new[] { 7, 7, 6 }));
             for (int i = 0; i < quotas.Length; i++)
             {
-                Assert.That(quotas[i].Count, Is.EqualTo(8));
                 Assert.That(quotas[i].Count(p => p == elite), Is.EqualTo(i == quotas.Length - 1 ? 1 : 0));
             }
         }
@@ -147,12 +206,13 @@ public class Elite101Tests
         yield return new ExitPlayMode();
     }
 
-    private static IEnumerator RunRush(bool wall, bool grab)
+    private static IEnumerator RunRush(bool wall, bool grab, float direction = 1f)
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
         var fixture = new GameObject("Elite rush fixture");
         EnemyAttackAction action = null;
+        var probes = new List<PlayerCharacter>();
         try
         {
             fixture.AddComponent<AudioListener>();
@@ -179,7 +239,7 @@ public class Elite101Tests
             Assert.That(graph == null || !graph.enabled, Is.True, "Only the manually driven action may control this fixture.");
             var target = new GameObject("Target");
             target.transform.SetParent(fixture.transform);
-            target.transform.position = root.transform.position + Vector3.right * 1.6f;
+            target.transform.position = root.transform.position + Vector3.right * (direction * 1.6f);
             if (wall)
             {
                 var blocker = new GameObject("Wall");
@@ -191,6 +251,13 @@ public class Elite101Tests
             Physics2D.SyncTransforms();
             var hitbox = (BoxCollider2D)enemy.attackHitbox;
             Vector2 size = hitbox.size, offset = hitbox.offset;
+            if (!grab)
+            {
+                probes.Add(CreateDamageProbe("Inside warning"));
+                probes.Add(CreateDamageProbe("Behind the Elite"));
+                probes.Add(CreateDamageProbe("Beyond warning"));
+                probes.Add(CreateDamageProbe("Above warning"));
+            }
             action = new EnemyAttackAction();
             action.Agent.Value = root;
             action.Target.Value = target;
@@ -234,6 +301,22 @@ public class Elite101Tests
                 {
                     rushes++;
                     rushStart = enemy.rb.position.x;
+                    if (!grab)
+                    {
+                        Vector3 start = lane.GetPosition(0);
+                        Vector3 end = lane.GetPosition(1);
+                        float height = lane.startWidth;
+                        Vector3 center = enemy.bodyCollider.bounds.center;
+                        float rear = center.x - direction * enemy.bodyCollider.bounds.extents.x;
+                        PlaceProbe(probes[0], Vector3.Lerp(start, end, .55f));
+                        PlaceProbe(probes[1], new Vector3(rear - direction * .052f, start.y));
+                        PlaceProbe(probes[2], end + Vector3.right * (direction * .067f));
+                        PlaceProbe(probes[3], Vector3.Lerp(start, end, .55f) + Vector3.up * (height / 2f + .067f));
+                        Physics2D.SyncTransforms();
+                        Bounds box = hitbox.bounds;
+                        Assert.That((box.center.x - center.x) * direction, Is.GreaterThan(0f));
+                        Assert.That(box.size.x, Is.LessThan(enemy.bodyCollider.bounds.size.x));
+                    }
                     if (grab)
                     {
                         for (int i = 0; i < 5; i++)
@@ -255,12 +338,17 @@ public class Elite101Tests
                 }
                 if (!active && wasActive)
                 {
-                    float travel = enemy.rb.position.x - rushStart;
+                    float travel = (enemy.rb.position.x - rushStart) * direction;
                     Assert.That(travel, Is.LessThanOrEqualTo(wall ? .5f : enemy.Kit.LungeDistance + .15f));
                     var contacts = (RaycastHit2D[])typeof(EnemyAttackAction).GetField("m_ChargeHits", Private).GetValue(action);
                     if (!wall) Assert.That(travel, Is.GreaterThan(.3f),
                         $"Rush {rushes}: feet={enemy.bodyCollider.bounds.min.y}, body={enemy.rb.bodyType}, constraints={enemy.rb.constraints}, "
                         + string.Join("; ", contacts.Where(h => h.collider != null).Select(h => $"{h.collider.name}: distance={h.distance}, normal={h.normal}")));
+                    foreach (var probe in probes)
+                    {
+                        float expected = probe == probes[0] && !wall ? 1000f - enemy.attackDamage : 1000f;
+                        Assert.That(probe.CurrentHP, Is.EqualTo(expected).Within(.001f), $"Rush {rushes}: {probe.name}");
+                    }
                 }
                 wasActive = active;
                 yield return null;
@@ -283,9 +371,30 @@ public class Elite101Tests
         finally
         {
             if (action != null) Call(action, "OnEnd");
+            foreach (var probe in probes) Object.Destroy(probe.gameObject);
             Object.Destroy(fixture);
         }
         yield return new ExitPlayMode();
+    }
+
+    private static PlayerCharacter CreateDamageProbe(string name)
+    {
+        var root = new GameObject(name);
+        root.layer = LayerMask.NameToLayer("Player");
+        root.transform.position = new Vector3(0f, -10f);
+        root.AddComponent<BoxCollider2D>().size = new Vector2(.13f, .13f);
+        var player = root.AddComponent<PlayerCharacter>();
+        // Keep the hurt collider live without registering a player that has no traversal state machine.
+        player.enabled = false;
+        root.GetComponent<PlayerWorldUI>().enabled = false;
+        typeof(PlayerCharacter).GetField("postHitInvulnerabilityDuration", Private).SetValue(player, 0f);
+        return player;
+    }
+
+    private static void PlaceProbe(PlayerCharacter player, Vector3 position)
+    {
+        player.transform.position = position;
+        typeof(PlayerCharacter).GetField("currentHP", Private).SetValue(player, 1000f);
     }
 
     private static string Call(EnemyAttackAction action, string method) =>

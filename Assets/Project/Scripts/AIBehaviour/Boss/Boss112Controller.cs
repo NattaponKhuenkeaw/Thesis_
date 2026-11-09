@@ -46,7 +46,7 @@ namespace Project.AIBehaviour.Boss
         [SerializeField, Min(.1f)] private float sweepChargeDuration = 1.5f;
         [SerializeField, Min(.1f)] private float sweepActiveDuration = 2f;
         [SerializeField] private BossGroundWave shockwavePrefab;
-        [SerializeField, Min(1f)] private float shockwaveSpeed = 10f;
+        [SerializeField, Min(1f)] private float shockwaveSpeed = 14f;
         [Header("Movement")]
         [SerializeField, Min(1f)] private float hoverHeight = 7f;
         [SerializeField, Min(1f)] private float trackingSpeed = 12f;
@@ -71,7 +71,8 @@ namespace Project.AIBehaviour.Boss
 
         private Rigidbody2D body;
         private Vector2 phaseOrigin, retreatTarget;
-        private float phaseAge, lockedX, recoveryDuration, sweepStartX, sweepEndX;
+        private float phaseAge, lockedX, recoveryDuration, sweepStartX, sweepEndX, slamStartY;
+        private Boss112WormBody worm;
         private bool manualPose, stunPoseHeld;
         private bool spawnRevealStarted, spawnRevealPending;
         private Coroutine spawnRevealRoutine;
@@ -109,6 +110,7 @@ namespace Project.AIBehaviour.Boss
         private void Awake()
         {
             if (enemy == null) enemy = GetComponent<EnemyController>();
+            TryGetComponent(out worm);
             body = GetComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;
             body.gravityScale = 0f;
@@ -272,12 +274,12 @@ namespace Project.AIBehaviour.Boss
                     break;
                 case Boss112Phase.SlamTracking:
                     SetSlamPose(1);
-                    Move(Vector2.Lerp(phaseOrigin, new Vector2(lockedX, floorY + departureHeight), Mathf.SmoothStep(0f, 1f, phaseAge / .3f)));
+                    Move(Vector2.Lerp(phaseOrigin, new Vector2(lockedX, slamStartY), Mathf.SmoothStep(0f, 1f, phaseAge / .3f)));
                     ShowLanding(true);
                     if (phaseAge >= slamTrackingDuration) BeginPhase(Boss112Phase.SlamLocked);
                     break;
                 case Boss112Phase.SlamLocked:
-                    Move(new Vector2(lockedX, floorY + departureHeight));
+                    Move(new Vector2(lockedX, slamStartY));
                     ShowLanding(true);
                     if (phaseAge >= slamLockDuration) BeginPhase(Boss112Phase.SlamFalling);
                     break;
@@ -339,6 +341,9 @@ namespace Project.AIBehaviour.Boss
             body.linearVelocity = Vector2.zero;
             // Standalone attacks and laser combos share the exact same slam sequence.
             lockedX = TargetX;
+            slamStartY = worm != null ? body.position.y : floorY + departureHeight;
+            // Repeat strikes start on the floor. Only climb back to normal hover height.
+            if (worm != null && SlamImpactCount > 0) slamStartY = floorY + hoverHeight;
             SetSlamPose(1);
             BeginPhase(Boss112Phase.SlamTracking);
             ShowLanding(true);
@@ -480,13 +485,18 @@ namespace Project.AIBehaviour.Boss
                     Vector2 size = Vector2.Scale(impactCollider.size, impactCollider.transform.lossyScale);
                     float width = Mathf.Abs(size.x);
                     Vector3 end = new Vector3(lockedX, floorY, transform.position.z);
-                    float height = Phase == Boss112Phase.SlamFeint ? feintHeight + Mathf.Abs(size.y) : departureHeight;
+                    float height = Phase == Boss112Phase.SlamFeint ? feintHeight + Mathf.Abs(size.y) : slamStartY - floorY;
                     chargeTelegraph.ShowLane(end + Vector3.up * height, end, width, progress);
                 }
                 else chargeTelegraph.Hide();
             }
             if (landingMarker != null && landingMarker.enabled)
                 landingMarker.transform.position = new Vector3(lockedX, floorY + .06f, transform.position.z);
+
+            // Hit priority can raise the body after the wave has already spawned.
+            if (waves.Count > 0 && worm != null && worm.GetFrontmostSegment() is { } front)
+                foreach (var wave in waves)
+                    if (wave != null) wave.DrawInFrontOf(front);
         }
 
         private void CloseAttackWindows()
