@@ -136,6 +136,13 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            // The new arena can overlap the player before the entrance teleport.
+            var transition = SceneTransitionManager.Instance;
+            if (useBossDeathFlow && transition != null && transition.IsTransitioning)
+            {
+                return;
+            }
+
             StartEncounter();
         }
 

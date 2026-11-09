@@ -207,6 +207,8 @@ public class Boss112RunIntegrationTests
         cameraRig.SetActive(true);
         var host = new GameObject("Layout host"); host.transform.SetParent(root.transform);
         var layout = host.AddComponent<RoomLayoutHost>();
+        var transition = new GameObject("Boss run transition").AddComponent<SceneTransitionManager>();
+        transition.transform.SetParent(root.transform);
         var death = new GameObject("Boss run death sequence"); death.transform.SetParent(root.transform);
         var sequence = death.AddComponent<BossDeathSequence>();
         var rewardFixture = new GameObject("Boss reward inventory");
@@ -237,15 +239,27 @@ public class Boss112RunIntegrationTests
         try
         {
             Assert.That(TrainingSession.IsTrainingContext, Is.False);
+            Set(transition, "isTransitioning", true);
+            targetBody.position = new Vector2(-20.50f, .01f);
             Assert.That(layout.MountRoom(Resources.Load<RoomData>("MapSO/RoomData_Boss_02")), Is.True);
-            var arenaCamera = layout.ActiveLayoutInstance.GetComponentInChildren<CinemachineCamera>();
+            var arena = layout.ActiveLayoutInstance;
+            var arenaCamera = arena.GetComponentInChildren<CinemachineCamera>();
             var cameraPosition = arenaCamera.transform.position;
             float cameraSize = arenaCamera.Lens.OrthographicSize;
             int cameraPriority = arenaCamera.Priority.Value;
-            var entrance = layout.ActiveLayoutInstance.GetComponentInChildren<EntrancePoint>();
+            var entrance = arena.GetComponentInChildren<EntrancePoint>();
+            var gate = arena.transform.Find("ArenaTerrain/LeftWall").GetComponent<BoxCollider2D>();
+            var trigger = arena.transform.Find("BossSpawnTrigger").GetComponent<BoxCollider2D>();
+            Physics2D.SyncTransforms();
+            Assert.That(trigger.bounds.Intersects(targetCollider.bounds), Is.True,
+                "The new scene's default player position overlaps the boss trigger before the entrance teleport.");
+            for (int i = 0; i < 3; i++) yield return new WaitForFixedUpdate();
+            Assert.That(gate.isTrigger, Is.True, "The previous position must not close the gate during transition.");
+            Assert.That(Object.FindFirstObjectByType<Boss112Controller>(), Is.Null);
             targetBody.position = entrance.SpawnPosition;
             Physics2D.SyncTransforms();
             yield return new WaitForFixedUpdate();
+            Set(transition, "isTransitioning", false);
             Assert.That(Object.FindFirstObjectByType<Boss112Controller>(), Is.Null);
             Assert.That(arenaCamera.enabled, Is.False);
             Boss112Controller boss = null;
