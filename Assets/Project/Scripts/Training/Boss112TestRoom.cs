@@ -10,6 +10,7 @@ namespace Project.Training
 {
     public sealed class Boss112TestRoom : MonoBehaviour
     {
+        private const float EntranceWalkDistance = 5f;
         [SerializeField] private Boss112Controller bossPrefab;
         [SerializeField] private Transform spawnPoint;
         [SerializeField] private Transform playerStart;
@@ -28,6 +29,7 @@ namespace Project.Training
         private Camera arenaCamera;
         private CinemachineBrain arenaBrain;
         private bool drawHitboxes;
+        private bool waitingForEntrance;
         public Boss112Controller Boss => boss;
 
         private void Awake()
@@ -60,12 +62,20 @@ namespace Project.Training
                 || PlayerCharacter.Instance.StateMachine == null) yield return null;
             yield return null;
             ResetPlayer();
-            SpawnBoss();
+        }
+
+        private void Update()
+        {
+            var player = PlayerCharacter.Instance;
+            if (waitingForEntrance && player != null && !player.IsDead
+                && player.transform.position.x >= playerStart.position.x + EntranceWalkDistance)
+                SpawnBoss();
         }
 
         public void SpawnBoss()
         {
             if (!TrainingSession.IsTrainingContext || bossPrefab == null || (boss != null && boss.Enemy.IsAlive)) return;
+            waitingForEntrance = false;
             RemoveBoss();
             boss = Instantiate(bossPrefab, spawnPoint.position, Quaternion.identity);
             boss.ConfigureArena(arenaLeft, arenaRight, floorY);
@@ -127,7 +137,6 @@ namespace Project.Training
 #endif
             RemoveBoss();
             ResetPlayer();
-            SpawnBoss();
         }
 
         private void ResetPlayer()
@@ -146,6 +155,7 @@ namespace Project.Training
                 if (body != null) { body.linearVelocity = Vector2.zero; body.position = playerStart.position; }
                 player.transform.position = playerStart.position;
                 player.StateMachine.ChangeState(player.StateMachine.IdleState);
+                waitingForEntrance = true;
             }
             TrainingSession.Instance?.ResetDamageSample();
         }

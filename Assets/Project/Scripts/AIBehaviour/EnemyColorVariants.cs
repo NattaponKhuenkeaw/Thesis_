@@ -19,7 +19,7 @@ public sealed class EnemyColorVariants : MonoBehaviour
     [SerializeField] private Variant[] variants = Array.Empty<Variant>();
     [SerializeField] private Sprite[] originalProjectileFrames = Array.Empty<Sprite>();
 
-    private Sprite[] SourceProjectileFrames => originalProjectileFrames.Length > 0
+    internal Sprite[] SourceProjectileFrames => originalProjectileFrames.Length > 0
         ? originalProjectileFrames : variants.Length > 0 ? variants[0].projectileFrames : Array.Empty<Sprite>();
 
     public int SelectedIndex { get; private set; } = -1;

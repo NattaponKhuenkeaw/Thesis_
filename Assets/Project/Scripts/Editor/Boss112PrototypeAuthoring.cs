@@ -592,7 +592,7 @@ public static class Boss112PrototypeAuthoring
             var go = new GameObject(name); go.transform.position = position; return go.transform;
         }
         Bind(test, "spawnPoint", Marker("Boss112Spawn", new Vector3(0, 7, 0)));
-        Bind(test, "playerStart", Marker("PlayerTestStart", new Vector3(-7, 2, 0)));
+        Bind(test, "playerStart", Marker("PlayerTestStart", new Vector3(-15, .05f, 0)));
         var cameraAnchor = Marker("ArenaCameraAnchor", new Vector3(0, 6, 0)); Bind(test, "cameraAnchor", cameraAnchor);
         var camera = Object.FindObjectsByType<CinemachineCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None)
             .First(c => c.name == "CinemachineCamera_Training");

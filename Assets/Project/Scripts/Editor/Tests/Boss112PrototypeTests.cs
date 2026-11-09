@@ -217,8 +217,7 @@ public sealed class Boss112PrototypeTests
         yield return new EnterPlayMode();
         Directory.CreateDirectory("Logs/Boss112");
         var room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null
-            && PlayerCharacter.Instance.StateMachine.CurrentStateId == PlayerStateId.Idle, 15f);
+        yield return WalkIntoTestArena(room);
         yield return Wait(.5f);
         var button = room.GetComponentsInChildren<Button>(true).Single(b => b.name == "TRIPLE SLAM");
         Assert.That(button.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(Boss112TestRoom.TestTripleSlam)));
@@ -555,8 +554,7 @@ public sealed class Boss112PrototypeTests
         Directory.CreateDirectory("Logs/Boss112");
         Screen.SetResolution(1280, 720, false);
         var room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null
-            && PlayerCharacter.Instance.StateMachine.CurrentStateId == PlayerStateId.Idle, 15f);
+        yield return WalkIntoTestArena(room);
         Assert.That(TrainingSession.IsTrainingContext, Is.True);
         Assert.That(TeamLoader.Instance.RunInventory, Is.SameAs(TrainingSession.Instance.Inventory));
         Assert.That(Object.FindObjectsByType<RoomWaveManager>(FindObjectsSortMode.None), Is.Empty);
@@ -568,12 +566,15 @@ public sealed class Boss112PrototypeTests
         Button Find(string name) => room.GetComponentsInChildren<Button>(true).Single(b => b.name == name);
         Find("PRECISION BEAM").onClick.Invoke();
         yield return Until(() => room.Boss.Phase == Boss112Phase.BeamLocked);
+        var beamVisual = room.Boss.Beam.GetComponentInChildren<SpriteRenderer>();
+        Assert.That(beamVisual.enabled && beamVisual.sprite.name.StartsWith("BeamWarning_"), Is.True);
         Capture("02_BeamLocked"); yield return null;
         var player = PlayerCharacter.Instance;
         var body = player.GetComponent<Rigidbody2D>();
         body.position = new Vector2(room.Boss.LockedX, 0f); body.linearVelocity = Vector2.zero;
         float hp = player.CurrentHP;
         yield return Until(() => room.Boss.Beam.IsDamaging);
+        Assert.That(beamVisual.enabled && beamVisual.sprite.name.StartsWith("BeamActive"), Is.True);
         Capture("03_BeamActive"); yield return null;
         yield return Until(() => player.CurrentHP < hp);
         float hitHp = player.CurrentHP;
@@ -583,7 +584,7 @@ public sealed class Boss112PrototypeTests
         Assert.That(player.CurrentHP, Is.EqualTo(hitHp), "A beam deals at most one accepted hit per activation.");
         Assert.That(Camera.main.transform.position.x, Is.EqualTo(cameraX).Within(.2f));
         Find("RESET TEST").onClick.Invoke();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady);
+        yield return WalkIntoTestArena(room);
         Assert.That(player.CurrentHP, Is.EqualTo(player.MaxHP));
         Assert.That(Object.FindObjectsByType<Boss112Controller>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
         Find("HEAVY SLAM").onClick.Invoke();
@@ -787,7 +788,7 @@ public sealed class Boss112PrototypeTests
         EditorSceneManager.OpenScene(Boss112PrototypeAuthoring.ScenePath);
         yield return new EnterPlayMode();
         var room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null, 15f);
+        yield return WalkIntoTestArena(room);
         Button Find(string name) => room.GetComponentsInChildren<Button>(true).Single(b => b.name == name);
         Find("PHASE: 1").onClick.Invoke();
         yield return Wait(.05f);
@@ -1469,7 +1470,7 @@ public sealed class Boss112PrototypeTests
         EditorSceneManager.OpenScene(Boss112PrototypeAuthoring.ScenePath);
         yield return new EnterPlayMode();
         var room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null, 15f);
+        yield return WalkIntoTestArena(room);
         var runEnd = Object.FindFirstObjectByType<Project.Core.RunEnd.RunEndController>(FindObjectsInactive.Include);
         Assert.That(runEnd.enabled, Is.False, "The normal training death flow must not send this test back to MainMenu.");
         int biome = RunProgressionManager.EnsureInstance().CurrentBiomeIndex;
@@ -1485,8 +1486,7 @@ public sealed class Boss112PrototypeTests
         yield return Until(() => Object.FindFirstObjectByType<Boss112TestRoom>() != null
             && Object.FindFirstObjectByType<Boss112TestRoom>() != room, 15f);
         room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null
-            && !PlayerCharacter.Instance.IsDead, 15f);
+        yield return WalkIntoTestArena(room);
         Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Test_Boss112"));
         Assert.That(TrainingSession.IsTrainingContext, Is.True);
         Assert.That(PlayerCharacter.Instance.CurrentHP, Is.EqualTo(PlayerCharacter.Instance.MaxHP));
@@ -1495,6 +1495,28 @@ public sealed class Boss112PrototypeTests
         Assert.That(SaveSlotStore.ActiveSlot, Is.EqualTo(slot));
         Capture("07_AfterDeathReset");
         yield return new ExitPlayMode();
+    }
+
+    private static IEnumerator WalkIntoTestArena(Boss112TestRoom room)
+    {
+        yield return Until(() => PlayerCharacter.Instance != null && !PlayerCharacter.Instance.IsDead
+            && PlayerCharacter.Instance.StateMachine?.CurrentStateId == PlayerStateId.Idle, 15f);
+        yield return Wait(.4f);
+        Assert.That(room.Boss, Is.Null, "Waiting at the entrance must not spawn the boss.");
+
+        var player = PlayerCharacter.Instance;
+        float startX = player.transform.position.x;
+        float deadline = Time.realtimeSinceStartup + 5f;
+        while (room.Boss == null)
+        {
+            Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), "The player could not reach the arena.");
+            Assert.That(player.transform.position.y, Is.GreaterThan(-.15f), "The player fell through the entrance floor.");
+            player.StateMachine.CurrentState.OnMoveInput(Vector2.right);
+            yield return null;
+        }
+        player.StateMachine.CurrentState.OnMoveInput(Vector2.zero);
+        Assert.That(player.transform.position.x, Is.GreaterThan(startX + 4f));
+        yield return Until(() => room.Boss.Enemy.IsCombatReady);
     }
 
     private static IEnumerator Until(System.Func<bool> predicate, float timeout = 10f)

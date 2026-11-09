@@ -22,6 +22,21 @@ namespace Project.AIBehaviour.Boss
         internal float LaneHalfWidth => activeWidth * .5f;
         internal float MouthY => sourcePoint != null ? sourcePoint.position.y : visual.bounds.max.y;
 
+        private void Awake()
+        {
+            if (visual == null) visual = GetComponentInChildren<SpriteRenderer>(true);
+            if (sourcePoint == null) sourcePoint = transform.parent.Find("Visual/BeamMouth");
+            if (damageCollider == null) damageCollider = GetComponent<BoxCollider2D>();
+            if (damage == null) damage = GetComponent<EnemyAttackHitbox>();
+            appearance = GetComponentInParent<EnemyColorVariants>();
+            var frames = appearance != null ? appearance.SourceProjectileFrames : null;
+            if (frames?.Length == 5)
+            {
+                if (warningFrames == null || warningFrames.Length == 0) warningFrames = frames[..4];
+                if (activeSprite == null) activeSprite = frames[4];
+            }
+        }
+
         public void Show(Vector2 top, float floor, bool active, bool locked, float clock)
         {
             transform.position = new Vector3(top.x, floor, transform.position.z);
