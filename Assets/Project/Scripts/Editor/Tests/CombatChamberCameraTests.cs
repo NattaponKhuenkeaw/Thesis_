@@ -47,6 +47,76 @@ public class CombatChamberCameraTests
         => VerifyFirstChamber(false, 16f / 9f);
 
     [UnityTest]
+    public IEnumerator CombatEntrancesKeepThePlayerOnScreenBeforeCombat()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var rig = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/Camera/CameraSetUp.prefab"));
+        var manager = rig.GetComponent<CameraManager>();
+        var output = rig.GetComponentInChildren<Camera>();
+        var explore = rig.transform.Find("CinemachineCamera_Explore").GetComponent<CinemachineCamera>();
+        var confiner = explore.GetComponent<CinemachineConfiner2D>();
+        float authoredSize = explore.Lens.OrthographicSize;
+        var provider = ScriptableObject.CreateInstance<ZoneStateProvider>();
+        typeof(CameraManager).GetField("_zoneStateProvider", Private).SetValue(manager, provider);
+        var player = new GameObject("Combat entrance camera target") { tag = "Player" };
+        var body = player.AddComponent<Rigidbody2D>();
+        body.bodyType = RigidbodyType2D.Kinematic;
+        try
+        {
+            foreach (float aspect in new[] { 16f / 9f, 21f / 9f })
+            {
+                output.aspect = aspect;
+                for (int level = 1; level <= 10; level++)
+                {
+                    provider.SetCurrentRoom(Resources.Load<RoomData>($"MapSO/RoomData_Combat_{level:00}"));
+                    var layout = Object.Instantiate(Resources.Load<GameObject>($"RoomLayouts/LV/RoomLayout_LV_{level:00}"));
+                    try
+                    {
+                        var firstGate = layout.GetComponentInChildren<CombatStageController>().Chambers[0].exitWall;
+                        float deadline = Time.realtimeSinceStartup + 2f;
+                        while (Mathf.Abs(confiner.BoundingShape2D.bounds.max.x - firstGate.bounds.min.x) > .01f)
+                        {
+                            Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), $"LV{level:00} did not bind its first gate.");
+                            yield return null;
+                        }
+                        var entrance = layout.GetComponentInChildren<EntrancePoint>();
+                        Vector2 previous = body.position;
+                        body.position = entrance.StopPosition;
+                        Physics2D.SyncTransforms();
+                        manager.SnapToPlayerForRoomEnter(body.position - previous);
+                        float revealAt = Time.time + .15f;
+                        while (Time.time < revealAt) yield return null;
+                        var viewport = output.WorldToViewportPoint((Vector3)body.position + Vector3.up);
+                        Assert.That(manager.IsInCombat, Is.False);
+                        Assert.That(viewport.y, Is.InRange(.05f, .95f),
+                            $"LV{level:00} aspect={aspect:F2} player={body.position}, camera={output.transform.position}, output size={output.orthographicSize}, explore size={explore.Lens.OrthographicSize}, bounds={confiner.BoundingShape2D.bounds}");
+                        var bounds = confiner.BoundingShape2D.bounds;
+                        float halfWidth = output.orthographicSize * output.aspect;
+                        Assert.That(output.transform.position.x - halfWidth, Is.GreaterThanOrEqualTo(bounds.min.x - .03f));
+                        Assert.That(output.transform.position.x + halfWidth, Is.LessThanOrEqualTo(bounds.max.x + .03f));
+                        if (bounds.size.x >= 2f * (authoredSize + .05f) * aspect)
+                            Assert.That(explore.Lens.OrthographicSize, Is.EqualTo(authoredSize).Within(.001f));
+                    }
+                    finally { Object.DestroyImmediate(layout); }
+                    yield return null;
+                }
+            }
+            provider.SetCurrentRoom(Resources.Load<RoomData>("MapSO/RoomData_Boss_02"));
+            yield return null;
+            Assert.That(explore.Lens.OrthographicSize, Is.EqualTo(authoredSize).Within(.001f),
+                "A narrow combat room must not leave the boss entrance zoomed in.");
+        }
+        finally
+        {
+            Object.DestroyImmediate(rig);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(provider);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
     public IEnumerator Lv1FirstChamberKeepsTheCombatViewportBehindTheClosedGate()
         => VerifyFirstChamber(true, 16f / 9f);
 

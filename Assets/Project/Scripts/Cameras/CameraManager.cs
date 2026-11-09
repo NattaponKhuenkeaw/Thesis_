@@ -163,6 +163,9 @@ public partial class CameraManager : MonoBehaviour
     private Coroutine _ultimateZoomCoroutine;
 
     private CinemachineGroupFraming _combatGroupFraming;
+    private CinemachineConfiner2D _exploreConfiner;
+    private float _authoredExploreSize;
+    private float _lastExploreRoomSize;
     private Vector2 _defaultCombatOrthoSizeRange = new Vector2(6.8f, 8f);
     private float _defaultCombatFramingSize = 0.47f;
     private bool _bossFramingActive;
@@ -271,7 +274,11 @@ public partial class CameraManager : MonoBehaviour
 
         // Temporary player focus overrides and restores the composer's damping.
         if (_exploreCam != null)
+        {
             _explorePositionComposer = _exploreCam.GetComponent<CinemachinePositionComposer>();
+            _exploreConfiner = _exploreCam.GetComponent<CinemachineConfiner2D>();
+            _authoredExploreSize = _lastExploreRoomSize = _exploreCam.Lens.OrthographicSize;
+        }
 
         CacheCombatGroupFraming();
 
@@ -333,6 +340,29 @@ public partial class CameraManager : MonoBehaviour
         EnsurePlayerReferences();
         TickEngagedEnemies();
         FitCombatZoomToRoom();
+    }
+
+    private void FitExploreZoomToRoom()
+    {
+        if (_exploreCam == null || _exploreConfiner == null) return;
+
+        float size = _authoredExploreSize;
+        RoomData room = _zoneStateProvider != null ? _zoneStateProvider.CurrentRoom : null;
+        Camera output = _brain != null ? _brain.OutputCamera : Camera.main;
+        if (room != null && room.RoomKind == RoomKind.Combat && !room.UseStaticCamera
+            && output != null && output.aspect > 0f && _exploreConfiner.enabled
+            && _exploreConfiner.BoundingShape2D is BoxCollider2D bounds && bounds.enabled)
+        {
+            // An oversized view collapses the confiner solution and can pull the camera off the floor.
+            float maxSize = bounds.bounds.size.x / (2f * output.aspect) - .05f;
+            size = Mathf.Min(size, Mathf.Max(.01f, maxSize));
+        }
+
+        if (Mathf.Approximately(size, _lastExploreRoomSize)) return;
+        _lastExploreRoomSize = size;
+        SetCameraSize(_exploreCam, size);
+        _exploreConfiner.InvalidateLensCache();
+        _exploreCam.PreviousStateIsValid = false;
     }
 
     private void FitCombatZoomToRoom()
@@ -738,6 +768,7 @@ public partial class CameraManager : MonoBehaviour
         ExitCombatMode();
         _cameraLookAhead?.SnapToPlayer();
         NotifyPlayerWarp(warpDelta);
+        FitExploreZoomToRoom();
         BeginTemporaryPlayerSnap(0.05f, smoothTransition: false);
     }
 
@@ -1368,6 +1399,7 @@ public partial class CameraManager : MonoBehaviour
 
     private void UpdateCameraForRoom(RoomData room)
     {
+        FitExploreZoomToRoom();
         if (_trainingMode) { _isInCombat = true; SetCombatMode(); return; }
         if (room != null && room.UseStaticCamera)
         {
