@@ -932,8 +932,10 @@ public class EnemyController : MonoBehaviour
         bool alreadyIgnoringReactions = ignoreHitReactions;
         bool isGrab = reactionData.reactionKind == EnemyReactionKind.Grab
             || (reactionData.actionAnchor != null && finalIncomingDamage > 0f && currentHP > 0f);
+        bool isOwnedGrabFinisher = !isGrab && reactionData.breaksGrab && IsGrabbed
+            && (CurrentReactionOwnerId == 0 || CurrentReactionOwnerId == reactionData.reactionOwnerId);
         bool shouldApplyReaction = !isSeparateDamage && (resistOrdinaryHitReactions
-            ? isGrab && !ignoreHitReactions && !IsArmored
+            ? (isGrab || isOwnedGrabFinisher) && !ignoreHitReactions && !IsArmored
             : ShouldApplyHitReaction());
         LastHitAppliedReaction = shouldApplyReaction;
 

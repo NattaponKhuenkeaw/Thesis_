@@ -116,6 +116,65 @@ public class Elite101Tests
     [UnityTest] public IEnumerator NormalHitsDoNotStunButMainStyleAnchorInterruptsTheRush() => RunRush(false, true);
 
     [UnityTest]
+    public IEnumerator GrabFinisherReleasesEliteInTheAirAndItFallsBackToTheFloor()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var root = new GameObject("Elite grab fixture");
+        try
+        {
+            var floor = new GameObject("Floor");
+            floor.transform.SetParent(root.transform);
+            floor.layer = LayerMask.NameToLayer("Ground");
+            floor.transform.position = Vector3.down * .5f;
+            floor.AddComponent<BoxCollider2D>().size = new Vector2(40f, 1f);
+            var enemy = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Elite101Authoring.ElitePath),
+                root.transform).GetComponent<EnemyController>();
+            enemy.SetBehaviorAgentActive(false);
+            enemy.InitializeSpawn(Vector3.zero, Quaternion.identity);
+            float deadline = Time.realtimeSinceStartup + 4f;
+            while (!enemy.IsCombatReady && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(enemy.IsCombatReady, Is.True);
+            enemy.SetBehaviorAgentActive(false);
+            var socket = new GameObject("Grab socket");
+            socket.transform.SetParent(root.transform);
+            socket.transform.position = enemy.transform.position + Vector3.up * 4f;
+            var grab = HitReactionData.Default(1f, Vector2.right, 0f);
+            grab.reactionKind = EnemyReactionKind.Grab;
+            grab.reactionTiming = HitReactionData.CreateTiming(0, 120, 12);
+            grab.grabSocket = socket.transform;
+            grab.attackerTransform = socket.transform;
+            grab.reactionOwnerId = root.GetInstanceID();
+            enemy.TakeResolvedHit(grab, Vector2.zero);
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            Assert.That(enemy.IsGrabbed, Is.True);
+            Assert.That(enemy.bodyCollider.bounds.min.y, Is.GreaterThan(1f));
+
+            var hit = HitReactionData.Default(1f, Vector2.right, 0f);
+            hit.reactionKind = EnemyReactionKind.Knockback;
+            hit.reactionTiming = HitReactionData.CreateTiming(0, 8, 8);
+            hit.reactionOwnerId = grab.reactionOwnerId;
+            enemy.TakeResolvedHit(hit, Vector2.zero);
+            Assert.That(enemy.IsGrabbed, Is.True, "Ordinary hits should not drop a held Elite.");
+
+            hit.breaksGrab = true;
+            hit.reactionOwnerId = grab.reactionOwnerId + 1;
+            enemy.TakeResolvedHit(hit, Vector2.zero);
+            Assert.That(enemy.IsGrabbed, Is.True, "Another attacker must not break this grab.");
+            hit.reactionOwnerId = grab.reactionOwnerId;
+            enemy.TakeResolvedHit(hit, Vector2.zero);
+            Assert.That(enemy.IsGrabbed, Is.False, "The owner's finisher must end the grab immediately.");
+            deadline = Time.realtimeSinceStartup + 2f;
+            while (enemy.bodyCollider.bounds.min.y > .1f && Time.realtimeSinceStartup < deadline)
+                yield return new WaitForFixedUpdate();
+            Assert.That(enemy.bodyCollider.bounds.min.y, Is.InRange(-.1f, .1f));
+        }
+        finally { Object.Destroy(root); }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
     public IEnumerator RealHardLayoutPlansOneEliteOnlyForItsFinalChamber()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
