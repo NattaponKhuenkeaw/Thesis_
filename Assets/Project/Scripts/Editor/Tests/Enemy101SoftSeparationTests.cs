@@ -586,7 +586,7 @@ public class Enemy101SoftSeparationTests
     }
 
     [Test]
-    public void ReiAttack4UsesOriginalHitDataDuringQteOnly()
+    public void ReiAttack4UsesSeparateHitDataDuringQte()
     {
         var action = LoadReiGroundCombo(out var rei);
         var table = rei.actionResolverTable;
@@ -600,6 +600,8 @@ public class Enemy101SoftSeparationTests
         Assert.That(ground.Length, Is.EqualTo(qte.Length));
         Assert.That(qte.Select(hit => hit.startFrameOffset), Is.EqualTo(new[] { 7, 11, 16, 19, 24, 25 }));
         Assert.That(qte.Select(hit => hit.horizontalSpeed), Is.EqualTo(new[] { 10f, 3f, 3f, 0f, 0f, 4f }));
+        Assert.That(qte.Where(hit => hit.useAuthoredReactionTarget).Select(hit => hit.startFrameOffset),
+            Is.EqualTo(new[] { 25 }));
 
         var probe = new GameObject("Rei QTE hit data probe");
         try
@@ -621,19 +623,121 @@ public class Enemy101SoftSeparationTests
             for (int i = 0; i < ground.Length; i++)
             {
                 Assert.That(ground[i], Is.Not.SameAs(qte[i]));
-                Assert.That(qte[i].useAuthoredReactionTarget || qte[i].useSnapToAnchor, Is.False);
+                Assert.That(qte[i].useSnapToAnchor, Is.False);
                 Assert.That(ground[i].reactionTargetTravelFrames, Is.EqualTo(6));
                 var comparable = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(ground[i]));
                 comparable.useAuthoredReactionTarget = false;
                 comparable.reactionTargetOffset = Vector2.zero;
                 comparable.reactionTargetTravelFrames = 0;
-                Assert.That(JsonUtility.ToJson(comparable), Is.EqualTo(JsonUtility.ToJson(qte[i])));
+                var qteBeforeMigration = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(qte[i]));
+                if (qteBeforeMigration.startFrameOffset == 25)
+                {
+                    qteBeforeMigration.useAuthoredReactionTarget = false;
+                    qteBeforeMigration.reactionTargetOffset = Vector2.zero;
+                    qteBeforeMigration.preserveReactionMotionTiming = false;
+                }
+                Assert.That(JsonUtility.ToJson(comparable), Is.EqualTo(JsonUtility.ToJson(qteBeforeMigration)));
             }
         }
         finally
         {
             Object.DestroyImmediate(probe);
         }
+    }
+
+    [UnityTest]
+    public IEnumerator ReiQteCompletesWithTheSameSixHitsNearAndFar()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        LoadReiGroundCombo(out var rei);
+        var table = Object.Instantiate(rei.actionResolverTable);
+        Assert.That(rei.qteSwap.TryResolveIntro(table, out var action, out var step), Is.True);
+        Assert.That(rei.qteSwap.GetIntroComboTree(table)?.rootNode, Is.Null);
+        var hits = step.ResolveHitData(true).hitboxes.Cast<NormalHitbox>().ToArray();
+        var final = hits.Single(hit => hit.startFrameOffset == 25);
+        Assert.That(final.useAuthoredReactionTarget && final.preserveReactionMotionTiming, Is.True);
+        Assert.That(final.reactionTargetOffset, Is.EqualTo(new Vector2(1.267f, 0f)));
+        var currentReaction = typeof(EnemyHitReactionHandler).GetField("currentReaction", Private);
+        var oldRandomState = UnityEngine.Random.state;
+        float previousMaxStep = Time.maximumDeltaTime;
+        Time.maximumDeltaTime = Time.fixedDeltaTime;
+        try
+        {
+            foreach (string prefab in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+            foreach (float gap in new[] { .25f, 2.6f })
+            {
+                List<(int hit, int frame, float damage)> oldHits = null;
+                Vector2 oldFinalPosition = default;
+                foreach (bool authored in new[] { false, true })
+                {
+                    final.useAuthoredReactionTarget = authored;
+                    UnityEngine.Random.InitState(12);
+                    using var fixture = new Fixture(1, prefab);
+                    yield return fixture.Ready();
+                    var enemy = fixture.Enemies[0];
+                    enemy.currentHP = 10000f;
+                    enemy.rb.position = new Vector2(gap, enemy.rb.position.y);
+                    Physics2D.SyncTransforms();
+
+                    var combat = CreatePositionCombatProbe(fixture.Root.transform, rei, 1, includeQteState: true);
+                    var fsm = combat.GetComponent<PlayerStateMachine>();
+                    yield return PhysicsStep();
+
+                    var connections = new List<(int hit, int frame, float damage)>();
+                    bool finalConnected = false;
+                    bool? finalUsedPosition = null;
+                    enemy.OnDamaged += reaction =>
+                    {
+                        if (reaction.sourceActionId != action.actionId || reaction.sourceStepData != step)
+                            return;
+                        var hit = hits.FirstOrDefault(combat.hitBoxDamage.IsConfiguredFor);
+                        if (hit == null) return;
+                        connections.Add((hit.startFrameOffset, fsm.QteIntroState.CurrentFrame, reaction.damage));
+                        if (hit == final) finalConnected = true;
+                    };
+
+                    fsm.QteIntroState.Prepare(action, step, enemy);
+                    fsm.ChangeState(fsm.QteIntroState);
+                    Assert.That(combat.CurrentExecution?.isQteIntro, Is.True);
+                    int elapsed = 0;
+                    while (fsm.CurrentStateId == PlayerStateId.QteIntro && elapsed++ < step.TotalFrames + 25)
+                    {
+                        yield return PhysicsStep();
+                        if (finalConnected && finalUsedPosition == null)
+                        {
+                            var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
+                            finalUsedPosition = enemy.LastHitAppliedReaction && reaction.hasAuthoredReactionTarget;
+                        }
+                    }
+
+                    string context = $"{prefab} gap={gap} authored={authored}";
+                    TestContext.WriteLine($"{context}: {string.Join(", ", connections.Select(hit => $"{hit.hit}@{hit.frame}"))}");
+                    TestContext.WriteLine($"Rei finisher used authored position={finalUsedPosition}");
+                    Assert.That(fsm.CurrentStateId, Is.Not.EqualTo(PlayerStateId.QteIntro), context);
+                    Assert.That(combat.IsAttacking(), Is.False, context);
+                    Assert.That(connections.Select(hit => hit.hit), Is.EqualTo(hits.Select(hit => hit.startFrameOffset)), context);
+                    for (int i = 0; i < 50; i++) yield return PhysicsStep();
+                    if (oldHits == null)
+                    {
+                        oldHits = connections;
+                        oldFinalPosition = enemy.rb.position;
+                    }
+                    else
+                    {
+                        Assert.That(connections, Is.EqualTo(oldHits), context);
+                        Assert.That(Vector2.Distance(enemy.rb.position, oldFinalPosition), Is.LessThan(.08f), context);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            Time.maximumDeltaTime = previousMaxStep;
+            UnityEngine.Random.state = oldRandomState;
+            Object.DestroyImmediate(table);
+        }
+        yield return new ExitPlayMode();
     }
 
     private static ComboAction LoadReiGroundCombo(out CharacterObject rei)
@@ -1070,7 +1174,8 @@ public class Enemy101SoftSeparationTests
         yield return new ExitPlayMode();
     }
 
-    private static PlayerCombat CreatePositionCombatProbe(Transform parent, CharacterObject character, int side)
+    private static PlayerCombat CreatePositionCombatProbe(Transform parent, CharacterObject character, int side,
+        bool includeQteState = false)
     {
         var source = new GameObject("Position combat probe");
         source.SetActive(false);
@@ -1092,6 +1197,18 @@ public class Enemy101SoftSeparationTests
         combat.hitBoxDamage = hitbox.AddComponent<HitBoxDamage>();
         combat.hitboxObject = hitbox;
         combat.enemyLayerMask = LayerMask.GetMask("Enemy");
+        if (includeQteState)
+        {
+            var player = source.AddComponent<PlayerCharacter>();
+            var fsm = source.AddComponent<PlayerStateMachine>();
+            player.characterObject = character;
+            player.Movement = motor;
+            player.Combat = combat;
+            player.StateMachine = fsm;
+            fsm.playerCharacter = player;
+            fsm.showCombatLogs = fsm.showFrameDataLogs = fsm.showFsmLogs = false;
+            combat.playerCharacter = player;
+        }
         source.SetActive(true);
         motor.SnapFacingDirection(side);
         return combat;
@@ -1108,7 +1225,7 @@ public class Enemy101SoftSeparationTests
         yield return new EnterPlayMode();
         var hits = GetPositionMigrationHits(group).ToArray();
         Assert.That(hits, Is.Not.Empty);
-        int expectedMigrated = group switch { "skills" => 7, "cut" => 1, "projectiles" => 29, "qte" => 1, _ => 0 };
+        int expectedMigrated = group switch { "skills" => 7, "cut" => 1, "projectiles" => 29, "qte" => 2, _ => 0 };
         Assert.That(hits.Count(entry => entry.hit.useAuthoredReactionTarget && entry.hit.preserveReactionMotionTiming),
             Is.EqualTo(expectedMigrated));
         float priorScale = Time.timeScale;
