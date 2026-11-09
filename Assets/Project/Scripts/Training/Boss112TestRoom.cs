@@ -178,7 +178,10 @@ namespace Project.Training
                 bool visible = drawHitboxes && boss != null && boss.Enemy.IsAlive;
                 line.enabled = visible;
                 if (!visible) continue;
-                Collider2D collider = i == 0 ? boss.Enemy.bodyCollider : i == 1 ? boss.Beam.DamageCollider : boss.ImpactCollider;
+                Collider2D collider = i == 0
+                    ? boss.GetComponent<Boss112WormBody>()?.GroundHurtbox ?? boss.Enemy.bodyCollider
+                    : i == 1 ? boss.Beam.DamageCollider : boss.ImpactCollider;
+                if (!collider.enabled) { line.enabled = false; continue; }
                 if (i > 0 && !collider.enabled) { line.enabled = false; continue; }
                 Bounds bounds = collider.bounds;
                 corners[0] = new Vector3(bounds.min.x, bounds.min.y, 0f);

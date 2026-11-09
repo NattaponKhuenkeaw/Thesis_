@@ -19,6 +19,15 @@ namespace Project.AIBehaviour.Boss
         private bool initialized;
         private readonly RaycastHit2D[] probes = new RaycastHit2D[8];
 
+        internal void DrawInFrontOf(SpriteRenderer other)
+        {
+            if (visual == null) return;
+            if (visual.sortingLayerID != other.sortingLayerID)
+                visual.sortingLayerID = other.sortingLayerID;
+            int order = other.sortingOrder + 1;
+            if (visual.sortingOrder != order) visual.sortingOrder = order;
+        }
+
         public void Initialize(EnemyController source, Vector2 groundPosition, float facing,
             float travelSpeed, float distance, HashSet<int> sharedTargets)
         {

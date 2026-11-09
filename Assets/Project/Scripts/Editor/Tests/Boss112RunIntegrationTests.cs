@@ -45,6 +45,8 @@ public class Boss112RunIntegrationTests
         Assert.That(waves.Count, Is.EqualTo(1));
         Assert.That(waves[0].enemies.Count, Is.EqualTo(1));
         var boss = waves[0].enemies[0].enemyPrefab.GetComponent<Boss112Controller>();
+        var executioner = first.Encounter.Waves[0].enemies[0].enemyPrefab.GetComponent<BossPatternController>();
+        using var waveData = new SerializedObject(executioner);
         var worm = boss.GetComponent<Boss112WormBody>();
         Assert.That(worm, Is.Not.Null);
         Assert.That(AssetDatabase.GetAssetPath(boss.gameObject), Is.EqualTo(Boss112RunAuthoring.BossPath));
@@ -64,6 +66,10 @@ public class Boss112RunIntegrationTests
         Assert.That(spawnData.FindProperty("useSpawnPresentation").boolValue, Is.False);
         Assert.That(spawnData.FindProperty("snapSpawnToGround").boolValue, Is.False);
         using var data = new SerializedObject(boss);
+        Assert.That(data.FindProperty("shockwavePrefab").objectReferenceValue,
+            Is.SameAs(waveData.FindProperty("groundWavePrefab").objectReferenceValue));
+        Assert.That(data.FindProperty("shockwaveSpeed").floatValue,
+            Is.EqualTo(waveData.FindProperty("groundWaveSpeed").floatValue));
         Assert.That(data.FindProperty("useRunBossFlow").boolValue, Is.True);
         Assert.That(data.FindProperty("spawnPanDuration").floatValue, Is.EqualTo(.5f));
         Assert.That(data.FindProperty("spawnRevealDuration").floatValue, Is.EqualTo(1.2f));
@@ -91,6 +97,7 @@ public class Boss112RunIntegrationTests
             {
                 Assert.That(progression.CurrentBiomeIndex, Is.EqualTo(level));
                 var current = map.GetRoomById("Test_Lobby");
+                bool leftShop = false;
                 for (int step = 0; step < director.BiomeTemplate.Count; step++)
                 {
                     var offers = (current.ZoneMode == ZoneMode.SafeZone
@@ -100,8 +107,8 @@ public class Boss112RunIntegrationTests
                     var next = offers.FirstOrDefault(o => o.Kind == RoomKind.Shop || o.Kind == RoomKind.Level || o.Kind == RoomKind.Rest);
                     if (!next.IsValid) next = offers[0];
                     director.NotifyLeavingRoom(current.RoomId);
-                    if (level == 0 && step < 3) Assert.That(director.HasVisitedShopThisAct, Is.False, "Lobby and earlier combats are not Shop visits.");
-                    if (level == 0 && step == 3) Assert.That(director.HasVisitedShopThisAct, Is.True);
+                    leftShop |= current.RoomKind == RoomKind.Shop && current.IncludeInRandomOffers;
+                    Assert.That(director.HasVisitedShopThisAct, Is.EqualTo(leftShop));
                     director.NotifyRoomEntered(next.RoomId);
                     current = next.Room;
                 }
@@ -137,11 +144,13 @@ public class Boss112RunIntegrationTests
             var director = root.AddComponent<RoomChoiceDirector>();
             var map = Resources.Load<MapSO>("MapSO/Test_MapSO");
             var current = map.GetRoomById("Test_Lobby");
-            for (int i = 0; i < 5; i++)
+            Set(director, "optionalSafeRoomChance", 0f);
+            for (int i = 0; i < 3; i++)
             {
                 var offers = current.ZoneMode == ZoneMode.SafeZone ? director.GenerateLeaveOffersFromSafeRoom(current.RoomId)
                     : director.GenerateOffersAfterClear(current.RoomId);
-                var next = offers.First(o => o.Kind == RoomKind.Combat);
+                var next = offers.First(o => o.Kind != RoomKind.Shop);
+                if (i == 2) Assert.That(next.Kind, Is.EqualTo(RoomKind.Level).Or.EqualTo(RoomKind.Rest));
                 director.NotifyLeavingRoom(current.RoomId); director.NotifyRoomEntered(next.RoomId); current = next.Room;
                 Assert.That(director.HasVisitedShopThisAct, Is.False);
             }
@@ -152,7 +161,7 @@ public class Boss112RunIntegrationTests
                 progression.SetCurrentBiomeIndex(level);
                 var enemy = Object.Instantiate(source, holder.transform).GetComponent<EnemyController>();
                 RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
-                Assert.That(enemy.maxHP, Is.EqualTo(4000f * Mathf.Pow(1.6f, level)).Within(.01f));
+                Assert.That(enemy.maxHP, Is.EqualTo(4000f * RunProgressionManager.ResolveBossHealthMultiplier(level)).Within(.01f));
                 Assert.That(enemy.defense, Is.Zero);
                 Object.DestroyImmediate(enemy.gameObject);
             }
@@ -253,9 +262,9 @@ public class Boss112RunIntegrationTests
             yield return Until(() => boss.Enemy.IsCombatReady);
             Assert.That(boss.AutoAttack, Is.True);
             Assert.That(boss.FloorY, Is.Zero.Within(.01f));
-            Assert.That(boss.ArenaLeft, Is.EqualTo(-18f).Within(.01f));
-            Assert.That(boss.ArenaRight, Is.EqualTo(18f).Within(.01f));
-            Assert.That(boss.Enemy.maxHP, Is.EqualTo(6400f).Within(.01f));
+            Assert.That(boss.ArenaLeft, Is.EqualTo(-23.678f).Within(.01f));
+            Assert.That(boss.ArenaRight, Is.EqualTo(23.678f).Within(.01f));
+            Assert.That(boss.Enemy.maxHP, Is.EqualTo(16000f).Within(.01f));
             yield return Until(() => manager.IsBossSpawnFocusActive(boss.transform));
             var focus = (CinemachineCamera)typeof(CameraManager).GetField("_focusCam", Private).GetValue(manager);
             Assert.That(focus.Priority.Value, Is.GreaterThan(cameraPriority), "Intro must win over the authored priority-250 arena camera.");
@@ -294,7 +303,7 @@ public class Boss112RunIntegrationTests
             attackCollider.size = normal.size;
             var hit = attackObject.AddComponent<HitBoxDamage>();
 
-            void StrikeFromGround(float damage)
+            void StrikeFromGround(float damageFraction)
             {
                 float groundX = worm.GroundHurtbox.bounds.center.x - 3f;
                 targetBody.position = new Vector2(groundX, boss.FloorY);
@@ -304,7 +313,7 @@ public class Boss112RunIntegrationTests
                 if (!boss.IsStaggered)
                     Assert.That(attackCollider.Distance(boss.Enemy.bodyCollider).isOverlapped, Is.False);
                 hit.ResetActivationState();
-                hit.SetHitData(damage, false, false, 0f, 1f, normal, AttackCategory.Normal, "RunGroundAttack", null, null);
+                hit.SetHitData(damageFraction * boss.Enemy.maxHP, false, false, 0f, 1f, normal, AttackCategory.Normal, "RunGroundAttack", null, null);
                 float hp = boss.Enemy.currentHP;
                 foreach (var piece in worm.SegmentHurtboxes)
                     if (piece.enabled && attackCollider.Distance(piece).isOverlapped) hit.ProcessHit(boss.Enemy, piece);
@@ -312,20 +321,34 @@ public class Boss112RunIntegrationTests
                 Assert.That(boss.Enemy.currentHP, Is.EqualTo(Mathf.Max(0f, hp - hit.DamageValue)).Within(.02f));
             }
 
-            StrikeFromGround(1200f);
+            StrikeFromGround(.1875f);
             yield return Until(() => boss.Phase == Boss112Phase.SlamLocked);
             Boss112PrototypeTests.Capture("Run_02_SlamWarning");
             Assert.That(worm.SegmentHurtboxes.All(piece => !piece.enabled), Is.True);
             yield return Until(() => boss.IsStaggered && worm.SegmentHurtboxes.All(piece => piece.enabled));
-            for (int i = 0; i < 4 && !boss.IsSecondPhase; i++) StrikeFromGround(1250f);
+            for (int i = 0; i < 4 && !boss.IsSecondPhase; i++) StrikeFromGround(.1953125f);
             Assert.That(boss.IsSecondPhase, Is.True);
             yield return Until(() => boss.Phase == Boss112Phase.SlamFeint && boss.Pattern == Boss112Pattern.DelayedSlam,
                 waitingFor: "After reaching half health, the automatic boss must use the delayed slam.");
             yield return Until(() => boss.Phase == Boss112Phase.SlamImpact);
-            Assert.That(Object.FindObjectsByType<BossGroundWave>(FindObjectsSortMode.None).Length, Is.EqualTo(2));
+            var shockwaves = Object.FindObjectsByType<BossGroundWave>(FindObjectsSortMode.None);
+            Assert.That(shockwaves.Length, Is.EqualTo(2));
+            var segmentVisuals = worm.SegmentHurtboxes.Select(piece => piece.GetComponent<SpriteRenderer>()).ToArray();
+            foreach (bool prioritized in new[] { false, true })
+            {
+                boss.Enemy.SetPriority(prioritized);
+                yield return null;
+                foreach (var shockwave in shockwaves)
+                {
+                    var waveVisual = shockwave.GetComponent<SpriteRenderer>();
+                    Assert.That(waveVisual.sortingOrder, Is.GreaterThan(segmentVisuals.Max(piece => piece.sortingOrder)));
+                    Assert.That(segmentVisuals.All(piece => piece.sortingLayerID == waveVisual.sortingLayerID), Is.True);
+                }
+            }
+            Boss112PrototypeTests.Capture("Run_02_ShockwavesInFront");
             yield return Until(() => boss.IsStaggered && worm.SegmentHurtboxes.All(piece => piece.enabled));
             Boss112PrototypeTests.Capture("Run_02_RecoverySegments");
-            for (int i = 0; i < 5 && boss.Enemy.IsAlive; i++) StrikeFromGround(1250f);
+            for (int i = 0; i < 5 && boss.Enemy.IsAlive; i++) StrikeFromGround(.1953125f);
             Assert.That(boss.Enemy.IsAlive, Is.False);
             Assert.That(boss.Beam.IsDamaging || boss.ImpactCollider.enabled, Is.False);
             var picker = default(ArtifactRewardPickerUI);

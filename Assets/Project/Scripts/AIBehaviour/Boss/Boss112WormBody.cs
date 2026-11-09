@@ -39,6 +39,23 @@ namespace Project.AIBehaviour.Boss
 
         public IReadOnlyList<CircleCollider2D> SegmentHurtboxes => segmentHurtboxes;
 
+        internal SpriteRenderer GetFrontmostSegment()
+        {
+            if (segments == null) return null;
+            SpriteRenderer front = null;
+            int frontLayer = int.MinValue;
+            foreach (var segment in segments)
+            {
+                if (segment == null || !segment.enabled) continue;
+                int layer = SortingLayer.GetLayerValueFromID(segment.sortingLayerID);
+                if (front != null && (layer < frontLayer || (layer == frontLayer && segment.sortingOrder <= front.sortingOrder)))
+                    continue;
+                front = segment;
+                frontLayer = layer;
+            }
+            return front;
+        }
+
         public void FlashSegment(int index) => segmentFlashUntil[index] = Time.time + .12f;
 
         public bool HitsHead(Collider2D attack, Collider2D contact)

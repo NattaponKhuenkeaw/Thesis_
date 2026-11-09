@@ -31,7 +31,7 @@ public static class Boss112PrototypeAuthoring
         }
     }
     public const string PanelPath = "Assets/Project/Prefab/UI/Boss112TestAdmin.prefab";
-    public const string WavePath = Folder + "/Boss112GroundWave.prefab";
+    public const string WavePath = BossAdditionalAttacksAuthoring.WavePath;
     private const string SourceArena = "Assets/Project/Resources/RoomLayouts/RoomLayout_Boss_Executioner.prefab";
     private static string SourceScene => AssetDatabase.GUIDToAssetPath("dae43fa0c18ca9f41828e9b69b4c16fc");
 
@@ -45,7 +45,6 @@ public static class Boss112PrototypeAuthoring
         if (!File.Exists(sheet)) File.Copy("C:/Users/fivef_4seie6e/Downloads/Enm112a.png", sheet);
         AssetDatabase.Refresh();
         ImportSheet(sheet);
-        BuildWave();
         BuildBoss(sheet);
         if (File.Exists(Folder + "/Enm112b.png") && File.Exists(Folder + "/Enm112c.png")) ApplyColorVariants();
         BuildArena();
@@ -318,7 +317,6 @@ public static class Boss112PrototypeAuthoring
     [MenuItem("Tools/Never Night/Boss 112/Apply Four Pattern Update")]
     public static void ApplyFourPatternUpdate()
     {
-        BuildWave();
         var root = PrefabUtility.LoadPrefabContents(BossPath);
         try
         {
@@ -334,21 +332,6 @@ public static class Boss112PrototypeAuthoring
         finally { PrefabUtility.UnloadPrefabContents(root); }
         BuildPanel();
         AssetDatabase.SaveAssets();
-    }
-
-    private static void BuildWave()
-    {
-        var source = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/Boss/Executioner/BossGroundWave.prefab");
-        var root = (GameObject)PrefabUtility.InstantiatePrefab(source);
-        try
-        {
-            PrefabUtility.UnpackPrefabInstance(root, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
-            root.name = "Boss112GroundWave";
-            root.transform.position = Vector3.zero;
-            root.transform.localScale = new Vector3(1.5f, 1.2f, 1f);
-            PrefabUtility.SaveAsPrefabAsset(root, WavePath);
-        }
-        finally { Object.DestroyImmediate(root); }
     }
 
     private static GameObject Child(string name, Transform parent)
@@ -610,12 +593,12 @@ public static class Boss112PrototypeAuthoring
         }
         Bind(test, "spawnPoint", Marker("Boss112Spawn", new Vector3(0, 7, 0)));
         Bind(test, "playerStart", Marker("PlayerTestStart", new Vector3(-7, 2, 0)));
-        var cameraAnchor = Marker("ArenaCameraAnchor", new Vector3(0, 9, 0)); Bind(test, "cameraAnchor", cameraAnchor);
+        var cameraAnchor = Marker("ArenaCameraAnchor", new Vector3(0, 6, 0)); Bind(test, "cameraAnchor", cameraAnchor);
         var camera = Object.FindObjectsByType<CinemachineCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None)
             .First(c => c.name == "CinemachineCamera_Training");
         Bind(test, "trainingCamera", camera);
         camera.Follow = cameraAnchor; camera.LookAt = null;
-        camera.transform.position = new Vector3(0, 9, -17);
+        camera.transform.position = cameraAnchor.position + Vector3.back * 17f;
         foreach (var body in camera.GetComponents<CinemachineComponentBase>()) body.enabled = false;
         var lens = camera.Lens; lens.OrthographicSize = 10.5f; camera.Lens = lens;
         foreach (var framing in camera.GetComponents<CinemachineGroupFraming>()) framing.enabled = false;
