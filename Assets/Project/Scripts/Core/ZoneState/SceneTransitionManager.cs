@@ -149,8 +149,38 @@ namespace Project.Core.ZoneState
         public bool TryTravelToRoomForPlaytest(string roomId)
         {
             RoomData room = ResolveRoom(roomId);
-            return room != null && !WasExitWalkAbortedByDeath()
-                && TryBeginTransition(room, roomId, room.DefaultEntranceId, skipExitWalk: true);
+            if (room == null)
+            {
+                Debug.LogWarning($"[SceneTransitionManager] Playtest room '{roomId}' is missing from the room map.", this);
+                return false;
+            }
+
+            bool fromTraining = Project.Training.TrainingSession.IsTrainingContext;
+            PlayerCharacter player = PlayerCharacter.Instance;
+            if (player == null)
+            {
+                Debug.LogWarning("[SceneTransitionManager] Cannot travel to a playtest room because the player is missing.", this);
+                return false;
+            }
+
+            if (player.IsDead)
+            {
+                TeamLoader teamLoader = TeamLoader.Instance ?? Object.FindFirstObjectByType<TeamLoader>();
+                if (teamLoader == null)
+                {
+                    Debug.LogWarning("[SceneTransitionManager] Cannot travel to a playtest room because the player is dead and TeamLoader is missing.", this);
+                    return false;
+                }
+
+                teamLoader.HealAndReviveEntireTeam();
+            }
+
+            return TryBeginTransition(
+                room,
+                roomId,
+                room.DefaultEntranceId,
+                skipExitWalk: true,
+                allowTrainingContext: fromTraining);
         }
 
         public bool TryClearCombatRoomAndTeleportToExit()
@@ -218,12 +248,19 @@ namespace Project.Core.ZoneState
         /// </summary>
         public bool TryBeginTransition(RoomData room, string fallbackKey, string entranceId)
         {
-            return TryBeginTransition(room, fallbackKey, entranceId, skipExitWalk: false);
+            return TryBeginTransition(
+                room, fallbackKey, entranceId, skipExitWalk: false, allowTrainingContext: false);
         }
 
-        private bool TryBeginTransition(RoomData room, string fallbackKey, string entranceId, bool skipExitWalk)
+        private bool TryBeginTransition(
+            RoomData room,
+            string fallbackKey,
+            string entranceId,
+            bool skipExitWalk,
+            bool allowTrainingContext)
         {
-            if (Project.Training.TrainingSession.IsTrainingContext) return false;
+            bool fromTraining = Project.Training.TrainingSession.IsTrainingContext;
+            if (fromTraining && !allowTrainingContext) return false;
             if (isTransitioning)
             {
                 Debug.LogWarning("[SceneTransitionManager] Transition already in progress. Ignoring request.");
@@ -246,6 +283,10 @@ namespace Project.Core.ZoneState
 
             bool useLayoutSwap = CanSwapLayout(room);
             Debug.Log($"[SceneTransitionManager] Transition requested: {SceneManager.GetActiveScene().name} -> '{loadKey}' (room={(room != null ? room.RoomId : "missing")}, layoutSwap={useLayoutSwap}), entrance='{targetEntrance}'.");
+            if (fromTraining && Project.Training.TrainingSession.Instance != null)
+            {
+                Project.Training.TrainingSession.Instance.EndSession();
+            }
             StartCoroutine(TransitionRoutine(loadKey, room, targetEntrance, useLayoutSwap, skipExitWalk));
             return true;
         }

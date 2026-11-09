@@ -12,6 +12,9 @@ namespace Project.Progression
         public const int UpgradesPerFamily = 6;
         public const int MajorUpgradeCount = ChoiceCount * UpgradesPerFamily;
         public const int StepCount = MajorUpgradeCount * StepsPerGroup;
+        public const int PageCount = 3;
+        public const int StepsPerPage = StepCount / PageCount;
+        public const int GenericStepsPerPage = StepsPerPage - StepsPerPage / StepsPerGroup;
 
         [SerializeField] private string _characterId;
         [SerializeField] private int _completedSteps;
@@ -20,6 +23,7 @@ namespace Project.Progression
         public string CharacterId => _characterId;
         public int CompletedSteps => _completedSteps;
         public int CompletedMajorUpgrades => _choices.Count;
+        public int LastUnlockedPage => Math.Min(_completedSteps / StepsPerPage, PageCount - 1);
 
         public CharacterMemoryProgress(string characterId) => _characterId = characterId;
 

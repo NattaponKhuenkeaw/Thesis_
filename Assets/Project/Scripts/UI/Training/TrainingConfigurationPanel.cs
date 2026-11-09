@@ -52,6 +52,7 @@ namespace Project.UI.Training
         private CharacterPotentialPanel _memoryWindow;
         private GameObject _legacyPanel;
         private Button _legacyButton;
+        private Button _resetMemoryButton;
         private bool _showLegacy;
         public bool IsOpen { get; private set; }
         public bool IsLoadoutOpen => _teamUI != null && _teamUI.IsTeamBuilderOpen;
@@ -114,16 +115,21 @@ namespace Project.UI.Training
             var footer = new GameObject("Training Configuration Controls", typeof(RectTransform), typeof(Image));
             footer.GetComponent<Image>().color = new Color(.055f, .065f, .09f, .98f);
             Place(footer.transform, content.transform, Vector2.zero, Vector2.right, Vector2.zero, new Vector2(0, 100));
-            _legacyButton = CharacterMemoryPanel.CreateButton(footer.transform, "Previous upgrades");
+            _legacyButton = _memoryWindow.CreateMemoryControl(footer.transform, "Previous upgrades");
             _legacyButton.onClick.AddListener(ToggleLegacy);
+            _resetMemoryButton = _memoryWindow.CreateMemoryControl(footer.transform, "Reset All Memory");
+            _resetMemoryButton.onClick.AddListener(ResetMemory);
+            foreach (Button button in new[] { previousCharacterButton, nextCharacterButton, applyButton, cancelButton })
+                _memoryWindow.StyleMemoryControl(button);
             PlaceFooter(teamLevelValue.transform, footer.transform, .02f, .18f);
             teamLevelValue.enableAutoSizing = true;
             teamLevelValue.fontSizeMin = 14f;
             teamLevelValue.fontSizeMax = 24f;
             PlaceFooter(teamLevel.transform, footer.transform, .19f, .40f);
-            PlaceFooter(_legacyButton.transform, footer.transform, .42f, .61f);
-            PlaceFooter(applyButton.transform, footer.transform, .63f, .80f);
-            PlaceFooter(cancelButton.transform, footer.transform, .82f, .98f);
+            PlaceFooter(_legacyButton.transform, footer.transform, .42f, .55f);
+            PlaceFooter(_resetMemoryButton.transform, footer.transform, .56f, .70f);
+            PlaceFooter(applyButton.transform, footer.transform, .71f, .83f);
+            PlaceFooter(cancelButton.transform, footer.transform, .84f, .98f);
             Place(errorText.transform, footer.transform, new Vector2(.02f, .56f), new Vector2(.98f, 1f), Vector2.zero, Vector2.zero);
             Place(previousCharacterButton.transform, content.transform, new Vector2(0f, .5f), new Vector2(0f, .5f),
                 new Vector2(14f, -36f), new Vector2(86f, 36f));
@@ -131,7 +137,7 @@ namespace Project.UI.Training
                 new Vector2(-86f, -36f), new Vector2(-14f, 36f));
 
             _memoryWindow.ConfigurePractice(new Selectable[] { previousCharacterButton, nextCharacterButton },
-                new[] { new Selectable[] { teamLevel }, new Selectable[] { _legacyButton, applyButton, cancelButton } });
+                new[] { new Selectable[] { teamLevel }, new Selectable[] { _legacyButton, _resetMemoryButton, applyButton, cancelButton } });
         }
 
         private static void PlaceFooter(Transform control, Transform footer, float left, float right) =>
@@ -153,6 +159,17 @@ namespace Project.UI.Training
             _showLegacy = !_showLegacy;
             ShowCharacter();
             EventSystem.current?.SetSelectedGameObject(_legacyButton.gameObject);
+        }
+
+        private void ResetMemory()
+        {
+            if (!IsOpen || _draft == null || _roster.Count == 0 || _showLegacy) return;
+            CaptureRanks();
+            var character = _draft.characters[_index];
+            character.memory = new CharacterMemoryProgress(character.characterId);
+            ShowCharacter();
+            errorText.text = $"{characterLabel.text}'s Memory cleared in this draft.";
+            EventSystem.current?.SetSelectedGameObject(_resetMemoryButton.gameObject);
         }
 
         public void Open()
@@ -208,6 +225,7 @@ namespace Project.UI.Training
                 {
                     _legacyPanel.SetActive(false);
                     _legacyButton.gameObject.SetActive(false);
+                    _resetMemoryButton.gameObject.SetActive(false);
                     _memoryWindow.Hide();
                     errorText.text = "Deploy a character to edit Memory.";
                     CharacterMemoryPanel.BindNavigation(new[] { new Selectable[] { teamLevel }, new Selectable[] { applyButton, cancelButton } });
@@ -227,6 +245,7 @@ namespace Project.UI.Training
             bool legacyAvailable = !MainMemoryKit.AppliesTo(character);
             _showLegacy &= legacyAvailable;
             _legacyButton.gameObject.SetActive(legacyAvailable);
+            _resetMemoryButton.gameObject.SetActive(!_showLegacy);
             if (legacyAvailable)
                 _legacyButton.GetComponentInChildren<TMP_Text>().text = _showLegacy ? "Memory" : "Previous upgrades";
             _legacyPanel.SetActive(_showLegacy);

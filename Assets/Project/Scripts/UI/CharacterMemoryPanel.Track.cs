@@ -13,8 +13,43 @@ namespace Project.UI
     {
         private static readonly Color LockedLine = new Color32(83, 70, 116, 255);
         private static readonly Color EarnedLine = new Color32(188, 136, 255, 255);
+        private RectTransform _connectedRows;
+        private RectTransform[] _genericPages;
+        private CharacterPotentialNodeUI[][] _genericNodes;
+        private const float BoardScale = .85f;
 
-        internal static CharacterMemoryPanel CreateBoard(ScrollRect scroll)
+        internal bool IsScreenPointInsideNode(Vector2 screenPosition)
+        {
+            if (_connectedRows != null)
+            {
+                CharacterPotentialNodeUI[] majorNodes = _connectedRows.GetComponentsInChildren<CharacterPotentialNodeUI>();
+                for (int i = 0; i < majorNodes.Length; i++)
+                    if (IsScreenPointInside(majorNodes[i], screenPosition)) return true;
+            }
+
+            if (_genericNodes == null) return false;
+            for (int page = 0; page < _genericNodes.Length; page++)
+            {
+                CharacterPotentialNodeUI[] nodes = _genericNodes[page];
+                if (nodes == null) continue;
+                for (int i = 0; i < nodes.Length; i++)
+                    if (IsScreenPointInside(nodes[i], screenPosition)) return true;
+            }
+            return false;
+        }
+
+        private static bool IsScreenPointInside(CharacterPotentialNodeUI node, Vector2 screenPosition)
+        {
+            if (node == null || !node.gameObject.activeInHierarchy) return false;
+            RectTransform rect = node.transform as RectTransform;
+            Canvas canvas = rect.GetComponentInParent<Canvas>();
+            Camera eventCamera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? canvas.worldCamera
+                : null;
+            return RectTransformUtility.RectangleContainsScreenPoint(rect, screenPosition, eventCamera);
+        }
+
+        internal static CharacterMemoryPanel CreateBoard(ScrollRect scroll, RectTransform[] genericPages)
         {
             var board = new GameObject("Memory Node Map", typeof(RectTransform), typeof(CharacterMemoryPanel));
             RectTransform viewport = scroll.viewport != null ? scroll.viewport : (RectTransform)scroll.transform;
@@ -23,18 +58,34 @@ namespace Project.UI
             var panel = board.GetComponent<CharacterMemoryPanel>();
             panel._scroll = scroll;
             panel._list = (RectTransform)board.transform;
+            panel._list.localScale = Vector3.one * BoardScale;
+            panel._connectedRows = (RectTransform)new GameObject("Connections and Major Nodes", typeof(RectTransform)).transform;
+            panel._connectedRows.SetParent(panel._list, false);
+            Stretch(panel._connectedRows, Vector2.zero, Vector2.zero);
+            panel._genericPages = genericPages;
+            panel._genericNodes = new CharacterPotentialNodeUI[genericPages.Length][];
+            for (int page = 0; page < genericPages.Length; page++)
+            {
+                genericPages[page].SetParent(panel._list, false);
+                panel._genericNodes[page] = genericPages[page].GetComponentsInChildren<CharacterPotentialNodeUI>(true);
+                Array.Sort(panel._genericNodes[page], (a, b) =>
+                    ((RectTransform)a.transform).anchoredPosition.y.CompareTo(((RectTransform)b.transform).anchoredPosition.y));
+            }
             return panel;
         }
 
         internal void ShowConnectedTrack(CharacterItem character, CharacterMemoryProgress memory, Selectable[] headerButtons,
-            CharacterPotentialNodeUI majorTemplate, CharacterPotentialNodeUI genericTemplate, float originalWidth,
+            CharacterPotentialNodeUI majorTemplate, int page, float originalWidth, TMP_FontAsset font,
             Func<PotentialTrack, Sprite> potentialIcon,
             Action<Button, string, int, PotentialTrack, string, string, Sprite> preview,
             Selectable[][] footerRows = null, (int step, PotentialTrack family)? focusNode = null, Vector2? scrollPosition = null)
         {
             ClearRows();
+            for (int index = 0; index < _genericPages.Length; index++)
+                _genericPages[index].gameObject.SetActive(index == page);
+            CharacterPotentialNodeUI[] genericNodes = _genericNodes[page];
             Vector2 majorSize = majorTemplate != null ? ((RectTransform)majorTemplate.transform).sizeDelta : new Vector2(175f, 175f);
-            Vector2 genericSize = genericTemplate != null ? ((RectTransform)genericTemplate.transform).sizeDelta : new Vector2(125f, 125f);
+            Vector2 genericSize = ((RectTransform)genericNodes[0].transform).sizeDelta;
             float branchHeight = majorSize.y * .56f;
             float stepSpacing = majorSize.y + genericSize.y * .6f;
             float endPadding = stepSpacing * .68f;
@@ -43,32 +94,34 @@ namespace Project.UI
             _list.anchorMax = Vector2.right;
             _list.pivot = new Vector2(.5f, 0f);
             _list.sizeDelta = new Vector2(Mathf.Max(majorSize.x, originalWidth - viewport.rect.width),
-                (CharacterMemoryProgress.StepCount - 1) * stepSpacing + 2f * endPadding);
+                (CharacterMemoryProgress.StepsPerPage - 1) * stepSpacing + 2f * endPadding);
             _list.anchoredPosition = Vector2.zero;
             _scroll.content = _list;
             _scroll.horizontal = _scroll.vertical = true;
             _scroll.scrollSensitivity = stepSpacing;
 
             var links = new GameObject("Connections", typeof(RectTransform));
-            links.transform.SetParent(_list, false);
+            links.transform.SetParent(_connectedRows, false);
             Stretch((RectTransform)links.transform, Vector2.zero, Vector2.zero);
-            var rows = new List<Selectable[]>(CharacterMemoryProgress.StepCount + 2);
+            var rows = new List<Selectable[]>(CharacterMemoryProgress.StepsPerPage + 2);
             Button focused = null;
-            for (int step = 1; step <= CharacterMemoryProgress.StepCount; step++)
+            int genericIndex = 0;
+            for (int localStep = 0; localStep < CharacterMemoryProgress.StepsPerPage; localStep++)
             {
-                int stepIndex = step;
+                int step = page * CharacterMemoryProgress.StepsPerPage + localStep + 1;
                 bool major = CharacterMemoryProgress.IsChoiceStep(step);
-                float y = endPadding + (step - 1) * stepSpacing;
+                CharacterPotentialNodeUI genericNode = major ? null : genericNodes[genericIndex++];
+                float y = major ? endPadding + localStep * stepSpacing : ((RectTransform)genericNode.transform).anchoredPosition.y;
                 bool stepEarned = step <= memory.CompletedSteps;
                 bool centerEarned = stepEarned && (!major || memory.GetChoice(step) == PotentialTrack.Ultimate);
                 AddLink(links.transform, .5f, .5f, y - branchHeight, y + branchHeight,
                     centerEarned ? EarnedLine : LockedLine);
-                if (step > 1)
+                if (localStep > 0)
                     AddLink(links.transform, .5f, .5f, y - stepSpacing + branchHeight, y - branchHeight,
                         stepEarned ? EarnedLine : LockedLine);
 
                 var row = new GameObject($"Step {step}", typeof(RectTransform));
-                row.transform.SetParent(_list, false);
+                row.transform.SetParent(_connectedRows, false);
                 var rowRect = (RectTransform)row.transform;
                 rowRect.anchorMin = Vector2.zero;
                 rowRect.anchorMax = Vector2.right;
@@ -76,7 +129,7 @@ namespace Project.UI
                 rowRect.anchoredPosition = new Vector2(0, y);
                 rowRect.sizeDelta = new Vector2(0, stepSpacing);
 
-                TMP_Text number = AddText(row.transform, $"{step:00}", 24);
+                TMP_Text number = AddText(row.transform, $"{step:00}", 24, font);
                 Place(number.rectTransform, .5f, 0, -22, 0, 22, .035f, .1f);
                 number.color = stepEarned ? EarnedLine : Color.white;
 
@@ -97,19 +150,22 @@ namespace Project.UI
                     if (major && lane != 1)
                         AddBranch(links.transform, x, y, branchHeight, earned ? EarnedLine : LockedLine);
 
-                    CharacterPotentialNodeUI nodeTemplate = major ? majorTemplate : genericTemplate;
-                    var node = nodeTemplate != null ? Instantiate(nodeTemplate, row.transform)
-                        : CharacterPotentialNodeUI.CreateRuntimeNode(row.transform);
+                    var node = genericNode;
+                    if (major)
+                    {
+                        node = majorTemplate != null ? Instantiate(majorTemplate, row.transform)
+                            : CharacterPotentialNodeUI.CreateRuntimeNode(row.transform);
+                        var nodeRect = (RectTransform)node.transform;
+                        nodeRect.anchorMin = nodeRect.anchorMax = new Vector2(x, .5f);
+                        nodeRect.pivot = new Vector2(.5f, .5f);
+                        nodeRect.anchoredPosition = Vector2.zero;
+                        nodeRect.sizeDelta = majorSize;
+                    }
                     string title = CharacterMemoryProgress.DescribeStep(step, family);
-                    node.name = title;
+                    if (major) node.name = title;
                     if (major && !full) title += $" Lv.{rank}";
-                    var nodeRect = (RectTransform)node.transform;
-                    nodeRect.anchorMin = nodeRect.anchorMax = new Vector2(x, .5f);
-                    nodeRect.pivot = new Vector2(.5f, .5f);
-                    nodeRect.anchoredPosition = Vector2.zero;
-                    nodeRect.sizeDelta = major ? majorSize : genericSize;
                     Sprite icon = major ? potentialIcon?.Invoke(family) ?? MemoryNodeIcon(character, family)
-                        : MemoryNodeIcon(character);
+                        : node.AuthoredIcon;
                     string caption = major ? family.ToString() : "Generic";
                     if (major && !full) caption += $" Lv.{rank}";
                     if (earned) caption += " · Earned";
@@ -117,7 +173,7 @@ namespace Project.UI
                     string description = DescribeMemoryEffect(character, step, family, rank);
                     Button button = node.GetComponent<Button>();
                     rowButtons[lane] = node.BindMemoryPreview(caption, icon, state, () =>
-                        preview(button, title, stepIndex, family, description, status, icon), full);
+                        preview(button, title, step, family, description, status, icon), full, font);
                     if (focusNode.HasValue && focusNode.Value.step == step && focusNode.Value.family == family)
                         focused = button;
                     node.gameObject.SetActive(true);

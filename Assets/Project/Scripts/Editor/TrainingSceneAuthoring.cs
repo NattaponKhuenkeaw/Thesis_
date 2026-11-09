@@ -188,7 +188,7 @@ public static class TrainingSceneAuthoring
         var box = Image(shade.transform, "Training Panel", new Color(.055f, .065f, .09f, 1), Vector2.zero, new Vector2(680, 590));
         Label(box.transform, "TRAINING CONFIGURATION", new Vector2(0, 250), new Vector2(620, 40), 32);
         Label(box.transform, "Practice settings only - your save is unchanged", new Vector2(0, 208), new Vector2(620, 30), 21);
-        var level = SliderRow(box.transform, "Team Level", 145, out var levelValue);
+        var level = SliderRow(box.transform, "Team Level", 145, out var levelValue, showFill: true);
         var previous = Button(box.transform, "<", new Vector2(-268, 72), new Vector2(56, 42));
         var next = Button(box.transform, ">", new Vector2(268, 72), new Vector2(56, 42));
         var character = Label(box.transform, "Character", new Vector2(0, 72), new Vector2(450, 44), 25);
@@ -212,7 +212,7 @@ public static class TrainingSceneAuthoring
         return controller;
     }
 
-    private static Slider SliderRow(Transform parent, string name, float y, out TMP_Text value)
+    private static Slider SliderRow(Transform parent, string name, float y, out TMP_Text value, bool showFill = false)
     {
         var caption = Label(parent, name, new Vector2(-216, y), new Vector2(215, 36), 22);
         caption.alignment = TextAlignmentOptions.MidlineLeft;
@@ -225,6 +225,17 @@ public static class TrainingSceneAuthoring
         var handle = Image(area, "Handle", new Color(.55f, .82f, 1), Vector2.zero, new Vector2(18, -8));
         var slider = host.GetComponent<Slider>(); slider.direction = Slider.Direction.LeftToRight;
         slider.handleRect = (RectTransform)handle.transform; slider.targetGraphic = handle; slider.wholeNumbers = true;
+        if (showFill)
+        {
+            track.rectTransform.anchorMin = new Vector2(0f, .5f);
+            track.rectTransform.anchorMax = new Vector2(1f, .5f);
+            track.rectTransform.sizeDelta = new Vector2(-18f, 6f);
+            var fill = Image(track.transform, "Fill", new Color(.55f, .82f, 1f), Vector2.zero, Vector2.zero);
+            fill.rectTransform.anchorMin = Vector2.zero;
+            fill.rectTransform.anchorMax = Vector2.one;
+            fill.raycastTarget = false;
+            slider.fillRect = fill.rectTransform;
+        }
         value = Label(parent, "0 / 0", new Vector2(261, y), new Vector2(100, 36), 22);
         return slider;
     }

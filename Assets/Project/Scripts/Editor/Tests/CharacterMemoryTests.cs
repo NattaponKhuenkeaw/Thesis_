@@ -7,6 +7,7 @@ using Project.TeamBuilder.UI.Panels;
 using Project.Training;
 using Project.UI;
 using System.Collections;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -193,27 +194,20 @@ public sealed class CharacterMemoryTests
     }
 
     [Test]
-    public void TrainingTrackButtonsApplyPrerequisitesToTheDraft()
+    public void PagesUnlockOnlyAfterTheLastStepOfThePreviousPage()
     {
-        var canvas = new GameObject("Memory Test Canvas", typeof(Canvas));
-        try
-        {
-            var memory = new CharacterMemoryProgress("practice");
-            var panel = CharacterMemoryPanel.Create(canvas.transform);
-            panel.ShowTrack("Practice", memory, true, "Back", () => { });
-            Button final = panel.transform.Find("Memory Steps/Rows/Step 54/Generic Memory").GetComponent<Button>();
-            Button passive = panel.transform.Find("Memory Steps/Rows/Step 1/Passive Memory").GetComponent<Button>();
-            Assert.That(final.navigation.selectOnDown.transform.IsChildOf(panel.transform), Is.True);
-            Assert.That(passive.navigation.selectOnRight, Is.SameAs(passive));
-            final.onClick.Invoke();
-            passive.onClick.Invoke();
-            Assert.That(memory.CompletedSteps, Is.EqualTo(54));
-            Assert.That(memory.GetChoice(1), Is.EqualTo(PotentialTrack.Passive));
-        }
-        finally
-        {
-            Object.DestroyImmediate(canvas);
-        }
+        var memory = new CharacterMemoryProgress("practice");
+        Assert.That(memory.LastUnlockedPage, Is.Zero);
+        memory.TrySelectStep(17);
+        Assert.That(memory.LastUnlockedPage, Is.Zero);
+        memory.TrySelectStep(18);
+        Assert.That(memory.LastUnlockedPage, Is.EqualTo(1));
+        memory.TrySelectStep(35);
+        Assert.That(memory.LastUnlockedPage, Is.EqualTo(1));
+        memory.TrySelectStep(36);
+        Assert.That(memory.LastUnlockedPage, Is.EqualTo(2));
+        memory.TrySelectStep(54);
+        Assert.That(memory.LastUnlockedPage, Is.EqualTo(2));
     }
 
     [Test]
@@ -260,24 +254,48 @@ public sealed class CharacterMemoryTests
             panel.PopulateData(item, null);
             var memoryPanel = panel.GetComponentInChildren<CharacterMemoryPanel>();
             Assert.That(memoryPanel.isActiveAndEnabled, Is.True);
+            Assert.That(panel.transform.Find("SKILLTrackTitle").gameObject.activeSelf, Is.False);
             Assert.That(scroll.content, Is.SameAs(memoryPanel.transform));
             Assert.That(potentialContent.gameObject.activeSelf, Is.False);
             Assert.That(scroll.horizontal && scroll.vertical, Is.True);
             Assert.That(scroll.content.rect.width, Is.GreaterThan(scroll.viewport.rect.width));
             Assert.That(scroll.verticalNormalizedPosition, Is.EqualTo(0f).Within(.001f));
-            Assert.That(scroll.content.Find("Connections").childCount, Is.GreaterThanOrEqualTo(53));
-            var first = (RectTransform)scroll.content.Find("Step 1/Skill Memory");
-            var final = scroll.content.Find("Step 54/Generic Memory").GetComponent<Button>();
+            var rows = scroll.content.Find("Connections and Major Nodes");
+            Assert.That(rows.Find("Step 19"), Is.Null);
+            var first = (RectTransform)rows.Find("Step 1/Skill Memory");
+            var pages = serialized.FindProperty("genericMemoryPages");
+            var pageOne = (RectTransform)pages.GetArrayElementAtIndex(0).objectReferenceValue;
+            var final = pageOne.Find("Generic Memory 18").GetComponent<Button>();
             Assert.That(first.sizeDelta, Is.EqualTo(((RectTransform)potentialNode.transform).sizeDelta));
             Assert.That(((RectTransform)first.parent).anchoredPosition.y,
-                Is.LessThan(((RectTransform)final.transform.parent).anchoredPosition.y));
-            Assert.That(final.navigation.selectOnDown.transform.parent.name, Is.EqualTo("Step 53"));
+                Is.LessThan(((RectTransform)final.transform).anchoredPosition.y));
+            Assert.That(final.navigation.selectOnDown.name, Is.EqualTo("Generic Memory 17"));
             final.onClick.Invoke();
             Assert.That(upgradeWindow.gameObject.activeSelf, Is.True);
             var window = new SerializedObject(upgradeWindow);
             var upgrade = (Button)window.FindProperty("upgradeButton").objectReferenceValue;
             Assert.That(upgrade.gameObject.activeInHierarchy, Is.False);
             Assert.That(state.GetCompletedMemorySteps(character.characterId), Is.Zero);
+            var pageTwoButton = panel.transform.Find("Memory Page II").GetComponent<Button>();
+            var pageThreeButton = panel.transform.Find("Memory Page III").GetComponent<Button>();
+            var notice = panel.transform.Find("Memory Unlock Notice").GetComponent<TMP_Text>();
+            Assert.That(pageTwoButton.transform.Find("Lock Icon").gameObject.activeSelf, Is.True);
+            Assert.That(pageThreeButton.transform.Find("Lock Icon").gameObject.activeSelf, Is.True);
+            pageTwoButton.onClick.Invoke();
+            Assert.That(notice.gameObject.activeSelf, Is.True);
+            Assert.That(notice.text, Is.EqualTo("Complete Page I to Unlock"));
+            Assert.That(pageOne.gameObject.activeSelf && memoryPanel.isActiveAndEnabled && scroll.enabled, Is.True);
+            Assert.That(scroll.content.localScale.x, Is.LessThan(1f));
+            pageThreeButton.onClick.Invoke();
+            Assert.That(notice.text, Is.EqualTo("Complete Page II to Unlock"));
+            for (int step = 1; step <= CharacterMemoryProgress.StepsPerPage; step++)
+                Assert.That(state.TryGrantMemory(character, step, PotentialTrack.Skill), Is.True);
+            Assert.That(pageTwoButton.transform.Find("Lock Icon").gameObject.activeSelf, Is.False);
+            Assert.That(pageThreeButton.transform.Find("Lock Icon").gameObject.activeSelf, Is.True);
+            pageTwoButton.onClick.Invoke();
+            Assert.That(notice.gameObject.activeSelf, Is.False);
+            Assert.That(pageOne.gameObject.activeSelf, Is.False);
+            Assert.That(((RectTransform)pages.GetArrayElementAtIndex(1).objectReferenceValue).gameObject.activeSelf, Is.True);
             var switchView = panel.transform.Find("Switch Upgrade View").GetComponent<Button>();
             switchView.onClick.Invoke();
             Assert.That(scroll.content, Is.SameAs(potentialContent));

@@ -28,6 +28,9 @@ namespace Project.TeamBuilder.UI.Panels
 
         private PotentialNodeDefinition _node;
         private Action<PotentialNodeDefinition> _onSelected;
+        private Action _onMemoryPreview;
+
+        internal Sprite AuthoredIcon => iconImage != null ? iconImage.sprite : null;
 
         private void Awake()
         {
@@ -61,12 +64,13 @@ namespace Project.TeamBuilder.UI.Panels
         {
             _node = node;
             _onSelected = onSelected;
+            _onMemoryPreview = null;
             ApplyAppearance(state, selected, icon);
             if (selectButton != null) selectButton.interactable = node != null;
         }
 
         internal Button BindMemoryPreview(string caption, Sprite icon, CharacterPotentialNodeState state, Action preview,
-            bool unavailable)
+            bool unavailable, TMP_FontAsset font)
         {
             ResolveReferences();
             if (iconImage == null)
@@ -92,13 +96,14 @@ namespace Project.TeamBuilder.UI.Panels
                 stateLabel.alignment = TextAlignmentOptions.Center;
                 stateLabel.raycastTarget = false;
             }
+            if (font != null) stateLabel.font = font;
             ApplyAppearance(state, false, icon);
             stateLabel.text = caption;
             if (unavailable) AddUnavailableOverlay();
             Transform level = transform.Find("Level");
             if (level != null) level.gameObject.SetActive(false);
             selectButton.interactable = true;
-            selectButton.onClick.AddListener(() => preview());
+            _onMemoryPreview = preview;
             return selectButton;
         }
 
@@ -191,7 +196,9 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void HandleSelected()
         {
-            if (_node != null)
+            if (_onMemoryPreview != null)
+                _onMemoryPreview();
+            else if (_node != null)
             {
                 _onSelected?.Invoke(_node);
             }

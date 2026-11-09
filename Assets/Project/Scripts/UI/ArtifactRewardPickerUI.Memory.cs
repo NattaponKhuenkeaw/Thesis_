@@ -49,7 +49,8 @@ namespace Project.UI
             }
             choices.gameObject.SetActive(false);
 
-            var back = CharacterMemoryPanel.CreateButton(transform, "Back to characters");
+            Sprite backSprite = cards[0].background != null ? cards[0].background.sprite : null;
+            var back = CharacterMemoryPanel.CreateButton(transform, "Back to characters", pullLabel.font, backSprite);
             SetRegion((RectTransform)back.transform, .38f, .065f, .62f, .135f);
             back.gameObject.SetActive(false);
 

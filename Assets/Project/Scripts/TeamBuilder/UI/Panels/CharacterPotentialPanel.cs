@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using TMPro;
@@ -58,6 +59,11 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private ScrollRect contentScrollRect;
         [SerializeField] private Transform nodeRoot;
         [SerializeField] private CharacterPotentialNodeUI[] nodeSlots;
+        [Tooltip("Authored generic node roots for pages I, II and III, ordered by step.")]
+        [SerializeField] private RectTransform[] genericMemoryPages;
+        [SerializeField] private TMP_FontAsset memoryFont;
+        [SerializeField] private Sprite memoryControlSprite;
+        [SerializeField] private Sprite memoryLockSprite;
         [SerializeField] private bool createRuntimeFallbackNodes = true;
 
         [Header("Upgrade Window")]
@@ -98,6 +104,15 @@ namespace Project.TeamBuilder.UI.Panels
         private CharacterMemoryProgress _practiceMemory;
         private Selectable[] _practiceHeader;
         private Selectable[][] _practiceFooter;
+        private static readonly string[] MemoryPageLabels = { "I", "II", "III" };
+        private Button[] _memoryPageButtons;
+        private Image[] _memoryPageLocks;
+        private TMP_Text _memoryLockNotice;
+        private Coroutine _memoryLockNoticeMotion;
+        private int _lastUnlockedMemoryPage;
+        private int _memoryPage = -1;
+        private Vector2 _potentialTitleAnchorMax;
+        private readonly List<GameObject> _legacyTrackHeaders = new();
 
         private void Awake()
         {
@@ -123,6 +138,7 @@ namespace Project.TeamBuilder.UI.Panels
             CloseUpgradeWindow();
             _showPreviousUpgrades = false;
             _memoryCharacter = null;
+            _memoryPage = -1;
             RestorePotentialView();
         }
 
@@ -133,7 +149,11 @@ namespace Project.TeamBuilder.UI.Panels
 
         public void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts)
         {
-            if (_currentCharacterItem != character) _showPreviousUpgrades = false;
+            if (_currentCharacterItem != character)
+            {
+                _showPreviousUpgrades = false;
+                _memoryPage = -1;
+            }
             _currentCharacterItem = character;
             _currentCharacter = character != null ? character.characterObjectData : null;
             _currentArtifacts = equippedArtifacts ?? Array.Empty<ArtifactInstance>();
@@ -173,7 +193,11 @@ namespace Project.TeamBuilder.UI.Panels
 
         internal void ShowPracticeMemory(CharacterItem character, CharacterMemoryProgress memory)
         {
-            if (!ReferenceEquals(_practiceMemory, memory)) _memoryCharacter = null;
+            if (!ReferenceEquals(_practiceMemory, memory))
+            {
+                _memoryCharacter = null;
+                _memoryPage = -1;
+            }
             _practiceMemory = memory;
             PopulateData(character, null);
             Show();
@@ -199,35 +223,159 @@ namespace Project.TeamBuilder.UI.Panels
             if (progression == null) return;
             if (_memoryPanel == null)
             {
+                if (genericMemoryPages == null || genericMemoryPages.Length != CharacterMemoryProgress.PageCount ||
+                    Array.Exists(genericMemoryPages, page => page == null ||
+                        page.GetComponentsInChildren<CharacterPotentialNodeUI>(true).Length != CharacterMemoryProgress.GenericStepsPerPage))
+                    return;
                 _potentialContent = contentScrollRect.content;
                 _potentialScrollSensitivity = contentScrollRect.scrollSensitivity;
                 _panelTitle = transform.Find("PotentialTitle")?.GetComponent<TMP_Text>();
                 _potentialTitle = _panelTitle?.text;
-                _memoryPanel = CharacterMemoryPanel.CreateBoard(contentScrollRect);
+                if (_panelTitle != null) _potentialTitleAnchorMax = _panelTitle.rectTransform.anchorMax;
+                foreach (string name in new[] { "SKILLTrackTitle", "ULTIMATETrackTitle", "PASSIVETrackTitle" })
+                {
+                    Transform trackTitle = transform.Find(name);
+                    if (trackTitle != null && trackTitle.gameObject.activeSelf) _legacyTrackHeaders.Add(trackTitle.gameObject);
+                }
+                _memoryPanel = CharacterMemoryPanel.CreateBoard(contentScrollRect, genericMemoryPages);
+                CreateMemoryPageButtons();
+                CreateMemoryLockNotice();
                 if (_practiceFooter == null) CreateUpgradeViewButton();
             }
 
             CloseUpgradeWindow();
+            HideMemoryLockNotice();
             _potentialContent.gameObject.SetActive(false);
             _memoryPanel.gameObject.SetActive(true);
             _memoryCharacter = _currentCharacter;
             var memory = _practiceMemory ?? progression.CaptureMemory(_currentCharacter.characterId);
+            _lastUnlockedMemoryPage = memory.LastUnlockedPage;
+            _memoryPage = _memoryPage < 0 ? _lastUnlockedMemoryPage : Mathf.Min(_memoryPage, _lastUnlockedMemoryPage);
+            foreach (GameObject trackTitle in _legacyTrackHeaders) trackTitle.SetActive(false);
             if (_panelTitle != null)
-                _panelTitle.text = $"{ResolveCharacterDisplayName()}   /   MEMORY {memory.CompletedSteps} / {CharacterMemoryProgress.StepCount}";
+            {
+                _panelTitle.rectTransform.anchorMax = new Vector2(.36f, _potentialTitleAnchorMax.y);
+                _panelTitle.text = ResolveCharacterDisplayName();
+            }
             bool canShowPrevious = _switchUpgradeView != null && !MainMemoryKit.AppliesTo(_currentCharacter);
             if (_switchUpgradeView != null)
                 _switchUpgradeView.gameObject.SetActive(canShowPrevious);
             if (canShowPrevious)
                 _switchUpgradeView.GetComponentInChildren<TMP_Text>(true).text = "PREVIOUS UPGRADES";
 
-            Selectable[] header = _practiceHeader != null ? ActiveControls(_practiceHeader)
-                : canShowPrevious ? new[] { exitButton, _switchUpgradeView }
-                : exitButton != null ? new[] { exitButton } : Array.Empty<Button>();
+            var header = new List<Selectable>();
+            if (exitButton != null && exitButton.isActiveAndEnabled) header.Add(exitButton);
+            for (int page = 0; page < _memoryPageButtons.Length; page++)
+            {
+                Button button = _memoryPageButtons[page];
+                button.gameObject.SetActive(true);
+                bool pageLocked = page > _lastUnlockedMemoryPage;
+                button.image.color = pageLocked ? new Color(.38f, .38f, .38f) : Color.white;
+                _memoryPageLocks[page].gameObject.SetActive(pageLocked);
+                button.GetComponentInChildren<TMP_Text>().color = page == _memoryPage ? new Color(1f, .86f, .35f) : Color.white;
+                header.Add(button);
+            }
+            if (canShowPrevious) header.Add(_switchUpgradeView);
+            if (_practiceHeader != null) header.AddRange(ActiveControls(_practiceHeader));
+            var footer = _practiceFooter == null ? null : Array.ConvertAll(_practiceFooter, ActiveControls);
             CharacterPotentialNodeUI major = nodeSlots.Length > 0 ? nodeSlots[0] : null;
-            CharacterPotentialNodeUI generic = nodeSlots.Length > 1 ? nodeSlots[1] : major;
-            _memoryPanel.ShowConnectedTrack(_currentCharacterItem, memory, header, major, generic,
-                _potentialContent.rect.width, ResolvePotentialIcon, OpenMemoryPreview,
-                _practiceFooter == null ? null : Array.ConvertAll(_practiceFooter, ActiveControls), focus, scrollPosition);
+            _memoryPanel.ShowConnectedTrack(_currentCharacterItem, memory, header.ToArray(), major, _memoryPage,
+                _potentialContent.rect.width, memoryFont, ResolvePotentialIcon, OpenMemoryPreview, footer, focus, scrollPosition);
+        }
+
+        internal Button CreateMemoryControl(Transform parent, string caption) =>
+            CharacterMemoryPanel.CreateButton(parent, caption, memoryFont, memoryControlSprite);
+
+        internal void StyleMemoryControl(Button button) =>
+            CharacterMemoryPanel.StyleButton(button, memoryFont, memoryControlSprite);
+
+        private void CreateMemoryPageButtons()
+        {
+            _memoryPageButtons = new Button[CharacterMemoryProgress.PageCount];
+            _memoryPageLocks = new Image[CharacterMemoryProgress.PageCount];
+            for (int page = 0; page < _memoryPageButtons.Length; page++)
+            {
+                int target = page;
+                Button button = CreateMemoryControl(transform, MemoryPageLabels[page]);
+                button.name = $"Memory Page {MemoryPageLabels[page]}";
+                var rect = (RectTransform)button.transform;
+                rect.anchorMin = rect.anchorMax = new Vector2(.5f, 1f);
+                rect.anchoredPosition = new Vector2((page - 1) * 114f, -42f);
+                rect.sizeDelta = new Vector2(104f, 42f);
+                _memoryPageLocks[page] = CreateMemoryLockIcon(button.transform, new Vector2(1f, .5f), new Vector2(-17f, 0f), 20f);
+                button.onClick.AddListener(() =>
+                {
+                    if (target > _lastUnlockedMemoryPage)
+                    {
+                        ShowMemoryLockNotice(target);
+                        return;
+                    }
+                    if (_memoryPage == target) return;
+                    _memoryPage = target;
+                    _memoryCharacter = null;
+                    PresentMemoryTrack();
+                    EventSystem.current?.SetSelectedGameObject(button.gameObject);
+                });
+                _memoryPageButtons[page] = button;
+            }
+        }
+
+        private void CreateMemoryLockNotice()
+        {
+            _memoryLockNotice = CharacterMemoryPanel.AddText(transform, string.Empty, 28f, memoryFont);
+            _memoryLockNotice.name = "Memory Unlock Notice";
+            var rect = _memoryLockNotice.rectTransform;
+            rect.anchorMin = new Vector2(.15f, 1f);
+            rect.anchorMax = new Vector2(.85f, 1f);
+            rect.sizeDelta = new Vector2(0f, 48f);
+            _memoryLockNotice.gameObject.SetActive(false);
+        }
+
+        private void ShowMemoryLockNotice(int target)
+        {
+            HideMemoryLockNotice();
+            _memoryLockNotice.text = $"Complete Page {MemoryPageLabels[target - 1]} to Unlock";
+            _memoryLockNotice.gameObject.SetActive(true);
+            _memoryLockNoticeMotion = StartCoroutine(AnimateMemoryLockNotice());
+        }
+
+        private IEnumerator AnimateMemoryLockNotice()
+        {
+            const float appear = .18f;
+            const float fadeStart = 1f;
+            const float end = 1.32f;
+            for (float elapsed = 0f; elapsed < end; elapsed += Time.unscaledDeltaTime)
+            {
+                float slide = Mathf.SmoothStep(0f, 1f, elapsed / appear);
+                _memoryLockNotice.rectTransform.anchoredPosition = new Vector2(0f, -126f + 30f * slide);
+                _memoryLockNotice.alpha = elapsed < fadeStart ? Mathf.Clamp01(elapsed / appear)
+                    : 1f - Mathf.InverseLerp(fadeStart, end, elapsed);
+                yield return null;
+            }
+            _memoryLockNotice.gameObject.SetActive(false);
+            _memoryLockNoticeMotion = null;
+        }
+
+        private void HideMemoryLockNotice()
+        {
+            if (_memoryLockNoticeMotion != null) StopCoroutine(_memoryLockNoticeMotion);
+            _memoryLockNoticeMotion = null;
+            if (_memoryLockNotice != null) _memoryLockNotice.gameObject.SetActive(false);
+        }
+
+        private Image CreateMemoryLockIcon(Transform parent, Vector2 anchor, Vector2 position, float size)
+        {
+            var host = new GameObject("Lock Icon", typeof(RectTransform), typeof(Image));
+            host.transform.SetParent(parent, false);
+            var icon = host.GetComponent<Image>();
+            icon.sprite = memoryLockSprite;
+            icon.enabled = memoryLockSprite != null;
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = anchor;
+            icon.rectTransform.anchoredPosition = position;
+            icon.rectTransform.sizeDelta = Vector2.one * size;
+            return icon;
         }
 
         private static Selectable[] ActiveControls(Selectable[] controls) =>
@@ -277,7 +425,14 @@ namespace Project.TeamBuilder.UI.Panels
             contentScrollRect.scrollSensitivity = _potentialScrollSensitivity;
             _memoryPanel.gameObject.SetActive(false);
             _potentialContent.gameObject.SetActive(true);
-            if (_panelTitle != null) _panelTitle.text = _potentialTitle;
+            if (_panelTitle != null)
+            {
+                _panelTitle.text = _potentialTitle;
+                _panelTitle.rectTransform.anchorMax = _potentialTitleAnchorMax;
+            }
+            foreach (Button button in _memoryPageButtons) button.gameObject.SetActive(false);
+            foreach (GameObject header in _legacyTrackHeaders) header.SetActive(true);
+            HideMemoryLockNotice();
             if (exitButton != null) exitButton.navigation = _potentialExitNavigation;
             if (_switchUpgradeView != null)
             {
@@ -617,7 +772,9 @@ namespace Project.TeamBuilder.UI.Panels
 
             Vector2 screenPosition = pointer.position.ReadValue();
             if (IsScreenPointInside(upgradeWindow.transform as RectTransform, screenPosition) ||
-                (_memoryPreviewSource == null && IsScreenPointInsideAnyNode(screenPosition)))
+                (_memoryPreviewSource != null
+                    ? _memoryPanel != null && _memoryPanel.IsScreenPointInsideNode(screenPosition)
+                    : IsScreenPointInsideAnyNode(screenPosition)))
             {
                 return;
             }
