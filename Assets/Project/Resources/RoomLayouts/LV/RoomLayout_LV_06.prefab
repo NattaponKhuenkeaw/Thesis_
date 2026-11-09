@@ -6837,6 +6837,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: 18.6357
       objectReference: {fileID: 0}
+    - target: {fileID: 6721536931465187723, guid: aa7771035462c5f44957bbca08ca65a6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 4.34
+      objectReference: {fileID: 0}
     - target: {fileID: 7415647901390197950, guid: aa7771035462c5f44957bbca08ca65a6, type: 3}
       propertyPath: m_Name
       value: CombatBackground_B2
