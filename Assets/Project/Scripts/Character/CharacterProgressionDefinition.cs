@@ -93,7 +93,8 @@ public enum PassiveCriticalHitRequirement
 public enum PassiveResourceValueMode
 {
     CharacterStat,
-    TriggerDamageDealt
+    TriggerDamageDealt,
+    RemainingCooldown
 }
 
 public enum PassiveCounterOperation
@@ -119,6 +120,7 @@ public enum StatusEffectType
 [Serializable]
 public class PassiveTriggerFilter
 {
+    public string requiredEnemyEffectKey;
     [Tooltip("When enabled, this effect only applies to the selected action category.")]
     public bool filterByCategory = false;
     public AttackCategory category = AttackCategory.Normal;
@@ -144,6 +146,9 @@ public class PassiveTriggerFilter
 
     public bool Matches(PassiveEventContext context)
     {
+        if (!string.IsNullOrWhiteSpace(requiredEnemyEffectKey) &&
+            (context.enemyEffectsBeforeHit != null ? !context.enemyEffectsBeforeHit.Contains(requiredEnemyEffectKey)
+                : context.enemy?.RuntimeEffects == null || context.enemy.RuntimeEffects.GetStackCount(requiredEnemyEffectKey) <= 0)) return false;
         if (requireInitialActionStep && context.isAutoChainStep) return false;
         if (requireManualOnFieldActionStart)
         {
@@ -471,6 +476,10 @@ public class PassiveActionModifierDefinition
     [Header("Projectile Replacement")]
     public ProjectileType replacementProjectileType = ProjectileType.None;
     public ProjectileData replacementProjectileData;
+    [Range(0f, 1f)] public float duplicateProjectileChance;
+    [Min(0f)] public float duplicateProjectileCooldown;
+    [Tooltip("Optional shared cooldown tag for actions that can spawn a second projectile.")]
+    public string duplicateProjectileCooldownTag;
 
     public bool Matches(AttackCategory targetCategory, string targetActionId, string targetActionName)
     {
@@ -851,6 +860,8 @@ public class PassiveOnHitStatusEffectDefinition
 [Serializable]
 public class PassiveCoordinatedActionDefinition
 {
+    public bool overrideDamageSource;
+    public ActionDamageSourceStat damageSourceStat = ActionDamageSourceStat.Attack;
     [Tooltip("The action ID to execute (e.g. 'skill.ex'). Will search the character's ActionResolverTable.")]
     public string actionId = "skill.ex";
     [Tooltip("Fallback action name if actionId is not matched.")]
@@ -862,7 +873,7 @@ public class PassiveCoordinatedActionDefinition
     [Tooltip("Internal cooldown in seconds between triggers of this coordinated action effect (0 = no cooldown).")]
     [Min(0f)] public float internalCooldown = 0f;
 
-    [Tooltip("Optional override for action damage multiplier as a ratio of source ATK (e.g. 4.0 = 400% ATK). If <= 0, uses ActionResolverTable data.")]
+    [Tooltip("Optional total damage budget as a ratio of the selected source stat, distributed across the step's authored Normal hitbox weights. If <= 0, preserves ActionResolverTable damage.")]
     public float damageMultiplierOverride = 0f;
 
     [Tooltip("Hitbox size multiplier for the spawned action (e.g. 1.5 = 1.5x bigger hitbox range).")]
@@ -995,6 +1006,9 @@ public class RuntimeAreaEffectApplication : ISerializationCallbackReceiver
 
     [Tooltip("Optional potential node id that must be active on the source character before this area effect can apply.")]
     public string requiredNodeId;
+
+    [Tooltip("Invoke the recipe's OnHitDealt handler with the source hit context after primary damage resolves.")]
+    public bool triggerOnHit;
 
     [HideInInspector]
     public PassiveEffectScope scope = PassiveEffectScope.Self;
@@ -1150,28 +1164,25 @@ public class PotentialNodeDefinition : CharacterEffectSetDefinition
     [Range(0, Project.Progression.CharacterMemoryProgress.UpgradesPerFamily)] public int level = 1;
     [Min(0)] public int fragmentCost = 1;
     public bool unlockedByDefault = false;
-    [Tooltip("Optional hit recipe used by custom projectile logic for this upgrade.")]
-    public RuntimeEffectRecipe projectileHitEffect;
+}
 
-    [Header("Main Memory Projectile Effects")]
-    [Tooltip("Skill Lv4 summoned Dark Chain settings. Only consumed by Main's Memory runtime.")]
-    public DarkChainSummonSettings darkChainSummon;
-    [Tooltip("Passive Lv5 additional damage, restricted to the final melee hit of Jailbreak Punisher and Execution Breakdown. Source stat refers to Main.")]
-    public AdditionalDamageEffectDefinition ultimateFinisherDamage;
+[Serializable]
+public class CharacterGenericMemoryNodeDefinition
+{
+    public string nodeName;
+    [TextArea] public string description;
+    public CombatStatId stat = CombatStatId.Attack;
+    [Min(0f)] public float value = 3f;
+    [Tooltip("When enabled, value is a percent of the character's base stat. Otherwise it is added directly (percentage points for percentage stats).")]
+    public bool percentOfBase;
+}
 
-    [Serializable]
-    public class DarkChainSummonSettings
-    {
-        [Tooltip("Optional summon visual/hitbox template. Empty reuses the cast Dark Chain projectile.")]
-        public ProjectileData projectile;
-        [Min(.1f)] public float durationSeconds = 12f;
-        [Min(.1f)] public float intervalSeconds = 2.5f;
-        [Min(.1f)] public float strikeLifetimeSeconds = 2f;
-        public ProjectileReferencePointMode referencePoint = ProjectileReferencePointMode.GroundProjection;
-        [Min(0f)] public float attackRatio = 2f;
-        [Tooltip("Damage ratio of Main's Max HP, not the enemy's.")]
-        [Min(0f)] public float maxHpRatio = .08f;
-    }
+[Serializable]
+public class CharacterMemoryPageDefinition
+{
+    [Tooltip("Icon used by generic Memory nodes on this page.")]
+    public Sprite genericNodeIcon;
+    public List<CharacterGenericMemoryNodeDefinition> genericNodes = new List<CharacterGenericMemoryNodeDefinition>();
 }
 
 [Serializable]
@@ -1196,7 +1207,14 @@ public class CharacterKitDefinition : ISerializationCallbackReceiver
     [Header("Kit Information")]
     public CharacterKitPresentationDefinition presentation = new CharacterKitPresentationDefinition();
     public CombatMeterDefinition combatMeter = new CombatMeterDefinition();
-    public const int MaxPotentialLevel = 4;
+    public const int MaxPotentialLevel = Project.Progression.CharacterMemoryProgress.UpgradesPerFamily;
+
+    [Header("Progression")]
+    [Tooltip("Use earned Memory ranks and stat bonuses for this kit in place of fragment Potential ranks.")]
+    public bool useMemoryRanks;
+
+    [Tooltip("Character-authored generic Memory effects and page icons. Each page has one icon and one effect per generic node.")]
+    public List<CharacterMemoryPageDefinition> genericMemoryPages = new List<CharacterMemoryPageDefinition>();
 
     [Header("Base Kit")]
     public CharacterAbilityDefinition skill = new CharacterAbilityDefinition { abilityName = "Skill" };
@@ -1373,6 +1391,7 @@ public class CharacterKitDefinition : ISerializationCallbackReceiver
 [Serializable]
 public struct PassiveEventContext
 {
+    [NonSerialized] public HashSet<string> enemyEffectsBeforeHit;
     [NonSerialized] public CombatExecutionContext actionStartExecution;
     [NonSerialized] public bool isAutoChainStep;
     public AttackCategory category;

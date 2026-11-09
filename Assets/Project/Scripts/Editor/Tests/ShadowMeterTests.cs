@@ -215,11 +215,10 @@ public class ShadowMeterTests
     {
         var receiver = owner.AddComponent<RuntimeEffectReceiver>();
         CharacterMemoryTests.SetMemoryRanks(progression, character, skill: 1);
-        var baseRecipe = ReadProjectileEffect<RuntimeEffectRecipe>(
-            ResolveMemoryProjectile("skill", "main.skill.dark_chain", "Dark Chain"), "Vulnerability");
+        var baseRecipe = ResolveMemoryProjectile("skill", "main.skill.dark_chain", "Dark Chain").projectileData.onHitEffects[0].recipe;
         CharacterMemoryTests.SetMemoryRanks(progression, character, skill: 3);
-        var enhanced = ReadProjectileEffect<RuntimeEffectRecipe>(
-            ResolveMemoryProjectile("skill", "main.skill.dark_chain", "Dark Chain"), "Vulnerability");
+        var enhanced = ResolveMemoryProjectile("skill", "main.skill.dark_chain", "Dark Chain").projectileData.onHitEffects[0].recipe;
+        Assert.That(baseRecipe.presentation.fieldVisualPrefab, Is.Not.Null);
         receiver.ApplyEffect(baseRecipe, character, character.stats);
         Assert.That(receiver.ModifyIncomingDamage(new RuntimeEffectDamageContext(), 100f), Is.EqualTo(120f).Within(.01f));
         receiver.ApplyEffect(enhanced, character, character.stats);
@@ -291,21 +290,37 @@ public class ShadowMeterTests
     [TestCase(1, 20f, 2f, 0f, 0f)]
     [TestCase(2, 20f, 2f, 0f, 0f)]
     [TestCase(3, 20f, 2f, 0f, 5f)]
-    [TestCase(4, 20f, 5f, .06f, 5f)]
-    [TestCase(5, 40f, 5f, .06f, 5f)]
-    [TestCase(6, 40f, 10f, .12f, 5f)]
+    [TestCase(4, 20f, 5f, 0f, 5f)]
+    [TestCase(5, 40f, 5f, 0f, 5f)]
+    [TestCase(6, 40f, 10f, 0f, 5f)]
     public void VoidMemoryResolvesEachRank(int rank, float duration, float attack, float hp, float energy)
     {
         CharacterMemoryTests.SetMemoryRanks(progression, character, ultimate: rank);
         ProjectileSpawnContext area = ResolveMemoryProjectile("void_area", "main.ultimate.jailbreak_punisher", "Void Area");
         Assert.That(area.projectileData.lifetime, Is.EqualTo(duration));
         Assert.That(area.projectileData.hitIntervalSeconds, Is.EqualTo(5f));
-        Assert.That(area.projectileData.ResolveRoutineHitbox().elementType, Is.EqualTo(ElementType.Void));
-        Assert.That(ReadProjectileEffect<float>(area, "AttackRatio"), Is.EqualTo(attack));
-        Assert.That(ReadProjectileEffect<float>(area, "MaxHpRatio"), Is.EqualTo(hp));
-        Assert.That(ReadProjectileEffect<float>(area, "AuraEnergy"), Is.EqualTo(energy));
-        var vulnerability = ReadProjectileEffect<RuntimeEffectRecipe>(area, "Vulnerability");
-        if (rank == 1) Assert.That(vulnerability, Is.Null);
+        Assert.That(area.projectileData.ResolveRoutineHitbox().elementType,
+            Is.EqualTo(rank >= 4 ? ElementType.None : ElementType.Void));
+        var scaling = ((NormalHitbox)area.projectileData.ResolveRoutineHitbox()).damageScaling;
+        Assert.That(scaling.Single(t => t.stat == CombatStatId.Attack).ratio, Is.EqualTo(attack));
+        Assert.That(scaling.FirstOrDefault(t => t.stat == CombatStatId.MaxHP)?.ratio ?? 0f, Is.EqualTo(hp));
+        if (rank >= 4)
+        {
+            RuntimeAreaEffectApplication damageApplication = area.projectileData.onHitEffects
+                .Single(application => application.triggerOnHit);
+            RuntimeEffectRecipe damageRecipe = damageApplication.ResolvedRecipe;
+            Assert.That(damageRecipe.parameters.additionalDamage.sourceStatRatio, Is.EqualTo(rank >= 6 ? .12f : .06f));
+            Assert.That(damageRecipe.parameters.additionalDamage.elementType, Is.EqualTo(ElementType.Darkness));
+            Assert.That(damageRecipe.parameters.additionalDamage.filter.requiredDamageTags, Is.EqualTo(CombatDamageTag.VoidArea));
+            PotentialNodeDefinition damageNode = character.kitDefinition.potentialNodes
+                .Single(node => node.nodeId == damageApplication.requiredNodeId);
+            Assert.That(damageNode.track, Is.EqualTo(PotentialTrack.Ultimate));
+            Assert.That(damageNode.level, Is.EqualTo(rank >= 6 ? 6 : 4));
+        }
+        Assert.That(passive.IsNodeUnlocked(area.projectileData.auraEnergyRequiredNodeId) ? area.projectileData.auraEnergyPerDamageBatch : 0f, Is.EqualTo(energy));
+        var hit = area.projectileData.onHitEffects.Single(application => !application.triggerOnHit);
+        var vulnerability = hit.recipe;
+        if (rank == 1) Assert.That(passive.IsNodeUnlocked(hit.requiredNodeId), Is.False);
         else
         {
             Assert.That(vulnerability.policy.durationSeconds, Is.EqualTo(7f));
@@ -314,13 +329,13 @@ public class ShadowMeterTests
     }
 
     [Test]
-    public void PassiveFiveAndSixUpgradeJudgmentAndAddOneUltimateHealthBuff()
+    public void PassiveFiveAndUltimateFiveUpgradeJudgmentAndAddOneUltimateHealthBuff()
     {
         CharacterMemoryTests.SetMemoryRanks(progression, character, passive: 5);
         Assert.That(passive.ModifyActionDamageMultiplier(AttackCategory.Skill,
             "main.skill.dimension_slash", "Judgment Cut", 6.5f), Is.EqualTo(8.5f));
-        CharacterMemoryTests.SetMemoryRanks(progression, character, passive: 6);
-        var effect = passive.GetActiveNodes().Single(n => n.nodeId == "main.memory.passive.lv6").runtimeEffects.Single();
+        CharacterMemoryTests.SetMemoryRanks(progression, character, ultimate: 5);
+        var effect = passive.GetActiveNodes().Single(n => n.track == PotentialTrack.Ultimate && n.level == 5).runtimeEffects.Single();
         Assert.That(effect.filter.Matches(new PassiveEventContext { category = AttackCategory.Ultimate }), Is.True);
         Assert.That(effect.filter.Matches(new PassiveEventContext { category = AttackCategory.Ultimate, isAutoChainStep = true }), Is.False);
         var receiver = owner.AddComponent<RuntimeEffectReceiver>();
@@ -331,95 +346,75 @@ public class ShadowMeterTests
         var stats = new CharacterStats { maxHP = 1000f };
         instance.definition.ModifyStats(new RuntimeEffectContext { instance = instance }, stats);
         Assert.That(stats.maxHP, Is.EqualTo(1400f).Within(.01f));
+        CharacterMemoryTests.SetMemoryRanks(progression, character, passive: 6);
+        Assert.That(passive.GetActiveNodes().Single(n => n.track == PotentialTrack.Passive && n.level == 6)
+            .runtimeEffects.Any(e => e.recipe.recipeId == "main.memory.ultimate_hp"), Is.False);
     }
 
     [Test]
     public void PassiveFiveAddsDarknessOnlyToTheAuthoredUltimateFinishers()
     {
-        CharacterMemoryTests.SetMemoryRanks(progression, character, passive: 5);
-        var jailbreak = table.ultimateActions.Single(action => action.actionId == "main.ultimate.jailbreak_punisher");
-        var execution = table.ultimateActions.Single(action => action.actionId == "main.ultimate.execution_breakdown");
-        foreach (var ultimate in new[] { jailbreak, execution })
+        var recipe = character.kitDefinition.potentialNodes.Single(n => n.track == PotentialTrack.Passive && n.level == 5)
+            .runtimeEffects.Single().recipe;
+        Assert.That(recipe.definition, Is.TypeOf<AdditionalDamageOnHitRuntimeEffectDefinition>());
+        Assert.That(recipe.parameters.additionalDamage.sourceStatDamageSource, Is.EqualTo(RuntimeEffectStatTarget.MaxHP));
+        Assert.That(recipe.parameters.additionalDamage.sourceStatRatio, Is.EqualTo(.2f));
+        Assert.That(recipe.parameters.additionalDamage.elementType, Is.EqualTo(ElementType.Darkness));
+        foreach (var ultimate in table.ultimateActions.Where(a => a.actionId == "main.ultimate.jailbreak_punisher" || a.actionId == "main.ultimate.execution_breakdown"))
         {
-            AttackStepData step = ultimate.comboTree.rootNode.stepData;
-            if (ultimate == jailbreak) step = step.triggerWindows[0].targetNode.stepData;
-            var hits = step.hitData.hitboxes.OfType<NormalHitbox>().OrderBy(hit => hit.startFrameOffset).ToArray();
-            var resolve = typeof(CharacterProgressionState).Assembly.GetType("Project.Progression.MainMemoryKit")
-                .GetMethod("ResolveFinisher", BindingFlags.Static | BindingFlags.NonPublic);
-            Assert.That(resolve.Invoke(null, new object[] { character, passive, ultimate.actionId, step, hits[0], null }), Is.Null);
-            var finisher = (AdditionalDamageEffectDefinition)resolve.Invoke(null,
-                new object[] { character, passive, ultimate.actionId, step, hits.Last(), null });
-            Assert.That(finisher.elementType, Is.EqualTo(ElementType.Darkness));
-            Assert.That(finisher.CalculateBaseDamage(100f, new PassiveEventContext(),
-                new CharacterStats { maxHP = 1000f }), Is.EqualTo(200f));
-            Assert.That(finisher, Is.SameAs(character.kitDefinition.GetNodeById("main.memory.passive.lv5").ultimateFinisherDamage));
-            finisher.sourceStatRatio = .35f;
-            Assert.That(finisher.CalculateBaseDamage(100f, new PassiveEventContext { enemyMaxHp = 9000f },
-                new CharacterStats { maxHP = 1000f }), Is.EqualTo(350f));
-            finisher.sourceStatRatio = .2f;
-            CharacterMemoryTests.SetMemoryRanks(progression, character, passive: 4);
-            Assert.That(resolve.Invoke(null,
-                new object[] { character, passive, ultimate.actionId, step, hits.Last(), null }), Is.Null);
-            CharacterMemoryTests.SetMemoryRanks(progression, character, passive: 5);
+            var step = ultimate.comboTree.rootNode.stepData;
+            if (ultimate.actionId == "main.ultimate.jailbreak_punisher") step = step.triggerWindows[0].targetNode.stepData;
+            var hits = step.hitData.hitboxes.OfType<NormalHitbox>().OrderBy(h => h.startFrameOffset).ToArray();
+            foreach (var hit in hits)
+            {
+                var context = new RuntimeEffectDamageContext { category = AttackCategory.Ultimate,
+                    damageDelivery = DamageDelivery.Primary, actionId = ultimate.actionId,
+                    provenance = new DamageProvenance(0, 0, 0, 0, null, hit.damageTags) };
+                Assert.That(recipe.parameters.additionalDamage.filter.Matches(context), Is.EqualTo(hit == hits.Last()));
+            }
         }
     }
 
     [Test]
     public void SummonedChainUsesAuthoredGroundProjectionAndTemplate()
     {
-        var settings = character.kitDefinition.GetNodeById("main.skill.lv4").darkChainSummon;
-        Assert.That(settings, Is.Not.Null);
-        Assert.That(settings.referencePoint, Is.EqualTo(ProjectileReferencePointMode.GroundProjection));
-        Assert.That(settings.durationSeconds, Is.EqualTo(12f));
-        Assert.That(settings.intervalSeconds, Is.EqualTo(2.5f));
-        Assert.That(settings.attackRatio, Is.EqualTo(2f));
-        Assert.That(settings.maxHpRatio, Is.EqualTo(.08f));
-        var original = ResolveMemoryProjectile("skill", "main.skill.dark_chain", "Dark Chain").projectileData;
-        var template = Object.Instantiate(original);
-        settings.projectile = template;
-        template.hitIntervalSeconds = 1.75f;
-        var create = typeof(CharacterProgressionState).Assembly.GetType("Project.Progression.MainMemoryKit")
-            .GetMethod("CreateSummonedChain", BindingFlags.Static | BindingFlags.NonPublic);
-        ProjectileData summoned = null;
-        try
-        {
-            summoned = (ProjectileData)create.Invoke(null, new object[] { original, settings });
-            Assert.That(summoned.spawnReferencePointMode, Is.EqualTo(ProjectileReferencePointMode.GroundProjection));
-            Assert.That(summoned.spawnPositionMode, Is.EqualTo(SpawnPositionMode.Target));
-            Assert.That(summoned.hitIntervalSeconds, Is.EqualTo(1.75f));
-            Assert.That(summoned.magnetismSpeed, Is.Zero);
-            Assert.That(summoned.maxHits, Is.EqualTo(1));
-            Assert.That(summoned.ResolveRoutineHitbox().elementType, Is.EqualTo(ElementType.Darkness));
-            Assert.That(original.spawnReferencePointMode, Is.EqualTo(template.spawnReferencePointMode));
-        }
-        finally
-        {
-            if (summoned != null) Object.DestroyImmediate(summoned);
-            Object.DestroyImmediate(template);
-        }
+        var skillNode = character.kitDefinition.GetNodeById("main.skill.lv4");
+        var recipe = skillNode.runtimeEffects.Single(effect => effect.recipe?.recipeId == "main.memory.chain_summon").recipe;
+        Assert.That(recipe.definition, Is.TypeOf<PeriodicProjectileRuntimeEffectDefinition>());
+        Assert.That(recipe.policy.durationSeconds, Is.EqualTo(15f));
+        Assert.That(recipe.parameters.projectile.tickInterval, Is.EqualTo(2.5f));
+        var projectile = recipe.parameters.projectile.projectile;
+        Assert.That(AssetDatabase.Contains(projectile), Is.True);
+        Assert.That(projectile.spawnReferencePointMode, Is.EqualTo(ProjectileReferencePointMode.GroundProjection));
+        Assert.That(projectile.spawnPositionMode, Is.EqualTo(SpawnPositionMode.Target));
+        Assert.That(projectile.magnetismSpeed, Is.Zero);
+        Assert.That(projectile.limitHitsToTarget, Is.True);
+        Assert.That(projectile.maxHits, Is.EqualTo(1));
+        var hit = (NormalHitbox)projectile.ResolveRoutineHitbox();
+        Assert.That(hit.elementType, Is.EqualTo(ElementType.None));
+        Assert.That(hit.ResolveBaseDamage(new CharacterStats { attack = 100f, maxHP = 1000f }, 0f), Is.EqualTo(200f));
+        var damageApplication = projectile.onHitEffects.Single(application => application.triggerOnHit);
+        Assert.That(damageApplication.requiredNodeId, Is.EqualTo(skillNode.nodeId));
+        Assert.That(damageApplication.ResolvedRecipe.parameters.additionalDamage.sourceStatRatio, Is.EqualTo(.08f));
+        Assert.That(damageApplication.ResolvedRecipe.parameters.additionalDamage.elementType, Is.EqualTo(ElementType.Darkness));
+        var visual = recipe.presentation.fieldVisualPrefab;
+        Assert.That(visual, Is.Not.Null);
+        Assert.That(recipe.presentation.followActiveCharacter, Is.True);
+        Assert.That(visual.GetComponent<FieldEffectVisual>().style, Is.EqualTo(FieldEffectVisual.VisualStyle.FloatingIcon));
     }
 
     private ProjectileSpawnContext ResolveMemoryProjectile(string asset, string action, string step)
     {
         var context = new ProjectileSpawnContext
         {
-            sourceCharacter = character,
-            sourceActionId = action,
-            sourceStep = new AttackStepData { stepName = step },
+            sourceCharacter = character, sourceActionId = action, sourceStep = new AttackStepData { stepName = step },
             projectileData = AssetDatabase.LoadAssetAtPath<ProjectileData>(
                 "Assets/Project/Character/Hero/test_0_Main/ProjectileData_main_" + asset + ".asset")
         };
-        var args = new object[] { context, passive };
-        typeof(CharacterProgressionState).Assembly.GetType("Project.Progression.MainMemoryKit")
-            .GetMethod("ConfigureProjectile", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, args);
-        return (ProjectileSpawnContext)args[0];
-    }
-
-    private static T ReadProjectileEffect<T>(ProjectileSpawnContext context, string name)
-    {
-        var effect = typeof(ProjectileSpawnContext).GetField("memoryEffects", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetValue(context);
-        return effect == null ? default : (T)effect.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(effect);
+        if (passive.TryGetProjectileReplacement(asset == "skill" ? AttackCategory.Skill : AttackCategory.Ultimate,
+            action, null, step, out var type, out var replacement) && replacement != null)
+            context.projectileData = replacement;
+        return context;
     }
 
     [Test]

@@ -2033,7 +2033,7 @@ namespace Project.ShopSystem
                 leveled.speed = character.movementProfile.moveSpeed;
             }
 
-            if (MainMemoryKit.AppliesTo(character))
+            if (CharacterMemoryKit.AppliesTo(character))
                 Project.Training.CharacterStateContext.ResolveProgression(TeamLoader.Instance?.MetaProgression)
                     ?.ApplyMemoryBaseStats(character, leveled);
             return leveled;
@@ -2369,6 +2369,7 @@ namespace Project.ShopSystem
             {
                 RuntimeEffectInstance instance = state.MutableActiveEffects[i];
                 affectedStats |= instance != null && instance.AffectsStats;
+                instance?.definition?.OnExpired(BuildRuntimeEffectContext(character, state, instance, 0f));
             }
 
             state.MutableActiveEffects.Clear();
@@ -2544,8 +2545,12 @@ namespace Project.ShopSystem
                         instance.remainingSeconds -= resolvedDelta;
                     }
 
+                    string requiredSource = instance.recipe?.policy?.requiredSourceEffectKey;
+                    if (!string.IsNullOrEmpty(requiredSource) && GetRuntimeEffectStackCount(instance.sourceCharacter, requiredSource) <= 0)
+                        instance.forceExpired = true;
+
                     instance.elapsedSeconds += resolvedDelta;
-                    if (instance.RequiresFormulaUpdate
+                    if (!instance.forceExpired && instance.RequiresFormulaUpdate
                         && instance.definition.IsFormulaUpdateDue(instance))
                     {
                         targetStatsSnapshot ??= GetCharacterStats(state.character);

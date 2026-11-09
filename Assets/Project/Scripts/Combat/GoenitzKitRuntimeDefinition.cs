@@ -33,11 +33,11 @@ public sealed class GoenitzKitRuntimeDefinition : CharacterKitRuntimeDefinition
     public RuntimeEffectRecipe frenzyBleed = new RuntimeEffectRecipe();
     public RuntimeEffectRecipe exBleed = new RuntimeEffectRecipe();
     public RuntimeEffectRecipe finisherBleed = new RuntimeEffectRecipe();
+    public RuntimeEffectRecipe frenzySpeed = new RuntimeEffectRecipe();
+    public RuntimeEffectRecipe frenzyEntryBuff = new RuntimeEffectRecipe();
+    public RuntimeEffectRecipe frenzyEntryBleed = new RuntimeEffectRecipe();
     [Header("Passive")]
-    public PassiveEnemyElementModifierDefinition criticalPhysicalShred = new PassiveEnemyElementModifierDefinition
-    {
-        elementType = ElementType.None, resistancePercentAdd = -15f, permanent = true, stacks = false
-    };
+    public RuntimeEffectRecipe criticalDamageResistanceShred = new RuntimeEffectRecipe();
 
     public override ICharacterKitRuntime CreateRuntime(CharacterObject owner, TeamLoader team)
         => new GoenitzKitRuntime(owner, team, this);

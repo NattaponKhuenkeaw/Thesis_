@@ -237,6 +237,12 @@ public class ProjectileData : ScriptableObject
 
     [Tooltip("Frames to wait between hits in a multi-hit routine.")]
     public int hitIntervalFrames = 5;
+    [Tooltip("Keep cadence running even when no enemy is touching the field.")]
+    public bool fixedHitCadence;
+    public bool limitHitsToTarget;
+    [Min(0f)] public float auraEnergyPerDamageBatch;
+    public string auraEnergyRequiredNodeId;
+    public List<RuntimeAreaEffectApplication> onHitEffects = new List<RuntimeAreaEffectApplication>();
     public bool stopOnImpact = true;
     public bool destroyWhenHitsExhausted = true;
     public bool destroyOnLifetimeExpire = true;
@@ -407,5 +413,4 @@ public struct ProjectileSpawnContext
     public PlayerCombat sourceCombat;
     public CharacterObject sourceCharacter;
     public float sizeMultiplier;
-    internal Project.Progression.MainMemoryKit.ProjectileEffects memoryEffects;
 }

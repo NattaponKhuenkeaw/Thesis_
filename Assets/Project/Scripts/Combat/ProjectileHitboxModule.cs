@@ -188,9 +188,7 @@ public sealed class ProjectileHitboxModule
     private void ApplyNormalHitData(NormalHitbox normalHitbox, ProjectileSpawnContext context)
     {
         float ratio = normalHitbox != null ? normalHitbox.damageRatio : 1f;
-        float baseDamage = context.memoryEffects != null && context.memoryEffects.AttackRatio > 0f
-            ? context.sourceAttack * context.memoryEffects.AttackRatio + (context.attackerStats?.maxHP ?? 0f) * context.memoryEffects.MaxHpRatio
-            : ResolveActionDamageSourceValue(context) * ResolveHitDamageMultiplier(context, ratio);
+        float baseDamage = ResolveActionDamageSourceValue(context) * ResolveHitDamageMultiplier(context, ratio);
         hitBoxDamage.SetHitData(
             baseDamage,
             false,

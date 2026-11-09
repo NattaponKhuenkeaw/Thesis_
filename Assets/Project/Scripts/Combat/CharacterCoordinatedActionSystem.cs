@@ -101,7 +101,7 @@ public class CharacterCoordinatedActionSystem : MonoBehaviour
 
     private void HandleDamageResolved(DamageResolvedEvent evt)
     {
-        if (evt.target == null || !evt.target.IsAlive)
+        if ((evt.acceptedPolicy & DamageProcPolicy.TriggerOrdinaryOnHit) == 0 || evt.target == null || !evt.target.IsAlive)
         {
             return;
         }
@@ -154,6 +154,7 @@ public class CharacterCoordinatedActionSystem : MonoBehaviour
                     {
                         continue;
                     }
+                    if (member == attacker && evt.actionId == coordDef.actionId) continue;
 
                     // Check internal cooldown
                     if (IsOnCooldown(member, coordDef))
@@ -241,9 +242,11 @@ public class CharacterCoordinatedActionSystem : MonoBehaviour
 
                     // Roll trigger chance
                     float chance = Mathf.Clamp01(coordDef.triggerChance);
-                    if (chance < 1f && Random.value > chance)
+                    // A selected higher-rank policy owns the roll; lower ranks must not reroll a failure.
+                    triggeredForMember = true;
+                    if (chance <= 0f || (chance < 1f && Random.value > chance))
                     {
-                        continue;
+                        break;
                     }
 
                     // Trigger cooldown if configured

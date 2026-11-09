@@ -38,6 +38,7 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
 
             float current = GetStat(stats, modifier.target);
             float resolved = ResolveModifiedValue(context, stats, current, modifier);
+            if (modifier.maxIncrease > 0f) resolved = Mathf.Min(resolved, current + modifier.maxIncrease);
             SetStat(stats, modifier.target, resolved);
         }
     }

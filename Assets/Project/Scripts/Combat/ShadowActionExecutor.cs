@@ -435,13 +435,23 @@ public class ShadowActionExecutor : MonoBehaviour
             }
 
             float baseDamage;
+            var liveStats = CombatSourceStatResolver.Resolve(sourceCharacter, sourceCharacter?.stats, SourceStatReadMode.LiveOnResolve);
+            float damageSource = definition != null && definition.overrideDamageSource
+                ? definition.damageSourceStat == ActionDamageSourceStat.Defense ? liveStats?.defense ?? 0f
+                    : definition.damageSourceStat == ActionDamageSourceStat.MaxHP ? liveStats?.maxHP ?? 0f : liveStats?.attack ?? sourceAttack
+                : liveStats?.attack ?? sourceAttack;
             if (definition != null && definition.damageMultiplierOverride > 0f)
             {
-                baseDamage = sourceAttack * definition.damageMultiplierOverride * (normalHitbox.damageRatio > 0f ? normalHitbox.damageRatio : 1f);
+                float totalWeight = 0f;
+                foreach (var authoredHit in actionStep.hitData.hitboxes)
+                    if (authoredHit is NormalHitbox normal)
+                        totalWeight += normal.damageRatio > 0f ? normal.damageRatio : 1f;
+                float weight = normalHitbox.damageRatio > 0f ? normalHitbox.damageRatio : 1f;
+                baseDamage = damageSource * definition.damageMultiplierOverride * weight / Mathf.Max(weight, totalWeight);
             }
             else
             {
-                baseDamage = sourceAttack * actionDamageMultiplier * (normalHitbox.damageRatio > 0f ? normalHitbox.damageRatio : 1f);
+                baseDamage = damageSource * actionDamageMultiplier * (normalHitbox.damageRatio > 0f ? normalHitbox.damageRatio : 1f);
             }
 
             if (cloneHitboxDamage != null)
@@ -478,7 +488,8 @@ public class ShadowActionExecutor : MonoBehaviour
                     sourceCombat,
                     sourceCharacter,
                     null,
-                    presentationType: presentationActionType);
+                    presentationType: presentationActionType,
+                    suppressNativeAuraEnergy: definition != null && definition.auraEnergyRewardOnHit > 0f);
 
                 cloneHitboxDamage.ResetActivationState();
                 cloneHitboxDamage.gameObject.SetActive(true);
@@ -520,7 +531,7 @@ public class ShadowActionExecutor : MonoBehaviour
                 }
 
                 // Aura Energy reward: single grant per shadow execution
-                if (definition != null && definition.auraEnergyRewardOnHit > 0f && !hasRewardedAura)
+                if (cloneHitboxDamage != null && cloneHitboxDamage.LastDamageDealt > 0f && definition != null && definition.auraEnergyRewardOnHit > 0f && !hasRewardedAura)
                 {
                     hasRewardedAura = true;
                     if (TeamLoader.Instance != null && sourceCharacter != null)

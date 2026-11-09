@@ -242,7 +242,7 @@ namespace Project.UI.Training
             RefreshRankLabels();
             if (_memoryWindow == null) return;
 
-            bool legacyAvailable = !MainMemoryKit.AppliesTo(character);
+            bool legacyAvailable = !CharacterMemoryKit.AppliesTo(character);
             _showLegacy &= legacyAvailable;
             _legacyButton.gameObject.SetActive(legacyAvailable);
             _resetMemoryButton.gameObject.SetActive(!_showLegacy);
@@ -269,7 +269,7 @@ namespace Project.UI.Training
         private static void SetTrack(Slider slider, CharacterObject character, PotentialTrack track, int value)
         {
             slider.minValue = 0;
-            slider.maxValue = MainMemoryKit.AppliesTo(character) ? 0 : TrainingSession.GetMaxPotentialLevel(character, track);
+            slider.maxValue = CharacterMemoryKit.AppliesTo(character) ? 0 : TrainingSession.GetMaxPotentialLevel(character, track);
             slider.interactable = slider.maxValue > 0;
             slider.SetValueWithoutNotify(value);
         }
@@ -283,7 +283,7 @@ namespace Project.UI.Training
 
         private void CaptureRanks()
         {
-            if (_draft == null || _roster.Count == 0 || MainMemoryKit.AppliesTo(_roster[_index].characterObjectData)) return;
+            if (_draft == null || _roster.Count == 0 || CharacterMemoryKit.AppliesTo(_roster[_index].characterObjectData)) return;
             var values = _draft.characters[_index];
             values.skill = Mathf.RoundToInt(skill.value);
             values.ultimate = Mathf.RoundToInt(ultimate.value);

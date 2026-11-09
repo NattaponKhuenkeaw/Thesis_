@@ -165,7 +165,8 @@ namespace Project.UI
                     if (major) node.name = title;
                     if (major && !full) title += $" Lv.{rank}";
                     Sprite icon = major ? potentialIcon?.Invoke(family) ?? MemoryNodeIcon(character, family)
-                        : node.AuthoredIcon;
+                        : CharacterMemoryKit.GetGenericPageIcon(character?.characterObjectData, step)
+                            ?? MemoryNodeIcon(character);
                     string caption = major ? family.ToString() : "Generic";
                     if (major && !full) caption += $" Lv.{rank}";
                     if (earned) caption += " · Earned";
@@ -230,10 +231,10 @@ namespace Project.UI
             bool major = CharacterMemoryProgress.IsChoiceStep(step);
             if (major && rank > CharacterMemoryProgress.UpgradesPerFamily)
                 return $"This row is beyond the {CharacterMemoryProgress.UpgradesPerFamily} {family} Memory ranks.";
-            if (MainMemoryKit.AppliesTo(character?.characterObjectData))
+            if (CharacterMemoryKit.AppliesTo(character?.characterObjectData))
             {
-                if (!major) return MainMemoryKit.DescribeGeneric(step);
-                return MainMemoryKit.GetNode(character.characterObjectData, family, rank)?.description
+                if (!major) return CharacterMemoryKit.DescribeGeneric(character.characterObjectData, step);
+                return CharacterMemoryKit.GetNode(character.characterObjectData, family, rank)?.description
                     ?? $"{family} Memory Lv.{rank}";
             }
             return major ? $"Raises {family} Memory to Lv.{rank} and advances the track to step {step}."

@@ -11,6 +11,8 @@ public class RuntimeEffectPresentation
     public bool showRemainingTime;
     public Sprite icon;
     public GameObject fieldVisualPrefab;
+    [Tooltip("Keep this effect's field visual beside the active player while its owner is switched out.")]
+    public bool followActiveCharacter;
 }
 
 [Serializable]
@@ -27,6 +29,8 @@ public class RuntimeEffectApplicationPolicy
     public bool removeOnOwnerDamaged = false;
     [Tooltip("Optional explicit merge/display key. Leave empty to use recipe id, presentation id, definition id, and parameter signature.")]
     public string stackKey;
+    [Tooltip("Optional source-owned effect that must remain active for this application to continue.")]
+    public string requiredSourceEffectKey;
 }
 
 [Serializable]
@@ -39,9 +43,15 @@ public class RuntimeEffectDamageFilter
     public bool filterByCategory;
     public AttackCategory category = AttackCategory.Normal;
 
+    public string actionId;
+    public List<string> actionIds = new List<string>();
+    public string requiredTargetEffectKey;
+    public CombatDamageTag requiredDamageTags;
+    public bool requireCriticalHit;
+
     public bool Matches(RuntimeEffectDamageContext context)
     {
-        if (context == null)
+        if (context == null || (requireCriticalHit && !context.isCriticalHit))
         {
             return false;
         }
@@ -56,6 +66,11 @@ public class RuntimeEffectDamageFilter
             return false;
         }
 
+        if (!string.IsNullOrWhiteSpace(actionId) && context.actionId != actionId) return false;
+        if (actionIds != null && actionIds.Count > 0 && !actionIds.Contains(context.actionId)) return false;
+        if (!string.IsNullOrWhiteSpace(requiredTargetEffectKey) &&
+            (context.targetEnemy?.RuntimeEffects == null || context.targetEnemy.RuntimeEffects.GetStackCount(requiredTargetEffectKey) <= 0)) return false;
+        if ((context.provenance.tags & requiredDamageTags) != requiredDamageTags) return false;
         return !filterByCategory || context.category == category;
     }
 }
@@ -71,6 +86,9 @@ public class RuntimeEffectDamageModifierParameters
 [Serializable]
 public class RuntimeEffectDamageInputParameters
 {
+    public bool applyToAllDeliveries;
+    public bool overrideDelivery;
+    public DamageDelivery delivery;
     public RuntimeEffectDamageFilter filter = new RuntimeEffectDamageFilter();
     public float defenderDefensePercentAdd;
     public float defenderDamageResistancePercentAdd;
@@ -107,10 +125,17 @@ public class RuntimeEffectLifestealParameters
 [Serializable]
 public class RuntimeEffectAdditionalDamageParameters
 {
+    public ExplosionSplashDefinition splash;
     public bool applyNativeDot;
+    public bool targetAllRoomEnemies;
+    public bool oncePerExecution;
+    [Tooltip("When positive, uses this share of the triggering hit's confirmed damage as the damage basis.")]
+    [Min(0f)] public float confirmedDamageRatio;
     public RuntimeEffectDamageFilter filter = new RuntimeEffectDamageFilter();
     [Range(0f, 1f)] public float chance = 1f;
     [Min(0f)] public float internalCooldown = 0f;
+    [Tooltip("Optional source-owned tag that shares the internal cooldown across instances of this effect.")]
+    public string sharedCooldownTag;
     [Min(0f)] public float attackRatio = 0.2f;
     public RuntimeEffectStatTarget sourceStatDamageSource = RuntimeEffectStatTarget.MaxHP;
     [Min(0f)] public float sourceStatRatio = 0f;
@@ -141,8 +166,26 @@ public class RuntimeEffectShieldParameters
 }
 
 [Serializable]
+public class RuntimeEffectProjectileParameters
+{
+    public bool roundRobinTargets;
+    [Tooltip("Measure nearest-target distance from the active player's current position at each tick.")]
+    public bool useActivePlayerOrigin;
+    public ProjectileData projectile;
+    [Tooltip("Seconds between strikes spawned by this recipe. ProjectileData controls each individual strike.")]
+    [Min(.05f)] public float tickInterval = 1f;
+    public AttackCategory category = AttackCategory.Skill;
+    public string actionId;
+    public string actionName;
+}
+
+[Serializable]
 public class RuntimeEffectParameterSet
 {
+    public bool overrideReaction;
+    [SerializeReference] public RuntimeEffectReactionParameters reaction;
+    public bool overrideMovement;
+    [Min(0f)] public float dashCooldownMultiplier = 1f;
     public bool overrideDefense;
     [Range(0f, 1f)] public float evasionChanceAdd;
     public bool overrideStatModifiers;
@@ -166,6 +209,9 @@ public class RuntimeEffectParameterSet
     public bool overrideAdditionalDamage;
     public RuntimeEffectAdditionalDamageParameters additionalDamage = new RuntimeEffectAdditionalDamageParameters();
 
+    public bool overrideProjectile;
+    public RuntimeEffectProjectileParameters projectile = new RuntimeEffectProjectileParameters();
+
     public bool overrideStatus;
     public RuntimeEffectStatusParameters status = new RuntimeEffectStatusParameters();
 
@@ -173,7 +219,7 @@ public class RuntimeEffectParameterSet
     public RuntimeEffectShieldParameters shield = new RuntimeEffectShieldParameters();
 
     public bool HasAnyOverride =>
-        overrideDefense
+        overrideReaction || overrideMovement || overrideDefense
         || overrideStatModifiers
         || overrideDamageModifier
         || overrideDamageInput
@@ -181,6 +227,7 @@ public class RuntimeEffectParameterSet
         || overrideHeal
         || overrideLifesteal
         || overrideAdditionalDamage
+        || overrideProjectile
         || overrideStatus
         || overrideShield;
 
@@ -192,6 +239,8 @@ public class RuntimeEffectParameterSet
         }
 
         StringBuilder builder = new StringBuilder();
+        if (overrideReaction) builder.Append("reaction:").Append(JsonUtility.ToJson(reaction));
+        if (overrideMovement) builder.Append("movement:").Append(dashCooldownMultiplier.ToString("R"));
         if (overrideDefense) builder.Append("defense:").Append(evasionChanceAdd.ToString("R")).Append(';');
         if (overrideStatModifiers && statModifiers != null)
         {
@@ -213,6 +262,7 @@ public class RuntimeEffectParameterSet
                     .Append((int)modifier.statRatioValueSource)
                     .Append(',')
                     .Append(modifier.value.ToString("R"))
+                    .Append(',').Append(modifier.maxIncrease.ToString("R"))
                     .Append(';');
             }
         }
@@ -280,8 +330,12 @@ public class RuntimeEffectParameterSet
                 .Append(';');
         }
 
+        if (overrideProjectile && projectile != null)
+            builder.Append("projectile:").Append(JsonUtility.ToJson(projectile)).Append(';');
+        // Include complete filter/target policy so differently scoped recipes cannot merge.
         if (overrideAdditionalDamage && additionalDamage != null)
         {
+            builder.Append("add-policy:").Append(JsonUtility.ToJson(additionalDamage)).Append(';');
             builder.Append(additionalDamage.applyNativeDot ? "add-dot:" : "add:")
                 .Append(additionalDamage.filter != null && additionalDamage.filter.filterByElement ? '1' : '0')
                 .Append(',')
@@ -339,6 +393,10 @@ public class RuntimeEffectParameterSet
                 .Append(';');
         }
 
+        if (overrideDamageModifier) builder.Append(JsonUtility.ToJson(damageModifier?.filter));
+        if (overrideDamageInput) builder.Append(JsonUtility.ToJson(damageInput?.filter));
+        if (overrideDamageInput) builder.Append(JsonUtility.ToJson(damageInput));
+        if (overrideLifesteal) builder.Append(JsonUtility.ToJson(lifesteal?.filter));
         return builder.ToString();
     }
 }
@@ -364,6 +422,15 @@ public class RuntimeEffectRecipe : RuntimeEffectRecipeData
 
 public static class RuntimeEffectRuntimeUtility
 {
+    public static bool SameEffectFamily(PassiveRuntimeEffectDefinition a, PassiveRuntimeEffectDefinition b)
+    {
+        string first = a?.ResolvedRecipe?.recipeId;
+        string second = b?.ResolvedRecipe?.recipeId;
+        if (!string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(second))
+            return string.Equals(first, second, StringComparison.Ordinal);
+        return a?.ResolvedEffect != null && b?.ResolvedEffect != null &&
+            a.ResolvedEffect.StableId == b.ResolvedEffect.StableId;
+    }
     public static void BindDamageContextToInstance(
         RuntimeEffectDamageContext context,
         RuntimeEffectInstance instance,
@@ -587,6 +654,7 @@ public static class RuntimeEffectRuntimeUtility
         }
 
         return (recipe == null && definition.RequiresTicking)
+            || !string.IsNullOrEmpty(recipe?.policy?.requiredSourceEffectKey)
             || GetDurationType(definition, recipe) == RuntimeEffectDurationType.Seconds
             || RequiresFormulaUpdate(definition, recipe)
             || ChildRecipesRequireTicking(recipe);
@@ -817,6 +885,22 @@ public static class RuntimeEffectRuntimeUtility
     public static RuntimeEffectParameterSet GetParameters(RuntimeEffectInstance instance)
     {
         return instance != null && instance.recipe != null ? instance.recipe.parameters : null;
+    }
+
+    public static float ModifyDashCooldown(PlayerCharacter player, float duration)
+    {
+        if (player == null) return duration;
+        var inventory = TeamLoader.Instance?.RunInventory;
+        var effects = inventory != null ? inventory.GetActiveRuntimeEffects(player.characterObject) : player.RuntimeEffects?.ActiveEffects;
+        float multiplier = 1f;
+        if (effects != null)
+            foreach (var effect in effects)
+            {
+                var parameters = GetParameters(effect);
+                if (parameters?.overrideMovement == true && !effect.IsExpired)
+                    multiplier *= Mathf.Max(0f, parameters.dashCooldownMultiplier);
+            }
+        return Mathf.Max(0f, duration * multiplier);
     }
 
     public static CharacterStats ResolveFormulaSourceStats(RuntimeEffectContext context)

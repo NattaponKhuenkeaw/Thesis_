@@ -178,7 +178,7 @@ MonoBehaviour:
         qte: 0
         hidden: 0
         hideWhenLocked: 0
-        minimumPotentialLevel: 3
+        minimumPotentialLevel: 5
         unlockTrack: 1
         showPotentialLevel: 0
         potentialTrack: 1
@@ -231,6 +231,194 @@ MonoBehaviour:
       baseBoxes: 2
       maximumBoxes: 5
       fillColor: {r: 0.25, g: 0.9, b: 1, a: 1}
+    useMemoryRanks: 1
+    genericMemoryPages:
+    - genericNodeIcon: {fileID: 21300000, guid: dd5971ec39e311347bebf92df047b5ee, type: 3}
+      genericNodes:
+      - nodeName: Goenitz Generic 01 - CRIT Rate
+        description: Base CRIT Rate <b><color=#a382ed>+3%</color></b>.
+        stat: 5
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 02 - CRIT DMG
+        description: Base CRIT DMG <b><color=#a382ed>+3%</color></b>.
+        stat: 6
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 03 - Damage Increase
+        description: Base Damage Increase <b><color=#a382ed>+3%</color></b>.
+        stat: 8
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 04 - ATK
+        description: Base ATK <b><color=#a382ed>+3%</color></b>.
+        stat: 1
+        value: 3
+        percentOfBase: 1
+      - nodeName: Goenitz Generic 05 - DOT Mastery
+        description: Base DOT Mastery <b><color=#a382ed>+3%</color></b>.
+        stat: 7
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 06 - CRIT Rate
+        description: Base CRIT Rate <b><color=#a382ed>+3%</color></b>.
+        stat: 5
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 07 - ATK
+        description: Base ATK <b><color=#a382ed>+3%</color></b>.
+        stat: 1
+        value: 3
+        percentOfBase: 1
+      - nodeName: Goenitz Generic 08 - DOT Mastery
+        description: Base DOT Mastery <b><color=#a382ed>+3%</color></b>.
+        stat: 7
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 09 - CRIT DMG
+        description: Base CRIT DMG <b><color=#a382ed>+3%</color></b>.
+        stat: 6
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 10 - ATK
+        description: Base ATK <b><color=#a382ed>+3%</color></b>.
+        stat: 1
+        value: 3
+        percentOfBase: 1
+      - nodeName: Goenitz Generic 11 - CRIT Rate
+        description: Base CRIT Rate <b><color=#a382ed>+3%</color></b>.
+        stat: 5
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 12 - Additional Damage Increase
+        description: Base Additional Damage Increase <b><color=#a382ed>+3%</color></b>.
+        stat: 9
+        value: 3
+        percentOfBase: 0
+    - genericNodeIcon: {fileID: 21300000, guid: dd5971ec39e311347bebf92df047b5ee, type: 3}
+      genericNodes:
+      - nodeName: Goenitz Generic 13 - Damage Increase
+        description: Base Damage Increase <b><color=#a382ed>+3%</color></b>.
+        stat: 8
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 14 - CRIT DMG
+        description: Base CRIT DMG <b><color=#a382ed>+3%</color></b>.
+        stat: 6
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 15 - CRIT Rate
+        description: Base CRIT Rate <b><color=#a382ed>+3%</color></b>.
+        stat: 5
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 16 - DOT Mastery
+        description: Base DOT Mastery <b><color=#a382ed>+3%</color></b>.
+        stat: 7
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 17 - ATK
+        description: Base ATK <b><color=#a382ed>+3%</color></b>.
+        stat: 1
+        value: 3
+        percentOfBase: 1
+      - nodeName: Goenitz Generic 18 - CRIT Rate
+        description: Base CRIT Rate <b><color=#a382ed>+3%</color></b>.
+        stat: 5
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 19 - DOT Mastery
+        description: Base DOT Mastery <b><color=#a382ed>+3%</color></b>.
+        stat: 7
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 20 - ATK
+        description: Base ATK <b><color=#a382ed>+3%</color></b>.
+        stat: 1
+        value: 3
+        percentOfBase: 1
+      - nodeName: Goenitz Generic 21 - CRIT DMG
+        description: Base CRIT DMG <b><color=#a382ed>+3%</color></b>.
+        stat: 6
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 22 - ATK
+        description: Base ATK <b><color=#a382ed>+3%</color></b>.
+        stat: 1
+        value: 3
+        percentOfBase: 1
+      - nodeName: Goenitz Generic 23 - CRIT Rate
+        description: Base CRIT Rate <b><color=#a382ed>+3%</color></b>.
+        stat: 5
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 24 - Additional Damage Increase
+        description: Base Additional Damage Increase <b><color=#a382ed>+3%</color></b>.
+        stat: 9
+        value: 3
+        percentOfBase: 0
+    - genericNodeIcon: {fileID: 21300000, guid: dd5971ec39e311347bebf92df047b5ee, type: 3}
+      genericNodes:
+      - nodeName: Goenitz Generic 25 - CRIT Rate
+        description: Base CRIT Rate <b><color=#a382ed>+3%</color></b>.
+        stat: 5
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 26 - Additional Damage Increase
+        description: Base Additional Damage Increase <b><color=#a382ed>+3%</color></b>.
+        stat: 9
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 27 - CRIT DMG
+        description: Base CRIT DMG <b><color=#a382ed>+3%</color></b>.
+        stat: 6
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 28 - ATK
+        description: Base ATK <b><color=#a382ed>+3%</color></b>.
+        stat: 1
+        value: 3
+        percentOfBase: 1
+      - nodeName: Goenitz Generic 29 - Damage Increase
+        description: Base Damage Increase <b><color=#a382ed>+3%</color></b>.
+        stat: 8
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 30 - CRIT DMG
+        description: Base CRIT DMG <b><color=#a382ed>+3%</color></b>.
+        stat: 6
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 31 - DOT Mastery
+        description: Base DOT Mastery <b><color=#a382ed>+3%</color></b>.
+        stat: 7
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 32 - CRIT Rate
+        description: Base CRIT Rate <b><color=#a382ed>+3%</color></b>.
+        stat: 5
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 33 - Additional Damage Increase
+        description: Base Additional Damage Increase <b><color=#a382ed>+3%</color></b>.
+        stat: 9
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 34 - ATK
+        description: Base ATK <b><color=#a382ed>+3%</color></b>.
+        stat: 1
+        value: 3
+        percentOfBase: 1
+      - nodeName: Goenitz Generic 35 - Cooldown Mastery
+        description: Base Cooldown Mastery <b><color=#a382ed>+3%</color></b>.
+        stat: 4
+        value: 3
+        percentOfBase: 0
+      - nodeName: Goenitz Generic 36 - CRIT DMG
+        description: Base CRIT DMG <b><color=#a382ed>+3%</color></b>.
+        stat: 6
+        value: 3
+        percentOfBase: 0
     skill:
       abilityId: goenitz.skill.yonokaze
       abilityName: Yonokaze
@@ -287,6 +475,9 @@ MonoBehaviour:
         projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
+        duplicateProjectileChance: 0
+        duplicateProjectileCooldown: 0
+        duplicateProjectileCooldownTag: 
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -351,6 +542,9 @@ MonoBehaviour:
         projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
+        duplicateProjectileChance: 0
+        duplicateProjectileCooldown: 0
+        duplicateProjectileCooldownTag: 
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -390,6 +584,7 @@ MonoBehaviour:
       dashThroughDamageEffects: []
       defensiveEffects:
       - filter:
+          requiredEnemyEffectKey: 
           filterByCategory: 0
           category: 0
           filterByActionId: 0
@@ -403,6 +598,7 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         evasionChance: 0.35
         grantsDamageImmunity: 0
         grantsDebuffImmunity: 0
@@ -430,7 +626,45 @@ MonoBehaviour:
       counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
-      actionModifiers: []
+      actionModifiers:
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
+        actionId: goenitz.skill.yonokaze
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 4.5
+        criticalRateOperation: 0
+        criticalRateValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+        duplicateProjectileChance: 0
+        duplicateProjectileCooldown: 0
+        duplicateProjectileCooldownTag: 
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -446,11 +680,15 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.skill.lv1
       nodeName: Skill 1
-      description: Unlock EX Yonokaze with Hold Skill.
-      skillPanelDescriptionOverride: Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-        of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
-        dealt</color>
-      kitInfoPatches: []
+      description: Yonokaze deals 450% ATK. Hold Skill to use EX Yonokaze.
+      skillPanelDescriptionOverride: '|- Yonokaze deals 450% ATK. Hold Skill to use
+        EX Yonokaze.'
+      kitInfoPatches:
+      - entryId: goenitz.skill.yonokaze
+        noteId: goenitz.skill.lv1
+        priority: 1
+        appendNote: 1
+        description: Yonokaze deals 450% ATK. Hold Skill to use EX Yonokaze.
       track: 0
       level: 1
       fragmentCost: 1
@@ -464,6 +702,7 @@ MonoBehaviour:
       runtimeEffects:
       - trigger: 1
         filter:
+          requiredEnemyEffectKey: 
           filterByCategory: 0
           category: 0
           filterByActionId: 1
@@ -477,6 +716,7 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -500,18 +740,25 @@ MonoBehaviour:
             showRemainingTime: 0
             icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
+            followActiveCharacter: 0
           policy:
             kind: 0
             appliesOn: 0
             durationType: 0
-            durationSeconds: 5
-            stackMode: 0
+            durationSeconds: 6
+            stackMode: 1
             stackLimit: 1
-            refreshDurationOnReapply: 0
+            refreshDurationOnReapply: 1
             stackable: 0
             removeOnOwnerDamaged: 0
             stackKey: 
+            requiredSourceEffectKey: 
           parameters:
+            overrideReaction: 0
+            reaction:
+              rid: -2
+            overrideMovement: 0
+            dashCooldownMultiplier: 1
             overrideDefense: 0
             evasionChanceAdd: 0
             overrideStatModifiers: 1
@@ -521,6 +768,7 @@ MonoBehaviour:
               sourceStat: 0
               statRatioValueSource: 0
               value: 17
+              maxIncrease: 0
             overrideDamageModifier: 0
             damageModifier:
               filter:
@@ -530,10 +778,18 @@ MonoBehaviour:
                 elementType: 0
                 filterByCategory: 0
                 category: 0
+                actionId: 
+                actionIds: []
+                requiredTargetEffectKey: 
+                requiredDamageTags: 0
+                requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
               incomingDamageTakenPercentAdd: 0
             overrideDamageInput: 0
             damageInput:
+              applyToAllDeliveries: 0
+              overrideDelivery: 0
+              delivery: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -541,6 +797,11 @@ MonoBehaviour:
                 elementType: 0
                 filterByCategory: 0
                 category: 0
+                actionId: 
+                actionIds: []
+                requiredTargetEffectKey: 
+                requiredDamageTags: 0
+                requireCriticalHit: 0
               defenderDefensePercentAdd: 0
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
@@ -568,12 +829,21 @@ MonoBehaviour:
                 elementType: 0
                 filterByCategory: 0
                 category: 0
+                actionId: 
+                actionIds: []
+                requiredTargetEffectKey: 
+                requiredDamageTags: 0
+                requireCriticalHit: 0
               damageDealtRatio: 0
               lowHpThreshold: 0
               lowHpMultiplier: 0
             overrideAdditionalDamage: 0
             additionalDamage:
+              splash: {fileID: 0}
               applyNativeDot: 0
+              targetAllRoomEnemies: 0
+              oncePerExecution: 0
+              confirmedDamageRatio: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -581,8 +851,14 @@ MonoBehaviour:
                 elementType: 0
                 filterByCategory: 0
                 category: 0
+                actionId: 
+                actionIds: []
+                requiredTargetEffectKey: 
+                requiredDamageTags: 0
+                requireCriticalHit: 0
               chance: 0
               internalCooldown: 0
+              sharedCooldownTag: 
               attackRatio: 0
               sourceStatDamageSource: 0
               sourceStatRatio: 0
@@ -594,6 +870,15 @@ MonoBehaviour:
               targetMaxHpDamageCapSource: 0
               targetMaxHpDamageCapRatio: 0
               elementType: 0
+            overrideProjectile: 0
+            projectile:
+              roundRobinTargets: 0
+              useActivePlayerOrigin: 0
+              projectile: {fileID: 0}
+              tickInterval: 1
+              category: 1
+              actionId: 
+              actionName: 
             overrideStatus: 0
             status:
               status: 0
@@ -627,28 +912,15 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.skill.lv2
       nodeName: Skill 2
-      description: Increase CRIT Rate by 17% for 5 second
-      skillPanelDescriptionOverride: 'Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-        of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
-        dealt</color>
-
-
-
-        <size=19><color=#787878>Increase CRIT Rate by <b><color=#00FFED>17%</color></b>
-        for <b><color=#00FFED>5 seconds</color></b>'
+      description: Casting Yonokaze grants +17 CRIT Rate for 6 seconds.
+      skillPanelDescriptionOverride: '|- Yonokaze deals 450% ATK. Hold Skill to use
+        EX Yonokaze. Casting Yonokaze grants +17 CRIT Rate for 6 seconds.'
       kitInfoPatches:
       - entryId: goenitz.skill.yonokaze
-        noteId: 
-        priority: 0
-        appendNote: 0
-        description: 'Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-          of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
-          dealt</color>
-
-
-
-          <size=19><color=#787878>Increase CRIT Rate by
-          <b><color=#00FFED>17%</color></b> for <b><color=#00FFED>5 seconds</color></b>'
+        noteId: goenitz.skill.lv2
+        priority: 2
+        appendNote: 1
+        description: Casting Yonokaze grants +17 CRIT Rate for 6 seconds.
       track: 0
       level: 2
       fragmentCost: 1
@@ -662,6 +934,7 @@ MonoBehaviour:
       runtimeEffects:
       - trigger: 1
         filter:
+          requiredEnemyEffectKey: 
           filterByCategory: 0
           category: 0
           filterByActionId: 1
@@ -675,6 +948,7 @@ MonoBehaviour:
           requireRuntimeTag: 0
           runtimeTag: 
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -694,31 +968,39 @@ MonoBehaviour:
           definition: {fileID: 11400000, guid: 18cbcd66e506598448fbf7c3475802ae, type: 2}
           presentation:
             effectId: 
-            displayName: Increase CRIT Chance
+            displayName: Increase CRIT Damage
             showRemainingTime: 0
             icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
+            followActiveCharacter: 0
           policy:
             kind: 0
             appliesOn: 0
             durationType: 0
-            durationSeconds: 5
-            stackMode: 0
+            durationSeconds: 6
+            stackMode: 1
             stackLimit: 1
-            refreshDurationOnReapply: 0
+            refreshDurationOnReapply: 1
             stackable: 0
             removeOnOwnerDamaged: 0
             stackKey: 
+            requiredSourceEffectKey: 
           parameters:
+            overrideReaction: 0
+            reaction:
+              rid: -2
+            overrideMovement: 0
+            dashCooldownMultiplier: 1
             overrideDefense: 0
             evasionChanceAdd: 0
             overrideStatModifiers: 1
             statModifiers:
-            - target: 5
+            - target: 6
               operation: 0
               sourceStat: 0
               statRatioValueSource: 0
-              value: 17
+              value: 43
+              maxIncrease: 0
             overrideDamageModifier: 0
             damageModifier:
               filter:
@@ -728,10 +1010,18 @@ MonoBehaviour:
                 elementType: 0
                 filterByCategory: 0
                 category: 0
+                actionId: 
+                actionIds: []
+                requiredTargetEffectKey: 
+                requiredDamageTags: 0
+                requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
               incomingDamageTakenPercentAdd: 0
             overrideDamageInput: 0
             damageInput:
+              applyToAllDeliveries: 0
+              overrideDelivery: 0
+              delivery: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -739,6 +1029,11 @@ MonoBehaviour:
                 elementType: 0
                 filterByCategory: 0
                 category: 0
+                actionId: 
+                actionIds: []
+                requiredTargetEffectKey: 
+                requiredDamageTags: 0
+                requireCriticalHit: 0
               defenderDefensePercentAdd: 0
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
@@ -766,12 +1061,21 @@ MonoBehaviour:
                 elementType: 0
                 filterByCategory: 0
                 category: 0
+                actionId: 
+                actionIds: []
+                requiredTargetEffectKey: 
+                requiredDamageTags: 0
+                requireCriticalHit: 0
               damageDealtRatio: 0
               lowHpThreshold: 0
               lowHpMultiplier: 0
             overrideAdditionalDamage: 0
             additionalDamage:
+              splash: {fileID: 0}
               applyNativeDot: 0
+              targetAllRoomEnemies: 0
+              oncePerExecution: 0
+              confirmedDamageRatio: 0
               filter:
                 filterByDelivery: 0
                 delivery: 0
@@ -779,8 +1083,14 @@ MonoBehaviour:
                 elementType: 0
                 filterByCategory: 0
                 category: 0
+                actionId: 
+                actionIds: []
+                requiredTargetEffectKey: 
+                requiredDamageTags: 0
+                requireCriticalHit: 0
               chance: 0
               internalCooldown: 0
+              sharedCooldownTag: 
               attackRatio: 0
               sourceStatDamageSource: 0
               sourceStatRatio: 0
@@ -792,6 +1102,15 @@ MonoBehaviour:
               targetMaxHpDamageCapSource: 0
               targetMaxHpDamageCapRatio: 0
               elementType: 0
+            overrideProjectile: 0
+            projectile:
+              roundRobinTargets: 0
+              useActivePlayerOrigin: 0
+              projectile: {fileID: 0}
+              tickInterval: 1
+              category: 1
+              actionId: 
+              actionName: 
             overrideStatus: 0
             status:
               status: 0
@@ -825,30 +1144,16 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.skill.lv3
       nodeName: Skill 3
-      description: Increase CRIT Damage by 43% for 5 seconds
-      skillPanelDescriptionOverride: 'Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-        of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
-        dealt</color>
-
-
-
-        <size=19><color=#787878>Increase CRIT Rate by <b><color=#00FFED>17%</color></b>
-        AND CRIT Damage by <b><color=#00FFED>43%</color></b> after Yonokaze for <b><color=#00FFED>5
-        seconds</color></b></color></size>'
+      description: Casting Yonokaze grants +43 CRIT Damage for 6 seconds.
+      skillPanelDescriptionOverride: '|- Yonokaze deals 450% ATK. Hold Skill to use
+        EX Yonokaze. Casting Yonokaze grants +17 CRIT Rate for 6 seconds. Casting
+        Yonokaze grants +43 CRIT Damage for 6 seconds.'
       kitInfoPatches:
       - entryId: goenitz.skill.yonokaze
-        noteId: 
-        priority: 1
-        appendNote: 0
-        description: 'Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b>
-          of own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage
-          dealt</color>
-
-
-
-          <size=19><color=#787878>Increase CRIT Rate by
-          <b><color=#00FFED>17%</color></b> AND CRIT Damage by <b><color=#00FFED>43%</color></b>
-          after Yonokaze for <b><color=#00FFED>5 seconds</color></b></color></size>'
+        noteId: goenitz.skill.lv3
+        priority: 3
+        appendNote: 1
+        description: Casting Yonokaze grants +43 CRIT Damage for 6 seconds.
       track: 0
       level: 3
       fragmentCost: 1
@@ -893,6 +1198,9 @@ MonoBehaviour:
         projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: 4da94e08f5984dafaa9cad8105535e23, type: 2}
+        duplicateProjectileChance: 0
+        duplicateProjectileCooldown: 0
+        duplicateProjectileCooldownTag: 
       - consumeRequiredTagsOnUse: 1
         startingComboStepNameOverride: 
         category: 1
@@ -928,6 +1236,9 @@ MonoBehaviour:
         projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: 1b317e4588b80df4eb86740f33780315, type: 2}
+        duplicateProjectileChance: 0
+        duplicateProjectileCooldown: 0
+        duplicateProjectileCooldownTag: 
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -945,29 +1256,17 @@ MonoBehaviour:
       nodeName: Skill 4
       description: Both tornado variants gain larger coverage, longer lifespan and
         more hits.
-      skillPanelDescriptionOverride: 'Unlock EX Yonokaze with Hold Skill.
-
-        Increase
-        CR by 17 percentage points.
-
-        Increase CD by 43 percentage points.
-
-        Both
-        tornado variants gain larger coverage, longer lifespan and more hits.'
+      skillPanelDescriptionOverride: '|- Yonokaze deals 450% ATK. Hold Skill to use
+        EX Yonokaze. Casting Yonokaze grants +17 CRIT Rate for 6 seconds. Casting
+        Yonokaze grants +43 CRIT Damage for 6 seconds. Both tornado variants gain
+        larger coverage, longer lifespan and more hits.'
       kitInfoPatches:
       - entryId: goenitz.skill.yonokaze
-        noteId: 
-        priority: 2
-        appendNote: 0
-        description: 'Summon <b><color=#00FFED>Upgraded Tornado</color></b>, Inflict
-          DMG <b><color=#00FFED>350%</color></b> of own ATK,<color=#C0C0C0>When CRIT
-          land will do 150% of critical damage dealt</color>
-
-
-
-          <size=19><color=#787878>Increase
-          CRIT Rate by <b><color=#00FFED>17%</color></b> AND CRIT Damage by <b><color=#00FFED>43%</color></b>
-          after Yonokaze for <b><color=#00FFED>5 seconds</color></b></color></size>'
+        noteId: goenitz.skill.lv4
+        priority: 4
+        appendNote: 1
+        description: Both tornado variants gain larger coverage, longer lifespan
+          and more hits.
       track: 0
       level: 4
       fragmentCost: 1
@@ -990,19 +1289,176 @@ MonoBehaviour:
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
+      nodeId: goenitz.skill.lv5
+      nodeName: Skill 5
+      description: Once per cast, a Yonokaze crit splashes 250% of the hit damage
+        within 10 units. EX Yonokaze crits splash 20% of the hit damage as Additional
+        Bleed within 3 units, with a 1-second cooldown.
+      skillPanelDescriptionOverride: '|- Yonokaze deals 450% ATK. Hold Skill to use
+        EX Yonokaze. Casting Yonokaze grants +17 CRIT Rate for 6 seconds. Casting
+        Yonokaze grants +43 CRIT Damage for 6 seconds. Both tornado variants gain
+        larger coverage, longer lifespan and more hits. Once per cast, a Yonokaze
+        crit splashes 250% of the hit damage within 10 units. EX Yonokaze crits splash
+        20% of the hit damage as Additional Bleed within 3 units, with a 1-second
+        cooldown.'
+      kitInfoPatches:
+      - entryId: goenitz.skill.yonokaze
+        noteId: goenitz.skill.lv5
+        priority: 5
+        appendNote: 1
+        description: Once per cast, a Yonokaze crit splashes 250% of the hit damage
+          within 10 units. EX Yonokaze crits splash 20% of the hit damage as Additional
+          Bleed within 3 units, with a 1-second cooldown.
+      track: 0
+      level: 5
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
+        actionId: goenitz.skill.yonokaze
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+        duplicateProjectileChance: 0.3
+        duplicateProjectileCooldown: 40
+        duplicateProjectileCooldownTag: goenitz.yonokaze.duplicate_cooldown
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 1
+        actionId: goenitz.skill.ex_yonokaze
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+        duplicateProjectileChance: 0.3
+        duplicateProjectileCooldown: 40
+        duplicateProjectileCooldownTag: goenitz.yonokaze.duplicate_cooldown
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: goenitz.skill.lv6
+      nodeName: Skill 6
+      description: Both tornado variants have a 30% chance to spawn two projectiles.
+        The proc has a shared 40-second cooldown.
+      skillPanelDescriptionOverride: '|- Yonokaze deals 450% ATK. Hold Skill to use
+        EX Yonokaze. Casting Yonokaze grants +17 CRIT Rate for 6 seconds. Casting
+        Yonokaze grants +43 CRIT Damage for 6 seconds. Both tornado variants gain
+        larger coverage, longer lifespan and more hits. Once per cast, a Yonokaze
+        crit splashes 250% of the hit damage within 10 units. EX Yonokaze crits splash
+        20% of the hit damage as Additional Bleed within 3 units, with a 1-second
+        cooldown. Both tornado variants have a 30% chance to spawn two projectiles.
+        The proc has a shared 40-second cooldown.'
+      kitInfoPatches:
+      - entryId: goenitz.skill.yonokaze
+        noteId: goenitz.skill.lv6
+        priority: 6
+        appendNote: 1
+        description: Both tornado variants have a 30% chance to spawn two projectiles.
+          The proc has a shared 40-second cooldown.
+      track: 0
+      level: 6
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
       nodeId: goenitz.ultimate.lv1
       nodeName: Ultimate 1
-      description: Hold Ultimate unlocks Blood Frenzy, fueled by the existing AE
-        gauge.
-      skillPanelDescriptionOverride: Hold Ultimate unlocks Blood Frenzy, fueled by
-        the existing AE gauge.
+      description: Hold Ultimate with positive AE to enter Blood Frenzy.
+      skillPanelDescriptionOverride: '|- Hold Ultimate with positive AE to enter
+        Blood Frenzy.'
       kitInfoPatches:
       - entryId: goenitz.ultimate.yamidokoku
         noteId: goenitz.ultimate.lv1
-        priority: 0
+        priority: 1
         appendNote: 1
-        description: Hold Ultimate unlocks Blood Frenzy, fueled by the existing AE
-          gauge.
+        description: Hold Ultimate with positive AE to enter Blood Frenzy.
       track: 1
       level: 1
       fragmentCost: 1
@@ -1027,20 +1483,15 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.ultimate.lv2
       nodeName: Ultimate 2
-      description: Hits by any Blood Frenzy actor apply +15% damage taken for 20
-        seconds.
-      skillPanelDescriptionOverride: 'Hold Ultimate unlocks Blood Frenzy, fueled
-        by the existing AE gauge.
-
-        Hits by any Blood Frenzy actor apply +15%
-        damage taken for 20 seconds.'
+      description: Goenitz's Ultimate hits apply +15% damage taken for 20 seconds.
+      skillPanelDescriptionOverride: '|- Hold Ultimate with positive AE to enter
+        Blood Frenzy. Goenitz''s Ultimate hits apply +15% damage taken for 20 seconds.'
       kitInfoPatches:
       - entryId: goenitz.ultimate.yamidokoku
         noteId: goenitz.ultimate.lv2
-        priority: 0
+        priority: 2
         appendNote: 1
-        description: Hits by any Blood Frenzy actor apply +15% damage taken for 20
-          seconds.
+        description: Goenitz's Ultimate hits apply +15% damage taken for 20 seconds.
       track: 1
       level: 2
       fragmentCost: 1
@@ -1049,7 +1500,45 @@ MonoBehaviour:
       counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
-      actionModifiers: []
+      actionModifiers:
+      - consumeRequiredTagsOnUse: 1
+        startingComboStepNameOverride: 
+        category: 2
+        actionId: goenitz.ultimate.yamidokoku
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 2
+        finalDamageValue: 2.3333333
+        finalDamageRequiresCriticalHit: 1
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 1
+        ignoreDefenseRequiresCriticalHit: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+        duplicateProjectileChance: 0
+        duplicateProjectileCooldown: 0
+        duplicateProjectileCooldownTag: 
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -1065,33 +1554,57 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.ultimate.lv3
       nodeName: Ultimate 3
-      description: 'Blood Frenzy unlocks Shin: Yaotome. Goenitz Ultimate/limit-break
-        use grants Blizzard, all-stat boost for 15 seconds; one refreshed stack,
-        including +10 ADI.'
-      skillPanelDescriptionOverride: 'Hold Ultimate unlocks Blood Frenzy, fueled
-        by the existing AE gauge.
-
-        Hits by any Blood Frenzy actor apply +15%
-        damage taken for 20 seconds.
-
-        Blood Frenzy unlocks Shin: Yaotome.
-        Goenitz Ultimate/limit-break use grants Blizzard, all-stat boost for 15 seconds;
-        one refreshed stack, including +10 ADI.'
+      description: Yamidokoku ignores DEF. Its resolved critical hits deal 250% more
+        damage.
+      skillPanelDescriptionOverride: '|- Hold Ultimate with positive AE to enter
+        Blood Frenzy. Goenitz''s Ultimate hits apply +15% damage taken for 20 seconds.
+        Yamidokoku ignores DEF. Its resolved critical hits deal 250% more damage.'
       kitInfoPatches:
       - entryId: goenitz.ultimate.yamidokoku
         noteId: goenitz.ultimate.lv3
-        priority: 0
+        priority: 3
         appendNote: 1
-        description: 'Blood Frenzy unlocks Shin: Yaotome. Goenitz Ultimate/limit-break
-          use grants Blizzard, all-stat boost for 15 seconds; one refreshed stack,
-          including +10 ADI.'
+        description: Yamidokoku ignores DEF. Its resolved critical hits deal 250%
+          more damage.
       track: 1
       level: 3
       fragmentCost: 1
       unlockedByDefault: 0
     - meterCapacityModifiers: []
       counterGainModifiers: []
-      statModifiers: []
+      statModifiers:
+      - target: 12
+        operation: 0
+        valueSource: 0
+        value: 15
+        sourceStat: 0
+        statRatioValueSource: 0
+        scaleValueByCounter: 0
+        valueCounterId: 
+        maxCounterScale: 0
+        scope: 0
+        filterOutgoingDamageByCategory: 0
+        outgoingDamageCategory: 0
+        requiredTags:
+        - tag: goenitz.blood_frenzy
+          expectedValue: 0
+        requiredCounters: []
+      - target: 13
+        operation: 0
+        valueSource: 0
+        value: 30
+        sourceStat: 0
+        statRatioValueSource: 0
+        scaleValueByCounter: 0
+        valueCounterId: 
+        maxCounterScale: 0
+        scope: 0
+        filterOutgoingDamageByCategory: 0
+        outgoingDamageCategory: 0
+        requiredTags:
+        - tag: goenitz.blood_frenzy
+          expectedValue: 0
+        requiredCounters: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -1109,28 +1622,19 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.ultimate.lv4
       nodeName: Ultimate 4
-      description: Goenitz kills during Blood Frenzy grant +3% ATK, maximum 10 stacks,
-        until damaged; restore 6 AE even at the stack cap.
-      skillPanelDescriptionOverride: 'Hold Ultimate unlocks Blood Frenzy, fueled
-        by the existing AE gauge.
-
-        Hits by any Blood Frenzy actor apply +15%
-        damage taken for 20 seconds.
-
-        Blood Frenzy unlocks Shin: Yaotome.
-        Goenitz Ultimate/limit-break use grants Blizzard, all-stat boost for 15 seconds;
-        one refreshed stack, including +10 ADI.
-
-        Goenitz kills during Blood
-        Frenzy grant +3% ATK, maximum 10 stacks, until damaged; restore 6 AE even
-        at the stack cap.'
+      description: Outside Blood Frenzy, Goenitz gains +15 CRIT Rate and +30 CRIT
+        Damage.
+      skillPanelDescriptionOverride: '|- Hold Ultimate with positive AE to enter
+        Blood Frenzy. Goenitz''s Ultimate hits apply +15% damage taken for 20 seconds.
+        Yamidokoku ignores DEF. Its resolved critical hits deal 250% more damage.
+        Outside Blood Frenzy, Goenitz gains +15 CRIT Rate and +30 CRIT Damage.'
       kitInfoPatches:
       - entryId: goenitz.ultimate.yamidokoku
         noteId: goenitz.ultimate.lv4
-        priority: 0
+        priority: 4
         appendNote: 1
-        description: Goenitz kills during Blood Frenzy grant +3% ATK, maximum 10
-          stacks, until damaged; restore 6 AE even at the stack cap.
+        description: Outside Blood Frenzy, Goenitz gains +15 CRIT Rate and +30 CRIT
+          Damage.
       track: 1
       level: 4
       fragmentCost: 1
@@ -1153,19 +1657,97 @@ MonoBehaviour:
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
+      nodeId: goenitz.ultimate.lv5
+      nodeName: Ultimate 5
+      description: 'Blood Frenzy unlocks Shin: Yaotome. Using an Ultimate or the
+        limit break grants Blizzard for 15 seconds. Reapplying Blizzard refreshes
+        its single stack.'
+      skillPanelDescriptionOverride: '|- Hold Ultimate with positive AE to enter
+        Blood Frenzy. Goenitz''s Ultimate hits apply +15% damage taken for 20 seconds.
+        Yamidokoku ignores DEF. Its resolved critical hits deal 250% more damage.
+        Outside Blood Frenzy, Goenitz gains +15 CRIT Rate and +30 CRIT Damage.'
+      kitInfoPatches:
+      - entryId: goenitz.ultimate.yamidokoku
+        noteId: goenitz.ultimate.lv5
+        priority: 5
+        appendNote: 1
+        description: 'Blood Frenzy unlocks Shin: Yaotome. Using an Ultimate or the
+          limit break grants Blizzard for 15 seconds. Reapplying Blizzard refreshes
+          its single stack.'
+      track: 1
+      level: 5
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: goenitz.ultimate.lv6
+      nodeName: Ultimate 6
+      description: Goenitz kills during Blood Frenzy grant +3% ATK per kill, up to
+        10 stacks, until damaged. Each kill restores 6 AE, extending Blood Frenzy
+        by up to 2 seconds.
+      skillPanelDescriptionOverride: '|- Hold Ultimate with positive AE to enter
+        Blood Frenzy. Goenitz''s Ultimate hits apply +15% damage taken for 20 seconds.
+        Yamidokoku ignores DEF. Its resolved critical hits deal 250% more damage.
+        Outside Blood Frenzy, Goenitz gains +15 CRIT Rate and +30 CRIT Damage.'
+      kitInfoPatches:
+      - entryId: goenitz.ultimate.yamidokoku
+        noteId: goenitz.ultimate.lv6
+        priority: 6
+        appendNote: 1
+        description: Goenitz kills during Blood Frenzy grant +3% ATK per kill, up
+          to 10 stacks, until damaged. Each kill restores 6 AE, extending Blood Frenzy
+          by up to 2 seconds.
+      track: 1
+      level: 6
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
       nodeId: goenitz.passive.lv1
       nodeName: Passive 1
-      description: Critical hits permanently reduce enemy Physical resistance by
-        15 percentage points; does not stack.
-      skillPanelDescriptionOverride: Critical hits permanently reduce enemy Physical
-        resistance by 15 percentage points; does not stack.
+      description: Critical hits permanently reduce enemy DMG RES by 15 percentage
+        points. This effect does not stack.
+      skillPanelDescriptionOverride: '|- Critical hits permanently reduce enemy DMG
+        RES by 15 percentage points. This effect does not stack.'
       kitInfoPatches:
       - entryId: passive
         noteId: goenitz.passive.lv1
-        priority: 0
+        priority: 1
         appendNote: 1
-        description: Critical hits permanently reduce enemy Physical resistance by
-          15 percentage points; does not stack.
+        description: Critical hits permanently reduce enemy DMG RES by 15 percentage
+          points. This effect does not stack.
       track: 2
       level: 1
       fragmentCost: 1
@@ -1214,9 +1796,13 @@ MonoBehaviour:
         projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
+        duplicateProjectileChance: 0
+        duplicateProjectileCooldown: 0
+        duplicateProjectileCooldownTag: 
       runtimeTagEffects:
       - trigger: 7
         filter:
+          requiredEnemyEffectKey: 
           filterByCategory: 0
           category: 0
           filterByActionId: 0
@@ -1230,12 +1816,14 @@ MonoBehaviour:
           requireRuntimeTag: 1
           runtimeTag: goenitz.blood_frenzy
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         tag: goenitz_after_dash_bonus_action
         addTag: 1
         duration: 10
         rememberEnemyTarget: 0
       - trigger: 7
         filter:
+          requiredEnemyEffectKey: 
           filterByCategory: 0
           category: 0
           filterByActionId: 0
@@ -1249,12 +1837,14 @@ MonoBehaviour:
           requireRuntimeTag: 1
           runtimeTag: goenitz.blood_frenzy
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         tag: goenitz_after_dash_basic_depth4
         addTag: 1
         duration: 10
         rememberEnemyTarget: 0
       - trigger: 1
         filter:
+          requiredEnemyEffectKey: 
           filterByCategory: 1
           category: 0
           filterByActionId: 1
@@ -1268,6 +1858,7 @@ MonoBehaviour:
           requireRuntimeTag: 1
           runtimeTag: goenitz_after_dash_basic_depth4
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         tag: goenitz_after_dash_basic_depth4
         addTag: 0
         duration: 0
@@ -1279,6 +1870,7 @@ MonoBehaviour:
       onHitStatusEffects: []
       additionalDamageEffects:
       - filter:
+          requiredEnemyEffectKey: 
           filterByCategory: 0
           category: 0
           filterByActionId: 0
@@ -1292,6 +1884,7 @@ MonoBehaviour:
           requireRuntimeTag: 1
           runtimeTag: goenitz_after_dash_bonus_action
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         chance: 1
         internalCooldown: 0
         criticalHitRequirement: 0
@@ -1306,10 +1899,11 @@ MonoBehaviour:
         capTargetMaxHpDamage: 1
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 5
-        elementType: 0
+        elementType: 2
         consumeRuntimeTagOnTrigger: 1
       dashThroughDamageEffects:
       - filter:
+          requiredEnemyEffectKey: 
           filterByCategory: 0
           category: 0
           filterByActionId: 0
@@ -1323,10 +1917,11 @@ MonoBehaviour:
           requireRuntimeTag: 1
           runtimeTag: goenitz.blood_frenzy
           requireManualOnFieldActionStart: 0
+          requireInitialActionStep: 0
         chance: 1
         internalCooldown: 0
         criticalHitRequirement: 0
-        attackRatio: 1
+        attackRatio: 2
         sourceStatDamageSource: 0
         sourceStatRatio: 0
         targetMaxHpRatio: 0
@@ -1337,7 +1932,7 @@ MonoBehaviour:
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 1
-        elementType: 0
+        elementType: 2
         consumeRuntimeTagOnTrigger: 0
         overrideDetectionBox: 0
         detectionBoxSize: {x: 10, y: 10}
@@ -1354,24 +1949,24 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.passive.lv2
       nodeName: Passive 2
-      description: During Blood Frenzy, unlock Attack2-2; dash through enemies for
-        100% ATK Physical damage. After dash, next damaging hit adds 4% enemy MaxHP
-        (cap 500% ATK); next normal begins at stage 4.
-      skillPanelDescriptionOverride: 'Critical hits permanently reduce enemy Physical
-        resistance by 15 percentage points; does not stack.
-
-        During Blood
-        Frenzy, unlock Attack2-2; dash through enemies for 100% ATK Physical damage.
-        After dash, next damaging hit adds 4% enemy MaxHP (cap 500% ATK); next normal
-        begins at stage 4.'
+      description: Blood Frenzy unlocks Attack2-2. Dashing through enemies deals
+        200% ATK Additional Bleed damage. The next damaging hit adds 4% enemy Max
+        HP as Additional Bleed damage, capped at 500% ATK. The next normal starts
+        at stage 4.
+      skillPanelDescriptionOverride: '|- Critical hits permanently reduce enemy DMG
+        RES by 15 percentage points. This effect does not stack. Blood Frenzy unlocks
+        Attack2-2. Dashing through enemies deals 200% ATK Additional Bleed damage.
+        The next damaging hit adds 4% enemy Max HP as Additional Bleed damage, capped
+        at 500% ATK. The next normal starts at stage 4.'
       kitInfoPatches:
       - entryId: passive
         noteId: goenitz.passive.lv2
-        priority: 0
+        priority: 2
         appendNote: 1
-        description: During Blood Frenzy, unlock Attack2-2; dash through enemies
-          for 100% ATK Physical damage. After dash, next damaging hit adds 4% enemy
-          MaxHP (cap 500% ATK); next normal begins at stage 4.
+        description: Blood Frenzy unlocks Attack2-2. Dashing through enemies deals
+          200% ATK Additional Bleed damage. The next damaging hit adds 4% enemy Max
+          HP as Additional Bleed damage, capped at 500% ATK. The next normal starts
+          at stage 4.
       track: 2
       level: 2
       fragmentCost: 1
@@ -1396,25 +1991,25 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.passive.lv3
       nodeName: Passive 3
-      description: Share Blood Frenzy's DI/DM/ADI and Bleed attack effect with teammates
-        for Goenitz's remaining duration.
-      skillPanelDescriptionOverride: 'Critical hits permanently reduce enemy Physical
-        resistance by 15 percentage points; does not stack.
-
-        During Blood
-        Frenzy, unlock Attack2-2; dash through enemies for 100% ATK Physical damage.
-        After dash, next damaging hit adds 4% enemy MaxHP (cap 500% ATK); next normal
-        begins at stage 4.
-
-        Share Blood Frenzy''s DI/DM/ADI and Bleed attack
-        effect with teammates for Goenitz''s remaining duration.'
+      description: Activating Blood Frenzy grants +10% ATK, +10 CRIT Rate and +10
+        CRIT Damage for 5 seconds and deals 300% ATK Additional Bleed damage to room
+        enemies. Actors in Blood Frenzy gain +1 SPD.
+      skillPanelDescriptionOverride: '|- Critical hits permanently reduce enemy DMG
+        RES by 15 percentage points. This effect does not stack. Blood Frenzy unlocks
+        Attack2-2. Dashing through enemies deals 200% ATK Additional Bleed damage.
+        The next damaging hit adds 4% enemy Max HP as Additional Bleed damage, capped
+        at 500% ATK. The next normal starts at stage 4. Activating Blood Frenzy grants
+        +10% ATK, +10 CRIT Rate and +10 CRIT Damage for 5 seconds and deals 300%
+        ATK Additional Bleed damage to room enemies. Actors in Blood Frenzy gain
+        +1 SPD.'
       kitInfoPatches:
       - entryId: passive
         noteId: goenitz.passive.lv3
-        priority: 0
+        priority: 3
         appendNote: 1
-        description: Share Blood Frenzy's DI/DM/ADI and Bleed attack effect with
-          teammates for Goenitz's remaining duration.
+        description: Activating Blood Frenzy grants +10% ATK, +10 CRIT Rate and +10
+          CRIT Damage for 5 seconds and deals 300% ATK Additional Bleed damage to
+          room enemies. Actors in Blood Frenzy gain +1 SPD.
       track: 2
       level: 3
       fragmentCost: 1
@@ -1439,31 +2034,109 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.passive.lv4
       nodeName: Passive 4
-      description: Teammates sharing Blood Frenzy gain +35 percentage points evasion
-        for its remaining duration.
-      skillPanelDescriptionOverride: 'Critical hits permanently reduce enemy Physical
-        resistance by 15 percentage points; does not stack.
-
-        During Blood
-        Frenzy, unlock Attack2-2; dash through enemies for 100% ATK Physical damage.
-        After dash, next damaging hit adds 4% enemy MaxHP (cap 500% ATK); next normal
-        begins at stage 4.
-
-        Share Blood Frenzy''s DI/DM/ADI and Bleed attack
-        effect with teammates for Goenitz''s remaining duration.
-
-        Teammates
-        sharing Blood Frenzy gain +35 percentage points evasion for its remaining
-        duration.'
+      description: Blood Frenzy continuously applies standard Bleed to enemies in
+        the room.
+      skillPanelDescriptionOverride: '|- Critical hits permanently reduce enemy DMG
+        RES by 15 percentage points. This effect does not stack. Blood Frenzy unlocks
+        Attack2-2. Dashing through enemies deals 200% ATK Additional Bleed damage.
+        The next damaging hit adds 4% enemy Max HP as Additional Bleed damage, capped
+        at 500% ATK. The next normal starts at stage 4. Activating Blood Frenzy grants
+        +10% ATK, +10 CRIT Rate and +10 CRIT Damage for 5 seconds and deals 300%
+        ATK Additional Bleed damage to room enemies. Actors in Blood Frenzy gain
+        +1 SPD. Blood Frenzy continuously applies standard Bleed to enemies in the
+        room.'
       kitInfoPatches:
       - entryId: passive
         noteId: goenitz.passive.lv4
-        priority: 0
+        priority: 4
         appendNote: 1
-        description: Teammates sharing Blood Frenzy gain +35 percentage points evasion
-          for its remaining duration.
+        description: Blood Frenzy continuously applies standard Bleed to enemies
+          in the room.
       track: 2
       level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: goenitz.passive.lv5
+      nodeName: Passive 5
+      description: Share Blood Frenzy with teammates for Goenitz's remaining duration.
+      skillPanelDescriptionOverride: '|- Critical hits permanently reduce enemy DMG
+        RES by 15 percentage points. This effect does not stack. Blood Frenzy unlocks
+        Attack2-2. Dashing through enemies deals 200% ATK Additional Bleed damage.
+        The next damaging hit adds 4% enemy Max HP as Additional Bleed damage, capped
+        at 500% ATK. The next normal starts at stage 4. Activating Blood Frenzy grants
+        +10% ATK, +10 CRIT Rate and +10 CRIT Damage for 5 seconds and deals 300%
+        ATK Additional Bleed damage to room enemies. Actors in Blood Frenzy gain
+        +1 SPD. Blood Frenzy continuously applies standard Bleed to enemies in the
+        room. Share Blood Frenzy with teammates for Goenitz''s remaining duration.'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: goenitz.passive.lv5
+        priority: 5
+        appendNote: 1
+        description: Share Blood Frenzy with teammates for Goenitz's remaining duration.
+      track: 2
+      level: 5
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      coordinatedActionEffects: []
+      passiveHookTypeName: 
+      nodeId: goenitz.passive.lv6
+      nodeName: Passive 6
+      description: Teammates sharing Blood Frenzy gain +35% evasion for the remaining
+        duration.
+      skillPanelDescriptionOverride: '|- Critical hits permanently reduce enemy DMG
+        RES by 15 percentage points. This effect does not stack. Blood Frenzy unlocks
+        Attack2-2. Dashing through enemies deals 200% ATK Additional Bleed damage.
+        The next damaging hit adds 4% enemy Max HP as Additional Bleed damage, capped
+        at 500% ATK. The next normal starts at stage 4. Activating Blood Frenzy grants
+        +10% ATK, +10 CRIT Rate and +10 CRIT Damage for 5 seconds and deals 300%
+        ATK Additional Bleed damage to room enemies. Actors in Blood Frenzy gain
+        +1 SPD. Blood Frenzy continuously applies standard Bleed to enemies in the
+        room. Share Blood Frenzy with teammates for Goenitz''s remaining duration.
+        Teammates sharing Blood Frenzy gain +35% evasion for the remaining duration.'
+      kitInfoPatches:
+      - entryId: passive
+        noteId: goenitz.passive.lv6
+        priority: 6
+        appendNote: 1
+        description: Teammates sharing Blood Frenzy gain +35% evasion for the remaining
+          duration.
+      track: 2
+      level: 6
       fragmentCost: 1
       unlockedByDefault: 0
   qteSwap:

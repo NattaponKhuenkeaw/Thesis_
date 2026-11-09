@@ -38,6 +38,7 @@ public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
             return;
         }
 
+        if (parameters.overrideDelivery) input.context.damageDelivery = parameters.delivery;
         if (parameters.ignoreDefense)
         {
             input.defenderDefense = 0f;
@@ -108,7 +109,7 @@ public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
 
         // Legacy source-side input modifiers had no delivery selector and are
         // migrated to Primary coverage. Authors must opt in to secondary damage.
-        return parameters.filter.filterByDelivery
+        return parameters.applyToAllDeliveries || parameters.filter.filterByDelivery
             || context.damageDelivery == DamageDelivery.Primary;
     }
 }

@@ -19,6 +19,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
     private readonly Dictionary<GameObject, FieldEffectVisual> _fieldVisuals =
         new Dictionary<GameObject, FieldEffectVisual>();
     private SpriteRenderer _visualReferenceSprite;
+    private readonly List<RuntimeEffectInstance> _presentationEffects = new List<RuntimeEffectInstance>();
     private TeamLoader _presentationTeam;
     private CharacterInventoryState _presentationInventory;
     private bool _changingTickEnabled;
@@ -660,8 +661,12 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 instance.remainingSeconds -= resolvedDelta;
             }
 
+            string requiredSource = instance.recipe?.policy?.requiredSourceEffectKey;
+            if (!string.IsNullOrEmpty(requiredSource) && GetStackCount(requiredSource) <= 0)
+                instance.forceExpired = true;
+
             instance.elapsedSeconds += resolvedDelta;
-            if (instance.RequiresFormulaUpdate
+            if (!instance.forceExpired && instance.RequiresFormulaUpdate
                 && instance.definition.IsFormulaUpdateDue(instance))
             {
                 instance.definition.OnUpdate(BuildContext(instance, resolvedDelta));
@@ -912,6 +917,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 _fieldVisuals[prefab] = field;
             }
             visual = field.gameObject;
+            if (field.style == FieldEffectVisual.VisualStyle.FloatingIcon && field.IsFinished)
+                field.FloatingIconSlot = FindFreeFloatingIconSlot();
             field.Begin(transform, _visualReferenceSprite);
         }
         else
@@ -919,6 +926,23 @@ public class RuntimeEffectReceiver : MonoBehaviour
         activeVisuals[instance] = visual;
         activeVisualPrefabs[instance] = prefab;
         SetTickingState(hasTickingEffects);
+    }
+
+    private int FindFreeFloatingIconSlot()
+    {
+        for (int slot = 0; ; slot++)
+        {
+            bool occupied = false;
+            foreach (FieldEffectVisual field in _fieldVisuals.Values)
+            {
+                // Keep the slot occupied until the view has finished fading.
+                if (field == null || field.IsFinished || field.style != FieldEffectVisual.VisualStyle.FloatingIcon
+                    || field.FloatingIconSlot != slot) continue;
+                occupied = true;
+                break;
+            }
+            if (!occupied) return slot;
+        }
     }
 
     private void DestroyVisual(RuntimeEffectInstance instance)
@@ -1019,7 +1043,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private void HandlePresentationEffectsChanged(CharacterObject character)
     {
-        if (playerCharacter != null && character == playerCharacter.characterObject)
+        if (playerCharacter != null)
             RefreshPresentation();
     }
 
@@ -1042,10 +1066,23 @@ public class RuntimeEffectReceiver : MonoBehaviour
             return;
         }
         _presentationSuppressed = false;
-        IReadOnlyList<RuntimeEffectInstance> effects = _presentationInventory != null && playerCharacter != null
-            ? _presentationInventory.GetActiveRuntimeEffects(playerCharacter.characterObject)
-            : activeEffects;
-        SyncVisuals(effects);
+        if (_presentationInventory == null || playerCharacter == null)
+        {
+            SyncVisuals(activeEffects);
+            return;
+        }
+        _presentationEffects.Clear();
+        _presentationEffects.AddRange(_presentationInventory.GetActiveRuntimeEffects(playerCharacter.characterObject));
+        for (int slot = 0; slot < _presentationInventory.TeamSlotCount; slot++)
+        {
+            CharacterObject owner = _presentationInventory.GetTeamCharacterAt(slot);
+            if (owner == null || owner == playerCharacter.characterObject || !_presentationInventory.IsRunCharacterAlive(owner))
+                continue;
+            foreach (RuntimeEffectInstance effect in _presentationInventory.GetActiveRuntimeEffects(owner))
+                if (effect?.recipe?.presentation?.followActiveCharacter == true)
+                    _presentationEffects.Add(effect);
+        }
+        SyncVisuals(_presentationEffects);
     }
 
     private void ClearPresentation()
@@ -1065,7 +1102,12 @@ public class RuntimeEffectReceiver : MonoBehaviour
     private void CacheTargets()
     {
         if (_visualReferenceSprite == null)
-            _visualReferenceSprite = GetComponentInChildren<SpriteRenderer>(true);
+            foreach (SpriteRenderer candidate in GetComponentsInChildren<SpriteRenderer>(true))
+                if (candidate.GetComponentInParent<FieldEffectVisual>(true) == null)
+                {
+                    _visualReferenceSprite = candidate;
+                    break;
+                }
         if (playerCharacter == null)
         {
             playerCharacter = GetComponent<PlayerCharacter>();

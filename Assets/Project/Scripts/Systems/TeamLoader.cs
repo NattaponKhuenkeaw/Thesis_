@@ -2228,10 +2228,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                     continue;
                 }
 
-                if (string.Equals(
-                    candidate.ResolvedEffect.StableId,
-                    resolvedEffect.StableId,
-                    StringComparison.Ordinal))
+                if (RuntimeEffectRuntimeUtility.SameEffectFamily(candidate, effect))
                 {
                     return true;
                 }

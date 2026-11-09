@@ -34,6 +34,7 @@ public class RuntimeEffectStatModifierDrawer : PropertyDrawer
         }
 
         EditorGUI.PropertyField(NextLine(ref position), value);
+        EditorGUI.PropertyField(NextLine(ref position), property.FindPropertyRelative("maxIncrease"));
 
         EditorGUI.indentLevel--;
         EditorGUI.EndProperty();
@@ -47,7 +48,7 @@ public class RuntimeEffectStatModifierDrawer : PropertyDrawer
         }
 
         SerializedProperty operation = property.FindPropertyRelative("operation");
-        int lineCount = UsesRuntimeSourceStat(operation) ? 6 : 4;
+        int lineCount = UsesRuntimeSourceStat(operation) ? 7 : 5;
         return lineCount * EditorGUIUtility.singleLineHeight
             + (lineCount - 1) * EditorGUIUtility.standardVerticalSpacing;
     }
@@ -365,6 +366,7 @@ public class PassiveTriggerFilterDrawer : FoldoutPropertyDrawer
 {
     protected override void DrawExpanded(ref Rect position, SerializedProperty property)
     {
+        EffectDrawerUtility.Draw(ref position, Prop(property, "requiredEnemyEffectKey"));
         DrawFilter(ref position, property, "filterByCategory", "category");
         DrawFilter(ref position, property, "filterByActionId", "actionId");
         DrawFilter(ref position, property, "filterByActionName", "actionName");
@@ -375,7 +377,7 @@ public class PassiveTriggerFilterDrawer : FoldoutPropertyDrawer
 
     protected override float GetExpandedHeight(SerializedProperty property)
     {
-        return FilterHeight(property, "filterByCategory", "category")
+        return EffectDrawerUtility.Height(Prop(property, "requiredEnemyEffectKey")) + FilterHeight(property, "filterByCategory", "category")
             + FilterHeight(property, "filterByActionId", "actionId")
             + FilterHeight(property, "filterByActionName", "actionName")
             + FilterHeight(property, "filterByStepName", "stepName")
@@ -481,6 +483,12 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
         {
             EffectDrawerUtility.Draw(ref position, Prop(property, "replacementProjectileData"));
         }
+        EffectDrawerUtility.Draw(ref position, Prop(property, "duplicateProjectileChance"));
+        if (Prop(property, "duplicateProjectileChance").floatValue > 0f)
+        {
+            EffectDrawerUtility.Draw(ref position, Prop(property, "duplicateProjectileCooldown"));
+            EffectDrawerUtility.Draw(ref position, Prop(property, "duplicateProjectileCooldownTag"));
+        }
         EffectDrawerUtility.Draw(ref position, Prop(property, "requiredTags"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "requiredCounters"));
     }
@@ -510,6 +518,7 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "ignoreDamageResistance"))
             + EffectDrawerUtility.Height(Prop(property, "ignoreTypeReduction"))
             + EffectDrawerUtility.Height(Prop(property, "replacementProjectileType"))
+            + EffectDrawerUtility.Height(Prop(property, "duplicateProjectileChance"))
             + EffectDrawerUtility.Height(Prop(property, "requiredTags"))
             + EffectDrawerUtility.Height(Prop(property, "requiredCounters"));
         if (!EffectDrawerUtility.EnumEquals(Prop(property, "finalDamageOperation"), PassiveValueModifierOperation.None))
@@ -519,6 +528,11 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
         if (!EffectDrawerUtility.EnumEquals(Prop(property, "replacementProjectileType"), ProjectileType.None))
         {
             height += EffectDrawerUtility.Height(Prop(property, "replacementProjectileData"));
+        }
+        if (Prop(property, "duplicateProjectileChance").floatValue > 0f)
+        {
+            height += EffectDrawerUtility.Height(Prop(property, "duplicateProjectileCooldown"))
+                + EffectDrawerUtility.Height(Prop(property, "duplicateProjectileCooldownTag"));
         }
 
         return height;
@@ -552,6 +566,11 @@ public class RuntimeEffectDamageFilterDrawer : FoldoutPropertyDrawer
 {
     protected override void DrawExpanded(ref Rect position, SerializedProperty property)
     {
+        EffectDrawerUtility.Draw(ref position, Prop(property, "actionIds"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "requireCriticalHit"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "requiredTargetEffectKey"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "actionId"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "requiredDamageTags"));
         DrawFilter(ref position, property, "filterByDelivery", "delivery");
         DrawFilter(ref position, property, "filterByElement", "elementType");
         DrawFilter(ref position, property, "filterByCategory", "category");
@@ -559,7 +578,10 @@ public class RuntimeEffectDamageFilterDrawer : FoldoutPropertyDrawer
 
     protected override float GetExpandedHeight(SerializedProperty property)
     {
-        return FilterHeight(property, "filterByDelivery", "delivery")
+        return EffectDrawerUtility.Height(Prop(property, "actionIds")) + EffectDrawerUtility.Height(Prop(property, "requireCriticalHit"))
+            + EffectDrawerUtility.Height(Prop(property, "requiredTargetEffectKey")) + EffectDrawerUtility.Height(Prop(property, "actionId"))
+            + EffectDrawerUtility.Height(Prop(property, "requiredDamageTags"))
+            + FilterHeight(property, "filterByDelivery", "delivery")
             + FilterHeight(property, "filterByElement", "elementType")
             + FilterHeight(property, "filterByCategory", "category");
     }
@@ -608,6 +630,7 @@ public class RuntimeEffectApplicationPolicyDrawer : FoldoutPropertyDrawer
         }
         EffectDrawerUtility.Draw(ref position, Prop(property, "refreshDurationOnReapply"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "removeOnOwnerDamaged"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "requiredSourceEffectKey"));
     }
 
     protected override float GetExpandedHeight(SerializedProperty property)
@@ -618,7 +641,8 @@ public class RuntimeEffectApplicationPolicyDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "stackMode"))
             + EffectDrawerUtility.Height(Prop(property, "stackable"))
             + EffectDrawerUtility.Height(Prop(property, "refreshDurationOnReapply"))
-            + EffectDrawerUtility.Height(Prop(property, "removeOnOwnerDamaged"));
+            + EffectDrawerUtility.Height(Prop(property, "removeOnOwnerDamaged"))
+            + EffectDrawerUtility.Height(Prop(property, "requiredSourceEffectKey"));
         if (EffectDrawerUtility.EnumEquals(Prop(property, "durationType"), RuntimeEffectDurationType.Seconds))
         {
             height += EffectDrawerUtility.Height(Prop(property, "durationSeconds"));
@@ -653,6 +677,9 @@ public class RuntimeEffectParameterSetDrawer : FoldoutPropertyDrawer
         DrawOverride(ref position, property, "overrideHeal", "heal");
         DrawOverride(ref position, property, "overrideLifesteal", "lifesteal");
         DrawOverride(ref position, property, "overrideAdditionalDamage", "additionalDamage");
+        DrawOverride(ref position, property, "overrideReaction", "reaction");
+        DrawOverride(ref position, property, "overrideMovement", "dashCooldownMultiplier");
+        DrawOverride(ref position, property, "overrideProjectile", "projectile");
         DrawOverride(ref position, property, "overrideStatus", "status");
         DrawOverride(ref position, property, "overrideShield", "shield");
     }
@@ -666,6 +693,9 @@ public class RuntimeEffectParameterSetDrawer : FoldoutPropertyDrawer
             + OverrideHeight(property, "overrideHeal", "heal")
             + OverrideHeight(property, "overrideLifesteal", "lifesteal")
             + OverrideHeight(property, "overrideAdditionalDamage", "additionalDamage")
+            + OverrideHeight(property, "overrideReaction", "reaction")
+            + OverrideHeight(property, "overrideMovement", "dashCooldownMultiplier")
+            + OverrideHeight(property, "overrideProjectile", "projectile")
             + OverrideHeight(property, "overrideStatus", "status")
             + OverrideHeight(property, "overrideShield", "shield");
     }
@@ -676,7 +706,10 @@ public class RuntimeEffectParameterSetDrawer : FoldoutPropertyDrawer
         EffectDrawerUtility.Draw(ref position, toggle);
         if (toggle.boolValue)
         {
-            EffectDrawerUtility.Draw(ref position, Prop(property, payloadName));
+            var payload = Prop(property, payloadName);
+            if (payloadName == "reaction" && payload.managedReferenceValue == null)
+                payload.managedReferenceValue = new RuntimeEffectReactionParameters();
+            EffectDrawerUtility.Draw(ref position, payload);
         }
     }
 
@@ -716,7 +749,10 @@ public class RuntimeEffectDamageInputParametersDrawer : FoldoutPropertyDrawer
 {
     protected override void DrawExpanded(ref Rect position, SerializedProperty property)
     {
+        EffectDrawerUtility.Draw(ref position, Prop(property, "overrideDelivery"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "delivery"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "filter"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "applyToAllDeliveries"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "defenderDefensePercentAdd"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "defenderDamageResistancePercentAdd"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreDefense"));
@@ -726,7 +762,8 @@ public class RuntimeEffectDamageInputParametersDrawer : FoldoutPropertyDrawer
 
     protected override float GetExpandedHeight(SerializedProperty property)
     {
-        return EffectDrawerUtility.Height(Prop(property, "filter"))
+        return EffectDrawerUtility.Height(Prop(property, "overrideDelivery")) + EffectDrawerUtility.Height(Prop(property, "delivery")) + EffectDrawerUtility.Height(Prop(property, "filter"))
+            + EffectDrawerUtility.Height(Prop(property, "applyToAllDeliveries"))
             + EffectDrawerUtility.Height(Prop(property, "defenderDefensePercentAdd"))
             + EffectDrawerUtility.Height(Prop(property, "defenderDamageResistancePercentAdd"))
             + EffectDrawerUtility.Height(Prop(property, "ignoreDefense"))
@@ -805,9 +842,15 @@ public class RuntimeEffectAdditionalDamageParametersDrawer : FoldoutPropertyDraw
 {
     protected override void DrawExpanded(ref Rect position, SerializedProperty property)
     {
+        EffectDrawerUtility.Draw(ref position, Prop(property, "targetAllRoomEnemies"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "oncePerExecution"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "splash"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "confirmedDamageRatio"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "filter"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "chance"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "internalCooldown"));
+        if (Prop(property, "internalCooldown").floatValue > 0f)
+            EffectDrawerUtility.Draw(ref position, Prop(property, "sharedCooldownTag"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "attackRatio"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "sourceStatRatio"));
         if (Prop(property, "sourceStatRatio").floatValue > 0f)
@@ -827,7 +870,8 @@ public class RuntimeEffectAdditionalDamageParametersDrawer : FoldoutPropertyDraw
 
     protected override float GetExpandedHeight(SerializedProperty property)
     {
-        float height = EffectDrawerUtility.Height(Prop(property, "filter"))
+        float height = EffectDrawerUtility.Height(Prop(property, "targetAllRoomEnemies")) + EffectDrawerUtility.Height(Prop(property, "oncePerExecution")) + EffectDrawerUtility.Height(Prop(property, "splash")) + EffectDrawerUtility.Height(Prop(property, "filter"))
+            + EffectDrawerUtility.Height(Prop(property, "confirmedDamageRatio"))
             + EffectDrawerUtility.Height(Prop(property, "chance"))
             + EffectDrawerUtility.Height(Prop(property, "internalCooldown"))
             + EffectDrawerUtility.Height(Prop(property, "attackRatio"))
@@ -836,6 +880,8 @@ public class RuntimeEffectAdditionalDamageParametersDrawer : FoldoutPropertyDraw
             + SourceStackScalingHeight(property)
             + EffectDrawerUtility.Height(Prop(property, "capTargetMaxHpDamage"))
             + EffectDrawerUtility.Height(Prop(property, "elementType"));
+        if (Prop(property, "internalCooldown").floatValue > 0f)
+            height += EffectDrawerUtility.Height(Prop(property, "sharedCooldownTag"));
         if (Prop(property, "sourceStatRatio").floatValue > 0f)
         {
             height += EffectDrawerUtility.Height(Prop(property, "sourceStatDamageSource"));

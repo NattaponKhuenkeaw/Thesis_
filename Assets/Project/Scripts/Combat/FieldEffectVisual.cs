@@ -4,7 +4,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class FieldEffectVisual : MonoBehaviour
 {
-    public enum VisualStyle { PowerUp, PowerDown, DarkFlame, Mark, Claw }
+    public enum VisualStyle { PowerUp, PowerDown, DarkFlame, Mark, Claw, FloatingIcon }
     public enum AnimationPhase { Inactive, Enter, Loop, Ending }
 
     [Header("Style")]
@@ -36,6 +36,7 @@ public sealed class FieldEffectVisual : MonoBehaviour
     public AnimationPhase Phase { get; private set; }
     public bool IsFinished => Phase == AnimationPhase.Inactive;
     public int DamagePulseCount { get; private set; }
+    internal int FloatingIconSlot { get; set; }
 
     private Transform _target;
     private SpriteRenderer _referenceSprite;
@@ -242,6 +243,9 @@ public sealed class FieldEffectVisual : MonoBehaviour
         {
             motif.transform.localPosition = style == VisualStyle.Mark
                 ? new Vector3(0f, height * 0.63f, 0f)
+                : style == VisualStyle.FloatingIcon
+                ? new Vector3(width * 0.65f + height * 0.12f,
+                    height * (0.16f + FloatingIconSlot * 0.42f + Mathf.Sin(_loopTime * 2.4f) * 0.035f), 0f)
                 : new Vector3(width * 0.65f, height * 0.1f, 0f);
             if (_referenceSprite != null)
             {

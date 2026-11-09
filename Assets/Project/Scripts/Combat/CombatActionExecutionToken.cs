@@ -8,8 +8,9 @@ public sealed class CombatActionExecutionToken
     public CharacterObject rememberedModeOwner;
     public uint rememberedModeEpoch;
     public bool modeEligibilityPending;
-    public bool activeNotified;
+    public bool projectileDuplicationRolled;
     private HashSet<ulong> _payloadTargets;
+    private HashSet<RuntimeEffectRecipeData> _triggeredRecipes;
     private HashSet<string> artifactInfusionRolls;
     public ElementType? ArtifactInfusion { get; set; }
 
@@ -23,6 +24,12 @@ public sealed class CombatActionExecutionToken
     {
         _payloadTargets ??= new HashSet<ulong>();
         return _payloadTargets.Add(enemyLife);
+    }
+
+    public bool ClaimRecipe(RuntimeEffectRecipeData recipe)
+    {
+        _triggeredRecipes ??= new HashSet<RuntimeEffectRecipeData>();
+        return _triggeredRecipes.Add(recipe);
     }
 
     public bool ClaimArtifactInfusionRoll(string instanceId)

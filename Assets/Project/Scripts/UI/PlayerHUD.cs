@@ -763,7 +763,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             runtimeEffectIcons[i].Bind(entry.effect, entry.stackCount);
         }
 
-        playerCharacter.RuntimeEffects?.SyncVisuals(effects);
+        // RuntimeEffectReceiver owns world visuals, including effects from switched-out teammates.
     }
 
     private void BuildDisplayEntries(IReadOnlyList<RuntimeEffectInstance> effects)

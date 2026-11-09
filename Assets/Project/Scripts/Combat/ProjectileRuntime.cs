@@ -171,6 +171,8 @@ public class ProjectileRuntime : MonoBehaviour
     private readonly HashSet<EnemyController> trackedEnemies = new HashSet<EnemyController>();
     private readonly List<EnemyController> trackedEnemyBuffer = new List<EnemyController>();
     private readonly Dictionary<int, int> remainingHitsByEnemy = new Dictionary<int, int>();
+    private readonly Dictionary<RuntimeAreaEffectApplication, RuntimeEffectInstance> onHitEffectInstances =
+        new Dictionary<RuntimeAreaEffectApplication, RuntimeEffectInstance>();
 
     private Vector2 currentDirection = Vector2.right;
     private float lifeTimer;
@@ -221,6 +223,7 @@ public class ProjectileRuntime : MonoBehaviour
         trackedEnemies.Clear();
         trackedEnemyBuffer.Clear();
         remainingHitsByEnemy.Clear();
+        onHitEffectInstances.Clear();
 
         EnsurePhysicsComponents();
         EnsureCombatComponents();
@@ -348,14 +351,68 @@ public class ProjectileRuntime : MonoBehaviour
         }
     }
 
-    internal void ApplyMemoryHitEffects(EnemyController enemy, CharacterStats sourceStats)
+    internal void ApplyHitEffects(
+        EnemyController enemy,
+        CharacterStats sourceStats,
+        DamageProvenance provenance,
+        float primaryDamageDealt,
+        bool isCriticalHit)
     {
-        var effects = spawnContext.memoryEffects;
-        if (effects == null) return;
         damageOccurredInCurrentBatch = true;
-        if (!enemy.IsAlive) return;
-        if (effects.Vulnerability != null)
-            enemy.RuntimeEffects?.ApplyEffect(effects.Vulnerability, spawnContext.sourceCharacter, sourceStats);
+        if (ProjectileData.onHitEffects == null) return;
+        foreach (var application in ProjectileData.onHitEffects)
+        {
+            RuntimeEffectRecipe recipe = application != null ? application.ResolvedRecipe : null;
+            if (recipe?.definition == null || !IsSourceNodeUnlocked(application.requiredNodeId)) continue;
+            // A splash can still reach nearby enemies when its triggering hit was lethal.
+            if (!enemy.IsAlive && (!application.triggerOnHit
+                || recipe.parameters?.additionalDamage?.splash == null)) continue;
+            if (!application.triggerOnHit)
+            {
+                enemy.RuntimeEffects?.ApplyEffect(recipe, spawnContext.sourceCharacter, sourceStats);
+                continue;
+            }
+
+            if (!onHitEffectInstances.TryGetValue(application, out RuntimeEffectInstance instance))
+            {
+                instance = new RuntimeEffectInstance();
+                instance.Initialize(recipe, spawnContext.sourceCharacter, sourceStats);
+                onHitEffectInstances.Add(application, instance);
+            }
+            HitboxBase hitbox = ProjectileData.ResolveRoutineHitbox();
+            recipe.definition.OnHitDealt(new RuntimeEffectDamageContext
+            {
+                instance = instance,
+                execution = spawnContext.execution,
+                provenance = provenance,
+                sourceCharacter = spawnContext.sourceCharacter,
+                sourceStats = sourceStats,
+                targetEnemy = enemy,
+                category = spawnContext.category,
+                actionId = spawnContext.sourceActionId,
+                actionName = spawnContext.sourceActionName,
+                stepData = spawnContext.sourceStep,
+                elementType = hitbox != null ? hitbox.elementType : ElementType.None,
+                damageDelivery = DamageDelivery.Primary,
+                isCriticalHit = isCriticalHit,
+                damage = primaryDamageDealt,
+                damageDealt = primaryDamageDealt,
+                attackerPosition = AttackerPosition,
+                hitDirection = CurrentDirection
+            });
+        }
+    }
+
+    private bool IsSourceNodeUnlocked(string nodeId)
+    {
+        if (string.IsNullOrWhiteSpace(nodeId)) return true;
+        var passive = spawnContext.passiveController;
+        if (passive != null && passive.playerCharacter?.characterObject == spawnContext.sourceCharacter)
+            return passive.IsNodeUnlocked(nodeId);
+        var nodes = TeamLoader.Instance?.GetCharacterPotentialNodes(spawnContext.sourceCharacter);
+        if (nodes != null)
+            foreach (var node in nodes) if (node?.nodeId == nodeId) return true;
+        return false;
     }
 
     public void Translate(Vector2 delta)
@@ -644,7 +701,7 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
-        bool fixedCadence = spawnContext.memoryEffects?.FixedCadence == true;
+        bool fixedCadence = ProjectileData.fixedHitCadence;
         if (fixedCadence)
         {
             if (!advanceFixedCadence) return;
@@ -680,7 +737,7 @@ public class ProjectileRuntime : MonoBehaviour
         for (int i = 0; i < trackedEnemyBuffer.Count; i++)
         {
             EnemyController enemy = trackedEnemyBuffer[i];
-            if ((spawnContext.memoryEffects?.LimitToTarget == true && enemy.transform != spawnContext.targetTransform) ||
+            if ((ProjectileData.limitHitsToTarget && enemy.transform != spawnContext.targetTransform) ||
                 !CanHitEnemy(enemy))
             {
                 continue;
@@ -701,8 +758,9 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
-        if (damageOccurredInCurrentBatch && spawnContext.memoryEffects.AuraEnergy > 0f)
-            TeamLoader.Instance?.AddCharacterAE(spawnContext.sourceCharacter, spawnContext.memoryEffects.AuraEnergy);
+        if (damageOccurredInCurrentBatch && ProjectileData.auraEnergyPerDamageBatch > 0f &&
+            IsSourceNodeUnlocked(ProjectileData.auraEnergyRequiredNodeId))
+            TeamLoader.Instance?.AddCharacterAE(spawnContext.sourceCharacter, ProjectileData.auraEnergyPerDamageBatch);
 
         if (!fixedCadence)
         {

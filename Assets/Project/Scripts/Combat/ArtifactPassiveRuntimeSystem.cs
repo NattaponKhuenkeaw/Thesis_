@@ -906,7 +906,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         if (this == null || !isActiveAndEnabled || definition == null) return;
         if (definition.visualPrefab == null)
         {
-            SpawnExplosionVisual(center, definition.radius, element);
+            SpawnExplosionVisual(center, ArtifactAreaGeometry.Radii(definition.radius, definition.verticalRadiusMultiplier), element);
             return;
         }
         foreach (var entry in _explosionVisuals)
@@ -931,7 +931,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             if (entry.view != null) entry.view.ClearImmediately();
     }
 
-    private static void SpawnExplosionVisual(Vector2 center, float radius, ElementType element)
+    private static void SpawnExplosionVisual(Vector2 center, Vector2 radii, ElementType element)
     {
         GameObject go = new GameObject("[DebugExplosionSplash]");
         go.transform.position = center;
@@ -942,7 +942,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             ? new Color(0.9f, 0.15f, 0.2f, 0.45f)
             : new Color(1.0f, 0.6f, 0.15f, 0.45f);
         sr.color = col;
-        go.transform.localScale = new Vector3(radius * 2f, radius * 2f, 1f);
+        go.transform.localScale = new Vector3(radii.x * 2f, radii.y * 2f, 1f);
 
         LineRenderer lr = go.AddComponent<LineRenderer>();
         lr.useWorldSpace = false;
@@ -966,7 +966,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         for (int i = 0; i < segments; i++)
         {
             float rad = Mathf.Deg2Rad * (i * angleStep);
-            positions[i] = new Vector3(Mathf.Cos(rad) * radius, Mathf.Sin(rad) * radius, 0f);
+            positions[i] = new Vector3(Mathf.Cos(rad) * 0.5f, Mathf.Sin(rad) * 0.5f, 0f);
         }
         lr.SetPositions(positions);
 

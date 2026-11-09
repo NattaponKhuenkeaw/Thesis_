@@ -371,12 +371,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         currentAttackFrame = frame;
         currentPhase = phase;
-        if (phase == ActionPhase.Active && CurrentCast != null && !CurrentCast.activeNotified)
-        {
-            CurrentCast.activeNotified = true;
-            TeamLoader.Instance?.KitRuntimes?.Find(CurrentCast.owner)?.OnActionActive(CurrentCast, CurrentCast.action);
-        }
-
         RestoreAnimatorSpeedIfNeeded();
 
         switch (phase)
@@ -646,14 +640,35 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         pendingCooldownReductions.Remove(new CooldownKey(activeChar, category));
     }
 
+    public void ReduceActionCooldownByRatio(AttackCategory category, string actionName, string actionId, float ratio)
+    {
+        var character = playerCharacter?.characterObject;
+        var table = character?.actionResolverTable;
+        IReadOnlyList<SkillAction> actions = category == AttackCategory.Skill ? table?.skillActions : table?.ultimateActions;
+        if (actions == null) return;
+        foreach (var action in actions)
+        {
+            if (action == null || (!string.IsNullOrWhiteSpace(actionId) && action.actionId != actionId) ||
+                (!string.IsNullOrWhiteSpace(actionName) && action.actionName != actionName)) continue;
+            var key = new CooldownKey(character, category, action.ActionKey);
+            if (!lastActionUseTime.ContainsKey(key)) continue;
+            float remaining = GetRemainingCooldown(category, action.cooldown, action.actionName, action.actionId);
+            if (remaining > 0f) ReduceActionCooldown(category, action.actionName, action.actionId, remaining * Mathf.Clamp01(ratio));
+        }
+    }
+
     public void ReduceActionCooldown(AttackCategory category, string actionName, string actionId, float seconds)
+        => ReduceActionCooldownForCharacter(playerCharacter?.characterObject, category, actionName, actionId, seconds, true);
+
+    public void ReduceActionCooldownForCharacter(CharacterObject character, AttackCategory category,
+        string actionName, string actionId, float seconds, bool accumulatePending = false)
     {
         if (seconds <= 0f)
         {
             return;
         }
 
-        CharacterObject activeChar = playerCharacter != null ? playerCharacter.characterObject : null;
+        CharacterObject activeChar = character;
         if (!string.IsNullOrWhiteSpace(actionName) || !string.IsNullOrWhiteSpace(actionId))
         {
             string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
@@ -666,7 +681,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 return;
             }
 
-            AddPendingCooldownReduction(actionKey, seconds);
+            if (accumulatePending) AddPendingCooldownReduction(actionKey, seconds);
             return;
         }
 
@@ -677,7 +692,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return;
         }
 
-        AddPendingCooldownReduction(categoryKey, seconds);
+        if (accumulatePending) AddPendingCooldownReduction(categoryKey, seconds);
     }
 
     [System.Obsolete("Use the action-owned input/output context overload.")]
@@ -1176,7 +1191,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             sourceCharacter = sourceCharacter,
             sizeMultiplier = projectileScale
         };
-        MainMemoryKit.ConfigureProjectile(ref context, passiveController);
         return context;
     }
 
@@ -1327,10 +1341,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         {
             ProjectileManager manager = ProjectileManager.Instance;
             ProjectileSpawnContext context = BuildProjectileSpawnContext(projectileHitbox);
-            manager.SpawnProjectile(context);
-            if (MainMemoryKit.AppliesTo(context.sourceCharacter) && context.sourceActionId == MainMemoryKit.DarkChain &&
-                passiveController != null && passiveController.GetPotentialLevel(PotentialTrack.Skill) >= 4)
-                StartCoroutine(MainMemoryKit.SummonChain(manager, context));
+            if (manager.SpawnProjectile(context) != null
+                && passiveController != null && passiveController.TryRollDuplicateProjectile(context))
+                manager.SpawnProjectile(context);
         }
         else
         {

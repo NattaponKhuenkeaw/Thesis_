@@ -20,7 +20,9 @@ public enum CombatDamageTag
     Explosion = 1 << 2,
     Splash = 1 << 3,
     DotApplication = 1 << 4,
-    DotTick = 1 << 5
+    DotTick = 1 << 5,
+    Finisher = 1 << 6,
+    VoidArea = 1 << 7
 }
 
 [Flags]

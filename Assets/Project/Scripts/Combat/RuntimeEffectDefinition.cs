@@ -80,6 +80,8 @@ public class RuntimeEffectStatModifier
     [Tooltip("Used only by stat-ratio operations. Current Value includes artifacts and active runtime stat effects. Base Value uses clean leveled stats before artifacts and buffs.")]
     public RuntimeEffectStatValueSource statRatioValueSource = RuntimeEffectStatValueSource.CurrentValue;
     public float value = 0f;
+    [Tooltip("Maximum contribution of this modifier; zero is uncapped.")]
+    [Min(0f)] public float maxIncrease;
 }
 
 [Serializable]
@@ -99,6 +101,8 @@ public class RuntimeEffectInstance
 
     [NonSerialized] public float lastTriggeredAt = -999f;
     [NonSerialized] public bool forceExpired;
+    [NonSerialized] public object formulaState;
+    [NonSerialized] public CombatExecutionContext lastTriggeredExecution;
     [NonSerialized] private Dictionary<RuntimeEffectDefinition, RuntimeEffectInstance> childInstances;
     [NonSerialized] private Dictionary<RuntimeEffectRecipeData, RuntimeEffectInstance> childRecipeInstances;
 
@@ -152,6 +156,8 @@ public class RuntimeEffectInstance
         appliedShieldAmount = 0f;
         lastTriggeredAt = -999f;
         forceExpired = false;
+        formulaState = null;
+        lastTriggeredExecution = null;
         childInstances?.Clear();
         childRecipeInstances?.Clear();
 

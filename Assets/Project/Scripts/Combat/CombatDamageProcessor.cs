@@ -60,6 +60,7 @@ public static class CombatDamageProcessor
             outgoingResult.IsCriticalHit,
             outgoingResult.Descriptor);
         ApplyActionDamageInput(ref coreRequest, outgoingResult.IsCriticalHit);
+        ApplyTargetDamageInput(ref coreRequest, outgoingResult.IsCriticalHit);
         bool ignoreTypeReduction = coreRequest.ignoreTypeReduction;
         coreRequest.ignoreTypeReduction = true;
         DamageResult coreResult = CombatDamageResolver.ResolveMitigation(coreRequest, outgoingResult);
@@ -90,6 +91,26 @@ public static class CombatDamageProcessor
         if (Mathf.Approximately(current, resolved)) return;
         request.sourceStats = request.sourceStats.Clone();
         request.sourceStats.critRate = resolved;
+    }
+
+    private static void ApplyTargetDamageInput(ref DamageRequest request, bool isCriticalHit)
+    {
+        var receiver = request.target?.RuntimeEffects;
+        if (receiver == null) return;
+        var input = new RuntimeEffectDamageInput
+        {
+            context = new RuntimeEffectDamageContext { sourceCharacter = request.sourceCharacter,
+                sourceStats = request.sourceStats, targetEnemy = request.target, category = request.category,
+                actionId = request.actionId, actionName = request.actionName, stepData = request.stepData,
+                elementType = request.descriptor.elementType, damageDelivery = request.descriptor.delivery,
+                isCriticalHit = isCriticalHit },
+            baseDamage = request.baseDamage, defenderDefense = request.defenderDefense,
+            defenderDamageResistance = request.defenderDamageResistance, ignoreTypeReduction = request.ignoreTypeReduction
+        };
+        receiver.ModifyDamageInput(input);
+        request.defenderDefense = input.defenderDefense;
+        request.defenderDamageResistance = input.defenderDamageResistance;
+        request.ignoreTypeReduction = input.ignoreTypeReduction;
     }
 
     private static void ApplyActionDamageInput(ref DamageRequest request, bool isCriticalHit)

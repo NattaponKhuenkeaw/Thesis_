@@ -36,6 +36,7 @@ MonoBehaviour:
   trackingRadius: 0
   speed: 0
   lifetime: 20
+  hitIntervalSeconds: 5
   maxHits: 99
   hitCountMode: 1
   routineHitbox:
@@ -49,11 +50,152 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   hitIntervalFrames: 250
+  fixedHitCadence: 1
+  limitHitsToTarget: 0
+  auraEnergyPerDamageBatch: 5
+  auraEnergyRequiredNodeId: main.ultimate.lv3
+  onHitEffects:
+  - recipe:
+      recipeId: main.memory.void_exposure
+      definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+      presentation:
+        effectId: main.memory.void_exposure
+        displayName: Void Area - Damage Taken
+        showRemainingTime: 0
+        icon: {fileID: 0}
+        fieldVisualPrefab: {fileID: 0}
+        followActiveCharacter: 0
+      policy:
+        kind: 1
+        appliesOn: 1
+        durationType: 0
+        durationSeconds: 7
+        stackMode: 1
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        stackable: 0
+        removeOnOwnerDamaged: 0
+        stackKey: main.memory.void_exposure
+      parameters:
+        overrideDefense: 0
+        evasionChanceAdd: 0
+        overrideStatModifiers: 0
+        statModifiers: []
+        overrideDamageModifier: 1
+        damageModifier:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId:
+            requiredDamageTags: 0
+          outgoingDamagePercentAdd: 0
+          incomingDamageTakenPercentAdd: 15
+        overrideDamageInput: 0
+        damageInput:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId:
+            requiredDamageTags: 0
+          defenderDefensePercentAdd: 0
+          defenderDamageResistancePercentAdd: 0
+          ignoreDefense: 0
+          ignoreDamageResistance: 0
+          ignoreTypeReduction: 0
+        overridePeriodicHeal: 0
+        periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+          tickInterval: 1
+        overrideHeal: 0
+        heal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+        overrideLifesteal: 0
+        lifesteal:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId:
+            requiredDamageTags: 0
+          damageDealtRatio: 0.5
+          lowHpThreshold: 0.3
+          lowHpMultiplier: 2
+        overrideAdditionalDamage: 0
+        additionalDamage:
+          applyNativeDot: 0
+          targetAllRoomEnemies: 0
+          oncePerExecution: 0
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId:
+            requiredDamageTags: 0
+          chance: 1
+          internalCooldown: 0
+          attackRatio: 0.2
+          sourceStatDamageSource: 0
+          sourceStatRatio: 0
+          targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey:
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
+          capTargetMaxHpDamage: 0
+          targetMaxHpDamageCapSource: 1
+          targetMaxHpDamageCapRatio: 1
+          elementType: 0
+        overrideProjectile: 0
+        projectile:
+          projectile: {fileID: 0}
+          tickInterval: 1
+          category: 1
+          actionId:
+          actionName:
+        overrideStatus: 0
+        status:
+          status: 5
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+      childRecipes: []
+    effect: {fileID: 0}
+    requiredNodeId: main.ultimate.lv2
+    triggerOnHit: 0
+    scope: 0
+    stackMode: 0
+    stackLimit: 1
+    refreshDurationOnReapply: 1
+    durationOverride: -1
   stopOnImpact: 0
   destroyWhenHitsExhausted: 0
   destroyOnLifetimeExpire: 1
   centerGrabbedTargets: 0
   grabCenterOffset: {x: 0, y: 0}
+  magnetismSpeed: 0
+  magnetismRange: 0
   trackAreaOccupants: 1
   areaEffectRefreshInterval: 0.25
   areaEffects:
@@ -63,6 +205,10 @@ MonoBehaviour:
       presentation:
         effectId: main.void_area.shadow_gain
         displayName: Shadow Meter Gain x2
+        showRemainingTime: 0
+        icon: {fileID: 0}
+        fieldVisualPrefab: {fileID: 0}
+        followActiveCharacter: 0
       policy:
         kind: 0
         appliesOn: 0
@@ -71,13 +217,121 @@ MonoBehaviour:
         stackMode: 1
         stackLimit: 1
         refreshDurationOnReapply: 1
+        stackable: 0
+        removeOnOwnerDamaged: 0
         stackKey: main.void_area.shadow_gain
       parameters:
+        overrideDefense: 0
+        evasionChanceAdd: 0
         overrideStatModifiers: 1
         statModifiers: []
+        overrideDamageModifier: 0
+        damageModifier:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId:
+            requiredDamageTags: 0
+          outgoingDamagePercentAdd: 0
+          incomingDamageTakenPercentAdd: 0
+        overrideDamageInput: 0
+        damageInput:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId:
+            requiredDamageTags: 0
+          defenderDefensePercentAdd: 0
+          defenderDamageResistancePercentAdd: 0
+          ignoreDefense: 0
+          ignoreDamageResistance: 0
+          ignoreTypeReduction: 0
+        overridePeriodicHeal: 0
+        periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+          tickInterval: 1
+        overrideHeal: 0
+        heal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+        overrideLifesteal: 0
+        lifesteal:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId:
+            requiredDamageTags: 0
+          damageDealtRatio: 0.5
+          lowHpThreshold: 0.3
+          lowHpMultiplier: 2
+        overrideAdditionalDamage: 0
+        additionalDamage:
+          applyNativeDot: 0
+          targetAllRoomEnemies: 0
+          oncePerExecution: 0
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId:
+            requiredDamageTags: 0
+          chance: 1
+          internalCooldown: 0
+          attackRatio: 0.2
+          sourceStatDamageSource: 0
+          sourceStatRatio: 0
+          targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey:
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
+          capTargetMaxHpDamage: 0
+          targetMaxHpDamageCapSource: 1
+          targetMaxHpDamageCapRatio: 1
+          elementType: 0
+        overrideProjectile: 0
+        projectile:
+          projectile: {fileID: 0}
+          tickInterval: 1
+          category: 1
+          actionId:
+          actionName:
+        overrideStatus: 0
+        status:
+          status: 5
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
       childRecipes: []
+    effect: {fileID: 0}
     requiredNodeId: main.passive.lv4
+    triggerOnHit: 0
     scope: 0
+    stackMode: 0
+    stackLimit: 1
+    refreshDurationOnReapply: 1
     durationOverride: 0.3
   spawnFeedback:
     vfxType: 0
@@ -101,12 +355,17 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        elementType: 0
-        damageTags: 0
+        elementType: 5
+        damageTags: 128
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0, y: 2}
         size: {x: 45, y: 8}
         damageRatio: 0.36
+        damageScaling:
+        - stat: 1
+          ratio: 2
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -126,6 +385,8 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 7c1b8c226596fc4498a647193d825b4d, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}

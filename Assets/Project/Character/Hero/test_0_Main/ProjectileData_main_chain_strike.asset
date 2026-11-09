@@ -1,0 +1,606 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79c1523f29053b247a7c908054ed396c, type: 3}
+  m_Name: ProjectileData_main_chain_strike
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
+  projectileType: 100
+  projectilePrefab: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
+  spawnClip: {fileID: 7400000, guid: b32b1af21e17f3d499440095188f9e31, type: 2}
+  loopClip: {fileID: 7400000, guid: 37d8547e1c4fd7f4b86117fcc63c5736, type: 2}
+  spawnOffset: {x: 4, y: 0}
+  spawnPositionMode: 1
+  spawnReferencePointMode: 2
+  playSpawnAnimation: 1
+  spawnDuration: 0
+  inheritFacingDirection: 1
+  applyOffsetToTarget: 0
+  spawningHitbox:
+    enabled: 0
+    decrementsMaxHits: 0
+    hitbox:
+      rid: -2
+  traversalMode: 0
+  trackingReferencePointMode: 0
+  anchorReferencePointMode: 2
+  homingTurnRate: 8
+  trackDelaySeconds: 0
+  trackingRadius: 0
+  speed: 0
+  lifetime: 1.8333334
+  hitIntervalSeconds: 0
+  maxHits: 1
+  hitCountMode: 0
+  routineHitbox:
+    enabled: 1
+    decrementsMaxHits: 1
+    hitbox:
+      rid: 1588256193077838051
+  travelColliderSize: {x: 0.5, y: 0.5}
+  travelColliderOffset: {x: 0, y: 0}
+  enemyLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
+  hitIntervalFrames: 17
+  fixedHitCadence: 0
+  limitHitsToTarget: 1
+  auraEnergyPerDamageBatch: 0
+  auraEnergyRequiredNodeId: 
+  onHitEffects:
+  - recipe:
+      recipeId: main.memory.chain_exposure
+      definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+      presentation:
+        effectId: 
+        displayName: 
+        showRemainingTime: 0
+        icon: {fileID: 0}
+        fieldVisualPrefab: {fileID: 0}
+        followActiveCharacter: 0
+      policy:
+        kind: 1
+        appliesOn: 1
+        durationType: 0
+        durationSeconds: 10
+        stackMode: 1
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        stackable: 0
+        removeOnOwnerDamaged: 0
+        stackKey: main.memory.chain_exposure
+        requiredSourceEffectKey: 
+      parameters:
+        overrideReaction: 0
+        reaction:
+          rid: -2
+        overrideMovement: 0
+        dashCooldownMultiplier: 1
+        overrideDefense: 0
+        evasionChanceAdd: 0
+        overrideStatModifiers: 0
+        statModifiers: []
+        overrideDamageModifier: 1
+        damageModifier:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          outgoingDamagePercentAdd: 0
+          incomingDamageTakenPercentAdd: 40
+        overrideDamageInput: 0
+        damageInput:
+          applyToAllDeliveries: 0
+          overrideDelivery: 0
+          delivery: 0
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          defenderDefensePercentAdd: 0
+          defenderDamageResistancePercentAdd: 0
+          ignoreDefense: 0
+          ignoreDamageResistance: 0
+          ignoreTypeReduction: 0
+        overridePeriodicHeal: 0
+        periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+          tickInterval: 1
+        overrideHeal: 0
+        heal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+        overrideLifesteal: 0
+        lifesteal:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          damageDealtRatio: 0.5
+          lowHpThreshold: 0.3
+          lowHpMultiplier: 2
+        overrideAdditionalDamage: 0
+        additionalDamage:
+          splash: {fileID: 0}
+          applyNativeDot: 0
+          targetAllRoomEnemies: 0
+          oncePerExecution: 0
+          confirmedDamageRatio: 0
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          chance: 1
+          internalCooldown: 0
+          sharedCooldownTag: 
+          attackRatio: 0.2
+          sourceStatDamageSource: 0
+          sourceStatRatio: 0
+          targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey: 
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
+          capTargetMaxHpDamage: 0
+          targetMaxHpDamageCapSource: 1
+          targetMaxHpDamageCapRatio: 1
+          elementType: 0
+        overrideProjectile: 0
+        projectile:
+          roundRobinTargets: 0
+          useActivePlayerOrigin: 0
+          projectile: {fileID: 0}
+          tickInterval: 1
+          category: 1
+          actionId: 
+          actionName: 
+        overrideStatus: 0
+        status:
+          status: 5
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+      childRecipes: []
+    effect: {fileID: 0}
+    requiredNodeId: main.skill.lv3
+    triggerOnHit: 0
+    scope: 0
+    stackMode: 0
+    stackLimit: 1
+    refreshDurationOnReapply: 1
+    durationOverride: -1
+  - recipe:
+      recipeId: main.memory.chain_stun
+      definition: {fileID: 11400000, guid: 8e99520f9fd3f4643aea5d83935b1864, type: 2}
+      presentation:
+        effectId: 
+        displayName: 
+        showRemainingTime: 0
+        icon: {fileID: 0}
+        fieldVisualPrefab: {fileID: 0}
+        followActiveCharacter: 0
+      policy:
+        kind: 1
+        appliesOn: 1
+        durationType: 0
+        durationSeconds: 0.5
+        stackMode: 1
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        stackable: 0
+        removeOnOwnerDamaged: 0
+        stackKey: main.memory.chain_stun
+        requiredSourceEffectKey: 
+      parameters:
+        overrideReaction: 0
+        reaction:
+          rid: -2
+        overrideMovement: 0
+        dashCooldownMultiplier: 1
+        overrideDefense: 0
+        evasionChanceAdd: 0
+        overrideStatModifiers: 0
+        statModifiers: []
+        overrideDamageModifier: 0
+        damageModifier:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          outgoingDamagePercentAdd: 0
+          incomingDamageTakenPercentAdd: 0
+        overrideDamageInput: 0
+        damageInput:
+          applyToAllDeliveries: 0
+          overrideDelivery: 0
+          delivery: 0
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          defenderDefensePercentAdd: 0
+          defenderDamageResistancePercentAdd: 0
+          ignoreDefense: 0
+          ignoreDamageResistance: 0
+          ignoreTypeReduction: 0
+        overridePeriodicHeal: 0
+        periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+          tickInterval: 1
+        overrideHeal: 0
+        heal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+        overrideLifesteal: 0
+        lifesteal:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          damageDealtRatio: 0.5
+          lowHpThreshold: 0.3
+          lowHpMultiplier: 2
+        overrideAdditionalDamage: 0
+        additionalDamage:
+          splash: {fileID: 0}
+          applyNativeDot: 0
+          targetAllRoomEnemies: 0
+          oncePerExecution: 0
+          confirmedDamageRatio: 0
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          chance: 1
+          internalCooldown: 0
+          sharedCooldownTag: 
+          attackRatio: 0.2
+          sourceStatDamageSource: 0
+          sourceStatRatio: 0
+          targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey: 
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
+          capTargetMaxHpDamage: 0
+          targetMaxHpDamageCapSource: 1
+          targetMaxHpDamageCapRatio: 1
+          elementType: 0
+        overrideProjectile: 0
+        projectile:
+          roundRobinTargets: 0
+          useActivePlayerOrigin: 0
+          projectile: {fileID: 0}
+          tickInterval: 1
+          category: 1
+          actionId: 
+          actionName: 
+        overrideStatus: 1
+        status:
+          status: 6
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+      childRecipes: []
+    effect: {fileID: 0}
+    requiredNodeId: main.skill.lv3
+    triggerOnHit: 0
+    scope: 0
+    stackMode: 0
+    stackLimit: 1
+    refreshDurationOnReapply: 1
+    durationOverride: -1
+  - recipe:
+      recipeId: main.memory.chain_summon_darkness
+      definition: {fileID: 11400000, guid: 415918be4bdded440914c0232e1022fa, type: 2}
+      presentation:
+        effectId: 
+        displayName: 
+        showRemainingTime: 0
+        icon: {fileID: 0}
+        fieldVisualPrefab: {fileID: 0}
+        followActiveCharacter: 0
+      policy:
+        kind: 0
+        appliesOn: 0
+        durationType: 2
+        durationSeconds: 0
+        stackMode: 1
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        stackable: 0
+        removeOnOwnerDamaged: 0
+        stackKey: main.memory.chain_summon_darkness
+        requiredSourceEffectKey: 
+      parameters:
+        overrideReaction: 0
+        reaction:
+          rid: -2
+        overrideMovement: 0
+        dashCooldownMultiplier: 1
+        overrideDefense: 0
+        evasionChanceAdd: 0
+        overrideStatModifiers: 0
+        statModifiers: []
+        overrideDamageModifier: 0
+        damageModifier:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          outgoingDamagePercentAdd: 0
+          incomingDamageTakenPercentAdd: 0
+        overrideDamageInput: 0
+        damageInput:
+          applyToAllDeliveries: 0
+          overrideDelivery: 0
+          delivery: 0
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          defenderDefensePercentAdd: 0
+          defenderDamageResistancePercentAdd: 0
+          ignoreDefense: 0
+          ignoreDamageResistance: 0
+          ignoreTypeReduction: 0
+        overridePeriodicHeal: 0
+        periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+          tickInterval: 1
+        overrideHeal: 0
+        heal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+        overrideLifesteal: 0
+        lifesteal:
+          filter:
+            filterByDelivery: 0
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          damageDealtRatio: 0.5
+          lowHpThreshold: 0.3
+          lowHpMultiplier: 2
+        overrideAdditionalDamage: 1
+        additionalDamage:
+          splash: {fileID: 0}
+          applyNativeDot: 0
+          targetAllRoomEnemies: 0
+          oncePerExecution: 0
+          confirmedDamageRatio: 0
+          filter:
+            filterByDelivery: 1
+            delivery: 0
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 1
+            category: 1
+            actionId: main.skill.dark_chain.summon
+            actionIds: []
+            requiredTargetEffectKey: 
+            requiredDamageTags: 0
+            requireCriticalHit: 0
+          chance: 1
+          internalCooldown: 0
+          sharedCooldownTag: 
+          attackRatio: 0
+          sourceStatDamageSource: 0
+          sourceStatRatio: 0.08
+          targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey: 
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
+          capTargetMaxHpDamage: 0
+          targetMaxHpDamageCapSource: 1
+          targetMaxHpDamageCapRatio: 1
+          elementType: 3
+        overrideProjectile: 0
+        projectile:
+          roundRobinTargets: 0
+          useActivePlayerOrigin: 0
+          projectile: {fileID: 0}
+          tickInterval: 1
+          category: 1
+          actionId: 
+          actionName: 
+        overrideStatus: 0
+        status:
+          status: 5
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
+      childRecipes: []
+    effect: {fileID: 0}
+    requiredNodeId: main.skill.lv4
+    triggerOnHit: 1
+    scope: 0
+    stackMode: 0
+    stackLimit: 1
+    refreshDurationOnReapply: 1
+    durationOverride: -1
+  stopOnImpact: 1
+  destroyWhenHitsExhausted: 0
+  destroyOnLifetimeExpire: 1
+  centerGrabbedTargets: 0
+  grabCenterOffset: {x: 0, y: 0}
+  magnetismSpeed: 0
+  magnetismRange: 0
+  trackAreaOccupants: 0
+  areaEffectRefreshInterval: 0.25
+  areaEffects: []
+  spawnFeedback:
+    vfxType: 0
+    vfxClip: {fileID: 0}
+    audio: {fileID: 0}
+    offset: {x: 0, y: 0}
+  expireFeedback:
+    vfxType: 0
+    vfxClip: {fileID: 7400000, guid: afe8147dda1b702479c521a01e64dd12, type: 2}
+    audio: {fileID: 0}
+    offset: {x: 0, y: 0}
+  impactVFXType: 15
+  impactAudio: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1588256193077838051
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 3
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0, y: 2.4}
+        size: {x: 8, y: 8}
+        damageRatio: 0.2
+        damageScaling:
+        - stat: 1
+          ratio: 2
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 1
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 1
+        launchSpeed: 2
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: fd68e61463416b94882f101778384a8f, type: 3}
+        hitSFXVolume: 0.8
+        hitSFXPitch: 1
+        hitVFXType: 19
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 0

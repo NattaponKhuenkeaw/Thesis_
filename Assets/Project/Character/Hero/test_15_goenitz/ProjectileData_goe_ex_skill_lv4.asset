@@ -59,6 +59,37 @@ MonoBehaviour:
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []
+  onHitEffects:
+  - recipe:
+      recipeId: goenitz.ex_yonokaze_splash
+      definition: {fileID: 11400000, guid: 415918be4bdded440914c0232e1022fa, type: 2}
+      presentation:
+        effectId: goenitz.ex_yonokaze_splash
+        displayName: EX Yonokaze Splash
+        showRemainingTime: 0
+      policy:
+        kind: 0
+        appliesOn: 0
+        durationType: 1
+        durationSeconds: 0
+        stackMode: 1
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        stackKey: goenitz.ex_yonokaze_splash
+      parameters:
+        overrideAdditionalDamage: 1
+        additionalDamage:
+          splash: {fileID: 11400000, guid: 6b49a7cb33d5428a8e6999a8c5553d5a, type: 2}
+          confirmedDamageRatio: 0.2
+          internalCooldown: 1
+          sharedCooldownTag: goenitz.ex_yonokaze.splash_cooldown
+          filter:
+            requireCriticalHit: 1
+          chance: 1
+          attackRatio: 0
+          elementType: 2
+    requiredNodeId: goenitz.skill.lv5
+    triggerOnHit: 1
   spawnFeedback:
     vfxType: 0
     vfxClip: {fileID: 0}

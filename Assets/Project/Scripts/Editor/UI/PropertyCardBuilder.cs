@@ -264,6 +264,21 @@ namespace CombatEditor.UI
                     data.hitIntervalFrames = value;
                     MarkDirty();
                 });
+                AddFloatField(body, "Hit Interval (Seconds)", data.hitIntervalSeconds, value =>
+                { RecordUndo("Edit Hit Interval Seconds"); data.hitIntervalSeconds = Mathf.Max(0f, value); MarkDirty(); });
+                AddToggle(body, "Fixed Hit Cadence", data.fixedHitCadence, value =>
+                { RecordUndo("Edit Fixed Hit Cadence"); data.fixedHitCadence = value; MarkDirty(); });
+                AddToggle(body, "Hit Selected Target Only", data.limitHitsToTarget, value =>
+                { RecordUndo("Edit Projectile Target Policy"); data.limitHitsToTarget = value; MarkDirty(); });
+                AddFloatField(body, "AE per Damaging Tick", data.auraEnergyPerDamageBatch, value =>
+                { RecordUndo("Edit Projectile AE"); data.auraEnergyPerDamageBatch = Mathf.Max(0f, value); MarkDirty(); });
+                var serialized = new SerializedObject(data);
+                foreach (string property in new[] { "auraEnergyRequiredNodeId", "onHitEffects" })
+                {
+                    var field = new PropertyField(serialized.FindProperty(property));
+                    field.Bind(serialized);
+                    body.Add(field);
+                }
                 AddFloatField(body, "Magnetism Speed", data.magnetismSpeed, value =>
                 {
                     RecordUndo("Edit Magnetism Speed");
@@ -2277,6 +2292,25 @@ namespace CombatEditor.UI
             { RecordUndo("Edit Contact VFX"); hitbox.suppressContactVfx = value; MarkDirty(); });
         }
 
+        private void BuildHitScaling(VisualElement body, NormalHitbox hitbox)
+        {
+            hitbox.damageScaling ??= new List<HitDamageStatScaling>();
+            var list = new Foldout { text = "Stat Damage Formula (empty uses action budget)" };
+            body.Add(list);
+            foreach (var term in hitbox.damageScaling)
+            {
+                if (term == null) continue;
+                AddEnumField(list, "Source Stat", term.stat, value =>
+                { RecordUndo("Edit Damage Source Stat"); term.stat = (CombatStatId)value; MarkDirty(); });
+                AddFloatField(list, "Ratio", term.ratio, value =>
+                { RecordUndo("Edit Damage Stat Ratio"); term.ratio = Mathf.Max(0f, value); MarkDirty(); });
+                list.Add(new Button(() =>
+                { RecordUndo("Remove Damage Stat"); hitbox.damageScaling.Remove(term); MarkDirtyAndRebuild(); }) { text = "Remove Stat" });
+            }
+            list.Add(new Button(() =>
+            { RecordUndo("Add Damage Stat"); hitbox.damageScaling.Add(new HitDamageStatScaling()); MarkDirtyAndRebuild(); }) { text = "Add Stat" });
+        }
+
         private void BuildNormalHitboxFields(VisualElement body, NormalHitbox hitbox)
         {
             AddSeparator(body, "Hitbox Geometry");
@@ -2300,6 +2334,7 @@ namespace CombatEditor.UI
                 hitbox.damageRatio = Mathf.Clamp01(value);
                 MarkDirty();
             });
+            BuildHitScaling(body, hitbox);
             AddEnumField(body, "Impact Tier", hitbox.impactTier, value =>
             {
                 RecordUndo("Edit Impact Tier");

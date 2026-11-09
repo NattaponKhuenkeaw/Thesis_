@@ -237,10 +237,11 @@ public static class KitInformationValidation
             {
                 var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(AssetDatabase.GUIDToAssetPath(guid));
                 bool main = character.characterId == "char-0-main";
-                int maxLevel = main ? CharacterMemoryProgress.UpgradesPerFamily : CharacterKitDefinition.MaxPotentialLevel;
+                bool memory = character.kitDefinition.useMemoryRanks;
+                int maxLevel = memory ? CharacterMemoryProgress.UpgradesPerFamily : CharacterKitDefinition.MaxPotentialLevel;
                 for (int level = 0; level <= maxLevel; level++)
                 {
-                    if (main) CharacterMemoryTests.SetMemoryRanks(progression, character, level, level, level);
+                    if (memory) CharacterMemoryTests.SetMemoryRanks(progression, character, level, level, level);
                     else foreach (PotentialTrack track in Enum.GetValues(typeof(PotentialTrack))) progression.SetPotentialLevel(character, track, level);
                     var model = CharacterKitInfoBuilder.Build(character, new KitInfoContext(progression));
                     Require(model.Diagnostics.Count == 0, character.name + ": " + string.Join("; ", model.Diagnostics));

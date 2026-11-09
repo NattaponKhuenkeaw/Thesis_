@@ -501,7 +501,7 @@ namespace Project.Progression
 
         public PotentialNodeDefinition GetNextPotentialNode(CharacterObject character, PotentialTrack track)
         {
-            if (character == null || character.kitDefinition == null || MainMemoryKit.AppliesTo(character))
+            if (character == null || character.kitDefinition == null || CharacterMemoryKit.AppliesTo(character))
             {
                 return null;
             }

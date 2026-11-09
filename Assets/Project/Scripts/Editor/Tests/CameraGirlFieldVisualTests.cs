@@ -39,7 +39,7 @@ public sealed class CameraGirlFieldVisualTests
         foreach (string id in new[] { "cg.skill.lv1", "cg.skill.lv2", "cg.skill.lv3" })
         {
             PotentialNodeDefinition node = _character.kitDefinition.GetNodeById(id);
-            Assert.That(node.runtimeEffects.Count, Is.EqualTo(2));
+            Assert.That(node.runtimeEffects.Count, Is.EqualTo(id == "cg.skill.lv3" ? 3 : 2));
             foreach (PassiveRuntimeEffectDefinition effect in node.runtimeEffects)
                 AssertPowerUp(effect.recipe);
         }

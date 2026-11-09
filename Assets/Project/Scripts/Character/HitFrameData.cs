@@ -41,6 +41,13 @@ public abstract class HitboxBase
     public Color debugColor = Color.red;
 }
 
+[System.Serializable]
+public class HitDamageStatScaling
+{
+    public CombatStatId stat = CombatStatId.Attack;
+    [Min(0f)] public float ratio = 1f;
+}
+
 // ─── Normal Hitbox ───────────────────────────────────────
 
 [System.Serializable]
@@ -66,6 +73,18 @@ public class NormalHitbox : HitboxBase
     [FormerlySerializedAs("damageMultiplier")]
     [Tooltip("Share of the CombatAction damage budget. Explicit action budgets clamp this value to 0..1.")]
     public float damageRatio = 1f;
+    [Tooltip("Optional complete damage formula. Empty keeps the action damage budget. Ratios use the source character's current stats.")]
+    public List<HitDamageStatScaling> damageScaling = new List<HitDamageStatScaling>();
+
+    public float ResolveBaseDamage(CharacterStats stats, float actionDamage)
+    {
+        if (damageScaling == null || damageScaling.Count == 0) return actionDamage;
+        float damage = 0f;
+        foreach (var term in damageScaling)
+            if (term != null && stats != null) damage += Mathf.Max(0f, stats.Get(term.stat)) * Mathf.Max(0f, term.ratio);
+        return damage;
+    }
+
     public DamageImpactTier impactTier = DamageImpactTier.Low;
 
     // ── Reaction & HitStop ──

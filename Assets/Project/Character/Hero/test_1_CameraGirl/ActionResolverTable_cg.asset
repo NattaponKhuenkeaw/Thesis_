@@ -70,14 +70,14 @@ MonoBehaviour:
       seconds</color></b>
     activationDescription: 
     icon: {fileID: 21300000, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
-    actionType: 0
+    actionType: 2
     resourceCounterId: 
     resourceCost: 0
     commitsDash: 0
     requiresEnemyTarget: 0
     reselectOnAttackInput: 0
     targetRadius: 8
-    context: 0
+    context: 2
     outputContext: 0
     priority: 0
     conditions: []
@@ -117,6 +117,36 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 7060639382869639287
+    requiresSkillHold: 0
+    skillHoldDuration: 0.35
+    cooldown: 0
+  - actionId: Skill.super.ex
+    actionName: Mastery EndField
+    description: Execute the authored Attack6. Available for 10s after Capture Da
+      Soul or Attack3 hits a Captured enemy.
+    activationDescription: 
+    icon: {fileID: 21300000, guid: ca214fc009f4dd74fa3a572bea8735c3, type: 3}
+    actionType: 0
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 8
+    context: 0
+    outputContext: 0
+    priority: 100
+    conditions:
+    - rid: 5456673014376825048
+    - rid: 5456673014376825049
+    damageSourceStat: 0
+    actionDamageMultiplier: 4.5
+    auraEnergyReward: 0
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 5456673014376825015
     requiresSkillHold: 0
     skillHoldDuration: 0.35
     cooldown: 0
@@ -238,6 +268,7 @@ MonoBehaviour:
         offset: {x: 4.8377643, y: 2.3463008}
         size: {x: 10.597951, y: 5.6553593}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -277,6 +308,7 @@ MonoBehaviour:
         offset: {x: 4.3752766, y: 2.7205577}
         size: {x: 11.172674, y: 5.4411154}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -316,6 +348,7 @@ MonoBehaviour:
         offset: {x: 4.618126, y: 2.6800828}
         size: {x: 10.633011, y: 5.3601656}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -416,6 +449,7 @@ MonoBehaviour:
         offset: {x: 0.73862654, y: 1.4408524}
         size: {x: 1.5960404, y: 1.9701918}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -497,6 +531,7 @@ MonoBehaviour:
         offset: {x: 1.9269958, y: 1.5639287}
         size: {x: 4.696252, y: 3.6193118}
         damageRatio: 0.02
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -597,6 +632,7 @@ MonoBehaviour:
         offset: {x: 0.9164111, y: 1.3354383}
         size: {x: 1.9984351, y: 2.5544248}
         damageRatio: 0.25
+        damageScaling: []
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
@@ -892,6 +928,7 @@ MonoBehaviour:
         offset: {x: 0.04266739, y: 1.4082842}
         size: {x: 2.4200406, y: 3.1476989}
         damageRatio: 0.05
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -962,6 +999,7 @@ MonoBehaviour:
         offset: {x: 1.7002583, y: 1.4658246}
         size: {x: 3.2558231, y: 2.5591278}
         damageRatio: 1
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1006,6 +1044,7 @@ MonoBehaviour:
         offset: {x: 2.404759, y: 2.8986833}
         size: {x: 7.1714125, y: 6.0871053}
         damageRatio: 1
+        damageScaling: []
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1045,6 +1084,7 @@ MonoBehaviour:
         offset: {x: 1.1752834, y: 1.7673931}
         size: {x: 4.0189457, y: 4.088813}
         damageRatio: 0.1
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1507,6 +1547,7 @@ MonoBehaviour:
         offset: {x: 4.330721, y: 2.520928}
         size: {x: 11.105595, y: 5.041856}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1529,6 +1570,352 @@ MonoBehaviour:
         hitSFXVolume: 1
         hitSFXPitch: 1
         hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 0
+    - rid: 5456673014376825015
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 2
+          activeFrames: 35
+          recoveryFrames: 7
+          cancelWindowStartFrame: 49
+          loopActivePhase: 0
+          stepName: Attack6
+          animationClip: {fileID: 7400000, guid: e0f3bede55a90654d9e36c90d8f4cd5f, type: 2}
+          syncAnimationToActionFrames: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 5456673014376825050
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 5456673014376825051
+          hitData:
+            rid: 5456673014376825052
+          eventData:
+            rid: 5456673014376825053
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 5456673014376825048
+      type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        track: 2
+        comparison: 3
+        level: 3
+    - rid: 5456673014376825049
+      type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        tagType: 0
+        tag: cg.skill.followup_window
+        shouldExist: 1
+        applyOnActionStart: 0
+    - rid: 5456673014376825050
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        followSlowMotion: 1
+        keyframes:
+        - startFrame: 1
+          endFrame: 6
+          taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
+          easing: 1
+          position: {x: 0.7, y: 0.54, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 22
+          endFrame: 22
+          taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
+          easing: 1
+          position: {x: 0, y: -0.44, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 9
+          endFrame: 20
+          taskType: 0
+          targetRadius: 8
+          passThroughDistance: 1.2
+          horizontalOnly: 1
+          alignTargetToDashPlane: 0
+          minimumTravelDistance: 3
+          holdTargetAtAnchor: 0
+          targetAnchorOffset: {x: 0, y: 0}
+          faceTargetOnArrival: 1
+          easing: 1
+          position: {x: 1, y: -0.1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 5456673014376825051
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 09f7d446d71638d48b24c24114dbf483, type: 3}
+          triggerFrame: 0
+          duration: 6
+          channel: 1
+          volume: 1
+          pitchVariation: 2
+          slowMotionAware: 0
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 09f7d446d71638d48b24c24114dbf483, type: 3}
+          triggerFrame: 2
+          duration: 6
+          channel: 1
+          volume: 0.7
+          pitchVariation: 1
+          slowMotionAware: 0
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 60fea6f9cd755924ea53ea4a5b381699, type: 3}
+          triggerFrame: 22
+          duration: 7
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          slowMotionAware: 0
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 5456673014376825052
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 5456673014376825054
+        - rid: 5456673014376825055
+    - rid: 5456673014376825053
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeInFrames: 0
+            holdFrames: 0
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          activationSFXVolume: 1
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              followSlowMotion: 0
+              followHitstop: 0
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            followSlowMotion: 1
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 5456673014376825054
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 5
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.1752834, y: 1.7673931}
+        size: {x: 4.0189457, y: 4.088813}
+        damageRatio: 0.1
+        damageScaling: []
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 2
+        knockbackFrames: 21
+        knockupFrames: 17
+        knockfallFrames: 14
+        recoveryFrames: 13
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 1
+        snapOffset: {x: 1.5, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 7
+        hitSFX: {fileID: 8300000, guid: 332041b5ca70b034dad992b18618a489, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 21
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 0
+    - rid: 5456673014376825055
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 20
+        activeFrames: 6
+        elementType: 0
+        damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.6659267, y: 1.3864373}
+        size: {x: 6.431534, y: 3.1351666}
+        damageRatio: 0.22
+        damageScaling: []
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 4
+        knockbackFrames: 23
+        knockupFrames: 9
+        knockfallFrames: 7
+        recoveryFrames: 7
+        horizontalSpeed: 5
+        launchSpeed: 1
+        useSnapToAnchor: 1
+        snapOffset: {x: 1.5, y: -2}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 8300000, guid: b1470e36aa93aed4782bad8e2663c2b8, type: 3}
+        hitSFXVolume: 1
+        hitSFXPitch: 1
+        hitVFXType: 20
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1750,6 +2137,7 @@ MonoBehaviour:
         offset: {x: 1.157036, y: 1.4228604}
         size: {x: 2.9106262, y: 3.11591}
         damageRatio: 0.65
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1816,6 +2204,7 @@ MonoBehaviour:
         offset: {x: -0.23655891, y: 1.325858}
         size: {x: 2.1472588, y: 2.6517158}
         damageRatio: 0.05
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1855,6 +2244,7 @@ MonoBehaviour:
         offset: {x: -0.06547618, y: 1.3258576}
         size: {x: 2.3686597, y: 2.8127346}
         damageRatio: 0.05
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1894,6 +2284,7 @@ MonoBehaviour:
         offset: {x: -0.0050935745, y: 1.2856028}
         size: {x: 2.28815, y: 2.8127341}
         damageRatio: 0.05
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1933,6 +2324,7 @@ MonoBehaviour:
         offset: {x: -0.11965704, y: 1.2654756}
         size: {x: 2.4615698, y: 2.7322252}
         damageRatio: 0.05
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1972,6 +2364,7 @@ MonoBehaviour:
         offset: {x: -0.27681375, y: 1.2956668}
         size: {x: 1.9459867, y: 2.7926068}
         damageRatio: 0.2
+        damageScaling: []
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2141,6 +2534,7 @@ MonoBehaviour:
         offset: {x: 0.6659267, y: 1.3864373}
         size: {x: 6.431534, y: 3.1351666}
         damageRatio: 0.22
+        damageScaling: []
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1

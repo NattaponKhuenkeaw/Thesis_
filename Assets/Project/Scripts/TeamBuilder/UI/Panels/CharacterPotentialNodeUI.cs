@@ -30,8 +30,6 @@ namespace Project.TeamBuilder.UI.Panels
         private Action<PotentialNodeDefinition> _onSelected;
         private Action _onMemoryPreview;
 
-        internal Sprite AuthoredIcon => iconImage != null ? iconImage.sprite : null;
-
         private void Awake()
         {
             ResolveReferences();

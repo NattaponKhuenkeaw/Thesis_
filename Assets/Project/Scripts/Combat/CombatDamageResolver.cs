@@ -12,6 +12,7 @@ public static class CombatDamageResolver
     {
         CharacterStats stats = request.sourceStats;
         float damage = Mathf.Max(0f, request.baseDamage);
+        if (request.skipSourceDamageScaling) return new DamageResult(damage, false, request.descriptor);
 
         if (request.descriptor.delivery == DamageDelivery.Primary)
         {

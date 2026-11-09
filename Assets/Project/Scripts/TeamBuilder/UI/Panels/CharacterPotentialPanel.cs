@@ -257,7 +257,7 @@ namespace Project.TeamBuilder.UI.Panels
                 _panelTitle.rectTransform.anchorMax = new Vector2(.36f, _potentialTitleAnchorMax.y);
                 _panelTitle.text = ResolveCharacterDisplayName();
             }
-            bool canShowPrevious = _switchUpgradeView != null && !MainMemoryKit.AppliesTo(_currentCharacter);
+            bool canShowPrevious = _switchUpgradeView != null && !CharacterMemoryKit.AppliesTo(_currentCharacter);
             if (_switchUpgradeView != null)
                 _switchUpgradeView.gameObject.SetActive(canShowPrevious);
             if (canShowPrevious)
@@ -405,6 +405,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void SwitchUpgradeView()
         {
+            if (CharacterMemoryKit.AppliesTo(_currentCharacter)) return;
             CloseUpgradeWindow();
             _showPreviousUpgrades = !_showPreviousUpgrades;
             if (!_showPreviousUpgrades)

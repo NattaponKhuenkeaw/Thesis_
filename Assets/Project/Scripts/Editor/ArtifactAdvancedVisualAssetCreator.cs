@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 public static class ArtifactAdvancedVisualAssetCreator
 {
     private const string Root = FieldEffectVisualAssetCreator.Root;
-    private const string Artifacts = "Assets/Project/Resources/ItemSO/Artifacts/Phase1/";
+    private const string Artifacts = "Assets/Project/Resources/ItemSO/Artifacts/RaritySSR/";
 
     [MenuItem("Tools/Project/Field Effects/Create Advanced Artifact Visuals")]
     public static void Create()

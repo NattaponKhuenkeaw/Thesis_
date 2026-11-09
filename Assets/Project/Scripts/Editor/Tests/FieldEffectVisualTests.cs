@@ -117,6 +117,31 @@ public sealed class FieldEffectVisualTests
     }
 
     [Test]
+    public void FloatingIconsStaySeparateThroughReorderingAndFade()
+    {
+        var chain = Instance("chain", "FieldDarkChain");
+        var lens = Instance("lens", "FieldLensFocus");
+        _receiver.SyncVisuals(new[] { chain });
+        var chainView = OnlyView();
+        _receiver.SyncVisuals(new[] { chain, lens });
+        var lensView = _host.transform.Find("FieldLensFocus(Clone)").GetComponent<FieldEffectVisual>();
+        Sample(chainView, .25f);
+        Sample(lensView, .5f);
+        float initialGap = lensView.motif.bounds.min.y - chainView.motif.bounds.max.y;
+        Assert.That(initialGap, Is.GreaterThan(0f));
+
+        _receiver.SyncVisuals(new[] { lens, chain });
+        Assert.That(lensView.motif.bounds.min.y - chainView.motif.bounds.max.y, Is.EqualTo(initialGap).Within(.001f));
+        _receiver.SyncVisuals(new[] { lens });
+        Assert.That(chainView.Phase, Is.EqualTo(FieldEffectVisual.AnimationPhase.Ending));
+        Sample(chainView, .1f);
+        Assert.That(chainView.motif.bounds.Intersects(lensView.motif.bounds), Is.False);
+        _receiver.SyncVisuals(new[] { lens, chain });
+        Assert.That(chainView.motif.bounds.Intersects(lensView.motif.bounds), Is.False);
+        Assert.That(chainView.Phase, Is.EqualTo(FieldEffectVisual.AnimationPhase.Loop));
+    }
+
+    [Test]
     public void DisableClearsAndEnableRestoresActualEffectsWithoutChangingTheirStacks()
     {
         _receiver.ApplyEffect(Recipe("active", "FieldPowerUp"), null, null);

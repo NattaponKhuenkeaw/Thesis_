@@ -17,12 +17,12 @@ namespace Project.Progression
         public int GetMemoryRank(string characterId, PotentialTrack track) => FindMemory(characterId)?.CountFamilyUpgrades(track) ?? 0;
 
         public int GetCombatPotentialLevel(CharacterObject character, PotentialTrack track) =>
-            MainMemoryKit.AppliesTo(character) ? GetMemoryRank(character.characterId, track) : GetPotentialLevel(character, track);
+            CharacterMemoryKit.AppliesTo(character) ? GetMemoryRank(character.characterId, track) : GetPotentialLevel(character, track);
 
         public void ApplyMemoryBaseStats(CharacterObject character, CharacterStats stats)
         {
-            if (MainMemoryKit.AppliesTo(character))
-                MainMemoryKit.ApplyBaseStats(stats, GetCompletedMemorySteps(character.characterId));
+            if (CharacterMemoryKit.AppliesTo(character))
+                CharacterMemoryKit.ApplyBaseStats(character, stats, GetCompletedMemorySteps(character.characterId));
         }
 
         public bool TryDrawMemory(CharacterObject character, int step, int seed, out PotentialTrack choice)

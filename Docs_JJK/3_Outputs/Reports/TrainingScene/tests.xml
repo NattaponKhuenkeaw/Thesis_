@@ -1,102 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="14" result="Passed" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-07 03:22:39Z" end-time="2026-11-07 03:22:49Z" duration="9.837059">
-  <test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="1885" result="Passed" start-time="2026-11-07 03:22:39Z" end-time="2026-11-07 03:22:49Z" duration="9.837059" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-09 13:43:03Z" end-time="2026-11-09 13:43:10Z" duration="7.2561434">
+  <test-suite type="TestSuite" id="3330" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="1921" result="Passed" start-time="2026-11-09 13:43:03Z" end-time="2026-11-09 13:43:10Z" duration="7.256143" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
-    <test-suite type="Assembly" id="3284" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="1885" result="Passed" start-time="2026-11-07 03:22:39Z" end-time="2026-11-07 03:22:49Z" duration="9.728605" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="3329" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="1921" result="Passed" start-time="2026-11-09 13:43:04Z" end-time="2026-11-09 13:43:10Z" duration="6.983094" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
-        <property name="_PID" value="10504" />
+        <property name="_PID" value="5136" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
         <property name="EditorOnly" value="True" />
       </properties>
-      <test-suite type="TestFixture" id="1525" name="CharacterMemoryTests" fullname="CharacterMemoryTests" classname="CharacterMemoryTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-11-07 03:22:39Z" end-time="2026-11-07 03:22:48Z" duration="8.862222" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestFixture" id="2568" name="MainSummonPlayTests" fullname="MainSummonPlayTests" classname="MainSummonPlayTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-11-09 13:43:04Z" end-time="2026-11-09 13:43:10Z" duration="6.940737" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
         <properties />
-        <test-case id="1530" name="ApplyingPracticeMemoryCopiesTheDraftIntoThePracticeState" fullname="CharacterMemoryTests.ApplyingPracticeMemoryCopiesTheDraftIntoThePracticeState" methodname="ApplyingPracticeMemoryCopiesTheDraftIntoThePracticeState" classname="CharacterMemoryTests" runstate="Runnable" seed="310366679" result="Passed" start-time="2026-11-07 03:22:39Z" end-time="2026-11-07 03:22:39Z" duration="0.131889" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="1534" name="AuthoredHardPatternsAdvertiseMemoryWithTheirExistingPayout" fullname="CharacterMemoryTests.AuthoredHardPatternsAdvertiseMemoryWithTheirExistingPayout" methodname="AuthoredHardPatternsAdvertiseMemoryWithTheirExistingPayout" classname="CharacterMemoryTests" runstate="Runnable" seed="2007236751" result="Passed" start-time="2026-11-07 03:22:40Z" end-time="2026-11-07 03:22:40Z" duration="0.587052" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="1527" name="DrawSkipsFullFamiliesAndGenericStepsDoNotIncreaseTheMajorCount" fullname="CharacterMemoryTests.DrawSkipsFullFamiliesAndGenericStepsDoNotIncreaseTheMajorCount" methodname="DrawSkipsFullFamiliesAndGenericStepsDoNotIncreaseTheMajorCount" classname="CharacterMemoryTests" runstate="Runnable" seed="994395264" result="Passed" start-time="2026-11-07 03:22:40Z" end-time="2026-11-07 03:22:40Z" duration="0.003728" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="1529" name="GrantsAreSequentialAndSurviveCheckpointRestoreAndSaveRoundTrip" fullname="CharacterMemoryTests.GrantsAreSequentialAndSurviveCheckpointRestoreAndSaveRoundTrip" methodname="GrantsAreSequentialAndSurviveCheckpointRestoreAndSaveRoundTrip" classname="CharacterMemoryTests" runstate="Runnable" seed="482527393" result="Passed" start-time="2026-11-07 03:22:40Z" end-time="2026-11-07 03:22:40Z" duration="0.003061" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="1532" name="InspectorHasOneBoxPerMajorUpgradeInTwelveWideRows" fullname="CharacterMemoryTests.InspectorHasOneBoxPerMajorUpgradeInTwelveWideRows" methodname="InspectorHasOneBoxPerMajorUpgradeInTwelveWideRows" classname="CharacterMemoryTests" runstate="Runnable" seed="892118196" result="Passed" start-time="2026-11-07 03:22:40Z" end-time="2026-11-07 03:22:40Z" duration="0.347915" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="1533" name="InspectorOpensMemoryWhenThePrefabHasNoCanvasGroup" fullname="CharacterMemoryTests.InspectorOpensMemoryWhenThePrefabHasNoCanvasGroup" methodname="InspectorOpensMemoryWhenThePrefabHasNoCanvasGroup" classname="CharacterMemoryTests" runstate="Runnable" seed="159901390" result="Passed" start-time="2026-11-07 03:22:40Z" end-time="2026-11-07 03:22:48Z" duration="7.408117" asserts="0">
+        <test-case id="2569" name="AuthoredSummonKeepsSourceStatsAndCadenceAfterSwitchAndStopsOnRoomClear" fullname="MainSummonPlayTests.AuthoredSummonKeepsSourceStatsAndCadenceAfterSwitchAndStopsOnRoomClear" methodname="AuthoredSummonKeepsSourceStatsAndCadenceAfterSwitchAndStopsOnRoomClear" classname="MainSummonPlayTests" runstate="Runnable" seed="600766994" result="Passed" start-time="2026-11-09 13:43:04Z" end-time="2026-11-09 13:43:10Z" duration="6.919880" asserts="0">
           <properties>
             <property name="_JOINTYPE" value="UnityCombinatorial" />
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="1528" name="OldSixtyStepSaveKeepsValidChoicesAndNormalizesOverflow" fullname="CharacterMemoryTests.OldSixtyStepSaveKeepsValidChoicesAndNormalizesOverflow" methodname="OldSixtyStepSaveKeepsValidChoicesAndNormalizesOverflow" classname="CharacterMemoryTests" runstate="Runnable" seed="654975320" result="Passed" start-time="2026-11-07 03:22:48Z" end-time="2026-11-07 03:22:48Z" duration="0.005249" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="1526" name="PracticeFillsTheFiftyFourStepTrackAndSwapsAFullFamily" fullname="CharacterMemoryTests.PracticeFillsTheFiftyFourStepTrackAndSwapsAFullFamily" methodname="PracticeFillsTheFiftyFourStepTrackAndSwapsAFullFamily" classname="CharacterMemoryTests" runstate="Runnable" seed="130876408" result="Passed" start-time="2026-11-07 03:22:48Z" end-time="2026-11-07 03:22:48Z" duration="0.004642" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="1531" name="TrainingTrackButtonsApplyPrerequisitesToTheDraft" fullname="CharacterMemoryTests.TrainingTrackButtonsApplyPrerequisitesToTheDraft" methodname="TrainingTrackButtonsApplyPrerequisitesToTheDraft" classname="CharacterMemoryTests" runstate="Runnable" seed="985930607" result="Passed" start-time="2026-11-07 03:22:48Z" end-time="2026-11-07 03:22:48Z" duration="0.243716" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-      </test-suite>
-      <test-suite type="TestFixture" id="2708" name="PotentialScreenTests" fullname="PotentialScreenTests" classname="PotentialScreenTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-11-07 03:22:48Z" end-time="2026-11-07 03:22:49Z" duration="0.698016" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
-        <properties />
-        <test-case id="2713" name="BoardIsScrollableAndLevelsRiseFromBottomWithoutProfile" fullname="PotentialScreenTests.BoardIsScrollableAndLevelsRiseFromBottomWithoutProfile" methodname="BoardIsScrollableAndLevelsRiseFromBottomWithoutProfile" classname="PotentialScreenTests" runstate="Runnable" seed="2131873178" result="Passed" start-time="2026-11-07 03:22:48Z" end-time="2026-11-07 03:22:48Z" duration="0.297086" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="2712" name="CancelClosesPreviewAndClearsSelection" fullname="PotentialScreenTests.CancelClosesPreviewAndClearsSelection" methodname="CancelClosesPreviewAndClearsSelection" classname="PotentialScreenTests" runstate="Runnable" seed="2055286698" result="Passed" start-time="2026-11-07 03:22:48Z" end-time="2026-11-07 03:22:49Z" duration="0.085583" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="2710" name="ConfirmSpendsOnceAndRefreshesProgressAndUnlockedPreview" fullname="PotentialScreenTests.ConfirmSpendsOnceAndRefreshesProgressAndUnlockedPreview" methodname="ConfirmSpendsOnceAndRefreshesProgressAndUnlockedPreview" classname="PotentialScreenTests" runstate="Runnable" seed="1865678857" result="Passed" start-time="2026-11-07 03:22:49Z" end-time="2026-11-07 03:22:49Z" duration="0.086405" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="2709" name="MissingFragmentsAndPreviousLevelStillBlockUpgrade" fullname="PotentialScreenTests.MissingFragmentsAndPreviousLevelStillBlockUpgrade" methodname="MissingFragmentsAndPreviousLevelStillBlockUpgrade" classname="PotentialScreenTests" runstate="Runnable" seed="298955696" result="Passed" start-time="2026-11-07 03:22:49Z" end-time="2026-11-07 03:22:49Z" duration="0.135520" asserts="0">
-          <properties>
-            <property name="retryIteration" value="0" />
-            <property name="repeatIteration" value="0" />
-          </properties>
-        </test-case>
-        <test-case id="2711" name="SwitchingCharacterRefreshesIconsAndClosesPreview" fullname="PotentialScreenTests.SwitchingCharacterRefreshesIconsAndClosesPreview" methodname="SwitchingCharacterRefreshesIconsAndClosesPreview" classname="PotentialScreenTests" runstate="Runnable" seed="242952442" result="Passed" start-time="2026-11-07 03:22:49Z" end-time="2026-11-07 03:22:49Z" duration="0.055257" asserts="0">
-          <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />
           </properties>

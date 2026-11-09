@@ -140,7 +140,9 @@ namespace Project.UI
                     string detail = !major ? "Track progress" : available
                         ? $"Rank {rank} / {CharacterMemoryProgress.UpgradesPerFamily}" : "Family complete";
                     BindMemoryCard(card, CharacterMemoryProgress.DescribeStep(step, family),
-                        CharacterMemoryPanel.MemoryNodeIcon(candidate.item, major ? family : null),
+                        major ? CharacterMemoryPanel.MemoryNodeIcon(candidate.item, family)
+                            : CharacterMemoryKit.GetGenericPageIcon(candidate.item?.characterObjectData, step)
+                                ?? CharacterMemoryPanel.MemoryNodeIcon(candidate.item),
                         available ? CharacterMemoryPanel.DescribeMemoryEffect(candidate.item, step, family, rank)
                             : "All ranks in this family have been earned.",
                         detail, major ? MemoryFamilyColor(family) : Color.white, available);

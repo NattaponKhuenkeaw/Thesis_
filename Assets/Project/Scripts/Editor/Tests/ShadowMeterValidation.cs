@@ -37,7 +37,7 @@ public static class ShadowMeterValidation
             "ShadowMeterTests.SkillMemoryAppliesMagnetismAndCooldown",
             "ShadowMeterTests.VoidMemoryResolvesEachRank",
             "ShadowMeterTests.VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost",
-            "ShadowMeterTests.PassiveFiveAndSixUpgradeJudgmentAndAddOneUltimateHealthBuff",
+            "ShadowMeterTests.PassiveFiveAndUltimateFiveUpgradeJudgmentAndAddOneUltimateHealthBuff",
             "ShadowMeterTests.PassiveFiveAddsDarknessOnlyToTheAuthoredUltimateFinishers",
             "ShadowMeterTests.ExecutionRestoresMaxHpAtPassiveThree"
         }, "Temp/main-skill-revision-tests.xml", false);
@@ -54,6 +54,43 @@ public static class ShadowMeterValidation
             "ShadowMeterTests.MemoryUpgradesKeepGroundAndAirNormalAttacksAvailable",
             "ShadowMeterTests.PassiveFiveAddsDarknessOnlyToTheAuthoredUltimateFinishers"
         }, "Temp/main-memory-fixes-tests.xml", false);
+    }
+
+    [MenuItem("Tools/Project/Combat/Validate Main Authored Memory Effects")]
+    public static void RunAuthoredMemoryEffects()
+    {
+        RunFixtures(new[] { "ShadowMeterTests", "MainAuthoredEffectsTests", "MainSkillMagnetismTests", "EnemyPositionReactionTests", "CombatDamageTypeTests" },
+            "Temp/main-authored-memory-tests.xml", false);
+    }
+
+    [MenuItem("Tools/Project/Combat/Validate Main Recipe Field Icon")]
+    public static void RunRecipeFieldIcon()
+    {
+        RunFixtures(new[] {
+            "FieldEffectVisualTests.IndependentEffectsShareOneViewUntilTheLastOwnerIsRemoved",
+            "FieldEffectVisualTests.ReapplicationDuringEndingResumesTheSameViewWithoutAnotherEntryBurst",
+            "FieldEffectVisualTests.GameplayExpiryStartsAnEndingAnimationInsteadOfDestroyingImmediately",
+            "FieldEffectVisualTests.DarkFlamesStopEmissionButRetainLiveParticlesUntilTheEndingCompletes",
+            "FieldEffectVisualTests.OppositeStylesCanCoexistWhileTheirGameplayEffectsRemainActive",
+            "FieldEffectVisualTests.FloatingIconsStaySeparateThroughReorderingAndFade",
+            "FieldEffectVisualTests.DisableClearsAndEnableRestoresActualEffectsWithoutChangingTheirStacks",
+            "FieldEffectArtifactSequenceTests.PersistentRecipeIconFollowsActivePlayerAndExpiresWhileOwnerIsOffField",
+            "MainSummonPlayTests.TeamInventorySummonSurvivesSetCharacterAndKeepsOneTimer",
+            "ShadowMeterTests.SummonedChainUsesAuthoredGroundProjectionAndTemplate", "MainAuthoredEffectsTests" },
+            "Temp/main-recipe-field-icon-tests.xml", false);
+    }
+
+    [MenuItem("Tools/Project/Combat/Validate Camera Girl Memory Revision")]
+    public static void RunCameraGirlMemoryRevision()
+    {
+        RunFixtures(new[] { "CameraGirlPotentialTests", "CameraGirlFieldVisualTests", "CameraGirlMemoryRevisionTests",
+            "MainAuthoredEffectsTests", "CombatDamageTypeTests",
+            "CharacterMemoryTests.MainUsesMemoryRanksAndGenericBonusesAsBaseStats",
+            "CharacterMemoryTests.ReiMemoryUsesAuthoredDescriptionsAndSavedProgress",
+            "FieldEffectArtifactSequenceTests.PersistentRecipeIconFollowsActivePlayerAndExpiresWhileOwnerIsOffField",
+            "MainSummonPlayTests.TeamInventorySummonSurvivesSetCharacterAndKeepsOneTimer",
+            "FieldEffectVisualTests.IndependentEffectsShareOneViewUntilTheLastOwnerIsRemoved" },
+            "Temp/camera-girl-memory-tests.xml", false);
     }
 
     private static void RunFixtures(string[] fixtures, string resultPath, bool capturePreviews)
@@ -204,6 +241,46 @@ public static class ShadowMeterValidation
             UnityEngine.Object.DestroyImmediate(cameraObject);
             UnityEngine.Object.DestroyImmediate(owner);
             UnityEngine.Object.DestroyImmediate(progression);
+        }
+    }
+}
+
+[InitializeOnLoad]
+public static class MainSummonValidation
+{
+    private const string Running = "Temp/main-summon-test.running";
+    private static UnityEditor.TestTools.TestRunner.Api.TestRunnerApi runner;
+    private static readonly Results Callback = new();
+    static MainSummonValidation()
+    {
+        EditorApplication.delayCall += () => { if (File.Exists(Running)) Register(); };
+    }
+    private static void Register()
+    {
+        if (runner == null) runner = ScriptableObject.CreateInstance<UnityEditor.TestTools.TestRunner.Api.TestRunnerApi>();
+        runner.UnregisterCallbacks(Callback);
+        runner.RegisterCallbacks(Callback);
+    }
+    [MenuItem("Tools/Project/Combat/Validate Main Summon Lifecycle")]
+    public static void Run()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+        File.WriteAllText(Running, "requested");
+        Register();
+        runner.Execute(new UnityEditor.TestTools.TestRunner.Api.ExecutionSettings(new UnityEditor.TestTools.TestRunner.Api.Filter
+        { testMode = UnityEditor.TestTools.TestRunner.Api.TestMode.EditMode, groupNames = new[] { "^MainSummonPlayTests" } }));
+    }
+    private sealed class Results : UnityEditor.TestTools.TestRunner.Api.ICallbacks
+    {
+        public void RunStarted(UnityEditor.TestTools.TestRunner.Api.ITestAdaptor test) { }
+        public void TestStarted(UnityEditor.TestTools.TestRunner.Api.ITestAdaptor test) { }
+        public void TestFinished(UnityEditor.TestTools.TestRunner.Api.ITestResultAdaptor result) { }
+        public void RunFinished(UnityEditor.TestTools.TestRunner.Api.ITestResultAdaptor result)
+        {
+            if (!File.Exists(Running)) return;
+            UnityEditor.TestTools.TestRunner.Api.TestRunnerApi.SaveResultToFile(result, Path.GetFullPath("Temp/main-summon-play-tests.xml"));
+            File.Delete(Running);
+            Debug.Log($"Main summon lifecycle: {result.PassCount} passed, {result.FailCount} failed.");
         }
     }
 }

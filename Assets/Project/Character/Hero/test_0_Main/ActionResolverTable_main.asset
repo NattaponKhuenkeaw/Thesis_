@@ -316,6 +316,7 @@ MonoBehaviour:
         offset: {x: 1.1540773, y: 1.8350035}
         size: {x: 7.6870008, y: 3.670007}
         damageRatio: 0.12
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -355,6 +356,7 @@ MonoBehaviour:
         offset: {x: 2.552644, y: 2.0374408}
         size: {x: 5.4299564, y: 3.5354872}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -394,6 +396,7 @@ MonoBehaviour:
         offset: {x: 2.6299334, y: 1.9507024}
         size: {x: 5.968272, y: 3.7560248}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -708,6 +711,7 @@ MonoBehaviour:
         offset: {x: -0.07513046, y: 3.6861455}
         size: {x: 20, y: 7.372291}
         damageRatio: 0.5
+        damageScaling: []
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 1
@@ -747,6 +751,7 @@ MonoBehaviour:
         offset: {x: 1.0539994, y: 1.9239981}
         size: {x: 3.4476328, y: 3.8479962}
         damageRatio: 0.3
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1196,6 +1201,7 @@ MonoBehaviour:
         offset: {x: 2.0164385, y: 3.53552}
         size: {x: 14.950785, y: 7.7207327}
         damageRatio: 0.58
+        damageScaling: []
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1235,6 +1241,7 @@ MonoBehaviour:
         offset: {x: 3.1404533, y: 2.9430416}
         size: {x: 11.507011, y: 7.1860833}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1274,6 +1281,7 @@ MonoBehaviour:
         offset: {x: 3.1941748, y: 2.9430416}
         size: {x: 11.614454, y: 7.186083}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1313,6 +1321,7 @@ MonoBehaviour:
         offset: {x: 3.1046376, y: 2.5132682}
         size: {x: 11.435382, y: 6.3265367}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1352,6 +1361,7 @@ MonoBehaviour:
         offset: {x: 3.2478971, y: 2.5848973}
         size: {x: 11.721897, y: 6.4697948}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1391,6 +1401,7 @@ MonoBehaviour:
         offset: {x: 3.212081, y: 2.6028044}
         size: {x: 11.721897, y: 6.505609}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1430,6 +1441,7 @@ MonoBehaviour:
         offset: {x: 3.0357513, y: 2.795796}
         size: {x: 11.359751, y: 6.4956923}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2275,6 +2287,7 @@ MonoBehaviour:
         offset: {x: -1.0513954, y: 9.209899}
         size: {x: 42.8332, y: 22.531849}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2314,6 +2327,7 @@ MonoBehaviour:
         offset: {x: -1.1169968, y: 9.537912}
         size: {x: 42.9644, y: 21.875824}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2353,6 +2367,7 @@ MonoBehaviour:
         offset: {x: -3.5442924, y: 10.521951}
         size: {x: 55.95371, y: 23.8439}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2392,6 +2407,7 @@ MonoBehaviour:
         offset: {x: -1.0513954, y: 9.669117}
         size: {x: 44.932484, y: 22.138233}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2431,6 +2447,7 @@ MonoBehaviour:
         offset: {x: -0.39536667, y: 10.062732}
         size: {x: 44.145256, y: 22.925465}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2470,6 +2487,7 @@ MonoBehaviour:
         offset: {x: -0.98579025, y: 9.865925}
         size: {x: 44.801277, y: 22.531849}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2509,6 +2527,7 @@ MonoBehaviour:
         offset: {x: -1.1169968, y: 9.997129}
         size: {x: 49.26225, y: 22.794258}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2548,6 +2567,7 @@ MonoBehaviour:
         offset: {x: -1.1825981, y: 10.456348}
         size: {x: 46.506947, y: 23.712696}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2587,6 +2607,7 @@ MonoBehaviour:
         offset: {x: -1.1826, y: 9.931527}
         size: {x: 45.982124, y: 22.663054}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2626,6 +2647,7 @@ MonoBehaviour:
         offset: {x: -0.7889824, y: 10.193936}
         size: {x: 45.98213, y: 23.187874}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2665,6 +2687,7 @@ MonoBehaviour:
         offset: {x: -0.6577778, y: 10.325142}
         size: {x: 45.71972, y: 23.450283}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2704,6 +2727,7 @@ MonoBehaviour:
         offset: {x: -1.1826, y: 9.931527}
         size: {x: 45.71972, y: 22.663054}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2743,6 +2767,7 @@ MonoBehaviour:
         offset: {x: -0.5265751, y: 9.865924}
         size: {x: 45.71971, y: 22.531849}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2782,6 +2807,7 @@ MonoBehaviour:
         offset: {x: -0.85458565, y: 9.669116}
         size: {x: 43.226814, y: 22.138233}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2821,6 +2847,7 @@ MonoBehaviour:
         offset: {x: -0.98579216, y: 10.390744}
         size: {x: 48.737427, y: 23.581488}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2860,6 +2887,7 @@ MonoBehaviour:
         offset: {x: -0.59217644, y: 10.193937}
         size: {x: 44.53887, y: 23.187874}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2899,6 +2927,7 @@ MonoBehaviour:
         offset: {x: -1.0513935, y: 9.9971285}
         size: {x: 45.194893, y: 22.794258}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2938,6 +2967,7 @@ MonoBehaviour:
         offset: {x: -1.0513935, y: 10.062732}
         size: {x: 44.40767, y: 22.925463}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -2970,13 +3000,14 @@ MonoBehaviour:
         startFrameOffset: 59
         activeFrames: 2
         elementType: 0
-        damageTags: 0
+        damageTags: 64
         suppressImpactFeedback: 1
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.0513935, y: 9.9971285}
         size: {x: 44.145256, y: 22.794258}
         damageRatio: 0.030526316
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -3398,6 +3429,7 @@ MonoBehaviour:
         offset: {x: -0.009140968, y: 2.2263482}
         size: {x: 13.992498, y: 5.5623755}
         damageRatio: 0.6
+        damageScaling: []
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2
@@ -3459,6 +3491,7 @@ MonoBehaviour:
         offset: {x: -0.009140968, y: 2.226348}
         size: {x: 13.9925, y: 5.562376}
         damageRatio: 0.4
+        damageScaling: []
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
@@ -3498,6 +3531,7 @@ MonoBehaviour:
         offset: {x: 3.0507379, y: 2.650034}
         size: {x: 11.543061, y: 6.147648}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -3537,6 +3571,7 @@ MonoBehaviour:
         offset: {x: 3.0509863, y: 2.721912}
         size: {x: 11.548544, y: 6.079509}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -3576,6 +3611,7 @@ MonoBehaviour:
         offset: {x: 3.1273527, y: 2.7184217}
         size: {x: 11.48041, y: 6.0018964}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -3615,6 +3651,7 @@ MonoBehaviour:
         offset: {x: 3.1641645, y: 2.8256161}
         size: {x: 11.404789, y: 6.216285}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -3654,6 +3691,7 @@ MonoBehaviour:
         offset: {x: 3.1920013, y: 2.8957489}
         size: {x: 11.54306, y: 6.0740247}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -3693,6 +3731,7 @@ MonoBehaviour:
         offset: {x: 3.3683314, y: 2.8407807}
         size: {x: 11.967347, y: 6.1053514}
         damageRatio: 0.18
+        damageScaling: []
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2
@@ -3732,6 +3771,7 @@ MonoBehaviour:
         offset: {x: 3.6305885, y: 6.303217}
         size: {x: 32.811554, y: 14.491028}
         damageRatio: 1
+        damageScaling: []
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -3829,13 +3869,14 @@ MonoBehaviour:
         startFrameOffset: 142
         activeFrames: 5
         elementType: 0
-        damageTags: 0
+        damageTags: 64
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 4.4041758, y: 6.08351}
         size: {x: 29.9698, y: 12.96618}
         damageRatio: 1
+        damageScaling: []
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -3964,6 +4005,7 @@ MonoBehaviour:
         offset: {x: 2.1995919, y: 1.8162396}
         size: {x: 2.8946762, y: 1.0976708}
         damageRatio: 0.15
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -4066,6 +4108,7 @@ MonoBehaviour:
         offset: {x: 1.3448527, y: 1.3677429}
         size: {x: 5.6576276, y: 3.2269402}
         damageRatio: 0.2
+        damageScaling: []
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 2
@@ -4194,6 +4237,7 @@ MonoBehaviour:
         offset: {x: 0.6521182, y: 1.6478544}
         size: {x: 4.6373043, y: 2.5299394}
         damageRatio: 0.08
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -4715,6 +4759,7 @@ MonoBehaviour:
         offset: {x: 2.8127468, y: 1.4299183}
         size: {x: 6.350013, y: 3.810453}
         damageRatio: 0.1
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -4760,6 +4805,7 @@ MonoBehaviour:
         offset: {x: 2.5597022, y: 1.3514577}
         size: {x: 6.9029555, y: 3.3237839}
         damageRatio: 0.35
+        damageScaling: []
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 2
@@ -4824,6 +4870,7 @@ MonoBehaviour:
         offset: {x: 1.8552812, y: 2.0382164}
         size: {x: 3.613568, y: 3.1792188}
         damageRatio: 1
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -4869,6 +4916,7 @@ MonoBehaviour:
         offset: {x: 0.6758268, y: 1.455477}
         size: {x: 1, y: 3.2006927}
         damageRatio: 1
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -5865,13 +5913,14 @@ MonoBehaviour:
         startFrameOffset: 27
         activeFrames: 4
         elementType: 0
-        damageTags: 0
+        damageTags: 64
         suppressImpactFeedback: 0
         suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -5.3543725, y: 2.4058695}
         size: {x: 15, y: 5.6019297}
         damageRatio: 0.3
+        damageScaling: []
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -6663,6 +6712,7 @@ MonoBehaviour:
         offset: {x: 1.5495343, y: 1.7782769}
         size: {x: 8.841007, y: 3.8294063}
         damageRatio: 1
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -9639,6 +9689,7 @@ MonoBehaviour:
         offset: {x: 1.0062327, y: 2.4431608}
         size: {x: 8.01652, y: 5.159174}
         damageRatio: 1
+        damageScaling: []
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -9678,6 +9729,7 @@ MonoBehaviour:
         offset: {x: 2.6389868, y: 1.833952}
         size: {x: 7.292773, y: 4.4661694}
         damageRatio: 0.11
+        damageScaling: []
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1

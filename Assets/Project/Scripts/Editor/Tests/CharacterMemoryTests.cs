@@ -69,6 +69,44 @@ public sealed class CharacterMemoryTests
     }
 
     [Test]
+    public void ReiMemoryUsesAuthoredDescriptionsAndSavedProgress()
+    {
+        var state = ScriptableObject.CreateInstance<CharacterProgressionState>();
+        var item = ScriptableObject.CreateInstance<CharacterItem>();
+        var rei = AssetDatabase.LoadAssetAtPath<CharacterObject>(
+            "Assets/Project/Character/Hero/test_1_CameraGirl/CharacterObject_cg.asset");
+        item.characterObjectData = rei;
+        try
+        {
+            const string save = "{\"schemaVersion\":2,\"characterMemories\":[{\"_characterId\":\"char-1-camera_girl\"," +
+                "\"_completedSteps\":4,\"_choices\":[0,2]}]}";
+            state.ImportJson(save);
+            Assert.That(state.GetCombatPotentialLevel(rei, PotentialTrack.Skill), Is.EqualTo(1));
+            Assert.That(state.GetCombatPotentialLevel(rei, PotentialTrack.Passive), Is.EqualTo(1));
+            Assert.That(state.TryGrantMemory(rei, 5, PotentialTrack.Skill), Is.True);
+            var stats = new CharacterStats { maxHP = 1000f, critRate = 5f };
+            state.ApplyMemoryBaseStats(rei, stats);
+            Assert.That(stats.maxHP, Is.EqualTo(1030f));
+            Assert.That(stats.critRate, Is.EqualTo(8f));
+
+            var describe = typeof(CharacterMemoryPanel).GetMethod("DescribeMemoryEffect",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            foreach (var node in rei.kitDefinition.potentialNodes)
+            {
+                Assert.That(node.description, Is.Not.Empty);
+                Assert.That(describe.Invoke(null, new object[] { item, 1, node.track, node.level }), Is.EqualTo(node.description));
+            }
+            Assert.That(describe.Invoke(null, new object[] { item, 2, PotentialTrack.Skill, 0 }),
+                Does.StartWith("Base ").And.Contain("+3%"));
+        }
+        finally
+        {
+            Object.DestroyImmediate(item);
+            Object.DestroyImmediate(state);
+        }
+    }
+
+    [Test]
     public void PracticeFillsTheFiftyFourStepTrackAndSwapsAFullFamily()
     {
         var memory = new CharacterMemoryProgress("character");
@@ -307,6 +345,25 @@ public sealed class CharacterMemoryTests
             Assert.That(panel.TryGetComponent<CanvasGroup>(out _), Is.False);
             Assert.That(panel.GetComponentInChildren<CharacterMemoryPanel>().isActiveAndEnabled, Is.True);
             Assert.That(upgradeWindow.gameObject.activeSelf, Is.False);
+
+            switchView.onClick.Invoke();
+            Assert.That(scroll.content, Is.SameAs(potentialContent));
+            var rei = AssetDatabase.LoadAssetAtPath<CharacterObject>(
+                "Assets/Project/Character/Hero/test_1_CameraGirl/CharacterObject_cg.asset");
+            var reiItem = Object.Instantiate(item);
+            try
+            {
+                reiItem.characterObjectData = rei;
+                panel.PopulateData(reiItem, null);
+                Assert.That(switchView.gameObject.activeSelf, Is.False);
+                switchView.onClick.Invoke();
+                Assert.That(scroll.content, Is.SameAs(memoryPanel.transform));
+                var firstReiNode = scroll.content.Find("Connections and Major Nodes/Step 1/Skill Memory").GetComponent<Button>();
+                firstReiNode.onClick.Invoke();
+                var description = (TMP_Text)window.FindProperty("descriptionText").objectReferenceValue;
+                Assert.That(description.text, Is.EqualTo(CharacterPotentialPanel.FindPotentialNode(rei, PotentialTrack.Skill, 1).description));
+            }
+            finally { Object.Destroy(reiItem); }
         }
         finally
         {

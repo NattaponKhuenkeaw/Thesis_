@@ -43,3 +43,11 @@ Dimension Slash's judgment field and final-cut ribbon use the existing overallSc
 Use the same combat-zoom readability test for the enlarged waves and both Dimension Slash stages. If effects obscure danger cues, reduce scale. Runtime tests and visual review remain pending.
 
 Latest owner tuning: Shockwave is now 300% larger than original (4x radius/diameter), across all four saved prefabs and the component default. Extended duration and Dimension Slash settings remain as above. Updated dimension regression expectations. Combat-view validation remains pending; use the same readability criteria.
+
+## Explosion footprint correction, 2026-11-10
+
+The user reported that explosion visuals looked several times wider than their hits. The two authored Explosion Splash definitions both use `ChronoBloodExplosion`. Its wave now reaches the damage boundary at 1x radius. Broken Chrono Relic uses 2 world units and Rei's Captured splash uses 3. The change is specific to explosion splashes and retains the extended wave duration. The fallback explosion ring now uses the same horizontal and vertical radii as the damage query.
+
+`Tools/Project/Field Effects/Validate Explosion Footprints` passed 13 isolated EditMode checks, including both saved wave footprints and both damage boundary paths. Live combat visual review remains pending.
+
+The user also flagged Wrath of Demon, Throne Barrier and Lightning Strike. Their saved waves now use the same 1x scale as the explosion splashes. The authored hit radii are 3, 2 and 3.5 world units respectively. Rei's Captured splash uses a yellow tint on a saved variant of the shared explosion prefab. The focused run passed all 13 checks with the new assets.

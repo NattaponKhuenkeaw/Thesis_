@@ -38,6 +38,16 @@ public static class ArtifactIsolatedVisualTestRunner
         RunIsolated("Temp/ArtifactInventoryTests.xml", "ArtifactInstanceSystemTests");
     }
 
+    [MenuItem("Tools/Project/Field Effects/Validate Explosion Footprints")]
+    public static void RunExplosionFootprints()
+    {
+        RunIsolated("Temp/explosion-footprint-tests.xml", "ArtifactAreaGeometryTests",
+            "ArtifactAdvancedVisualTests.AuthoredExplosionWavesStayWithinTheirDamageArea",
+            "ArtifactAdvancedVisualTests.ShockwaveMatchesTheHitFootprintAndOutlastsTheDamageRing",
+            "FieldEffectArtifactSequenceTests.ChronoExplosionDamagesCircularAreaWhileRejectingCorners",
+            "CameraGirlMemoryRevisionTests.SkillSixSplashUsesSourceDefenseAndRespectsTheRadiusBoundary");
+    }
+
     [MenuItem("Tools/Project/Field Effects/Run Artifact UI Tests")]
     public static void RunArtifactUiTests()
     {

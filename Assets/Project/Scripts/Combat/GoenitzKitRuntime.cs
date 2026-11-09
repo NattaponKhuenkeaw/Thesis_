@@ -8,6 +8,7 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
     private readonly TeamLoader _team;
     private readonly GoenitzKitRuntimeDefinition _data;
     private readonly List<CharacterObject> _recipients = new List<CharacterObject>();
+    private readonly List<EnemyController> _roomEnemies = new List<EnemyController>();
     private readonly Dictionary<EnemyController, ulong> _rewardedLives = new Dictionary<EnemyController, ulong>();
     private readonly Dictionary<RuntimeEffectRecipe, RuntimeEffectInstance> _payloads = new Dictionary<RuntimeEffectRecipe, RuntimeEffectInstance>();
     private bool _active;
@@ -27,7 +28,7 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
         _team.OnCharacterAuraEnergyUpdated += OnAuraChanged;
     }
 
-    private int Level(PotentialTrack track) => _team.MetaProgression?.GetPotentialLevel(_owner, track) ?? 0;
+    private int Level(PotentialTrack track) => _team.MetaProgression?.GetCombatPotentialLevel(_owner, track) ?? 0;
     private bool OwnerAlive => _team.RunInventory?.GetRunCharacter(_owner) != null
         && _team.RunInventory.GetRunCharacter(_owner).currentHP != 0f;
     public bool Affects(CharacterObject character) => _active && _recipients.Contains(character);
@@ -49,6 +50,7 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
         Reconcile();
         if (!_active) return;
         _team.AddCharacterAE(_owner, -DrainRate * delta, AuraEnergyChangeReason.ModeDrain);
+        if (_active && _passiveLevel >= 4) MaintainRoomBleed();
     }
 
     public void OnCastAccepted(CombatActionExecutionToken cast, CombatAction action)
@@ -57,7 +59,7 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
         Reconcile();
         bool transform = action.actionId == _data.transformationActionId;
         bool consumes = action.actionId == _data.ultimateActionId || action.actionId == _data.finisherActionId;
-        if (_ultimateLevel >= 3 && (transform || consumes)) Apply(_owner, _data.blizzard);
+        if (_ultimateLevel >= 5 && (transform || consumes)) Apply(_owner, _data.blizzard);
         if (_active && consumes)
         {
             cast.rememberedModeOwner = _owner;
@@ -65,14 +67,25 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
             cast.modeEligibilityPending = true;
             if (action.actionId == _data.finisherActionId) EndMode();
         }
-    }
-
-    public void OnActionActive(CombatActionExecutionToken cast, CombatAction action)
-    {
-        if (_disposed || cast?.owner != _owner) return;
-        if (action?.actionId == _data.transformationActionId && !_active
-            && Level(PotentialTrack.Ultimate) >= 1 && _team.GetCharacterCurrentAE(_owner) > 0f && OwnerAlive)
+        if (transform && !_active
+            && _ultimateLevel >= 1 && _team.GetCharacterCurrentAE(_owner) > 0f && OwnerAlive)
+        {
             BeginMode(true);
+            if (_passiveLevel >= 3)
+            {
+                Apply(_owner, _data.frenzyEntryBuff);
+                Emit(_data.frenzyEntryBleed, new DamageRequest
+                {
+                    sourceCharacter = _owner,
+                    sourceStats = _team.GetCharacterRuntimeStats(_owner),
+                    execution = new CombatExecutionContext(null, _owner, 0, false, action, cast),
+                    category = AttackCategory.Ultimate,
+                    actionId = action.actionId,
+                    actionName = action.actionName,
+                    attackerPosition = _team.playerCharacter != null ? _team.playerCharacter.transform.position : Vector3.zero
+                });
+            }
+        }
     }
 
     private void BeginMode(bool newEpoch)
@@ -95,12 +108,13 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
                 for (int i = 0; i < characters.Length; i++)
                 {
                     CharacterObject target = characters[i];
-                    if (target == null || (target != _owner && _passiveLevel < 3)
+                    if (target == null || (target != _owner && _passiveLevel < 5)
                         || _team.RunInventory.GetRunCharacter(target)?.currentHP == 0f) continue;
                     _recipients.Add(target);
                     _team.GetCharacterCombatRuntimeState(target).SetTag(target == _owner ? _data.modeTag : _data.sharedModeTag);
                     Apply(target, _data.frenzy);
-                    if (target != _owner && _passiveLevel >= 4) Apply(target, _data.evasion);
+                    if (_passiveLevel >= 3) Apply(target, _data.frenzySpeed);
+                    if (target != _owner && _passiveLevel >= 6) Apply(target, _data.evasion);
                     CharacterEvents.NotifyStatsChanged(target);
                 }
         }
@@ -114,6 +128,7 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
             CharacterObject target = _recipients[i];
             _team.GetCharacterCombatRuntimeState(target).RemoveTag(target == _owner ? _data.modeTag : _data.sharedModeTag);
             Remove(target, _data.frenzy);
+            Remove(target, _data.frenzySpeed);
             Remove(target, _data.evasion);
             // Dash readiness cannot survive its enabling mode.
             if (target == _owner)
@@ -140,6 +155,19 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
         if (owner == _owner && current <= 0f && _active) EndMode();
     }
 
+    private void MaintainRoomBleed()
+    {
+        RoomEnemyRegistry.FillTargetable(_roomEnemies);
+        CharacterStats stats = null;
+        foreach (EnemyController enemy in _roomEnemies)
+        {
+            EnemyDamageTypeState damageTypes = enemy.DamageTypeState;
+            if (damageTypes == null || damageTypes.HasActiveDot(ElementType.Bleed)) continue;
+            stats ??= _team.GetCharacterRuntimeStats(_owner);
+            damageTypes.ApplyDot(ElementType.Bleed, stats, _owner);
+        }
+    }
+
     public void OnPositivePrimaryHit(in DamageRequest request, in DamageResult result, float damageDealt)
     {
         if (_disposed || damageDealt <= 0f || request.target == null) return;
@@ -150,14 +178,17 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
             && cast.rememberedModeOwner == _owner && cast.rememberedModeEpoch == _epoch;
         if (remembered) cast.modeEligibilityPending = false;
         if (own && (affected || remembered) && !request.target.IsAlive) RewardKill(request.target);
-        if (affected && _ultimateLevel >= 2 && request.target.IsAlive)
+        if (own && request.category == AttackCategory.Ultimate && _ultimateLevel >= 2 && request.target.IsAlive)
             request.target.RuntimeEffects?.ApplyEffect(_data.vulnerability, _owner, _team.GetCharacterRuntimeStats(_owner));
-        if (own && result.IsCriticalHit && _passiveLevel >= 1)
-            request.target.DamageTypeState?.ApplyRuntimeElementModifier(_data.criticalPhysicalShred);
-        if (own && result.IsCriticalHit && request.actionId == _data.exSkillActionId)
+        if (own && result.IsCriticalHit)
         {
-            Emit(_data.exBleed, request);
-            _team.AddCharacterAE(_owner, _data.exCriticalAuraEnergy);
+            if (_passiveLevel >= 1 && request.target.IsAlive)
+                request.target.RuntimeEffects?.ApplyEffect(_data.criticalDamageResistanceShred, _owner, request.sourceStats);
+            if (request.actionId == _data.exSkillActionId)
+            {
+                Emit(_data.exBleed, request);
+                _team.AddCharacterAE(_owner, _data.exCriticalAuraEnergy);
+            }
         }
         if (affected) Emit(_data.frenzyBleed, request);
         if (own && request.actionId == _data.finisherActionId && cast != null && cast.ClaimPayload(request.target.LifeIdentity))
@@ -173,7 +204,7 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
 
     private void RewardKill(EnemyController enemy)
     {
-        if (_ultimateLevel < 4 || !OwnerAlive || enemy == null) return;
+        if (_ultimateLevel < 6 || !OwnerAlive || enemy == null) return;
         if (_rewardedLives.TryGetValue(enemy, out ulong life) && life == enemy.LifeIdentity) return;
         _rewardedLives[enemy] = enemy.LifeIdentity;
         Apply(_owner, _data.killAttack);
@@ -183,7 +214,7 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
 
     private void Emit(RuntimeEffectRecipe recipe, in DamageRequest request)
     {
-        if (recipe?.definition == null || !request.target.IsAlive) return;
+        if (recipe?.definition == null || (request.target != null && !request.target.IsAlive)) return;
         if (!_payloads.TryGetValue(recipe, out RuntimeEffectInstance instance))
         {
             instance = new RuntimeEffectInstance();
@@ -216,7 +247,7 @@ public sealed class GoenitzKitRuntime : ICharacterKitRuntime
     {
         remaining = RemainingSeconds;
         return _active && effect?.sourceCharacter == _owner
-            && (effect.recipe == _data.frenzy || effect.recipe == _data.evasion);
+            && (effect.recipe == _data.frenzy || effect.recipe == _data.frenzySpeed || effect.recipe == _data.evasion);
     }
 
     public void Dispose()

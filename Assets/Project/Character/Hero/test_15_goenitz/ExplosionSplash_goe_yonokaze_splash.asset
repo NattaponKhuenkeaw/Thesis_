@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f50bd7409ce848d4fbf22db1af7f816e, type: 3}
+  m_Name: ExplosionSplash_goe_yonokaze_splash
+  m_EditorClassIdentifier: Assembly-CSharp::ExplosionSplashDefinition
+  visualPrefab: {fileID: 1532693892371257931, guid: 01fccfbe75bc66f4ba4a852cc0707617, type: 3}
+  stableId: goenitz.yonokaze_splash
+  radius: 10
+  verticalRadiusMultiplier: 1
+  centerOffset: {x: 0, y: 0}
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  targetCap: 0
+  excludeOriginalTarget: 1

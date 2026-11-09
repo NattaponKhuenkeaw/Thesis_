@@ -64,8 +64,8 @@ MonoBehaviour:
   skillActions:
   - actionId: goenitz.skill.yonokaze
     actionName: Yonokaze
-    description: Summon Tornado, Inflict DMG <b><color=#00FFED>350%</color></b> of
-      own ATK,<color=#C0C0C0>When CRIT land will do 150% of critical damage dealt</color>
+    description: Summon a tornado dealing {multiplierPercent} ATK over its hits.
+      Critical hits deal 150% of resolved critical damage.
     activationDescription: 
     icon: {fileID: 21300000, guid: cedf5b663bb21aa4fb6d414953f976aa, type: 3}
     actionType: 2
@@ -6231,7 +6231,7 @@ MonoBehaviour:
       data:
         track: 1
         comparison: 3
-        level: 3
+        level: 5
     - rid: 5456672870199460052
       type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
       data:

@@ -685,7 +685,7 @@ public partial class PlayerMovement : MonoBehaviour
 
         dashInProgress = false;
         dashCooldownFramesRemaining = dashData != null
-            ? Mathf.Max(0, dashData.cooldownFrames)
+            ? Mathf.CeilToInt(RuntimeEffectRuntimeUtility.ModifyDashCooldown(GetComponent<PlayerCharacter>(), Mathf.Max(0, dashData.cooldownFrames)))
             : 0;
     }
 
@@ -717,7 +717,8 @@ public partial class PlayerMovement : MonoBehaviour
 
     // The HUD reads the same fixed-step timer that gates the next dash.
     public float DashCooldownRemaining => Mathf.Max(0, dashCooldownFramesRemaining) * Time.fixedDeltaTime;
-    public float DashCooldownDuration => dashData != null ? Mathf.Max(0, dashData.cooldownFrames) * Time.fixedDeltaTime : 0f;
+    public float DashCooldownDuration => RuntimeEffectRuntimeUtility.ModifyDashCooldown(GetComponent<PlayerCharacter>(),
+        dashData != null ? Mathf.Max(0, dashData.cooldownFrames) * Time.fixedDeltaTime : 0f);
 
     public bool CanDash() => profile != null && (CanStartGroundDash() || CanStartAirDash());
     public bool CanJump() => profile != null

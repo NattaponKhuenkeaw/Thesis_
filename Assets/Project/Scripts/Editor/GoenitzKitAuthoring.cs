@@ -17,6 +17,8 @@ public static class GoenitzKitAuthoring
     {
         if (Application.isPlaying) throw new InvalidOperationException("Author Goenitz outside Play Mode.");
         CharacterObject character = Load<CharacterObject>(Folder + "CharacterObject_Goenitz.asset");
+        if (character.kitDefinition.useMemoryRanks)
+            throw new InvalidOperationException("The legacy Blood Frenzy migration would overwrite Goenitz's authored Memory kit.");
         ActionResolverTable table = character.actionResolverTable;
         Undo.RecordObjects(new Object[] { character, table }, "Apply Goenitz Blood Frenzy Kit");
         var profile = LoadOrCreate<GoenitzKitRuntimeDefinition>(Folder + "GoenitzKitRuntime.asset");

@@ -14,6 +14,7 @@ public interface IPassiveEffectHook
 
 public class CharacterPassiveController : MonoBehaviour
 {
+    private readonly HashSet<string> enemyEffectsBeforeHit = new HashSet<string>();
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
     [SerializeField] private CharacterProgressionState metaProgression;
@@ -818,6 +819,35 @@ public class CharacterPassiveController : MonoBehaviour
             out replacementProjectileData);
     }
 
+    public bool TryRollDuplicateProjectile(in ProjectileSpawnContext context)
+    {
+        CombatActionExecutionToken cast = context.execution?.cast;
+        if (cast == null || cast.projectileDuplicationRolled) return false;
+
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            if (node?.actionModifiers == null) continue;
+            foreach (PassiveActionModifierDefinition modifier in node.actionModifiers)
+            {
+                if (modifier == null || modifier.duplicateProjectileChance <= 0f ||
+                    !modifier.Matches(context.category, context.sourceActionId, context.sourceActionName,
+                        context.sourceStep?.stepName, runtimeState)) continue;
+
+                cast.projectileDuplicationRolled = true;
+                string cooldownTag = modifier.duplicateProjectileCooldownTag;
+                if (runtimeState.HasTag(cooldownTag)
+                    || (modifier.duplicateProjectileChance < 1f && UnityEngine.Random.value >= modifier.duplicateProjectileChance))
+                    return false;
+
+                if (modifier.duplicateProjectileCooldown > 0f)
+                    runtimeState.SetTag(cooldownTag, modifier.duplicateProjectileCooldown);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public float ModifyHitboxScale(
         AttackCategory category,
         string actionId,
@@ -1002,6 +1032,16 @@ public class CharacterPassiveController : MonoBehaviour
         context.damageDealt = damageDealt;
         context.killedEnemy = killedEnemy;
         context.enemyMaxHp = enemy != null ? enemy.maxHP : 0f;
+        enemyEffectsBeforeHit.Clear();
+        if (enemy?.RuntimeEffects != null)
+            foreach (var effect in enemy.RuntimeEffects.ActiveEffects)
+            {
+                if (effect == null) continue;
+                if (!string.IsNullOrEmpty(effect.StackKey)) enemyEffectsBeforeHit.Add(effect.StackKey);
+                string identity = RuntimeEffectRuntimeUtility.GetStableId(effect.definition, effect.recipe);
+                if (!string.IsNullOrEmpty(identity)) enemyEffectsBeforeHit.Add(identity);
+            }
+        context.enemyEffectsBeforeHit = enemyEffectsBeforeHit;
 
         CombatMeterDefinition meter = CombatMeter;
         if (damageDealt > 0f && meter != null && meter.IsConfigured)
@@ -1382,10 +1422,7 @@ public class CharacterPassiveController : MonoBehaviour
                 // Standard 1-to-1 recipe superseding
                 if (resolvedEffect != null && candidate.ResolvedEffect != null)
                 {
-                    if (string.Equals(
-                        candidate.ResolvedEffect.StableId,
-                        resolvedEffect.StableId,
-                        StringComparison.Ordinal))
+                    if (RuntimeEffectRuntimeUtility.SameEffectFamily(candidate, effect))
                     {
                         return true;
                     }
@@ -2283,6 +2320,14 @@ public class CharacterPassiveController : MonoBehaviour
             return false;
         }
 
+        if (effect.valueMode == PassiveResourceValueMode.RemainingCooldown &&
+            (effect.effectType == PassiveResourceEffectType.ReduceSkillCooldown || effect.effectType == PassiveResourceEffectType.ReduceUltimateCooldown))
+        {
+            playerCharacter.Combat?.ReduceActionCooldownByRatio(
+                effect.effectType == PassiveResourceEffectType.ReduceSkillCooldown ? AttackCategory.Skill : AttackCategory.Ultimate,
+                effect.cooldownActionName, effect.cooldownActionId, effect.valueRatio);
+            return true;
+        }
         float valueSource = effect.valueMode == PassiveResourceValueMode.TriggerDamageDealt
             ? Mathf.Max(0f, context.damageDealt)
             : ResolveResourceValue(effect.valueSource);

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 public sealed class ArtifactAdvancedVisualTests
@@ -127,6 +128,34 @@ public sealed class ArtifactAdvancedVisualTests
     }
 
     [Test]
+    public void AuthoredExplosionWavesStayWithinTheirDamageArea()
+    {
+        var definitions = AssetDatabase.FindAssets("t:ExplosionSplashDefinition", new[] { "Assets/Project" });
+        Assert.That(definitions.Length, Is.GreaterThanOrEqualTo(2));
+        var center = new Vector2(4f, 2f);
+        foreach (string guid in definitions)
+        {
+            var definition = AssetDatabase.LoadAssetAtPath<ExplosionSplashDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+            if (definition.visualPrefab == null) continue;
+            var host = Object.Instantiate(definition.visualPrefab);
+            try
+            {
+                var visual = host.GetComponent<ArtifactAreaVisual>();
+                visual.Begin(center, definition.radius, verticalMultiplier: definition.verticalRadiusMultiplier);
+                Sample(visual, visual.expansionSeconds * visual.shockwaveDurationMultiplier);
+                Vector2 radii = ArtifactAreaGeometry.Radii(definition.radius, definition.verticalRadiusMultiplier);
+                Assert.That(visual.CurrentAttackRadii, Is.EqualTo(radii), definition.name);
+                Assert.That(visual.wave.color.a, Is.GreaterThan(0f), definition.name);
+                Bounds bounds = visual.wave.bounds;
+                Assert.That(bounds.center, Is.EqualTo((Vector3)center), definition.name);
+                Assert.That(bounds.extents.x, Is.LessThanOrEqualTo(radii.x + .001f), definition.name);
+                Assert.That(bounds.extents.y, Is.LessThanOrEqualTo(radii.y + .001f), definition.name);
+            }
+            finally { Object.DestroyImmediate(host); }
+        }
+    }
+
+    [Test]
     public void ExpiredMarkCannotBeConsumedByARuleWithoutItsOwnDuration()
     {
         ArtifactRuleRuntimeState state = new ArtifactRuleRuntimeState
@@ -168,7 +197,7 @@ public sealed class ArtifactAdvancedVisualTests
     [TestCase("ChronoBloodExplosion")]
     [TestCase("DaggerThunderStrike")]
     [TestCase("CrestDarkFlameMark")]
-    public void ShockwaveIsLargerAndOutlastsTheDamageRing(string prefab)
+    public void ShockwaveMatchesTheHitFootprintAndOutlastsTheDamageRing(string prefab)
     {
         ArtifactAreaVisual visual = Area(prefab);
         visual.Begin(Vector2.zero, 3f, verticalMultiplier: 2f);
@@ -176,8 +205,8 @@ public sealed class ArtifactAdvancedVisualTests
             visual.Pulse(Vector2.zero, 3f, 2f);
         Sample(visual, visual.expansionSeconds * visual.shockwaveDurationMultiplier);
         Assert.That(visual.CurrentAttackRadii, Is.EqualTo(new Vector2(3f, 6f)));
-        Assert.That(visual.wave.transform.localScale.x, Is.EqualTo(24f).Within(0.001f));
-        Assert.That(visual.wave.transform.localScale.y, Is.EqualTo(48f).Within(0.001f));
+        Assert.That(visual.wave.transform.localScale.x, Is.EqualTo(6f).Within(0.001f));
+        Assert.That(visual.wave.transform.localScale.y, Is.EqualTo(12f).Within(0.001f));
         Sample(visual, visual.attackFadeSeconds);
         Assert.That(visual.attackRing.startColor.a, Is.Zero);
         Assert.That(visual.wave.color.a, Is.GreaterThan(0f));

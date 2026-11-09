@@ -18,150 +18,111 @@ public sealed class CameraGirlPotentialTests
     }
 
     [Test]
-    public void CameraGirl_HasAll12PotentialNodesConfigured()
+    public void CameraGirl_HasAll18PotentialNodesConfigured()
     {
-        Assert.That(cg.kitDefinition, Is.Not.Null);
-        List<PotentialNodeDefinition> allNodes = cg.kitDefinition.EnumerateAllNodes().ToList();
-
-        // 3 base nodes + 12 potential nodes = 15 total nodes
-        var potentialNodes = allNodes.Where(n => n.level > 0).ToList();
-        Assert.That(potentialNodes.Count, Is.EqualTo(12), "Should have exactly 12 potential nodes authored.");
-
-        var skillNodes = potentialNodes.Where(n => n.track == PotentialTrack.Skill).OrderBy(n => n.level).ToList();
-        var ultNodes = potentialNodes.Where(n => n.track == PotentialTrack.Ultimate).OrderBy(n => n.level).ToList();
-        var passiveNodes = potentialNodes.Where(n => n.track == PotentialTrack.Passive).OrderBy(n => n.level).ToList();
-
-        Assert.That(skillNodes.Count, Is.EqualTo(4), "Skill track should have 4 nodes (Lv.1 to Lv.4).");
-        Assert.That(ultNodes.Count, Is.EqualTo(4), "Ultimate track should have 4 nodes (Lv.1 to Lv.4).");
-        Assert.That(passiveNodes.Count, Is.EqualTo(4), "Passive track should have 4 nodes (Lv.1 to Lv.4).");
+        var nodes = cg.kitDefinition.potentialNodes;
+        Assert.That(nodes.Count, Is.EqualTo(18));
+        foreach (var track in new[] { PotentialTrack.Skill, PotentialTrack.Ultimate, PotentialTrack.Passive })
+            CollectionAssert.AreEqual(Enumerable.Range(1, 6), nodes.Where(n => n.track == track).Select(n => n.level).OrderBy(n => n));
     }
 
     [Test]
     public void CameraGirl_SkillTrack_ConfiguredCorrectly()
     {
-        var skillNodes = cg.kitDefinition.EnumerateAllNodes()
-            .Where(n => n.track == PotentialTrack.Skill && n.level > 0)
-            .OrderBy(n => n.level)
-            .ToList();
-
-        // Skill Lv.1: Deterministic buffs for CR (13%) & CD (23%) to Teammates (3)
-        var lv1 = skillNodes[0];
-        Assert.That(lv1.nodeId, Is.EqualTo("cg.skill.lv1"));
-        Assert.That(lv1.runtimeEffects.Count, Is.EqualTo(2));
-        Assert.That(lv1.runtimeEffects[0].recipe.policy.appliesOn, Is.EqualTo(RuntimeEffectApplyTarget.Teammates));
-        Assert.That(lv1.runtimeEffects[0].recipe.parameters.statModifiers[0].value, Is.EqualTo(13f));
-        Assert.That(lv1.runtimeEffects[1].recipe.parameters.statModifiers[0].value, Is.EqualTo(23f));
-
-        // Skill Lv.2: Increased values to CR 17% and CD 33%
-        var lv2 = skillNodes[1];
-        Assert.That(lv2.nodeId, Is.EqualTo("cg.skill.lv2"));
-        Assert.That(lv2.runtimeEffects[0].recipe.parameters.statModifiers[0].value, Is.EqualTo(17f));
-        Assert.That(lv2.runtimeEffects[1].recipe.parameters.statModifiers[0].value, Is.EqualTo(33f));
-
-        // Skill Lv.3: Scope changed to Allies (2)
-        var lv3 = skillNodes[2];
-        Assert.That(lv3.nodeId, Is.EqualTo("cg.skill.lv3"));
-        Assert.That(lv3.runtimeEffects[0].recipe.policy.appliesOn, Is.EqualTo(RuntimeEffectApplyTarget.Allies));
-        Assert.That(lv3.runtimeEffects[1].recipe.policy.appliesOn, Is.EqualTo(RuntimeEffectApplyTarget.Allies));
-
-        // Skill Lv.4: 40% chance Stun for 2.5s on hit
-        var lv4 = skillNodes[3];
-        Assert.That(lv4.nodeId, Is.EqualTo("cg.skill.lv4"));
-        Assert.That(lv4.onHitStatusEffects.Count, Is.EqualTo(1));
-        Assert.That(lv4.onHitStatusEffects[0].status, Is.EqualTo(StatusEffectType.Stun));
-        Assert.That(lv4.onHitStatusEffects[0].chance, Is.EqualTo(0.4f).Within(0.01f));
-        Assert.That(lv4.onHitStatusEffects[0].durationSeconds, Is.EqualTo(2.5f).Within(0.01f));
+        var nodes = cg.kitDefinition.potentialNodes.Where(n => n.track == PotentialTrack.Skill).OrderBy(n => n.level).ToArray();
+        Assert.That(nodes[0].runtimeEffects[0].recipe.parameters.statModifiers[0].value, Is.EqualTo(17f));
+        Assert.That(nodes[0].runtimeEffects[1].recipe.parameters.statModifiers[0].value, Is.EqualTo(33f));
+        Assert.That(nodes[0].runtimeEffects[0].recipe.policy.appliesOn, Is.EqualTo(RuntimeEffectApplyTarget.Teammates));
+        Assert.That(nodes[1].runtimeEffects[0].recipe.parameters.statModifiers[0].value, Is.EqualTo(31f));
+        Assert.That(nodes[1].runtimeEffects[1].recipe.parameters.statModifiers[0].value, Is.EqualTo(64f));
+        Assert.That(nodes[2].runtimeEffects.Take(2).All(e => e.recipe.policy.appliesOn == RuntimeEffectApplyTarget.Allies), Is.True);
+        Assert.That(nodes[2].runtimeEffects[2].recipe.parameters.statModifiers[0].value, Is.EqualTo(1.4f));
+        Assert.That(nodes[2].runtimeEffects[2].recipe.policy.durationSeconds, Is.EqualTo(15f));
+        Assert.That(nodes[3].onHitStatusEffects.Single().chance, Is.EqualTo(.4f));
+        Assert.That(nodes[3].onHitStatusEffects.Single().durationSeconds, Is.EqualTo(2.5f));
+        var focus = nodes[4].runtimeEffects.Single(e => e.recipe.parameters.overrideProjectile).recipe;
+        Assert.That(focus.policy.durationSeconds, Is.EqualTo(10f));
+        Assert.That(focus.parameters.projectile.tickInterval, Is.EqualTo(1f));
+        Assert.That(focus.parameters.projectile.roundRobinTargets, Is.True);
+        Assert.That(AssetDatabase.Contains(focus.parameters.projectile.projectile), Is.True);
+        Assert.That(nodes[5].runtimeEffects.Single().recipe.definition, Is.TypeOf<OnHitRecipeRuntimeEffectDefinition>());
     }
 
     [Test]
     public void CameraGirl_UltimateTrack_ConfiguredCorrectly()
     {
-        var ultNodes = cg.kitDefinition.EnumerateAllNodes()
-            .Where(n => n.track == PotentialTrack.Ultimate && n.level > 0)
-            .OrderBy(n => n.level)
-            .ToList();
-
-        // Ult Lv.1: 15s assist tag, 50% shadow attack trigger, off-field supported, max 1 active
-        var lv1 = ultNodes[0];
-        Assert.That(lv1.nodeId, Is.EqualTo("cg.ultimate.lv1"));
-        Assert.That(lv1.runtimeTagEffects.Count, Is.EqualTo(1));
-        Assert.That(lv1.runtimeTagEffects[0].tag, Is.EqualTo("cg.ult.shadow_assist"));
-        Assert.That(lv1.runtimeTagEffects[0].duration, Is.EqualTo(15f));
-        Assert.That(lv1.coordinatedActionEffects.Count, Is.EqualTo(1));
-        var coord1 = lv1.coordinatedActionEffects[0];
-        Assert.That(coord1.actionId, Is.EqualTo("cg.skill.ex"));
-        Assert.That(coord1.triggerChance, Is.EqualTo(0.5f).Within(0.01f));
-        Assert.That(coord1.canTriggerOffField, Is.True);
-        Assert.That(coord1.maxSimultaneousActive, Is.EqualTo(1));
-        Assert.That(coord1.internalCooldown, Is.EqualTo(1.5f).Within(0.01f));
-
-        // Ult Lv.2: 100% chance, 400% ATK damage override
-        var lv2 = ultNodes[1];
-        Assert.That(lv2.nodeId, Is.EqualTo("cg.ultimate.lv2"));
-        var coord2 = lv2.coordinatedActionEffects[0];
-        Assert.That(coord2.actionId, Is.EqualTo("cg.skill.ex"));
-        Assert.That(coord2.triggerChance, Is.EqualTo(1.0f).Within(0.01f));
-        Assert.That(coord2.damageMultiplierOverride, Is.EqualTo(4.0f).Within(0.01f));
-        Assert.That(coord2.internalCooldown, Is.EqualTo(1.5f).Within(0.01f));
-
-        // Ult Lv.3: Bigger Radius Projectile (1.5x)
-        var lv3 = ultNodes[2];
-        Assert.That(lv3.nodeId, Is.EqualTo("cg.ultimate.lv3"));
-        Assert.That(lv3.actionModifiers.Count, Is.EqualTo(1));
-        Assert.That(lv3.actionModifiers[0].projectileScaleMultiplier, Is.EqualTo(1.5f).Within(0.01f));
-        Assert.That(lv3.actionModifiers[0].hitboxScaleMultiplier, Is.EqualTo(1.5f).Within(0.01f));
-
-        // Ult Lv.4: 1.5x hitbox scale, +3 AE reward on hit
-        var lv4 = ultNodes[3];
-        Assert.That(lv4.nodeId, Is.EqualTo("cg.ultimate.lv4"));
-        var coord4 = lv4.coordinatedActionEffects[0];
-        Assert.That(coord4.actionId, Is.EqualTo("cg.skill.ex"));
-        Assert.That(coord4.hitboxScaleMultiplier, Is.EqualTo(1.5f).Within(0.01f));
-        Assert.That(coord4.auraEnergyRewardOnHit, Is.EqualTo(3.0f).Within(0.01f));
-        Assert.That(coord4.internalCooldown, Is.EqualTo(1.5f).Within(0.01f));
+        var nodes = cg.kitDefinition.potentialNodes.Where(n => n.track == PotentialTrack.Ultimate).OrderBy(n => n.level).ToArray();
+        Assert.That(nodes[0].runtimeTagEffects.Single().duration, Is.EqualTo(15f));
+        Assert.That(nodes[0].coordinatedActionEffects.Single().triggerChance, Is.EqualTo(.5f));
+        Assert.That(nodes[0].coordinatedActionEffects.Single().canTriggerOffField, Is.True);
+        Assert.That(nodes[1].coordinatedActionEffects.Single().auraEnergyRewardOnHit, Is.EqualTo(3f));
+        Assert.That(nodes[1].coordinatedActionEffects.Single().triggerChance, Is.EqualTo(.5f));
+        Assert.That(nodes[2].runtimeTagEffects.Single().duration, Is.EqualTo(30f));
+        var attack = nodes[3].runtimeEffects.Single().recipe;
+        Assert.That(attack.policy.durationSeconds, Is.EqualTo(20f));
+        Assert.That(attack.parameters.statModifiers.Single().value, Is.EqualTo(5f));
+        Assert.That(attack.parameters.statModifiers.Single().maxIncrease, Is.EqualTo(900f));
+        var shadow = nodes[4].coordinatedActionEffects.Single();
+        Assert.That(shadow.triggerChance, Is.EqualTo(1f));
+        Assert.That(shadow.damageMultiplierOverride, Is.EqualTo(6.5f));
+        Assert.That(shadow.overrideDamageSource, Is.True);
+        Assert.That(shadow.damageSourceStat, Is.EqualTo(ActionDamageSourceStat.Defense));
+        Assert.That(shadow.maxSimultaneousActive, Is.EqualTo(1));
+        Assert.That(nodes[5].runtimeEffects.Single().recipe.parameters.statModifiers.Single().value, Is.EqualTo(100f));
     }
 
     [Test]
     public void CameraGirl_PassiveTrack_ConfiguredCorrectly()
     {
-        var passiveNodes = cg.kitDefinition.EnumerateAllNodes()
-            .Where(n => n.track == PotentialTrack.Passive && n.level > 0)
-            .OrderBy(n => n.level)
-            .ToList();
+        var nodes = cg.kitDefinition.potentialNodes.Where(n => n.track == PotentialTrack.Passive).OrderBy(n => n.level).ToArray();
+        foreach (var node in nodes.Take(2))
+        {
+            Assert.That(node.runtimeEffects.Count, Is.EqualTo(2));
+            Assert.That(node.runtimeEffects[0].recipe.policy.durationSeconds, Is.EqualTo(10f));
+            Assert.That(node.runtimeEffects[0].recipe.recipeId, Is.EqualTo("cg.captured"));
+            Assert.That(node.runtimeEffects[0].recipe.childRecipes[0].parameters.damageInput.defenderDefensePercentAdd, Is.EqualTo(-40f));
+        }
+        Assert.That(nodes[1].runtimeEffects[0].recipe.childRecipes.Count, Is.EqualTo(5));
+        Assert.That(nodes[1].runtimeEffects[0].recipe.childRecipes[0].parameters.damageInput.defenderDamageResistancePercentAdd, Is.EqualTo(-40f));
+        Assert.That(nodes[2].runtimeTagEffects.Count, Is.EqualTo(2));
+        Assert.That(nodes[2].runtimeTagEffects.All(e => e.duration == 10f && e.filter.requiredEnemyEffectKey == "cg.captured"), Is.True);
+        var mastery = cg.actionResolverTable.skillActions.Single(a => a.actionId == "Skill.super.ex");
+        Assert.That(mastery.comboTree.rootNode.stepData.animationClip.name, Is.EqualTo("cg_attack6"));
+        Assert.That(nodes[3].resourceEffects.Single().flatValue, Is.EqualTo(5f));
+        Assert.That(nodes[3].runtimeEffects.Single().recipe.parameters.damageInput.delivery, Is.EqualTo(DamageDelivery.Additional));
+        var proc = nodes[4].runtimeEffects.Single().recipe.parameters.reaction;
+        Assert.That(proc.internalCooldown, Is.EqualTo(1.5f));
+        Assert.That(proc.skillCooldownReduction, Is.EqualTo(.5f));
+        Assert.That(proc.effects.Single().recipe.parameters.additionalDamage.sourceStatRatio, Is.EqualTo(.7f));
+        var stacks = nodes[5].runtimeEffects.Single().recipe.parameters.reaction.effects.Single().recipe;
+        Assert.That(stacks.policy.stackLimit, Is.EqualTo(10));
+        Assert.That(stacks.policy.durationSeconds, Is.EqualTo(3f));
+    }
 
-        // Passive Lv.1: On Attack3 hit, reduce DEF by -20% for 10s
-        var lv1 = passiveNodes[0];
-        Assert.That(lv1.nodeId, Is.EqualTo("cg.passive.lv1"));
-        Assert.That(lv1.runtimeEffects.Count, Is.EqualTo(1));
-        var effect1 = lv1.runtimeEffects[0];
-        Assert.That(effect1.filter.stepName, Is.EqualTo("Attack3"));
-        Assert.That(effect1.recipe.parameters.damageInput.defenderDefensePercentAdd, Is.EqualTo(-20f));
-        Assert.That(effect1.recipe.policy.durationSeconds, Is.EqualTo(10f));
-
-        // Passive Lv.2: On Attack3 hit, reduce DEF by -40% for 10s
-        var lv2 = passiveNodes[1];
-        Assert.That(lv2.nodeId, Is.EqualTo("cg.passive.lv2"));
-        var effect2 = lv2.runtimeEffects[0];
-        Assert.That(effect2.filter.stepName, Is.EqualTo("Attack3"));
-        Assert.That(effect2.recipe.parameters.damageInput.defenderDefensePercentAdd, Is.EqualTo(-40f));
-        Assert.That(effect2.recipe.policy.durationSeconds, Is.EqualTo(10f));
-
-        // Passive Lv.3: Bigger 3rd basic (Attack3) hitbox collider (1.5x scale)
-        var lv3 = passiveNodes[2];
-        Assert.That(lv3.nodeId, Is.EqualTo("cg.passive.lv3"));
-        Assert.That(lv3.actionModifiers.Count, Is.EqualTo(1));
-        Assert.That(lv3.actionModifiers[0].stepName, Is.EqualTo("Attack3"));
-        Assert.That(lv3.actionModifiers[0].hitboxScaleMultiplier, Is.EqualTo(1.5f).Within(0.01f));
-
-        // Passive Lv.4: 10s follow-up window unlocking Skill.super.ex
-        var lv4 = passiveNodes[3];
-        Assert.That(lv4.nodeId, Is.EqualTo("cg.passive.lv4"));
-        Assert.That(lv4.runtimeTagEffects.Count, Is.EqualTo(1));
-        Assert.That(lv4.runtimeTagEffects[0].tag, Is.EqualTo("cg.skill.followup_window"));
-        Assert.That(lv4.runtimeTagEffects[0].duration, Is.EqualTo(10f));
-        Assert.That(lv4.actionModifiers.Count, Is.EqualTo(1));
-        Assert.That(lv4.actionModifiers[0].actionId, Is.EqualTo("Skill.super.ex"));
-        Assert.That(lv4.actionModifiers[0].unlocked, Is.True);
+    [Test]
+    public void MasteryRetainsAttackSixTimingAndBothAuthoredHitboxes()
+    {
+        var mastery = cg.actionResolverTable.skillActions.Single(a => a.actionId == "Skill.super.ex");
+        var step = mastery.comboTree.rootNode.stepData;
+        var pending = new Stack<ComboNode>(cg.actionResolverTable.comboActions.Select(a => a.comboTree.rootNode));
+        var visited = new HashSet<ComboNode>();
+        AttackStepData original = null;
+        while (pending.Count > 0)
+        {
+            var node = pending.Pop();
+            if (node == null || !visited.Add(node)) continue;
+            if (node.stepData?.animationClip == step.animationClip) { original = node.stepData; break; }
+            pending.Push(node.defaultNext);
+            pending.Push(node.onGrabSuccessNode);
+            foreach (var route in node.routes) pending.Push(route.targetNode);
+        }
+        Assert.That(original, Is.Not.Null);
+        Assert.That(step.TotalFrames, Is.EqualTo(original.TotalFrames));
+        Assert.That(step.hitData.hitboxes.Count, Is.EqualTo(2));
+        Assert.That(step.hitData.hitboxes.All(hit => hit is NormalHitbox), Is.True);
+        Assert.That(JsonUtility.ToJson(step.hitData), Is.EqualTo(JsonUtility.ToJson(original.hitData)));
+        Assert.That(JsonUtility.ToJson(step.motionData), Is.EqualTo(JsonUtility.ToJson(original.motionData)));
+        Assert.That(JsonUtility.ToJson(step.eventData), Is.EqualTo(JsonUtility.ToJson(original.eventData)));
     }
 
     [Test]

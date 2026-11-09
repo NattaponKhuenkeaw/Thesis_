@@ -60,6 +60,70 @@ public sealed class FieldEffectArtifactSequenceTests
     }
 
     [Test]
+    public void PersistentRecipeIconFollowsActivePlayerAndExpiresWhileOwnerIsOffField()
+    {
+        _inventory.DeployTeam(new[] { _wearer, _ally }, 0);
+        _playerHost = new GameObject("Persistent icon recipient");
+        PlayerCharacter player = _playerHost.AddComponent<PlayerCharacter>();
+        player.characterObject = _wearer;
+        player.SetCurrentHP(player.MaxHP);
+        RuntimeEffectReceiver receiver = _playerHost.AddComponent<RuntimeEffectReceiver>();
+        player.RuntimeEffects = receiver;
+        typeof(RuntimeEffectReceiver).GetMethod("OnEnable", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(receiver, null);
+        var authored = _wearer.kitDefinition.GetNodeById("main.skill.lv4").runtimeEffects
+            .Single(effect => effect.recipe?.recipeId == "main.memory.chain_summon").recipe;
+        // Isolate presentation from projectile services; retain the saved icon and ownership policy.
+        var recipe = JsonUtility.FromJson<RuntimeEffectRecipe>(JsonUtility.ToJson(authored));
+        recipe.definition = UnityEditor.AssetDatabase.LoadAssetAtPath<AdditionalDamageOnHitRuntimeEffectDefinition>(
+            "Assets/Project/Character/Hero/RuntimeEffect/RuntimeEffect_AdditionalDamage.asset");
+        _inventory.ApplyRuntimeEffect(_wearer, recipe, _wearer, _wearer.stats);
+        var view = _playerHost.GetComponentInChildren<FieldEffectVisual>(true);
+        Assert.That(view, Is.Not.Null);
+        Assert.That(view.style, Is.EqualTo(FieldEffectVisual.VisualStyle.FloatingIcon));
+        _inventory.SetActiveTeamSlotIndex(1);
+        player.SetCharacter(_ally, 1000f);
+        Assert.That(view.IsFinished, Is.False);
+        RebuildHud(player);
+        Assert.That(view.Phase, Is.Not.EqualTo(FieldEffectVisual.AnimationPhase.Ending),
+            "HUD refreshes for the incoming character must not remove a team-visible effect.");
+        typeof(FieldEffectVisual).GetMethod("Sample", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(view, new object[] { .2f });
+        Vector3 previous = view.transform.position;
+        _playerHost.transform.position += Vector3.right * 4f;
+        typeof(FieldEffectVisual).GetMethod("Sample", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(view, new object[] { .2f });
+        Assert.That(view.transform.position.x - previous.x, Is.EqualTo(4f).Within(.01f));
+        Assert.That(_inventory.GetActiveRuntimeEffects(_ally), Is.Empty, "The visual must not transfer the source effect to the ally.");
+        _inventory.TickRuntimeEffects(15.1f);
+        Assert.That(view.Phase, Is.EqualTo(FieldEffectVisual.AnimationPhase.Ending));
+        typeof(FieldEffectVisual).GetMethod("Sample", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(view, new object[] { .5f });
+        Assert.That(view.IsFinished, Is.True);
+    }
+
+    private void RebuildHud(PlayerCharacter player)
+    {
+        var root = new GameObject("Runtime effect HUD regression", typeof(RectTransform));
+        root.SetActive(false);
+        var hud = root.AddComponent<PlayerHUD>();
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        typeof(PlayerHUD).GetField("playerCharacter", flags).SetValue(hud, player);
+        typeof(PlayerHUD).GetField("teamLoader", flags).SetValue(hud, _team);
+        typeof(PlayerHUD).GetField("runtimeEffectContainer", flags).SetValue(hud, root.transform);
+        try
+        {
+            for (int refresh = 0; refresh < 3; refresh++)
+                typeof(PlayerHUD).GetMethod("RebuildRuntimeEffects", flags).Invoke(hud, null);
+        }
+        finally
+        {
+            typeof(PlayerHUD).GetMethod("OnDisable", flags).Invoke(hud, null);
+            Object.DestroyImmediate(root);
+        }
+    }
+
+    [Test]
     public void PlayerFieldVisualsFollowInventoryAndSwapsWithoutAStatusHud()
     {
         Equip("P1_01_BlindsBoundlessRibbon");
@@ -189,7 +253,7 @@ public sealed class FieldEffectArtifactSequenceTests
         Assert.That(glyph.Phase, Is.EqualTo(FieldEffectVisual.AnimationPhase.Ending));
         ArtifactAreaVisual blood = _host.GetComponentInChildren<ArtifactAreaVisual>(true);
         Assert.That(blood.style, Is.EqualTo(ArtifactAreaVisual.VisualStyle.BloodExplosion));
-        ExplosionSplashDefinition definition = Resources.Load<ExplosionSplashDefinition>("ItemSO/Artifacts/Phase1/P1_A04_MarkExplosion");
+        ExplosionSplashDefinition definition = Resources.Load<ExplosionSplashDefinition>("ItemSO/Artifacts/RaritySSR/P1_A04_MarkExplosion");
         Assert.That(blood.HitRadius, Is.EqualTo(definition.radius));
         Assert.That(blood.transform.position, Is.EqualTo((Vector3)skill.hitPosition));
         RuntimeEffectInstance claw = Effect(_wearer, "P1-A04-CLAW");
@@ -279,7 +343,7 @@ public sealed class FieldEffectArtifactSequenceTests
         Assert.That(corner.currentHP, Is.EqualTo(10000f));
         ArtifactAreaVisual blood = _host.GetComponentInChildren<ArtifactAreaVisual>(true);
         Assert.That(blood.HitRadii, Is.EqualTo(new Vector2(2f, 2f)));
-        Assert.That(Resources.Load<ExplosionSplashDefinition>("ItemSO/Artifacts/Phase1/P1_A04_MarkExplosion").centerOffset,
+        Assert.That(Resources.Load<ExplosionSplashDefinition>("ItemSO/Artifacts/RaritySSR/P1_A04_MarkExplosion").centerOffset,
             Is.EqualTo(Vector2.zero));
     }
 
@@ -430,7 +494,7 @@ public sealed class FieldEffectArtifactSequenceTests
 
     private ArtifactInstance Equip(string name)
     {
-        ArtifactDefinition definition = Resources.Load<ArtifactDefinition>("ItemSO/Artifacts/Phase1/" + name);
+        ArtifactDefinition definition = Resources.Load<ArtifactDefinition>("ItemSO/Artifacts/RaritySSR/" + name);
         Assert.That(_inventory.TryAcquireArtifact(definition, out ArtifactInstance artifact, 1), Is.True);
         _inventory.DeployTeam(new[] { _wearer, _ally }, 0);
         _inventory.SetEquippedArtifactRefsAt(0, new[] { new ArtifactInstanceRef(artifact.instanceId) });

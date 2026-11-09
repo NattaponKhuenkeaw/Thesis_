@@ -53,6 +53,7 @@ public struct DamageRequest
     public CharacterPassiveController sourcePassiveController;
     public AuraEnergyRewardClaim auraEnergyRewardClaim;
     public float baseDamage;
+    public bool skipSourceDamageScaling;
     public float defenderDefense;
     public float defenderDamageResistance;
     public float typeReductionPercent;

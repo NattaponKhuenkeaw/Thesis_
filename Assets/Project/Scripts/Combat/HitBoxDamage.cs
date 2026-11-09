@@ -33,6 +33,8 @@ public class HitBoxDamage : MonoBehaviour
     private AuraEnergyRewardClaim auraEnergyRewardClaim;
     private CombatExecutionContext execution;
     private CombatActionType presentationActionType;
+    private bool suppressNativeAuraEnergy;
+    public float LastDamageDealt { get; private set; }
     public bool UsesUltimateHitFlash => presentationActionType != CombatActionType.FromInput
         ? presentationActionType == CombatActionType.Ultimate
         : execution?.UsesUltimateHitFlash(sourceCategory) ?? sourceCategory == AttackCategory.Ultimate;
@@ -140,7 +142,8 @@ public class HitBoxDamage : MonoBehaviour
         CharacterObject sourceCharacter,
         AuraEnergyRewardClaim actionRewardClaim,
         CombatExecutionContext sourceExecution = null,
-        CombatActionType presentationType = CombatActionType.FromInput)
+        CombatActionType presentationType = CombatActionType.FromInput,
+        bool suppressNativeAuraEnergy = false)
     {
         currentAttackerStats = attackerStats;
         currentSourceAttack = Mathf.Max(0f, sourceAttack);
@@ -152,12 +155,14 @@ public class HitBoxDamage : MonoBehaviour
         auraEnergyRewardClaim = actionRewardClaim;
         execution = sourceExecution;
         presentationActionType = presentationType;
+        this.suppressNativeAuraEnergy = suppressNativeAuraEnergy;
         currentIsCrit = false;
         currentResolvedDamage = currentDamage;
     }
 
     private void ClearDamageSourceContext()
     {
+        suppressNativeAuraEnergy = false;
         currentAttackerStats = null;
         currentSourceAttack = 0f;
         currentIsSkillOrUltimate = false;
@@ -189,6 +194,7 @@ public class HitBoxDamage : MonoBehaviour
 
     public void ProcessHit(EnemyController enemy)
     {
+        LastDamageDealt = 0f;
         if (enemy == null || !enemy.IsTargetable || hitEnemiesThisActivation.Contains(enemy))
         {
             return;
@@ -228,6 +234,7 @@ public class HitBoxDamage : MonoBehaviour
             currentDamageResult,
             reactionData,
             true);
+        LastDamageDealt = primaryDamageDealt;
         if (reactionData.breaksGrab && enemy.LastHitAppliedReaction && !enemy.IsGrabbed)
         {
             PlayerCombat grabOwner = execution == null ? playerCombat : null;
@@ -245,7 +252,12 @@ public class HitBoxDamage : MonoBehaviour
             {
                 ApplyAdditionalDamage(enemy, attackerPosition, direction);
             }
-            projectileOwner?.ApplyMemoryHitEffects(enemy, currentAttackerStats);
+            projectileOwner?.ApplyHitEffects(
+                enemy,
+                currentAttackerStats,
+                currentDamageRequest.provenance,
+                primaryDamageDealt,
+                currentIsCrit);
         }
 
         HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
@@ -306,10 +318,12 @@ public class HitBoxDamage : MonoBehaviour
 
         ElementType elementType = ResolveElementType();
         CharacterStats resolvedAttackerStats = ResolveActionSpecificAttackerStats();
-        RuntimeEffectDamageContext runtimeContext = BuildRuntimeDamageContext(enemy, currentDamage, Vector2.zero);
+        float baseDamage = currentNormalHitbox != null
+            ? currentNormalHitbox.ResolveBaseDamage(resolvedAttackerStats, currentDamage) : currentDamage;
+        RuntimeEffectDamageContext runtimeContext = BuildRuntimeDamageContext(enemy, baseDamage, Vector2.zero);
         runtimeContext.elementType = elementType;
         runtimeContext.damageDelivery = DamageDelivery.Primary;
-        RuntimeEffectDamageInput damageInput = BuildRuntimeDamageInput(runtimeContext, currentDamage, enemy);
+        RuntimeEffectDamageInput damageInput = BuildRuntimeDamageInput(runtimeContext, baseDamage, enemy);
         ApplyRuntimeDamageInputModifiers(damageInput);
         runtimeContext.damage = damageInput.baseDamage;
         currentDamageRequest = new DamageRequest
@@ -323,7 +337,7 @@ public class HitBoxDamage : MonoBehaviour
             baseDamage = damageInput.baseDamage,
             defenderDefense = damageInput.defenderDefense,
             defenderDamageResistance = damageInput.defenderDamageResistance,
-            descriptor = new DamageDescriptor(DamageDelivery.Primary, elementType),
+            descriptor = new DamageDescriptor(runtimeContext.damageDelivery, elementType),
             execution = execution,
             category = sourceCategory,
             actionId = sourceActionId,
@@ -336,6 +350,17 @@ public class HitBoxDamage : MonoBehaviour
             ignoreTypeReduction = damageInput.ignoreTypeReduction,
             provenance = new DamageProvenance(0, 0, 0, 0, null, ResolveDamageTags())
         };
+        // Delivery conversion changes stat scaling, while this remains the originating action hit.
+        if (runtimeContext.damageDelivery != DamageDelivery.Primary)
+        {
+            currentDamageRequest.procPolicy = new DamageRequest { descriptor = new DamageDescriptor(DamageDelivery.Primary, elementType) }.ResolveProcPolicy();
+            currentDamageRequest.hasExplicitProcPolicy = true;
+        }
+        if (suppressNativeAuraEnergy)
+        {
+            currentDamageRequest.procPolicy = currentDamageRequest.ResolveProcPolicy() & ~DamageProcPolicy.GrantAuraEnergy;
+            currentDamageRequest.hasExplicitProcPolicy = true;
+        }
         if (elementType == ElementType.Void)
         {
             currentDamageRequest.procPolicy = currentDamageRequest.ResolveProcPolicy() &
@@ -352,7 +377,7 @@ public class HitBoxDamage : MonoBehaviour
 
     private bool HasDamageSource()
     {
-        return currentDamage > 0f && currentResolvedDamage > 0f;
+        return currentResolvedDamage > 0f;
     }
 
     private void ApplyAdditionalDamage(
@@ -364,10 +389,7 @@ public class HitBoxDamage : MonoBehaviour
         {
             return;
         }
-        var finisher = Project.Progression.MainMemoryKit.ResolveFinisher(rewardCharacter, passiveController, sourceActionId,
-            sourceStepData, currentNormalHitbox, projectileOwner);
-        int effectsCount = currentAdditionalDamageEffects?.Length ?? 0;
-        int totalEffects = effectsCount + (finisher != null ? 1 : 0);
+        int totalEffects = currentAdditionalDamageEffects?.Length ?? 0;
         if (totalEffects == 0) return;
 
         PassiveEventContext context = new PassiveEventContext
@@ -386,7 +408,7 @@ public class HitBoxDamage : MonoBehaviour
 
         for (int i = 0; i < totalEffects; i++)
         {
-            AdditionalDamageEffectDefinition effect = i == effectsCount ? finisher : currentAdditionalDamageEffects[i];
+            AdditionalDamageEffectDefinition effect = currentAdditionalDamageEffects[i];
             if (effect == null || !enemy.IsAlive || !effect.CanTrigger(context))
                 continue;
 
