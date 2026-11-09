@@ -56,7 +56,7 @@ public class CameraLookAhead : MonoBehaviour
         {
             GameObject playerObj = GameObject.FindWithTag("Player");
             if (playerObj != null)
-                playerRigidbody = playerObj.GetComponent<Rigidbody2D>();
+                playerRigidbody = ResolvePlayerBody(playerObj.transform);
 
             if (playerRigidbody == null)
                 Debug.LogWarning("[CameraLookAhead] No Rigidbody2D found. Assign playerRigidbody in the inspector.");
@@ -156,6 +156,18 @@ public class CameraLookAhead : MonoBehaviour
             playerPos.y,
             transform.position.z
         );
+    }
+
+    internal static Rigidbody2D ResolvePlayerBody(Transform target)
+    {
+        if (target == null || !target.gameObject.activeInHierarchy) return null;
+
+        // Tagged visuals and hitboxes belong to the motor, even if the hitbox has its own body.
+        PlayerMovement movement = target.GetComponentInParent<PlayerMovement>()
+            ?? target.GetComponentInChildren<PlayerMovement>();
+        return movement != null
+            ? movement.RB ?? movement.GetComponent<Rigidbody2D>()
+            : target.GetComponent<Rigidbody2D>();
     }
 
     public void BindPlayerRigidbody(Rigidbody2D playerBody)

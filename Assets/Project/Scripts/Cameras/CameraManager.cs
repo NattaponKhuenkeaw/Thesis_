@@ -198,14 +198,6 @@ public partial class CameraManager : MonoBehaviour
             return;
         }
 
-        // Auto-find player
-        if (_playerTransform == null)
-        {
-            GameObject playerObj = GameObject.FindWithTag("Player");
-            if (playerObj != null)
-                _playerTransform = playerObj.transform;
-        }
-
         _cameraLookAhead = GetComponentInChildren<CameraLookAhead>(true);
         if (_cameraLookAhead == null)
         {
@@ -740,19 +732,11 @@ public partial class CameraManager : MonoBehaviour
     /// </summary>
     public void SnapToPlayerForRoomEnter(Vector3 warpDelta)
     {
-        if (_playerTransform == null)
-        {
-            GameObject playerObj = GameObject.FindWithTag("Player");
-            if (playerObj != null)
-            {
-                _playerTransform = playerObj.transform;
-            }
-        }
+        EnsurePlayerReferences();
 
         ClearEngagedEnemies();
         ExitCombatMode();
-        CameraLookAhead lookAhead = Object.FindFirstObjectByType<CameraLookAhead>();
-        lookAhead?.SnapToPlayer();
+        _cameraLookAhead?.SnapToPlayer();
         NotifyPlayerWarp(warpDelta);
         BeginTemporaryPlayerSnap(0.05f, smoothTransition: false);
     }
@@ -1743,34 +1727,24 @@ public partial class CameraManager : MonoBehaviour
 
     private void EnsurePlayerReferences()
     {
-        if (_playerTransform == null)
+        Rigidbody2D body = CameraLookAhead.ResolvePlayerBody(_playerTransform);
+        if (body == null)
         {
             GameObject playerObj = GameObject.FindWithTag("Player");
             if (playerObj != null)
-            {
-                _playerTransform = playerObj.transform;
-            }
-            else
-            {
-                PlayerMovement movement = Object.FindFirstObjectByType<PlayerMovement>();
-                if (movement != null)
-                    _playerTransform = movement.transform;
-            }
+                body = CameraLookAhead.ResolvePlayerBody(playerObj.transform);
         }
 
-        if (_cameraLookAhead != null && _playerTransform != null)
+        if (body == null)
         {
-            PlayerMovement movement = _playerTransform.GetComponent<PlayerMovement>()
-                ?? _playerTransform.GetComponentInChildren<PlayerMovement>(true);
-            Rigidbody2D playerBody = movement != null ? movement.RB : null;
-            if (playerBody == null)
-                playerBody = _playerTransform.GetComponent<Rigidbody2D>()
-                    ?? _playerTransform.GetComponentInChildren<Rigidbody2D>(true);
-            if (playerBody != null)
-            {
-                _cameraLookAhead.BindPlayerRigidbody(playerBody);
-            }
+            PlayerMovement movement = Object.FindFirstObjectByType<PlayerMovement>();
+            if (movement != null)
+                body = movement.GetComponent<Rigidbody2D>();
         }
+
+        if (body == null) return;
+        _playerTransform = body.transform;
+        _cameraLookAhead?.BindPlayerRigidbody(body);
     }
 
     private IEnumerator EndTemporaryPlayerSnapAfterDelay(float duration)

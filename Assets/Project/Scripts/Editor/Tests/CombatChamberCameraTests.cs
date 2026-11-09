@@ -68,11 +68,15 @@ public class CombatChamberCameraTests
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
-        var player = new GameObject("Chamber camera player") { tag = "Player" };
-        var body = player.AddComponent<Rigidbody2D>();
-        body.bodyType = RigidbodyType2D.Kinematic;
         var rig = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(
             "Assets/Project/Prefab/Camera/CameraSetUp.prefab"));
+        var player = new GameObject("Chamber camera player");
+        var body = player.AddComponent<Rigidbody2D>();
+        body.bodyType = RigidbodyType2D.Kinematic;
+        player.AddComponent<PlayerMovement>().enabled = false;
+        var taggedChild = new GameObject(combat ? "HitBox" : "Visual") { tag = "Player" };
+        taggedChild.transform.SetParent(player.transform, false);
+        if (combat) taggedChild.AddComponent<Rigidbody2D>().simulated = false;
         var output = rig.GetComponentInChildren<Camera>();
         output.aspect = aspect;
         var manager = rig.GetComponent<CameraManager>();
@@ -91,7 +95,8 @@ public class CombatChamberCameraTests
             float right = first.exitWall.bounds.min.x;
             body.position = new Vector2(right - 1f, 1.5f);
             var lookAhead = rig.GetComponentInChildren<CameraLookAhead>();
-            lookAhead.playerRigidbody = body;
+            yield return null;
+            Assert.That(lookAhead.playerRigidbody, Is.SameAs(body), "Camera must follow the motor, not the tagged child.");
             lookAhead.SnapToPlayer();
             if (combat)
             {
@@ -113,6 +118,17 @@ public class CombatChamberCameraTests
             Assert.That(viewRight, Is.LessThanOrEqualTo(right + .03f),
                 $"{brain.ActiveVirtualCamera?.Name}: viewport right={viewRight}, gate={right}, size={output.orthographicSize}, combat={manager.IsInCombat}");
             if (combat) Assert.That(manager.IsInCombat, Is.True);
+            else
+            {
+                float previousX = output.transform.position.x;
+                float left = first.entranceWall.bounds.max.x;
+                body.position = new Vector2(Mathf.Lerp(left, right, .25f), body.position.y);
+                float deadline = Time.realtimeSinceStartup + 3f;
+                while (output.transform.position.x >= previousX - 1f && Time.realtimeSinceStartup < deadline)
+                    yield return null;
+                Assert.That(output.transform.position.x, Is.LessThan(previousX - 1f),
+                    "The actual viewport must follow the player back into the chamber.");
+            }
         }
         finally
         {
