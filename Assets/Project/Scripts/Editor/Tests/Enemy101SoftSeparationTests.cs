@@ -1235,6 +1235,143 @@ public class Enemy101SoftSeparationTests
         yield return new ExitPlayMode();
     }
 
+    private sealed class PositionUltimateProbe : PlayerUltimateState
+    {
+        public PositionUltimateProbe(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
+
+        public bool StartAction(UltimateAction action)
+        {
+            var step = action.comboTree.rootNode.stepData;
+            resolver.BeginExplicitStep(action, step, true, action.comboTree);
+            return ExecuteCombatStep(step, BuildInputContext(), false);
+        }
+    }
+
+    [UnityTest]
+    public IEnumerator YaotomeMaintainsItsGrabReleaseAndProjectileChain()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(
+            HeroRoot + "test_15_goenitz/CharacterObject_Goenitz.asset");
+        var table = Object.Instantiate(character.actionResolverTable);
+        var action = table.ultimateActions.Single(a => a.actionId == "goenitz.ultimate2.shin.yaotome");
+        var nodes = new Queue<ComboNode>();
+        var seen = new HashSet<ComboNode>();
+        var candidates = new List<NormalHitbox>();
+        var projectileCopies = new Dictionary<ProjectileData, ProjectileData>();
+        nodes.Enqueue(action.comboTree.rootNode);
+        while (nodes.Count > 0)
+        {
+            var node = nodes.Dequeue();
+            if (node == null || !seen.Add(node)) continue;
+            var step = node.stepData;
+            var hitboxes = step.hitData?.hitboxes.AsEnumerable() ?? Enumerable.Empty<HitboxBase>();
+            candidates.AddRange(hitboxes.OfType<NormalHitbox>().Where(hit => hit.useAuthoredReactionTarget));
+            foreach (var hit in hitboxes.OfType<ProjectileSpawnHitbox>())
+            {
+                var data = hit.projectileData;
+                if (data == null || data.ResolveRoutineHitbox() is not NormalHitbox routine
+                    || !routine.useAuthoredReactionTarget) continue;
+                if (!projectileCopies.TryGetValue(data, out var copy))
+                {
+                    copy = Object.Instantiate(data);
+                    projectileCopies.Add(data, copy);
+                    candidates.Add((NormalHitbox)copy.ResolveRoutineHitbox());
+                }
+                hit.projectileData = copy;
+            }
+            nodes.Enqueue(node.defaultNext);
+            nodes.Enqueue(node.onGrabSuccessNode);
+            foreach (var route in node.routes) nodes.Enqueue(route.targetNode);
+            foreach (var trigger in step.triggerWindows) nodes.Enqueue(trigger.targetNode);
+        }
+        Assert.That(candidates.Count, Is.EqualTo(5));
+        Assert.That(candidates.All(hit => hit.preserveReactionMotionTiming && !hit.useSnapToAnchor && !hit.breaksGrab), Is.True);
+        var oldRandomState = UnityEngine.Random.state;
+        float previousMaxStep = Time.maximumDeltaTime;
+        Time.maximumDeltaTime = Time.fixedDeltaTime;
+        try
+        {
+            foreach (string prefab in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+            {
+                List<(string step, int frame, bool held, bool release, EnemyReactionKind kind, float damage)> baseline = null;
+                Vector2 baselinePosition = default;
+                foreach (bool authored in new[] { false, true })
+                {
+                    foreach (var hit in candidates)
+                        hit.useAuthoredReactionTarget = authored;
+                    UnityEngine.Random.InitState(12);
+                    using var fixture = new Fixture(1, prefab);
+                    yield return fixture.Ready();
+                    var enemy = fixture.Enemies[0];
+                    enemy.currentHP = 10000f;
+                    enemy.rb.position = new Vector2(2f, enemy.rb.position.y);
+                    var projectiles = fixture.Root.AddComponent<Project.Combat.ProjectileVFXManager>();
+                    typeof(Project.Combat.ProjectileVFXManager).GetField("projectileLibrary", Private).SetValue(
+                        projectiles, AssetDatabase.LoadAssetAtPath<ProjectileLibrary>(HeroRoot + "Material/ProjectileLibrary.asset"));
+                    fixture.Root.AddComponent<Project.Combat.ProjectileManager>();
+                    var combat = CreatePositionCombatProbe(fixture.Root.transform, character, 1, includeQteState: true);
+                    var player = combat.GetComponent<PlayerCharacter>();
+                    var fsm = combat.GetComponent<PlayerStateMachine>();
+                    yield return PhysicsStep();
+                    var probe = new PositionUltimateProbe(player, fsm);
+                    fsm.ChangeState(probe);
+                    Assert.That(fsm.CurrentStateId, Is.EqualTo(PlayerStateId.Ultimate));
+                    int frame = 0;
+                    bool sawHeld = false;
+                    var trace = new List<(string step, int frame, bool held, bool release, EnemyReactionKind kind, float damage)>();
+                    enemy.OnDamaged += hit =>
+                    {
+                        if (hit.sourceActionId != action.actionId || hit.sourceStepData == null) return;
+                        trace.Add((hit.sourceStepData.stepName, probe.CurrentFrame, enemy.IsGrabbed, hit.breaksGrab, hit.reactionKind, hit.damage));
+                    };
+                    Assert.That(probe.StartAction(action), Is.True);
+                    for (frame = 1; frame <= 1250; frame++)
+                    {
+                        yield return PhysicsStep();
+                        sawHeld |= combat.HasGrabbedEnemy();
+                        if (frame > 120 && fsm.CurrentStateId != PlayerStateId.Ultimate
+                            && !Object.FindObjectsByType<ProjectileRuntime>(FindObjectsSortMode.None).Any())
+                            break;
+                    }
+                    string context = $"{action.actionId} {prefab} authored={authored}";
+                    TestContext.WriteLine($"{context}: {string.Join(", ", trace.Select(hit => $"{hit.step}@{hit.frame}:held={hit.held}:release={hit.release}"))}");
+                    Assert.That(sawHeld || trace.Any(hit => hit.held), Is.True, context);
+                    Assert.That(combat.HasGrabbedEnemy() || enemy.IsGrabbed, Is.False, context);
+                    Assert.That(fsm.CurrentStateId, Is.Not.EqualTo(PlayerStateId.Ultimate), context);
+                    Assert.That(trace.Select(hit => hit.step), Is.SupersetOf(new[] { "Yaotome", "Yaotome-Folow", "Exit" }), context);
+                    Assert.That(trace.Any(hit => hit.held && hit.release), Is.True, context);
+                    if (baseline == null)
+                    {
+                        baseline = trace;
+                        baselinePosition = enemy.rb.position;
+                    }
+                    else
+                    {
+                        Assert.That(trace.Select(hit => (hit.step, hit.held, hit.release, hit.kind, hit.damage)),
+                            Is.EqualTo(baseline.Select(hit => (hit.step, hit.held, hit.release, hit.kind, hit.damage))), context);
+                        for (int i = 0; i < trace.Count; i++)
+                        {
+                            int contactTolerance = trace[i].step == "Exit" && !trace[i].release ? 1 : 0;
+                            Assert.That(Mathf.Abs(trace[i].frame - baseline[i].frame),
+                                Is.LessThanOrEqualTo(contactTolerance), $"{context} hit {i}: {trace[i].step}");
+                        }
+                        Assert.That(Vector2.Distance(enemy.rb.position, baselinePosition), Is.LessThan(.1f), context);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            Time.maximumDeltaTime = previousMaxStep;
+            UnityEngine.Random.state = oldRandomState;
+            foreach (var copy in projectileCopies.Values) Object.DestroyImmediate(copy);
+            Object.DestroyImmediate(table);
+        }
+        yield return new ExitPlayMode();
+    }
+
     private static PlayerCombat CreatePositionCombatProbe(Transform parent, CharacterObject character, int side,
         bool includeQteState = false)
     {
@@ -1296,7 +1433,7 @@ public class Enemy101SoftSeparationTests
         yield return new EnterPlayMode();
         var hits = GetPositionMigrationHits(group).ToArray();
         Assert.That(hits, Is.Not.Empty);
-        int expectedMigrated = group switch { "skills" => 8, "cut" => 1, "projectiles" => 29, "qte" => 4, _ => 0 };
+        int expectedMigrated = group switch { "skills" => 8, "cut" => 1, "projectiles" => 34, "qte" => 4, _ => 0 };
         Assert.That(hits.Count(entry => entry.hit.useAuthoredReactionTarget && entry.hit.preserveReactionMotionTiming),
             Is.EqualTo(expectedMigrated));
         float priorScale = Time.timeScale;
