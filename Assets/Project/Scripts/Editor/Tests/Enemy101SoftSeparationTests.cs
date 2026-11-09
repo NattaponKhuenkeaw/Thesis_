@@ -646,18 +646,41 @@ public class Enemy101SoftSeparationTests
     }
 
     [UnityTest]
-    public IEnumerator ReiQteCompletesWithTheSameSixHitsNearAndFar()
+    public IEnumerator ReiQteCompletesWithTheSameSixHitsNearAndFar() => CompareQteFinisher(false);
+
+    [UnityTest]
+    public IEnumerator LightningPlungeConnectsActive10And47NearAndFar() => CompareQteFinisher(true);
+
+    [UnityTest]
+    public IEnumerator LightningPlungeOpenerKeepsTheFinisherConnected() => CompareQteFinisher(true, compareOpener: true);
+
+    private static IEnumerator CompareQteFinisher(bool lightningPlunge, bool compareOpener = false)
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
-        LoadReiGroundCombo(out var rei);
-        var table = Object.Instantiate(rei.actionResolverTable);
-        Assert.That(rei.qteSwap.TryResolveIntro(table, out var action, out var step), Is.True);
-        Assert.That(rei.qteSwap.GetIntroComboTree(table)?.rootNode, Is.Null);
-        var hits = step.ResolveHitData(true).hitboxes.Cast<NormalHitbox>().ToArray();
-        var final = hits.Single(hit => hit.startFrameOffset == 25);
+        string path = lightningPlunge ? "test_0_Main/CharacterObject_main.asset" : "test_1_CameraGirl/CharacterObject_cg.asset";
+        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(HeroRoot + path);
+        var table = Object.Instantiate(character.actionResolverTable);
+        Assert.That(character.qteSwap.TryResolveIntro(table, out var action, out var step), Is.True);
+        var introTree = character.qteSwap.GetIntroComboTree(table);
+        Assert.That(introTree?.rootNode?.defaultNext, Is.Null);
+        var hits = step.ResolveHitData(true).hitboxes.OfType<NormalHitbox>().OrderBy(hit => hit.startFrameOffset).ToArray();
+        Assert.That(hits.Select(hit => hit.startFrameOffset),
+            Is.EqualTo(lightningPlunge ? new[] { 10, 47 } : new[] { 7, 11, 16, 19, 24, 25 }));
+        var final = hits.Last();
+        var comparedHit = compareOpener ? hits[0] : final;
+        if (lightningPlunge)
+        {
+            Assert.That(hits[0].useAuthoredReactionTarget && hits[0].preserveReactionMotionTiming, Is.True);
+            Assert.That(hits[0].reactionTargetOffset, Is.EqualTo(new Vector2(.75f, 0f)));
+        }
+        else
+        {
+            Assert.That(hits.Take(hits.Length - 1).Any(hit => hit.useAuthoredReactionTarget), Is.False);
+        }
         Assert.That(final.useAuthoredReactionTarget && final.preserveReactionMotionTiming, Is.True);
-        Assert.That(final.reactionTargetOffset, Is.EqualTo(new Vector2(1.267f, 0f)));
+        Assert.That(final.reactionTargetOffset, Is.EqualTo(lightningPlunge
+            ? new Vector2(.3333f, 1.6509f) : new Vector2(1.267f, 0f)));
         var currentReaction = typeof(EnemyHitReactionHandler).GetField("currentReaction", Private);
         var oldRandomState = UnityEngine.Random.state;
         float previousMaxStep = Time.maximumDeltaTime;
@@ -671,7 +694,7 @@ public class Enemy101SoftSeparationTests
                 Vector2 oldFinalPosition = default;
                 foreach (bool authored in new[] { false, true })
                 {
-                    final.useAuthoredReactionTarget = authored;
+                    comparedHit.useAuthoredReactionTarget = authored;
                     UnityEngine.Random.InitState(12);
                     using var fixture = new Fixture(1, prefab);
                     yield return fixture.Ready();
@@ -680,13 +703,14 @@ public class Enemy101SoftSeparationTests
                     enemy.rb.position = new Vector2(gap, enemy.rb.position.y);
                     Physics2D.SyncTransforms();
 
-                    var combat = CreatePositionCombatProbe(fixture.Root.transform, rei, 1, includeQteState: true);
+                    var combat = CreatePositionCombatProbe(fixture.Root.transform, character, 1, includeQteState: true);
                     var fsm = combat.GetComponent<PlayerStateMachine>();
                     yield return PhysicsStep();
 
                     var connections = new List<(int hit, int frame, float damage)>();
                     bool finalConnected = false;
                     bool? finalUsedPosition = null;
+                    bool? openerUsedPosition = null;
                     enemy.OnDamaged += reaction =>
                     {
                         if (reaction.sourceActionId != action.actionId || reaction.sourceStepData != step)
@@ -697,13 +721,32 @@ public class Enemy101SoftSeparationTests
                         if (hit == final) finalConnected = true;
                     };
 
-                    fsm.QteIntroState.Prepare(action, step, enemy);
+                    if (lightningPlunge)
+                    {
+                        var motor = combat.GetComponent<PlayerMovement>();
+                        Assert.That(motor.TryFindQtePlungePlacement(enemy.rb.position, character.qteSwap.plunge.targetStartOffset,
+                            1, out var placement), Is.True, "Expected a valid Lightning Plunge landing");
+                        // The target can move after the QTE captures its landing point.
+                        enemy.rb.position = new Vector2(placement.landingBodyPosition.x + gap, enemy.rb.position.y);
+                        Physics2D.SyncTransforms();
+                        fsm.QteIntroState.Prepare(new QtePreparedEntry(action, step, enemy,
+                            QteEntryMode.LightningPlunge, placement));
+                    }
+                    else
+                    {
+                        fsm.QteIntroState.Prepare(action, step, enemy);
+                    }
                     fsm.ChangeState(fsm.QteIntroState);
                     Assert.That(combat.CurrentExecution?.isQteIntro, Is.True);
                     int elapsed = 0;
                     while (fsm.CurrentStateId == PlayerStateId.QteIntro && elapsed++ < step.TotalFrames + 25)
                     {
                         yield return PhysicsStep();
+                        if (connections.Count == 1 && openerUsedPosition == null)
+                        {
+                            var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
+                            openerUsedPosition = enemy.LastHitAppliedReaction && reaction.hasAuthoredReactionTarget;
+                        }
                         if (finalConnected && finalUsedPosition == null)
                         {
                             var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
@@ -713,7 +756,9 @@ public class Enemy101SoftSeparationTests
 
                     string context = $"{prefab} gap={gap} authored={authored}";
                     TestContext.WriteLine($"{context}: {string.Join(", ", connections.Select(hit => $"{hit.hit}@{hit.frame}"))}");
-                    TestContext.WriteLine($"Rei finisher used authored position={finalUsedPosition}");
+                    TestContext.WriteLine($"QTE opener used authored position={openerUsedPosition}; finisher={finalUsedPosition}");
+                    if (compareOpener)
+                        Assert.That(openerUsedPosition, Is.EqualTo(authored && gap > 1f), context);
                     Assert.That(fsm.CurrentStateId, Is.Not.EqualTo(PlayerStateId.QteIntro), context);
                     Assert.That(combat.IsAttacking(), Is.False, context);
                     Assert.That(connections.Select(hit => hit.hit), Is.EqualTo(hits.Select(hit => hit.startFrameOffset)), context);
@@ -1066,7 +1111,12 @@ public class Enemy101SoftSeparationTests
     }
 
     [UnityTest]
-    public IEnumerator ExecutionBreakdownConnectsActive141And142()
+    public IEnumerator ExecutionBreakdownConnectsActive141And142() => CompareExecutionBreakdown(142);
+
+    [UnityTest]
+    public IEnumerator ExecutionBreakdownActive96KeepsTheFinisherConnected() => CompareExecutionBreakdown(96);
+
+    private static IEnumerator CompareExecutionBreakdown(int comparedFrame)
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
@@ -1077,8 +1127,11 @@ public class Enemy101SoftSeparationTests
         var hits = step.hitData.hitboxes.OfType<NormalHitbox>().ToArray();
         var final = hits.Single(hit => hit.startFrameOffset == 142);
         Assert.That(hits.Single(hit => hit.startFrameOffset == 1).useSnapToAnchor, Is.True);
-        Assert.That(hits.Single(hit => hit.startFrameOffset == 96).useAuthoredReactionTarget, Is.False);
+        var launch = hits.Single(hit => hit.startFrameOffset == 96);
+        Assert.That(launch.useAuthoredReactionTarget && launch.preserveReactionMotionTiming, Is.True);
+        Assert.That(launch.reactionTargetOffset, Is.EqualTo(new Vector2(0f, 1.9968f)));
         Assert.That(hits.Single(hit => hit.startFrameOffset == 141).useAuthoredReactionTarget, Is.False);
+        var comparedHit = comparedFrame == 96 ? launch : final;
         Assert.That(final.useSnapToAnchor || final.breaksGrab, Is.False);
         Assert.That(final.useAuthoredReactionTarget && final.preserveReactionMotionTiming, Is.True);
         Assert.That(final.reactionTargetOffset, Is.EqualTo(new Vector2(1.5f, 1f)));
@@ -1095,7 +1148,7 @@ public class Enemy101SoftSeparationTests
                 Vector2 legacyTravel = default;
                 foreach (bool useAuthored in new[] { false, true })
                 {
-                    final.useAuthoredReactionTarget = useAuthored;
+                    comparedHit.useAuthoredReactionTarget = useAuthored;
                     UnityEngine.Random.InitState(12);
                     using var fixture = new Fixture(1, prefab);
                     yield return fixture.Ready();
@@ -1111,6 +1164,7 @@ public class Enemy101SoftSeparationTests
                     float apex = 0f;
                     bool sawFinal = false;
                     bool usedPosition = false;
+                    bool? launchUsedPosition = null;
                     enemy.OnDamaged += reaction =>
                     {
                         if (reaction.sourceActionId != action.actionId || reaction.sourceStepData != step)
@@ -1130,6 +1184,12 @@ public class Enemy101SoftSeparationTests
                     {
                         Physics2D.SyncTransforms();
                         combat.ProcessFrameFromState(frame, step.GetPhase(frame));
+                        int activeFrame = frame - step.ActivePhaseStart;
+                        if (activeFrame == 96 && connections.Any(hit => hit.activeFrame == activeFrame))
+                        {
+                            var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
+                            launchUsedPosition = enemy.LastHitAppliedReaction && reaction.hasAuthoredReactionTarget;
+                        }
                         if (frame == step.ActivePhaseStart + 142 && sawFinal)
                         {
                             var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
@@ -1149,6 +1209,7 @@ public class Enemy101SoftSeparationTests
                     string context = $"{prefab} facing={side} authored={useAuthored}";
                     TestContext.WriteLine($"{context}: {string.Join(", ", connections.Select(hit => hit.activeFrame))}");
                     TestContext.WriteLine($"Active 142 actual authored={usedPosition}; travel X={travel.x:F3} Y={travel.y:F3}");
+                    Assert.That(launchUsedPosition, Is.EqualTo(comparedFrame != 96 || useAuthored), context);
                     Assert.That(connections.Select(hit => hit.activeFrame), Is.SupersetOf(new[] { 1, 96 }), context);
                     Assert.That(connections.Count, Is.EqualTo(15), context);
                     Assert.That(connections.Select(hit => hit.activeFrame).TakeLast(2), Is.EqualTo(new[] { 141, 142 }), context);
@@ -1208,6 +1269,16 @@ public class Enemy101SoftSeparationTests
             fsm.playerCharacter = player;
             fsm.showCombatLogs = fsm.showFrameDataLogs = fsm.showFsmLogs = false;
             combat.playerCharacter = player;
+            if (character.qteSwap.entryMode == QteEntryMode.LightningPlunge)
+            {
+                var foot = new GameObject("Plunge probe foot").transform;
+                foot.SetParent(source.transform, false);
+                typeof(PlayerMovement).GetField("groundCheck", Private).SetValue(motor, foot);
+                var graphics = new GameObject("Plunge probe graphics");
+                graphics.transform.SetParent(source.transform, false);
+                graphics.AddComponent<Animator>().runtimeAnimatorController = character.metaData.animatorController;
+                player.Animator = graphics.AddComponent<PlayerAnimator>();
+            }
         }
         source.SetActive(true);
         motor.SnapFacingDirection(side);
@@ -1225,7 +1296,7 @@ public class Enemy101SoftSeparationTests
         yield return new EnterPlayMode();
         var hits = GetPositionMigrationHits(group).ToArray();
         Assert.That(hits, Is.Not.Empty);
-        int expectedMigrated = group switch { "skills" => 7, "cut" => 1, "projectiles" => 29, "qte" => 2, _ => 0 };
+        int expectedMigrated = group switch { "skills" => 8, "cut" => 1, "projectiles" => 29, "qte" => 4, _ => 0 };
         Assert.That(hits.Count(entry => entry.hit.useAuthoredReactionTarget && entry.hit.preserveReactionMotionTiming),
             Is.EqualTo(expectedMigrated));
         float priorScale = Time.timeScale;
