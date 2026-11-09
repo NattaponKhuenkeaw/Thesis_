@@ -894,28 +894,8 @@ public class Enemy101SoftSeparationTests
                     enemy.rb.position = new Vector2(2.5f * side, enemy.rb.position.y);
                     Physics2D.SyncTransforms();
 
-                    var source = new GameObject("Judgment Cut combat probe");
-                    source.SetActive(false);
-                    source.transform.SetParent(fixture.Root.transform);
-                    source.layer = LayerMask.NameToLayer("Player");
-                    var body = source.AddComponent<Rigidbody2D>();
-                    body.constraints = RigidbodyConstraints2D.FreezeRotation;
-                    var feet = source.AddComponent<BoxCollider2D>();
-                    feet.offset = Vector2.up * .65f;
-                    feet.size = new Vector2(.65f, 1.3f);
-                    var motor = source.AddComponent<PlayerMovement>();
-                    motor.profile = shin.movementProfile;
-                    var combat = source.AddComponent<PlayerCombat>();
-                    var hitbox = new GameObject("Judgment Cut HitBox");
-                    hitbox.transform.SetParent(source.transform);
-                    hitbox.layer = source.layer;
-                    hitbox.AddComponent<BoxCollider2D>().isTrigger = true;
-                    combat.hitBoxController = hitbox.AddComponent<HitBoxController>();
-                    combat.hitBoxDamage = hitbox.AddComponent<HitBoxDamage>();
-                    combat.hitboxObject = hitbox;
-                    combat.enemyLayerMask = LayerMask.GetMask("Enemy");
-                    source.SetActive(true);
-                    motor.SnapFacingDirection(side);
+                    var combat = CreatePositionCombatProbe(fixture.Root.transform, shin, side);
+                    var motor = combat.GetComponent<PlayerMovement>();
                     yield return PhysicsStep();
 
                     var resolver = new ActionResolver();
@@ -981,6 +961,142 @@ public class Enemy101SoftSeparationTests
         yield return new ExitPlayMode();
     }
 
+    [UnityTest]
+    public IEnumerator ExecutionBreakdownConnectsActive141And142()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var shin = AssetDatabase.LoadAssetAtPath<CharacterObject>(HeroRoot + "test_0_Main/CharacterObject_main.asset");
+        var table = Object.Instantiate(shin.actionResolverTable);
+        var action = table.ultimateActions.Single(a => a.actionId == "main.ultimate.execution_breakdown");
+        var step = action.comboTree.rootNode.stepData;
+        var hits = step.hitData.hitboxes.OfType<NormalHitbox>().ToArray();
+        var final = hits.Single(hit => hit.startFrameOffset == 142);
+        Assert.That(hits.Single(hit => hit.startFrameOffset == 1).useSnapToAnchor, Is.True);
+        Assert.That(hits.Single(hit => hit.startFrameOffset == 96).useAuthoredReactionTarget, Is.False);
+        Assert.That(hits.Single(hit => hit.startFrameOffset == 141).useAuthoredReactionTarget, Is.False);
+        Assert.That(final.useSnapToAnchor || final.breaksGrab, Is.False);
+        Assert.That(final.useAuthoredReactionTarget && final.preserveReactionMotionTiming, Is.True);
+        Assert.That(final.reactionTargetOffset, Is.EqualTo(new Vector2(1.5f, 1f)));
+        var currentReaction = typeof(EnemyHitReactionHandler).GetField("currentReaction", Private);
+        var oldRandomState = UnityEngine.Random.state;
+        float previousMaxStep = Time.maximumDeltaTime;
+        Time.maximumDeltaTime = Time.fixedDeltaTime;
+        try
+        {
+            foreach (string prefab in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+            foreach (int side in new[] { -1, 1 })
+            {
+                List<(int activeFrame, float damage)> legacy = null;
+                Vector2 legacyTravel = default;
+                foreach (bool useAuthored in new[] { false, true })
+                {
+                    final.useAuthoredReactionTarget = useAuthored;
+                    UnityEngine.Random.InitState(12);
+                    using var fixture = new Fixture(1, prefab);
+                    yield return fixture.Ready();
+                    var enemy = fixture.Enemies[0];
+                    enemy.rb.position = new Vector2(2.5f * side, enemy.rb.position.y);
+                    Physics2D.SyncTransforms();
+                    var combat = CreatePositionCombatProbe(fixture.Root.transform, shin, side);
+                    yield return PhysicsStep();
+
+                    var connections = new List<(int activeFrame, float damage)>();
+                    int frame = 0;
+                    Vector2 finalOrigin = default;
+                    float apex = 0f;
+                    bool sawFinal = false;
+                    bool usedPosition = false;
+                    enemy.OnDamaged += reaction =>
+                    {
+                        if (reaction.sourceActionId != action.actionId || reaction.sourceStepData != step)
+                            return;
+                        int active = frame - step.ActivePhaseStart;
+                        connections.Add((active, reaction.damage));
+                        if (active == 142)
+                        {
+                            finalOrigin = enemy.rb.position;
+                            sawFinal = true;
+                        }
+                    };
+                    combat.BeginResolvedAction(false, action);
+                    combat.ExecuteStep(step, 1, false, AttackCategory.Ultimate, action.actionName, action.actionId,
+                        isAutoChain: false);
+                    for (frame = 1; frame <= step.TotalFrames + 1; frame++)
+                    {
+                        Physics2D.SyncTransforms();
+                        combat.ProcessFrameFromState(frame, step.GetPhase(frame));
+                        if (frame == step.ActivePhaseStart + 142 && sawFinal)
+                        {
+                            var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
+                            usedPosition = enemy.LastHitAppliedReaction && reaction.hasAuthoredReactionTarget;
+                        }
+                        yield return PhysicsStep();
+                        if (sawFinal) apex = Mathf.Max(apex, enemy.rb.position.y - finalOrigin.y);
+                    }
+                    combat.ResetCombo();
+                    for (int i = 0; i < 55; i++)
+                    {
+                        yield return PhysicsStep();
+                        if (sawFinal) apex = Mathf.Max(apex, enemy.rb.position.y - finalOrigin.y);
+                    }
+
+                    var travel = new Vector2((enemy.rb.position.x - finalOrigin.x) * side, apex);
+                    string context = $"{prefab} facing={side} authored={useAuthored}";
+                    TestContext.WriteLine($"{context}: {string.Join(", ", connections.Select(hit => hit.activeFrame))}");
+                    TestContext.WriteLine($"Active 142 actual authored={usedPosition}; travel X={travel.x:F3} Y={travel.y:F3}");
+                    Assert.That(connections.Select(hit => hit.activeFrame), Is.SupersetOf(new[] { 1, 96 }), context);
+                    Assert.That(connections.Count, Is.EqualTo(15), context);
+                    Assert.That(connections.Select(hit => hit.activeFrame).TakeLast(2), Is.EqualTo(new[] { 141, 142 }), context);
+                    if (legacy == null)
+                    {
+                        legacy = connections;
+                        legacyTravel = travel;
+                    }
+                    else
+                    {
+                        Assert.That(connections, Is.EqualTo(legacy), context);
+                        Assert.That(Vector2.Distance(travel, legacyTravel), Is.LessThan(.1f), context);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            Time.maximumDeltaTime = previousMaxStep;
+            UnityEngine.Random.state = oldRandomState;
+            Object.DestroyImmediate(table);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    private static PlayerCombat CreatePositionCombatProbe(Transform parent, CharacterObject character, int side)
+    {
+        var source = new GameObject("Position combat probe");
+        source.SetActive(false);
+        source.transform.SetParent(parent);
+        source.layer = LayerMask.NameToLayer("Player");
+        var body = source.AddComponent<Rigidbody2D>();
+        body.constraints = RigidbodyConstraints2D.FreezeRotation;
+        var feet = source.AddComponent<BoxCollider2D>();
+        feet.offset = Vector2.up * .65f;
+        feet.size = new Vector2(.65f, 1.3f);
+        var motor = source.AddComponent<PlayerMovement>();
+        motor.profile = character.movementProfile;
+        var combat = source.AddComponent<PlayerCombat>();
+        var hitbox = new GameObject("Position combat HitBox");
+        hitbox.transform.SetParent(source.transform);
+        hitbox.layer = source.layer;
+        hitbox.AddComponent<BoxCollider2D>().isTrigger = true;
+        combat.hitBoxController = hitbox.AddComponent<HitBoxController>();
+        combat.hitBoxDamage = hitbox.AddComponent<HitBoxDamage>();
+        combat.hitboxObject = hitbox;
+        combat.enemyLayerMask = LayerMask.GetMask("Enemy");
+        source.SetActive(true);
+        motor.SnapFacingDirection(side);
+        return combat;
+    }
+
     private const string HeroRoot = "Assets/Project/Character/Hero/";
     private const string ShinTable = "test_0_Main/ActionResolverTable_main.asset";
     private const string ReiTable = "test_1_CameraGirl/ActionResolverTable_cg.asset";
@@ -992,7 +1108,7 @@ public class Enemy101SoftSeparationTests
         yield return new EnterPlayMode();
         var hits = GetPositionMigrationHits(group).ToArray();
         Assert.That(hits, Is.Not.Empty);
-        int expectedMigrated = group switch { "skills" => 6, "cut" => 1, "projectiles" => 29, "qte" => 1, _ => 0 };
+        int expectedMigrated = group switch { "skills" => 7, "cut" => 1, "projectiles" => 29, "qte" => 1, _ => 0 };
         Assert.That(hits.Count(entry => entry.hit.useAuthoredReactionTarget && entry.hit.preserveReactionMotionTiming),
             Is.EqualTo(expectedMigrated));
         float priorScale = Time.timeScale;
