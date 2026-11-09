@@ -10,17 +10,18 @@ namespace Project.AIBehaviour.Boss
         [SerializeField] private Boss112Controller boss;
         [SerializeField] private EnemyColorVariants colors;
         [SerializeField] private SpriteRenderer[] segments;
+        [SerializeField, Tooltip("Five looping frames per boss color, ordered A, B, C.")] private Sprite[] segmentFrames;
         [SerializeField] private CircleCollider2D groundHurtbox;
         [SerializeField, Range(0f, 1f)] private float segmentDamageMultiplier = .65f;
 
         private const float SegmentSpacing = 2.05f;
         private const float MaxJointDistance = 2.7f;
         private const float GroundHurtboxHeight = 1.7f;
-        private const float SegmentArtRadiusPixels = 288f;
+        private const float SegmentRadius = 288f / 170f;
+        private const int FramesPerColor = 5;
         private static readonly Color HitTint = new Color(1f, .12f, .1f);
         private readonly List<Vector3> headTrail = new List<Vector3>(256);
         private SpriteRenderer head;
-        private float segmentRadius;
         private Vector3[] hangingPositions;
         private Vector3[] pose;
         private Vector3[] followVelocity;
@@ -99,8 +100,6 @@ namespace Project.AIBehaviour.Boss
             segmentFlashUntil = new float[segmentHurtboxes.Length];
             for (int i = 0; i < segmentHurtboxes.Length; i++)
                 if (segments[i] != null) segmentHurtboxes[i] = segments[i].GetComponent<CircleCollider2D>();
-            if (segments != null && segments.Length > 0 && segments[0] != null && segments[0].sprite != null)
-                segmentRadius = SegmentArtRadiusPixels / segments[0].sprite.pixelsPerUnit;
             if (groundHurtbox != null) authoredHurtboxOffset = groundHurtbox.offset;
         }
 
@@ -133,11 +132,8 @@ namespace Project.AIBehaviour.Boss
                 return;
             }
 
-            Color tint = colors != null && colors.SelectedIndex == 1
-                ? new Color(.04f, .67f, .58f)
-                : colors != null && colors.SelectedIndex == 2
-                    ? new Color(.7f, .77f, .06f)
-                    : new Color(.68f, .05f, .61f);
+            int paletteStart = Mathf.Clamp(colors != null ? colors.SelectedIndex : 0, 0, 2) * FramesPerColor;
+            int frame = Mathf.FloorToInt(Time.time * 8f);
             Vector3 top = head != null && head.sprite != null
                 ? head.transform.TransformPoint(head.sprite.bounds.center)
                 : transform.position + Vector3.up * 3.5f;
@@ -174,7 +170,7 @@ namespace Project.AIBehaviour.Boss
             if (tail != null && tail.sprite != null)
             {
                 tail.transform.localScale = Vector3.one * 1.05f;
-                tailY = boss.FloorY + segmentRadius * tail.transform.lossyScale.y;
+                tailY = boss.FloorY + SegmentRadius * tail.transform.lossyScale.y;
             }
             Vector3 bottom = new Vector3(transform.position.x - .7f, tailY, transform.position.z);
             Vector3 trace = top;
@@ -214,8 +210,8 @@ namespace Project.AIBehaviour.Boss
             if (beamPoseWeight > 0f && tail != null && segments[0] != null)
             {
                 // Raise the first joint above the mouth, then route the rest around the full firing lane.
-                float sideX = beamLaneX + beamSide * (boss.Beam.LaneHalfWidth + segmentRadius * tail.transform.lossyScale.x + .15f);
-                float shoulderY = Mathf.Max(top.y, boss.Beam.MouthY + segmentRadius * segments[0].transform.lossyScale.y + .15f);
+                float sideX = beamLaneX + beamSide * (boss.Beam.LaneHalfWidth + SegmentRadius * tail.transform.lossyScale.x + .15f);
+                float shoulderY = Mathf.Max(top.y, boss.Beam.MouthY + SegmentRadius * segments[0].transform.lossyScale.y + .15f);
                 Vector3 shoulder = new Vector3(top.x + beamSide * 2.35f, shoulderY, top.z);
                 pose[0] = Vector3.Lerp(pose[0], shoulder, beamPoseWeight);
                 for (int i = 1; i < last; i++)
@@ -251,7 +247,9 @@ namespace Project.AIBehaviour.Boss
                 segment.transform.position = previous;
                 segment.transform.localScale = i == last ? Vector3.one * 1.05f
                     : new Vector3(1f + .16f * pulse, 1f - .24f * pulse, 1f) * .9f;
-                segment.color = Time.time < segmentFlashUntil[i] ? HitTint : tint;
+                if (segmentFrames != null && segmentFrames.Length == 3 * FramesPerColor)
+                    segment.sprite = segmentFrames[paletteStart + (frame + i) % FramesPerColor];
+                segment.color = Time.time < segmentFlashUntil[i] ? HitTint : Color.white;
             }
             if (groundHurtbox != null && groundHurtbox.enabled)
             {

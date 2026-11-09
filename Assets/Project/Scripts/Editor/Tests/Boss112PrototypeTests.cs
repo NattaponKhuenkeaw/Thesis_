@@ -1156,6 +1156,45 @@ public sealed class Boss112PrototypeTests
     }
 
     [UnityTest]
+    public IEnumerator SegmentAnimationLoopsInTheSelectedColorInBothPrefabs()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        foreach (var path in new[] { Boss112WormTestAuthoring.TestBossPath, Boss112RunAuthoring.BossPath })
+        {
+            using var f = new Fixture(path);
+            f.Boss.AutoAttack = false;
+            yield return f.Ready();
+            var appearance = f.Boss.GetComponent<EnemyColorVariants>();
+            var renderers = f.Boss.GetComponent<Boss112WormBody>().SegmentHurtboxes
+                .Select(collider => collider.GetComponent<SpriteRenderer>()).ToArray();
+            for (int color = 0; color < 3; color++)
+            {
+                Assert.That(appearance.ApplyVariant(color), Is.True);
+                yield return Wait(.05f);
+                var seen = new HashSet<Sprite>();
+                int changes = 0;
+                Sprite last = null;
+                float until = Time.time + .9f;
+                while (Time.time < until)
+                {
+                    yield return null;
+                    foreach (var renderer in renderers)
+                    {
+                        Assert.That(renderer.sprite.texture.name, Is.EqualTo($"Boss112_Segments_{(char)('a' + color)}"));
+                        Assert.That(renderer.color, Is.EqualTo(Color.white));
+                    }
+                    var current = renderers[0].sprite;
+                    if (current != last) { changes++; seen.Add(current); last = current; }
+                }
+                Assert.That(seen, Has.Count.EqualTo(5));
+                Assert.That(changes, Is.GreaterThan(5), "The animation must return to earlier frames.");
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
     public IEnumerator WormSegmentsTrailTheMovingHeadWithoutGaps()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -1347,8 +1386,8 @@ public sealed class Boss112PrototypeTests
 
     private static Bounds WormSegmentArtBounds(SpriteRenderer renderer)
     {
-        // The visible disc is 576 pixels across; the source rect also includes transparent padding.
-        float diameter = 576f / renderer.sprite.pixelsPerUnit;
+        // The new segment core is about 116 pixels across; exclude the cell padding and arms.
+        float diameter = 116f / renderer.sprite.pixelsPerUnit;
         return new Bounds(renderer.transform.position,
             Vector3.Scale(new Vector3(diameter, diameter, 0f), renderer.transform.lossyScale));
     }
