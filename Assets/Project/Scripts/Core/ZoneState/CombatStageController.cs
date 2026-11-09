@@ -19,7 +19,7 @@ namespace Project.Core.ZoneState
             [Tooltip("Optional override. Leave empty so the chosen card (Easy / Medium / Hard) picks Encounter_Easy / Medium / Hard.")]
             public EncounterSO encounter;
 
-            [Tooltip("How many enemies spawn in this room.")]
+            [Tooltip("Fallback enemy count without a combat card. Zero excludes this room from the card budget.")]
             [Min(0)]
             [UnityEngine.Serialization.FormerlySerializedAs("enemyQuota")]
             public int enemyCount = 3;
@@ -147,10 +147,11 @@ namespace Project.Core.ZoneState
             }
 
             slices = new List<GameObject>[chambers.Length];
+            int[] routeCounts = BuildRouteChamberCounts();
             for (int i = 0; i < chambers.Length; i++)
             {
                 Chamber chamber = chambers[i];
-                int count = ResolveChamberCount(chamber);
+                int count = routeCounts != null ? routeCounts[i] : ResolveChamberCount(chamber);
                 slices[i] = RollChamberQuota(chamber, stageQuota, count);
                 if (count > 0 && slices[i].Count == 0)
                 {
@@ -171,6 +172,33 @@ namespace Project.Core.ZoneState
             fighting = false;
             ArmEnterSensors();
             return BindAndStart(0);
+        }
+
+        private int[] BuildRouteChamberCounts()
+        {
+            if (!CombatRouteContent.TryGetActiveDifficulty(out RouteDifficulty difficulty)) return null;
+
+            int combatChambers = 0;
+            foreach (var chamber in chambers)
+                if (chamber != null && chamber.enemyCount > 0) combatChambers++;
+
+            var counts = new int[chambers.Length];
+            if (combatChambers == 0) return counts;
+
+            int budget = CombatRouteContent.GetLayoutEnemyBudget(difficulty);
+            int perChamber = budget / combatChambers;
+            int remainder = budget % combatChambers;
+            for (int i = 0; i < chambers.Length; i++)
+            {
+                if (chambers[i] == null || chambers[i].enemyCount <= 0) continue;
+                counts[i] = perChamber;
+                if (remainder > 0)
+                {
+                    counts[i]++;
+                    remainder--;
+                }
+            }
+            return counts;
         }
 
         private static int ResolveChamberCount(Chamber chamber)

@@ -275,7 +275,7 @@ namespace Project.Core.ZoneState
             }
 
             pressureDirector = quota != null && quota.Count > 0
-                ? new EncounterPressureDirector(runtimeAliveCap, quota)
+                ? new EncounterPressureDirector(Mathf.Min(runtimeAliveCap, 5), quota)
                 : null;
 
             if (pressureDirector == null || pressureDirector.Remaining == 0)
@@ -793,7 +793,7 @@ namespace Project.Core.ZoneState
         {
             List<GameObject> quota = CollectQuotaPrefabs();
             pressureDirector = quota.Count > 0
-                ? new EncounterPressureDirector(aliveCap, quota)
+                ? new EncounterPressureDirector(Mathf.Min(aliveCap, 5), quota)
                 : null;
         }
 
@@ -940,7 +940,8 @@ namespace Project.Core.ZoneState
                 return true;
             }
 
-            if (TryGetNudgeRange(basePosition, out float minX, out float maxX))
+            if (runtimeSpawnMode != EncounterSpawnMode.Pressure &&
+                TryGetNudgeRange(basePosition, out float minX, out float maxX))
             {
                 float step = Mathf.Max(0.25f, minSpawnSeparation * 0.5f);
                 for (float offset = step; offset <= maxSpawnNudge + Mathf.Epsilon; offset += step)

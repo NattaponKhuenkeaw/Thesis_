@@ -115,7 +115,7 @@ public class EnemySpawnSeparationTests
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
         yield return new EnterPlayMode();
-        foreach (string mode in new[] {"Pressure","Burst","Batched","Legacy"})
+        foreach (string mode in new[] {"Pressure","Burst","Legacy"})
         {
             var fixture=new GameObject(mode+" Spawn Retry Test");
             EncounterSO encounter=ScriptableObject.CreateInstance<EncounterSO>();

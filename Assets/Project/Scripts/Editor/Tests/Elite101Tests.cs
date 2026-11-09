@@ -87,7 +87,7 @@ public class Elite101Tests
             Assert.That(quotas[i].Count(p => p == hard.FinalChamberElite), Is.EqualTo(i == quotas.Length - 1 ? 1 : 0));
         }
         Assert.That(hard.AliveCap, Is.EqualTo(5));
-        Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
+        Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
     }
 
     [TestCase("Encounter_Easy")]
@@ -132,10 +132,9 @@ public class Elite101Tests
             Assert.That(stage.TryBegin(waves, System.Array.Empty<GameObject>()), Is.True);
             var quotas = (List<GameObject>[])typeof(CombatStageController).GetField("slices", Private).GetValue(stage);
             var elite = Resources.Load<EncounterSO>("EncounterSO/Encounter_Hard").FinalChamberElite;
-            Assert.That(quotas.Length, Is.GreaterThan(1));
+            Assert.That(quotas.Select(quota => quota.Count), Is.EqualTo(new[] { 7, 7, 6 }));
             for (int i = 0; i < quotas.Length; i++)
             {
-                Assert.That(quotas[i].Count, Is.EqualTo(8));
                 Assert.That(quotas[i].Count(p => p == elite), Is.EqualTo(i == quotas.Length - 1 ? 1 : 0));
             }
         }

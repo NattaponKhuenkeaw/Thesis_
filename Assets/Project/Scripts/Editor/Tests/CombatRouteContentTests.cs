@@ -1,10 +1,45 @@
 #if UNITY_INCLUDE_TESTS
+using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using Project.Core.ZoneState;
 using UnityEngine;
 
 public class CombatRouteContentTests
 {
+    [TestCase(RouteDifficulty.Easy, 12)]
+    [TestCase(RouteDifficulty.Medium, 16)]
+    [TestCase(RouteDifficulty.Hard, 20)]
+    public void EveryCombatLayoutSharesTheCardBudgetAcrossItsChambers(RouteDifficulty difficulty, int budget)
+    {
+        var previous = ActiveRouteOffer.Current;
+        bool hadOffer = ActiveRouteOffer.HasSelection;
+        var rooms = Resources.Load<MapSO>("MapSO/Test_MapSO").Rooms
+            .Where(room => room != null && room.RoomKind == RoomKind.Combat && room.IncludeInRandomOffers).ToArray();
+        Assert.That(rooms.Length, Is.EqualTo(10));
+        var buildCounts = typeof(CombatStageController).GetMethod("BuildRouteChamberCounts",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        try
+        {
+            foreach (var room in rooms)
+            {
+                ActiveRouteOffer.Set(new RoomChoiceOffer(room, difficulty, null, null));
+                var stage = room.LayoutPrefab.GetComponentInChildren<CombatStageController>(true);
+                var counts = (int[])buildCounts.Invoke(stage, null);
+                int playable = stage.Chambers.Count(chamber => chamber != null && chamber.enemyCount > 0);
+                int remainingExtra = budget % playable;
+                var expected = stage.Chambers.Select(chamber => chamber != null && chamber.enemyCount > 0
+                    ? budget / playable + (remainingExtra-- > 0 ? 1 : 0) : 0).ToArray();
+                Assert.That(counts, Is.EqualTo(expected), room.RoomId);
+                Assert.That(counts.Sum(), Is.EqualTo(budget), room.RoomId);
+            }
+        }
+        finally
+        {
+            if (hadOffer) ActiveRouteOffer.Set(previous); else ActiveRouteOffer.Clear();
+        }
+    }
+
     [Test]
     public void UsesAuthoredChambersDetectsStageControllerOnLayout()
     {

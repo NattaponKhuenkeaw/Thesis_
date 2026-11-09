@@ -211,19 +211,19 @@ public class EncounterPressureSpawnTests
     [TestCase(RouteDifficulty.Easy, 4)]
     [TestCase(RouteDifficulty.Medium, 6)]
     [TestCase(RouteDifficulty.Hard, 8)]
-    public void ProductionDifficultyKeepsItsQuotaAndUsesFiveEnemyBatches(RouteDifficulty difficulty, int quota)
+    public void ProductionDifficultyKeepsItsFallbackQuotaAndUsesFiveEnemyPressure(RouteDifficulty difficulty, int quota)
     {
         EncounterSO encounter = CombatRouteContent.LoadPalette(difficulty);
         Assert.That(encounter.ChamberQuota, Is.EqualTo(quota));
         Assert.That(encounter.AliveCap, Is.EqualTo(5));
-        Assert.That(encounter.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
+        Assert.That(encounter.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
         var enemies = encounter.RollQuota(encounter.ChamberQuota);
         Assert.That(enemies.Count, Is.EqualTo(quota));
         foreach (GameObject enemy in enemies) Assert.That(enemy, Is.Not.Null);
     }
 
     [Test]
-    public void CombatEncounterAssetsUseBatchesAndBossKeepsItsAuthoredBurst()
+    public void CombatEncounterAssetsUsePressureAndBossKeepsItsAuthoredBurst()
     {
         EncounterSO easy = UnityEditor.AssetDatabase.LoadAssetAtPath<EncounterSO>(
             "Assets/Project/Resources/EncounterSO/Encounter_Easy.asset");
@@ -238,9 +238,9 @@ public class EncounterPressureSpawnTests
         Assert.That(medium, Is.Not.Null);
         Assert.That(hard, Is.Not.Null);
         Assert.That(boss, Is.Not.Null);
-        Assert.That(easy.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
-        Assert.That(medium.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
-        Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Batched));
+        Assert.That(easy.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
+        Assert.That(medium.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
+        Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
         Assert.That(easy.AliveCap, Is.GreaterThanOrEqualTo(1));
         Assert.That(easy.TypePickMode, Is.EqualTo(EncounterTypePickMode.ShuffleBag));
         Assert.That(easy.CollectPalettePrefabs().Count, Is.GreaterThan(0));
