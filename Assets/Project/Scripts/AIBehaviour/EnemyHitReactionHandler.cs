@@ -1568,6 +1568,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
             horizontalTime = 0f;
             bool launching = data.reactionKind == EnemyReactionKind.Knockup && data.knockupFrames > 0;
             int frames = launching ? data.knockupFrames + data.knockfallFrames : data.ActiveReactionFrames;
+            if (data.reactionTargetTravelFrames > 0)
+                frames = Mathf.Min(frames, data.reactionTargetTravelFrames);
             horizontalDuration = Mathf.Max(1, frames) / (float)FrameDataConstants.LOGIC_FPS;
 
             if (airborneFollowup)

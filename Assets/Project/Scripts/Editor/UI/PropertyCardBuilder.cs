@@ -2386,6 +2386,12 @@ namespace CombatEditor.UI
                         hitbox.reactionTargetOffset = value;
                         MarkDirty();
                     });
+                    AddIntField(body, "Target Travel Frames (0 = Auto)", hitbox.reactionTargetTravelFrames, value =>
+                    {
+                        RecordUndo("Edit Reaction Target Travel Frames");
+                        hitbox.reactionTargetTravelFrames = Mathf.Max(0, value);
+                        MarkDirty();
+                    });
                 }
             }
 

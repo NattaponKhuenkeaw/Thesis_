@@ -64,6 +64,7 @@ public struct HitReactionData
     public float launchSpeed;
     public bool hasAuthoredReactionTarget;
     public Vector2 reactionTargetOffset;
+    public int reactionTargetTravelFrames;
     public EnemyLandingBehavior landingBehavior;
     public bool canAirJuggle;
     public float juggleLaunchScale;

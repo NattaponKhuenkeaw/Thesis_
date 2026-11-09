@@ -97,6 +97,8 @@ public class NormalHitbox : HitboxBase
     public bool useAuthoredReactionTarget;
     [Tooltip("World units from the victim at impact: X away from the attacker; Y is the rise to the Knockup apex.")]
     public Vector2 reactionTargetOffset;
+    [Min(0), Tooltip("Frames to reach the authored horizontal offset. Zero uses the full reaction duration.")]
+    public int reactionTargetTravelFrames;
     
     public EnemyLandingBehavior landingBehavior = EnemyLandingBehavior.Knockdown;
     public bool canAirJuggle = true;
@@ -239,6 +241,8 @@ public class HitFrameData : ActionStepComponent
                 normal.knockupFrames = Mathf.RoundToInt(normal.knockupFrames * ratio);
                 normal.knockfallFrames = Mathf.RoundToInt(normal.knockfallFrames * ratio);
                 normal.recoveryFrames = Mathf.RoundToInt(normal.recoveryFrames * ratio);
+                if (normal.reactionTargetTravelFrames > 0)
+                    normal.reactionTargetTravelFrames = Mathf.Max(1, Mathf.RoundToInt(normal.reactionTargetTravelFrames * ratio));
                 normal.flashFrames = Mathf.RoundToInt(normal.flashFrames * ratio);
             }
             else if (hb is GrabHitbox grab)

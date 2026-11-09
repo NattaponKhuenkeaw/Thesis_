@@ -480,6 +480,204 @@ public class Enemy101SoftSeparationTests
         yield return new ExitPlayMode();
     }
 
+    [UnityTest]
+    public IEnumerator ReiGroundComboMeasuresLegacyPlacementAndKeepsFollowupsInReach()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var action = LoadReiGroundCombo(out _);
+        var steps = GetDefaultComboSteps(action);
+        Assert.That(steps.Select(step => step.stepName), Is.EqualTo(new[] { "Attack1", "Attack2", "Attack3", "Attack4", "Attack5" }));
+        var groundHits = steps.Take(4).SelectMany(step => step.hitData.hitboxes.OfType<NormalHitbox>()).ToArray();
+        Assert.That(groundHits.Length, Is.EqualTo(9));
+        Assert.That(groundHits.All(hit => hit.useAuthoredReactionTarget && hit.reactionTargetOffset.y == 0f), Is.True);
+        var finishers = steps[4].hitData.hitboxes.OfType<NormalHitbox>().ToArray();
+        Assert.That(finishers.Select(hit => hit.startFrameOffset), Is.EqualTo(new[] { 0, 20 }));
+        Assert.That(finishers.All(hit => hit.useSnapToAnchor && !hit.useAuthoredReactionTarget), Is.True);
+
+        yield return VerifyGroundPositionCombo(action, steps, 1.15f,
+            "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab");
+        yield return new ExitPlayMode();
+    }
+
+    [Test]
+    public void ReiAttack4UsesOriginalHitDataDuringQteOnly()
+    {
+        var action = LoadReiGroundCombo(out var rei);
+        var table = rei.actionResolverTable;
+        var attack4 = GetDefaultComboSteps(action).Single(step => step.stepName == "Attack4");
+        Assert.That(rei.qteSwap.TryResolveIntro(table, out _, out var qteStep), Is.True);
+        Assert.That(qteStep, Is.SameAs(attack4));
+        Assert.That(rei.qteSwap.GetIntroComboTree(table)?.rootNode, Is.Null);
+
+        var ground = attack4.hitData.hitboxes.Cast<NormalHitbox>().ToArray();
+        var qte = attack4.qteHitDataOverride.hitboxes.Cast<NormalHitbox>().ToArray();
+        Assert.That(ground.Length, Is.EqualTo(qte.Length));
+        Assert.That(qte.Select(hit => hit.startFrameOffset), Is.EqualTo(new[] { 7, 11, 16, 19, 24, 25 }));
+        Assert.That(qte.Select(hit => hit.horizontalSpeed), Is.EqualTo(new[] { 10f, 3f, 3f, 0f, 0f, 4f }));
+
+        var probe = new GameObject("Rei QTE hit data probe");
+        try
+        {
+            var combat = probe.AddComponent<PlayerCombat>();
+            var damage = probe.AddComponent<HitBoxDamage>();
+            combat.hitBoxDamage = damage;
+            foreach (bool isQte in new[] { false, true })
+            {
+                combat.ExecuteStep(attack4, 4, false, AttackCategory.Normal, isAutoChain: true, isQteIntro: isQte);
+                for (int i = 0; i < ground.Length; i++)
+                {
+                    combat.ProcessFrameFromState(attack4.ActivePhaseStart + ground[i].startFrameOffset, ActionPhase.Active);
+                    Assert.That(damage.IsConfiguredFor(isQte ? qte[i] : ground[i]), Is.True,
+                        $"QTE={isQte}, hit {ground[i].startFrameOffset}");
+                }
+            }
+
+            for (int i = 0; i < ground.Length; i++)
+            {
+                Assert.That(ground[i], Is.Not.SameAs(qte[i]));
+                Assert.That(qte[i].useAuthoredReactionTarget || qte[i].useSnapToAnchor, Is.False);
+                Assert.That(ground[i].reactionTargetTravelFrames, Is.EqualTo(6));
+                var comparable = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(ground[i]));
+                comparable.useAuthoredReactionTarget = false;
+                comparable.reactionTargetOffset = Vector2.zero;
+                comparable.reactionTargetTravelFrames = 0;
+                Assert.That(JsonUtility.ToJson(comparable), Is.EqualTo(JsonUtility.ToJson(qte[i])));
+            }
+        }
+        finally
+        {
+            Object.DestroyImmediate(probe);
+        }
+    }
+
+    private static ComboAction LoadReiGroundCombo(out CharacterObject rei)
+    {
+        rei = AssetDatabase.LoadAssetAtPath<CharacterObject>(
+            "Assets/Project/Character/Hero/test_1_CameraGirl/CharacterObject_cg.asset");
+        return rei.actionResolverTable.comboActions.Single(combo => combo.actionId == "char-1-camera_girl.basic.0");
+    }
+
+    private static List<AttackStepData> GetDefaultComboSteps(ComboAction action)
+    {
+        var steps = new List<AttackStepData>();
+        for (var node = action.comboTree.rootNode; node != null; node = node.defaultNext)
+            steps.Add(node.stepData);
+        return steps;
+    }
+
+    private static IEnumerator VerifyGroundPositionCombo(
+        ComboAction action, IReadOnlyList<AttackStepData> steps, float startingDistance, params string[] targetPrefabs)
+    {
+        var candidates = steps.SelectMany(step => step.hitData.hitboxes.OfType<NormalHitbox>()
+            .Where(hit => hit.useAuthoredReactionTarget).Select(hit => (step, hit))).ToArray();
+        Assert.That(candidates, Is.Not.Empty);
+        foreach (string path in targetPrefabs)
+        {
+            using var fixture = new Fixture(1, path);
+            yield return fixture.Ready();
+            var enemy = fixture.Enemies[0];
+            float floorY = enemy.rb.position.y;
+            var source = new GameObject("Ground combo melee probe");
+            source.transform.SetParent(fixture.Root.transform);
+            var shape = source.AddComponent<BoxCollider2D>();
+            shape.isTrigger = true;
+            shape.enabled = false;
+            var damage = source.AddComponent<HitBoxDamage>();
+
+            foreach (var (step, hit) in candidates)
+            {
+                var legacy = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(hit));
+                legacy.useAuthoredReactionTarget = false;
+                Vector2 legacyTravel = default;
+                foreach (var frame in new[] { legacy, hit })
+                {
+                    enemy.hitReactionHandler.ForceClearReaction();
+                    enemy.rb.position = new Vector2(Mathf.Max(.5f, hit.offset.x), floorY);
+                    enemy.rb.linearVelocity = Vector2.zero;
+                    source.transform.localPosition = Vector3.zero;
+                    Vector2 origin = enemy.rb.position;
+                    Assert.That(TryHit(step, frame), Is.True, step.stepName);
+                    float highest = origin.y;
+                    for (int i = 0; i < 55; i++)
+                    {
+                        yield return PhysicsStep();
+                        highest = Mathf.Max(highest, enemy.rb.position.y);
+                    }
+                    var travel = new Vector2(enemy.rb.position.x - origin.x, highest - origin.y);
+                    TestContext.WriteLine($"{path} {step.stepName}:{hit.startFrameOffset} authored={frame == hit} X={travel.x:F3} Y={travel.y:F3}");
+                    if (frame == legacy)
+                        legacyTravel = travel;
+                    else
+                        Assert.That(Vector2.Distance(travel, legacyTravel), Is.LessThan(.06f), step.stepName);
+                }
+            }
+
+            enemy.hitReactionHandler.ForceClearReaction();
+            enemy.rb.position = new Vector2(startingDistance, floorY);
+            enemy.rb.linearVelocity = Vector2.zero;
+            Vector2 stepOrigin = Vector2.zero;
+            var connections = new List<string>();
+            foreach (var step in steps)
+            {
+                var hits = step.hitData.hitboxes.OfType<NormalHitbox>().OrderBy(hit => hit.startFrameOffset).ToArray();
+                var landed = new HashSet<NormalHitbox>();
+                int duration = Mathf.Max(step.startupFrames + step.activeFrames, step.cancelWindowStartFrame);
+                for (int frame = 1; frame <= duration; frame++)
+                {
+                    source.transform.localPosition = stepOrigin + MotionAt(step, frame - 1);
+                    int active = frame - step.ActivePhaseStart;
+                    var current = hits.LastOrDefault(hit => hit.startFrameOffset <= active);
+                    if (current != null && active < current.startFrameOffset + current.activeFrames &&
+                        !landed.Contains(current) && TryHit(step, current))
+                    {
+                        landed.Add(current);
+                        connections.Add($"{step.stepName}:{current.startFrameOffset}");
+                    }
+                    yield return PhysicsStep();
+                }
+                stepOrigin += MotionAt(step, duration);
+            }
+            TestContext.WriteLine($"{path}: {string.Join(", ", connections)}");
+            var expected = steps.SelectMany(step => step.hitData.hitboxes.OfType<NormalHitbox>()
+                .OrderBy(hit => hit.startFrameOffset).Select(hit => $"{step.stepName}:{hit.startFrameOffset}"));
+            Assert.That(connections, Is.EqualTo(expected), path);
+
+            bool TryHit(AttackStepData step, NormalHitbox hit)
+            {
+                shape.offset = hit.offset;
+                shape.size = hit.size;
+                shape.enabled = true;
+                Physics2D.SyncTransforms();
+                bool overlaps = shape.Distance(enemy.bodyCollider).isOverlapped;
+                if (overlaps)
+                {
+                    damage.ResetActivationState();
+                    damage.SetHitData(1f, false, false, 0f, 0f, hit, AttackCategory.Normal, "Ground", step, null, action.actionId);
+                    source.transform.SetParent(null, true);
+                    damage.ProcessHit(enemy, enemy.bodyCollider);
+                    source.transform.SetParent(fixture.Root.transform, true);
+                }
+                shape.enabled = false;
+                return overlaps;
+            }
+        }
+        static Vector2 MotionAt(AttackStepData step, int frame)
+        {
+            Vector2 offset = Vector2.zero;
+            if (step.motionData == null) return offset;
+            foreach (var key in step.motionData.keyframes)
+            {
+                Assert.That(key.taskType, Is.EqualTo(MotionTaskType.Relative));
+                if (frame < key.startFrame) continue;
+                float progress = key.startFrame == key.endFrame ? 1f :
+                    Mathf.Clamp01((frame - key.startFrame) / (float)(key.endFrame - key.startFrame));
+                offset += (Vector2)key.position * progress;
+            }
+            return offset;
+        }
+    }
+
     private sealed class Fixture : System.IDisposable
     {
         public readonly GameObject Root = new GameObject("101 separation fixture");

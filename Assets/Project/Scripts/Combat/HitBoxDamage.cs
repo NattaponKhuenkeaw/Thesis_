@@ -582,6 +582,7 @@ public class HitBoxDamage : MonoBehaviour
                 {
                     data.hasAuthoredReactionTarget = true;
                     data.reactionTargetOffset = currentNormalHitbox.reactionTargetOffset;
+                    data.reactionTargetTravelFrames = currentNormalHitbox.reactionTargetTravelFrames;
                 }
 
                 if (currentNormalHitbox.useSnapToAnchor)
