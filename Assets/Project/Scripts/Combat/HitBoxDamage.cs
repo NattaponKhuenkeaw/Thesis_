@@ -211,9 +211,6 @@ public class HitBoxDamage : MonoBehaviour
         HitReactionData reactionData = currentGrabHitbox != null
             ? BuildGrabReactionData(direction)
             : BuildReactionData(enemy, direction);
-        if (currentNormalHitbox != null && currentGrabHitbox == null && projectileOwner == null)
-            playerCombat?.PrepareDashHitAnchor(this, enemy, ref reactionData);
-
         Vector2 headHitPoint = hitHead ? CalculateHitPoint(enemy, enemy.bodyCollider) : default;
         System.Span<Vector2> segmentHitPoints = segmentContacts != 0 ? stackalloc Vector2[worm.SegmentHurtboxes.Count] : default;
         if (segmentContacts != 0)
@@ -552,6 +549,9 @@ public class HitBoxDamage : MonoBehaviour
 
         if (currentNormalHitbox != null)
         {
+            if (projectileOwner == null)
+                playerCombat?.PrepareDashHitAnchor(this, enemy, ref data);
+
             data.flashColor = currentNormalHitbox.flashColor;
             data.flashFrames = currentNormalHitbox.flashFrames;
             data.impactTier = currentNormalHitbox.impactTier;
@@ -577,12 +577,13 @@ public class HitBoxDamage : MonoBehaviour
                     currentNormalHitbox.useSnapToAnchor,
                     currentNormalHitbox.snapOffset);
 
-                if (currentNormalHitbox.useAuthoredReactionTarget && !currentNormalHitbox.useSnapToAnchor
+                if (data.actionAnchor == null && currentNormalHitbox.useAuthoredReactionTarget && !currentNormalHitbox.useSnapToAnchor
                     && currentNormalHitbox.reactionKind != EnemyReactionKind.Grab)
                 {
                     data.hasAuthoredReactionTarget = true;
                     data.reactionTargetOffset = currentNormalHitbox.reactionTargetOffset;
                     data.reactionTargetTravelFrames = currentNormalHitbox.reactionTargetTravelFrames;
+                    data.preserveReactionMotionTiming = currentNormalHitbox.preserveReactionMotionTiming;
                 }
 
                 if (currentNormalHitbox.useSnapToAnchor)

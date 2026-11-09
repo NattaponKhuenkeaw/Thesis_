@@ -763,6 +763,260 @@ public class Enemy101SoftSeparationTests
         }
     }
 
+    [UnityTest]
+    public IEnumerator SkillAndUltimatePositionMigration() => ProbePositionMigration("skills");
+
+    [UnityTest]
+    public IEnumerator DimensionCutUnboundPositionMigration() => ProbePositionMigration("cut");
+
+    [UnityTest]
+    public IEnumerator ProjectileAndAngeliquePositionMigration() => ProbePositionMigration("projectiles");
+
+    [UnityTest]
+    public IEnumerator QtePositionMigration() => ProbePositionMigration("qte");
+
+    [UnityTest]
+    public IEnumerator UranagiStillConnectsToItsSnapAtTheSameFrame()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(
+            HeroRoot + "test_15_goenitz/CharacterObject_Goenitz.asset");
+        Assert.That(character.qteSwap.TryResolveIntro(character.actionResolverTable, out var action, out var step), Is.True);
+        Assert.That(action.actionId, Is.EqualTo("goenitz.qte"));
+        Assert.That(action.comboTree.rootNode.defaultNext, Is.Null);
+        var hits = step.hitData.hitboxes.OfType<NormalHitbox>().OrderBy(h => h.startFrameOffset).ToArray();
+        Assert.That(hits.Select(h => h.startFrameOffset), Is.EqualTo(new[] { 0, 12 }));
+        Assert.That(hits[0].useAuthoredReactionTarget && hits[1].useSnapToAnchor, Is.True);
+        var oldOpening = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(hits[0]));
+        oldOpening.useAuthoredReactionTarget = false;
+        var movement = step.motionData.keyframes.Single();
+        Assert.That(movement.taskType, Is.EqualTo(MotionTaskType.Relative));
+        Assert.That(movement.easing, Is.EqualTo(LeanTweenType.easeInOutQuint));
+
+        foreach (string prefab in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+        {
+            using var fixture = new Fixture(1, prefab);
+            yield return fixture.Ready();
+            var enemy = fixture.Enemies[0];
+            float floorY = enemy.rb.position.y;
+            var source = new GameObject("Uranagi collision probe");
+            var shape = source.AddComponent<BoxCollider2D>();
+            shape.isTrigger = true;
+            var damage = source.AddComponent<HitBoxDamage>();
+            try
+            {
+                foreach (float gap in new[] { .35f, 2.4f })
+                {
+                    int oldSnapFrame = -1;
+                    foreach (var opening in new[] { oldOpening, hits[0] })
+                    {
+                        enemy.hitReactionHandler.ForceClearReaction();
+                        enemy.rb.position = new Vector2(gap, floorY);
+                        enemy.rb.linearVelocity = Vector2.zero;
+                        bool opened = false;
+                        int snapFrame = -1;
+                        for (int frame = 1; frame <= step.TotalFrames && snapFrame < 0; frame++)
+                        {
+                            float progress = Mathf.InverseLerp(movement.startFrame, movement.endFrame, frame - 1);
+                            // PlayerMovement's easing switch falls back to linear for easeInOutQuint.
+                            source.transform.position = movement.position * progress;
+                            int active = frame - step.ActivePhaseStart;
+                            var hit = active < hits[1].startFrameOffset ? opening : hits[1];
+                            if (active >= hit.startFrameOffset && active < hit.startFrameOffset + hit.activeFrames
+                                && (hit != opening || !opened))
+                            {
+                                shape.offset = hit.offset;
+                                shape.size = hit.size;
+                                shape.enabled = true;
+                                Physics2D.SyncTransforms();
+                                if (shape.Distance(enemy.bodyCollider).isOverlapped)
+                                {
+                                    damage.ResetActivationState();
+                                    damage.SetHitData(1f, false, false, 0f, 0f, hit, AttackCategory.Normal, action.actionName,
+                                        step, null, action.actionId);
+                                    damage.ProcessHit(enemy, enemy.bodyCollider);
+                                    if (hit == opening) opened = true;
+                                    else snapFrame = frame;
+                                }
+                                shape.enabled = false;
+                            }
+                            yield return PhysicsStep();
+                        }
+                        Assert.That(opened && snapFrame >= 0, Is.True, $"{prefab} gap={gap}");
+                        if (opening == oldOpening) oldSnapFrame = snapFrame;
+                        else Assert.That(snapFrame, Is.EqualTo(oldSnapFrame), $"{prefab} gap={gap}");
+                    }
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(source);
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    private const string HeroRoot = "Assets/Project/Character/Hero/";
+    private const string ShinTable = "test_0_Main/ActionResolverTable_main.asset";
+    private const string ReiTable = "test_1_CameraGirl/ActionResolverTable_cg.asset";
+    private const string AngeliqueTable = "test_15_goenitz/ActionResolverTable_char_5_goenitz.asset";
+
+    private static IEnumerator ProbePositionMigration(string group)
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var hits = GetPositionMigrationHits(group).ToArray();
+        Assert.That(hits, Is.Not.Empty);
+        int expectedMigrated = group switch { "skills" => 5, "cut" => 1, "projectiles" => 29, "qte" => 1, _ => 0 };
+        Assert.That(hits.Count(entry => entry.hit.useAuthoredReactionTarget && entry.hit.preserveReactionMotionTiming),
+            Is.EqualTo(expectedMigrated));
+        float priorScale = Time.timeScale;
+        Time.timeScale = 6f;
+        try
+        {
+            foreach (string prefab in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+            {
+                using var fixture = new Fixture(1, prefab);
+                yield return fixture.Ready();
+                var enemy = fixture.Enemies[0];
+                float floorY = enemy.rb.position.y;
+                var source = new GameObject("Reaction migration probe");
+                source.transform.SetParent(fixture.Root.transform);
+                var damage = source.AddComponent<HitBoxDamage>();
+                var build = typeof(HitBoxDamage).GetMethod("BuildReactionData", Private);
+                var current = typeof(EnemyHitReactionHandler).GetField("currentReaction", Private);
+
+                foreach (var (key, category, step, hit) in hits)
+                {
+                    var legacy = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(hit));
+                    legacy.useAuthoredReactionTarget = false;
+                    foreach (bool airborne in new[] { false, true })
+                    foreach (float distance in category == AttackCategory.Normal ? new[] { .25f, 3f } : new[] { 3f })
+                    {
+                        Vector2 original = default;
+                        int originalTiming = 0;
+                        EnemyReactionKind originalKind = default;
+                        foreach (var input in hit.useAuthoredReactionTarget ? new[] { legacy, hit } : new[] { legacy })
+                        {
+                            enemy.hitReactionHandler.ForceClearReaction();
+                            enemy.rb.position = new Vector2(distance, floorY + (airborne ? .6f : 0f));
+                            enemy.rb.linearVelocity = Vector2.zero;
+                            Physics2D.SyncTransforms();
+                            Vector2 origin = enemy.rb.position;
+                            damage.SetHitData(1f, false, false, 0f, 0f, input, category, key, step, null, key);
+                            var data = (HitReactionData)build.Invoke(damage, new object[] { enemy, Vector2.right });
+                            enemy.hitReactionHandler.StartReaction(data, source.transform.position);
+                            var actual = (HitReactionData)current.GetValue(enemy.hitReactionHandler);
+                            float apex = 0f;
+                            float travel = 0f;
+                            float sampleUntil = Time.fixedTime + Mathf.Max(1.1f, actual.TotalReactionFrames / 60f + .65f);
+                            while (Time.fixedTime < sampleUntil)
+                            {
+                                yield return PhysicsStep();
+                                travel = enemy.rb.position.x - origin.x;
+                                apex = Mathf.Max(apex, enemy.rb.position.y - origin.y);
+                            }
+                            var result = new Vector2(travel, apex);
+                            string context = $"{key} {prefab} air={airborne} gap={distance}";
+                            TestContext.WriteLine(System.FormattableString.Invariant(
+                                $"MEASURE {context} authored={input.useAuthoredReactionTarget} X={travel:F4} Y={apex:F4} timing={actual.TotalReactionFrames} kind={actual.reactionKind}"));
+                            if (input == legacy)
+                            {
+                                original = result;
+                                originalTiming = actual.TotalReactionFrames;
+                                originalKind = actual.reactionKind;
+                            }
+                            else
+                            {
+                                bool needsPointBlankSeparation = category == AttackCategory.Normal && distance < 1f
+                                    && original.x > hit.reactionTargetOffset.x + .01f;
+                                Assert.That(actual.hasAuthoredReactionTarget, Is.EqualTo(!needsPointBlankSeparation), context);
+                                Assert.That(result.x, Is.EqualTo(original.x).Within(.055f), context);
+                                Assert.That(result.y, Is.EqualTo(original.y).Within(.08f), context);
+                                Assert.That(actual.TotalReactionFrames, Is.EqualTo(originalTiming), context);
+                                Assert.That(actual.reactionKind, Is.EqualTo(originalKind), context);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        finally
+        {
+            Time.timeScale = priorScale;
+        }
+        yield return new ExitPlayMode();
+    }
+
+    private static IEnumerable<(string key, AttackCategory category, AttackStepData step, NormalHitbox hit)>
+        GetPositionMigrationHits(string group)
+    {
+        var paths = new[] { ShinTable, ReiTable, AngeliqueTable };
+        foreach (string path in paths)
+        {
+            var table = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(HeroRoot + path);
+            var actions = group switch
+            {
+                "skills" when path != AngeliqueTable => table.skillActions.Cast<CombatAction>().Concat(table.ultimateActions),
+                "cut" when path == ShinTable => table.standaloneActions.Where(action => action.actionId == "main.dash.dimension_cut").Cast<CombatAction>(),
+                "projectiles" when path == AngeliqueTable => table.comboActions.Cast<CombatAction>().Concat(table.skillActions).Concat(table.ultimateActions),
+                "qte" => table.qteActions.Cast<CombatAction>(),
+                _ => Enumerable.Empty<CombatAction>()
+            };
+            foreach (var action in actions)
+            {
+                var pending = new Queue<ComboNode>();
+                var seen = new HashSet<ComboNode>();
+                pending.Enqueue(action.comboTree?.rootNode);
+                while (pending.Count > 0)
+                {
+                    var node = pending.Dequeue();
+                    if (node == null || !seen.Add(node))
+                        continue;
+                    var step = node.stepData;
+                    if (step?.hitData?.hitboxes != null)
+                        foreach (var hit in step.hitData.hitboxes.OfType<NormalHitbox>().Where(CanProbePosition))
+                            if (!hit.useAuthoredReactionTarget || group != "projectiles" || step.stepName != "Yamidokoku Exit")
+                                yield return ($"{action.actionId}/{step.stepName}/{hit.startFrameOffset}", action.Category, step, hit);
+                    pending.Enqueue(node.defaultNext);
+                    pending.Enqueue(node.onGrabSuccessNode);
+                    if (node.routes != null)
+                        foreach (var route in node.routes)
+                            pending.Enqueue(route?.targetNode);
+                    if (step?.triggerWindows != null)
+                        foreach (var trigger in step.triggerWindows)
+                            pending.Enqueue(trigger?.targetNode);
+                }
+            }
+        }
+
+        if (group == "qte")
+        {
+            var step = GetDefaultComboSteps(LoadReiGroundCombo(out _)).Single(s => s.stepName == "Attack4");
+            foreach (var hit in step.ResolveHitData(true).hitboxes.OfType<NormalHitbox>().Where(CanProbePosition))
+                yield return ($"rei.qte/{hit.startFrameOffset}", AttackCategory.Normal, step, hit);
+        }
+        if (group != "projectiles")
+            yield break;
+
+        foreach (string guid in AssetDatabase.FindAssets("t:ProjectileData", paths
+                     .Select(path => HeroRoot + path.Substring(0, path.IndexOf('/'))).ToArray()))
+        {
+            var projectile = AssetDatabase.LoadAssetAtPath<ProjectileData>(AssetDatabase.GUIDToAssetPath(guid));
+            var category = projectile.name.Contains("_basic") ? AttackCategory.Normal
+                : projectile.name.Contains("_skill") ? AttackCategory.Skill : AttackCategory.Ultimate;
+            if (projectile.ResolveSpawningHitbox() is NormalHitbox spawn && CanProbePosition(spawn))
+                yield return ($"{projectile.name}/spawn", category, null, spawn);
+            if (projectile.ResolveRoutineHitbox() is NormalHitbox routine && CanProbePosition(routine))
+                yield return ($"{projectile.name}/routine", category, null, routine);
+        }
+
+        static bool CanProbePosition(NormalHitbox hit) => hit.useDeterministicReaction && !hit.useSnapToAnchor
+            && !hit.breaksGrab && (hit.reactionKind == EnemyReactionKind.Knockup
+                || hit.reactionKind == EnemyReactionKind.Knockback && hit.horizontalSpeed > 0f);
+    }
+
     private sealed class Fixture : System.IDisposable
     {
         public readonly GameObject Root = new GameObject("101 separation fixture");

@@ -2392,6 +2392,12 @@ namespace CombatEditor.UI
                         hitbox.reactionTargetTravelFrames = Mathf.Max(0, value);
                         MarkDirty();
                     });
+                    AddToggle(body, "Preserve Existing Reaction Timing", hitbox.preserveReactionMotionTiming, value =>
+                    {
+                        RecordUndo("Toggle Existing Reaction Timing");
+                        hitbox.preserveReactionMotionTiming = value;
+                        MarkDirty();
+                    });
                 }
             }
 

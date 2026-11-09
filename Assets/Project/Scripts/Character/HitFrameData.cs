@@ -99,6 +99,8 @@ public class NormalHitbox : HitboxBase
     public Vector2 reactionTargetOffset;
     [Min(0), Tooltip("Frames to reach the authored horizontal offset. Zero uses the full reaction duration.")]
     public int reactionTargetTravelFrames;
+    [Tooltip("Keep the existing recoil easing and rise/fall timing when migrating an authored reaction target.")]
+    public bool preserveReactionMotionTiming;
     
     public EnemyLandingBehavior landingBehavior = EnemyLandingBehavior.Knockdown;
     public bool canAirJuggle = true;

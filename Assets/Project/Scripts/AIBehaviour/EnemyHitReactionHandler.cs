@@ -270,6 +270,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
             && data.reactionKind != EnemyReactionKind.Grab;
         bool animationAirFollowup = IsAirJuggleContext() && !IsGrounded();
         bool positionAirFollowup = continuePositionMotion && animationAirFollowup;
+        if (animationAirFollowup && data.preserveReactionMotionTiming)
+            data.hasAuthoredReactionTarget = false;
         bool airborneJuggle = data.reactionKind == EnemyReactionKind.Knockup && IsAirJuggleContext();
         if (airborneJuggle)
         {
@@ -307,10 +309,31 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 positionMotion = new PositionReactionMotion(rb, bodyCollider, groundLayers,
                     maximumReactionTravel, Mathf.Max(0f, positionAirCeiling - rb.position.y));
             positionMotion.SetVerticalMotionEnabled(!HoldsFlightPlane);
+            bool groundRecoil = !animationAirFollowup && (data.reactionKind == EnemyReactionKind.Flinch
+                || data.reactionKind == EnemyReactionKind.Knockback);
+            bool initialLaunch = !animationAirFollowup && !HoldsFlightPlane
+                && data.reactionKind == EnemyReactionKind.Knockup;
+            float direction = GetDirectionSign();
+            float minimumSpacingTravel = (attackerPosition.x + direction * normalHitMinimumSpacing - rb.position.x) * direction;
+            // Do not replace an existing point-blank separation correction with a shorter fixed target.
+            if (data.hasAuthoredReactionTarget && data.preserveReactionMotionTiming
+                && data.sourceCategory == AttackCategory.Normal && minimumSpacingTravel > data.reactionTargetOffset.x + .001f)
+            {
+                data.hasAuthoredReactionTarget = currentReaction.hasAuthoredReactionTarget = false;
+            }
             if (data.hasAuthoredReactionTarget && !data.useSnapToAnchor && !data.snapToAttacker && !releasesGrab)
             {
                 positionMotion.SetFallAcceleration(positionFallAcceleration);
-                positionMotion.BeginAuthoredHit(data, GetDirectionSign(), positionAirFollowup, airFollowupHold);
+                positionMotion.BeginAuthoredHit(data, GetDirectionSign(), positionAirFollowup, airFollowupHold,
+                    minimumLaunchRiseDuration);
+                if (data.preserveReactionMotionTiming)
+                {
+                    if (groundRecoil)
+                        positionMotion.ShortenHorizontalTravel(groundRecoilDuration);
+                    if (initialLaunch)
+                        positionMotion.ConfigureLaunchRecoil(launchRecoilDuration);
+                    ApplyPositionReactionFreeze(data, groundRecoil || initialLaunch);
+                }
             }
             else
             {
@@ -319,12 +342,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 if (positionAirFollowup && data.canAirJuggle && (int)data.impactTier < (int)DamageImpactTier.Heavy)
                     travel = Mathf.Min(travel, airFollowupTravel);
                 positionMotion.BeginHit(data, travel, positionAirFollowup, airFollowupHold);
-                bool groundRecoil = !animationAirFollowup && (data.reactionKind == EnemyReactionKind.Flinch
-                    || data.reactionKind == EnemyReactionKind.Knockback);
                 if (groundRecoil)
                     positionMotion.ShortenHorizontalTravel(groundRecoilDuration);
-                bool initialLaunch = !animationAirFollowup && !HoldsFlightPlane
-                    && data.reactionKind == EnemyReactionKind.Knockup;
                 if (initialLaunch)
                 {
                     positionMotion.ConfigureLaunchArc(minimumLaunchRiseDuration);
@@ -332,21 +351,21 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 }
                 positionMotion.SetFallAcceleration(positionFallAcceleration);
                 if (data.sourceCategory == AttackCategory.Normal && !data.useSnapToAnchor && !data.snapToAttacker)
-                {
-                    float facing = GetDirectionSign();
-                    float needed = (attackerPosition.x + facing * normalHitMinimumSpacing - rb.position.x) * facing;
-                    positionMotion.EnsureMinimumSpacing(Mathf.Max(0f, needed));
-                }
-                int minimumFreeze = data.impactTier == DamageImpactTier.Low ? minimumLightImpactFreeze : minimumStrongImpactFreeze;
-                // Initial impacts start without an additional mandatory pause; authored hitstop still applies.
-                if (groundRecoil || initialLaunch) minimumFreeze = 0;
-                currentReaction.reactionTiming = HitReactionData.CreateTiming(
-                    Mathf.Max(minimumFreeze, data.ImpactFreezeFrames), data.ActiveReactionFrames, data.RecoveryFrames);
+                    positionMotion.EnsureMinimumSpacing(Mathf.Max(0f, minimumSpacingTravel));
+                ApplyPositionReactionFreeze(data, groundRecoil || initialLaunch);
             }
         }
         animationHandler?.BeginReactionAnimation(currentReaction, animationAirFollowup);
         EnterState(data.reactionKind == EnemyReactionKind.Grab && data.actionAnchor != null
             ? EnemyReactionState.Grabbed : EnemyReactionState.ImpactFreeze);
+    }
+
+    private void ApplyPositionReactionFreeze(HitReactionData data, bool initialImpact)
+    {
+        int minimumFreeze = initialImpact ? 0 : data.impactTier == DamageImpactTier.Low
+            ? minimumLightImpactFreeze : minimumStrongImpactFreeze;
+        currentReaction.reactionTiming = HitReactionData.CreateTiming(
+            Mathf.Max(minimumFreeze, data.ImpactFreezeFrames), data.ActiveReactionFrames, data.RecoveryFrames);
     }
 
     public bool ReleaseGrab(int ownerId, Transform anchor = null)
@@ -499,6 +518,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
         Vector2 delta = PositionReactionMotion.ClipTerrainMove(rb, bodyCollider, filter, bindingHits, new Vector2(deltaX, 0f));
         // Translate before the reaction motor computes its next step, preserving its trajectory and gravity.
         rb.position += delta;
+        if (currentReaction.preserveReactionMotionTiming)
+            positionMotion?.TranslateAuthoredPath(delta.x);
     }
 
     private void ProcessReactionFrame()
@@ -1560,14 +1581,18 @@ public class EnemyHitReactionHandler : MonoBehaviour
             }
         }
 
-        public void BeginAuthoredHit(HitReactionData data, float direction, bool airborneFollowup, float holdDuration)
+        public void BeginAuthoredHit(HitReactionData data, float direction, bool airborneFollowup, float holdDuration,
+            float minimumRiseDuration)
         {
             hasAuthoredTarget = configured = true;
             authoredStartX = body.position.x;
             authoredTargetX = authoredStartX + data.reactionTargetOffset.x * direction;
             horizontalTime = 0f;
+            impactRecoil = false;
             bool launching = data.reactionKind == EnemyReactionKind.Knockup && data.knockupFrames > 0;
-            int frames = launching ? data.knockupFrames + data.knockfallFrames : data.ActiveReactionFrames;
+            int frames = launching
+                ? data.knockupFrames + (data.preserveReactionMotionTiming ? 0 : data.knockfallFrames)
+                : data.ActiveReactionFrames;
             if (data.reactionTargetTravelFrames > 0)
                 frames = Mathf.Min(frames, data.reactionTargetTravelFrames);
             horizontalDuration = Mathf.Max(1, frames) / (float)FrameDataConstants.LOGIC_FPS;
@@ -1585,10 +1610,12 @@ public class EnemyHitReactionHandler : MonoBehaviour
             holdTime = 0f;
             float rise = launching && verticalMotionEnabled ? Mathf.Max(0f, data.reactionTargetOffset.y) : 0f;
             float riseDuration = Mathf.Max(1, data.knockupFrames) / (float)FrameDataConstants.LOGIC_FPS;
+            if (data.preserveReactionMotionTiming)
+                riseDuration = Mathf.Max(riseDuration, minimumRiseDuration);
             ceilingY = body.position.y + rise;
             verticalSpeed = 2f * rise / riseDuration;
             verticalAcceleration = Mathf.Max(.01f, verticalSpeed / riseDuration);
-            if (rise > 0f)
+            if (rise > 0f && !data.preserveReactionMotionTiming)
             {
                 float fallDuration = Mathf.Max(1, data.knockfallFrames) / (float)FrameDataConstants.LOGIC_FPS;
                 fallAcceleration = 2f * rise / (fallDuration * fallDuration);
@@ -1647,7 +1674,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
             {
                 horizontalTime += dt;
                 float remaining = 1f - Mathf.Clamp01(horizontalTime / horizontalDuration);
-                dx = Mathf.Lerp(authoredStartX, authoredTargetX, 1f - remaining * remaining) - body.position.x;
+                float eased = impactRecoil ? 1f - remaining * remaining * remaining : 1f - remaining * remaining;
+                dx = Mathf.Lerp(authoredStartX, authoredTargetX, eased) - body.position.x;
             }
             else if (state == EnemyReactionState.Knockback || state == EnemyReactionState.Knockup || state == EnemyReactionState.Knockfall
                 || (state == EnemyReactionState.Recovering && data.reactionKind == EnemyReactionKind.Flinch))
@@ -1691,6 +1719,13 @@ public class EnemyHitReactionHandler : MonoBehaviour
         public Vector2 MoveTo(Vector2 targetPosition)
         {
             return MoveBy(targetPosition - body.position);
+        }
+
+        public void TranslateAuthoredPath(float deltaX)
+        {
+            if (!hasAuthoredTarget) return;
+            authoredStartX += deltaX;
+            authoredTargetX += deltaX;
         }
 
         private Vector2 MoveBy(Vector2 desired)

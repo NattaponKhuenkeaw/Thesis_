@@ -750,8 +750,14 @@ public class ShadowMeterTests
         hitbox.movement = movement;
         combat.hitBoxDamage = hitbox;
         typeof(PlayerCombat).GetField("currentAttackFrame", privateInstance).SetValue(combat, 5);
-        hitbox.SetHitData(10f, false, false, 0f, 1f, new NormalHitbox { flashFrames = 0 },
-            AttackCategory.Normal, "Dimension Cut", null, null);
+        var action = character.actionResolverTable.standaloneActions.Single(a => a.actionId == "main.dash.dimension_cut");
+        var step = action.GetEntryStep();
+        var authored = step.hitData.hitboxes.OfType<NormalHitbox>().Single();
+        Assert.That(authored.useAuthoredReactionTarget, Is.True);
+        var hit = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(authored));
+        hit.flashFrames = 0;
+        hitbox.SetHitData(10f, false, false, 0f, 1f, hit, AttackCategory.Normal, action.actionName, step, null,
+            action.actionId);
 
         var enemies = new EnemyController[4];
         var anchors = (System.Collections.Generic.Dictionary<EnemyController, Transform>)typeof(PlayerMovement)
@@ -789,6 +795,15 @@ public class ShadowMeterTests
             Assert.That(enemies[1].CurrentReactionState, Is.EqualTo(EnemyReactionState.Grabbed));
             Assert.That(enemies[2].CurrentReactionState, Is.EqualTo(EnemyReactionState.Grabbed));
             Assert.That(enemies[3].IsGrabbed, Is.False);
+            foreach (var enemy in enemies.Skip(1).Take(2))
+            {
+                var reaction = (HitReactionData)typeof(EnemyHitReactionHandler).GetField("currentReaction", privateInstance)
+                    .GetValue(enemy.hitReactionHandler);
+                Assert.That(reaction.hasAuthoredReactionTarget, Is.False);
+                Assert.That(reaction.actionAnchorHoldFrames, Is.EqualTo(7));
+                Assert.That(enemy.ReleaseGrab(owner.transform.root.GetInstanceID(), anchors[enemy]), Is.True);
+                Assert.That(enemy.CurrentReactionState, Is.EqualTo(EnemyReactionState.None));
+            }
             Assert.That((Vector2)anchors[enemies[1]].position, Is.EqualTo(new Vector2(1.5f, 0f)));
             Assert.That((Vector2)anchors[enemies[2]].position, Is.EqualTo(new Vector2(2.5f, 0f)));
             movement.TryGetResolvedTargetMotion(out _, out Vector2 travelAfterHits);
