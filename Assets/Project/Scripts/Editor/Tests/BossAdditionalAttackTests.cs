@@ -81,6 +81,34 @@ public class BossAdditionalAttackTests
     }
 
     [UnityTest]
+    public IEnumerator FirstWindupDoesNotRememberAnExistingHitTint()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        using (var f = new Fixture())
+        {
+            yield return f.Ready();
+            Set(f.Boss, "flashDuringTelegraph", true);
+            var renderer = f.Enemy.GetComponentInChildren<Animator>().GetComponent<SpriteRenderer>();
+            Color original = renderer.color;
+            renderer.color = Color.red;
+
+            f.Start(BossPatternId.HeavyCleave);
+            Assert.That(renderer.color, Is.Not.EqualTo(original), "The windup still flashes.");
+            float deadline = Time.realtimeSinceStartup + 5f;
+            while (!f.Enemy.attackHitbox.enabled && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.That(f.Enemy.attackHitbox.enabled, Is.True);
+            Assert.That(renderer.color, Is.EqualTo(original), "The strike must not inherit the hit tint.");
+
+            Call(f.Boss, "StartTelegraphFlash");
+            f.Boss.ForceClearCombatHazards();
+            Assert.That(renderer.color, Is.EqualTo(original), "Cancelling a warning must also restore the base tint.");
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
     public IEnumerator FourCleavesAlternateCommittedSidesAndFinishWithRecovery()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

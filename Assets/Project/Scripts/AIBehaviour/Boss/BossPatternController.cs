@@ -203,7 +203,6 @@ namespace Project.AIBehaviour.Boss
 
         private Color[] flashOriginalColors;
         private SpriteRenderer[] flashRenderers;
-        private bool flashRenderersCached;
         private readonly WaitForSeconds flashWait = new WaitForSeconds(0.12f);
         private readonly WaitForFixedUpdate waitFixed = new WaitForFixedUpdate();
 
@@ -250,6 +249,7 @@ namespace Project.AIBehaviour.Boss
         private void Awake()
         {
             CacheReferences();
+            CacheFlashColors();
             ApplyDefaultStatsIfNeeded();
 
             // Boss owns AI; trash enemies keep Behavior Graph.
@@ -1496,27 +1496,13 @@ namespace Project.AIBehaviour.Boss
             return EnemyFacingUtil.GetFacingSign(transform);
         }
 
-        private void EnsureFlashRenderersCached()
+        private void CacheFlashColors()
         {
-            if (flashRenderersCached)
-                return;
-
+            // Capture the base tint before a hit or a warning can change it.
             flashRenderers = GetComponentsInChildren<SpriteRenderer>(true);
-            if (flashRenderers == null || flashRenderers.Length == 0)
-            {
-                flashOriginalColors = null;
-                flashRenderersCached = true;
-                return;
-            }
-
             flashOriginalColors = new Color[flashRenderers.Length];
             for (int i = 0; i < flashRenderers.Length; i++)
-            {
-                if (flashRenderers[i] != null)
-                    flashOriginalColors[i] = flashRenderers[i].color;
-            }
-
-            flashRenderersCached = true;
+                flashOriginalColors[i] = flashRenderers[i].color;
         }
 
         private void StartTelegraphFlash()
@@ -1527,12 +1513,10 @@ namespace Project.AIBehaviour.Boss
 
         private void StopTelegraphFlash()
         {
-            if (flashRoutine != null)
-            {
-                StopCoroutine(flashRoutine);
-                flashRoutine = null;
-            }
+            if (flashRoutine == null) return;
 
+            StopCoroutine(flashRoutine);
+            flashRoutine = null;
             RestoreFlashColors();
         }
 
@@ -1550,7 +1534,6 @@ namespace Project.AIBehaviour.Boss
 
         private IEnumerator TelegraphFlashRoutine()
         {
-            EnsureFlashRenderersCached();
             if (flashRenderers == null || flashRenderers.Length == 0)
                 yield break;
 
