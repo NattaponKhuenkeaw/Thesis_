@@ -39,6 +39,8 @@ namespace Project.UI
             nextIndex = extraRoom ? -1 : Mathf.Clamp(offeredIndex, 0, route.Count - 1);
             levelLabel.text = "LEVEL " + Mathf.Max(1, level);
             positionLabel.text = extraRoom ? "NEXT: BONUS ROOM" : $"NEXT ROOM {nextIndex + 1} / {route.Count}";
+            if (nextIndex >= 0 && route[nextIndex] == BiomeActNode.SafeRoom)
+                positionLabel.text += " · SAFE ROOM";
             for (int i = 0; i < nodes.Count; i++)
             {
                 var node = nodes[i];
@@ -90,6 +92,7 @@ namespace Project.UI
             BiomeActNode.Shop => RoomKind.Shop,
             BiomeActNode.Level => RoomKind.Level,
             BiomeActNode.Rest => RoomKind.Rest,
+            BiomeActNode.SafeRoom => RoomKind.Reward,
             BiomeActNode.Boss => RoomKind.Boss,
             _ => RoomKind.Combat
         };

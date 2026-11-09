@@ -54,12 +54,14 @@ public class BiomeDifficultyCurveTests
     public void NegativeBiomeClampsToBaseline()
     {
         Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(-2), Is.EqualTo(1f));
-        Assert.That(RunProgressionManager.ResolveBossHealthMultiplier(-2), Is.EqualTo(1f));
+        Assert.That(RunProgressionManager.ResolveBossHealthMultiplier(-2), Is.EqualTo(2f));
     }
 
-    [TestCase(0, 1f)] [TestCase(1, 1.6f)] [TestCase(2, 2.56f)]
-    [TestCase(3, 4.096f)] [TestCase(4, 6.5536f)] [TestCase(5, 10.48576f)]
-    public void BossHealthCompoundsSixtyPercentFromLevelOne(int biome, float health)
+    [TestCase(0, 2f)] [TestCase(1, 4f)] [TestCase(2, 6f)]
+    [TestCase(3, 6.625f)] [TestCase(4, 7.25f)] [TestCase(5, 7.875f)]
+    [TestCase(6, 8.5f)] [TestCase(7, 9.125f)] [TestCase(8, 9.75f)]
+    [TestCase(9, 10.5f)] [TestCase(10, 10.5f)] [TestCase(99, 10.5f)]
+    public void BossHealthUsesMilestonesAndCapsAfterLevelTen(int biome, float health)
     {
         progression.SetCurrentBiomeIndex(biome);
         Assert.That(progression.BossHealthMultiplier, Is.EqualTo(health).Within(.00001f));
@@ -67,12 +69,12 @@ public class BiomeDifficultyCurveTests
 
     [TestCase(-2, 1f, 1f)]
     [TestCase(0, 1f, 1f)]
-    [TestCase(1, 1.4f, 1.15f)]
-    [TestCase(2, 1.96f, 1.3225f)]
-    [TestCase(3, 2.744f, 1.520875f)]
-    [TestCase(4, 3.8416f, 1.74900625f)]
-    [TestCase(5, 5.37824f, 2.01135719f)]
-    public void NormalEnemyHealthAndAttackCompoundFromLevelOne(int biome, float health, float attack)
+    [TestCase(1, 1.18f, 1.15f)]
+    [TestCase(2, 1.3924f, 1.3225f)]
+    [TestCase(4, 1.93877776f, 1.74900625f)]
+    [TestCase(9, 4.43545386f, 3.51787629f)]
+    [TestCase(19, 4.43545386f, 14.23177165f)]
+    public void NormalHealthCapsAfterLevelTenButAttackKeepsCompounding(int biome, float health, float attack)
     {
         progression.SetCurrentBiomeIndex(biome);
         Assert.That(progression.NormalEnemyHealthMultiplier, Is.EqualTo(health).Within(.00001f));
@@ -85,7 +87,6 @@ public class BiomeDifficultyCurveTests
     {
         Assert.That(RunProgressionManager.ResolveNormalEnemyHealthMultiplier(5, bonus), Is.EqualTo(1f));
         Assert.That(RunProgressionManager.ResolveNormalEnemyAttackMultiplier(5, bonus), Is.EqualTo(1f));
-        Assert.That(RunProgressionManager.ResolveBossHealthMultiplier(5, bonus), Is.EqualTo(1f));
     }
 
     [Test]
@@ -96,10 +97,10 @@ public class BiomeDifficultyCurveTests
         for (int biome = 0; biome < 6; biome++)
         {
             Assert.That(progression.CurrentBiomeIndex, Is.EqualTo(biome));
-            Assert.That(progression.NormalEnemyHealthMultiplier, Is.EqualTo(Mathf.Pow(1.4f, biome)).Within(.00001f));
+            Assert.That(progression.NormalEnemyHealthMultiplier, Is.EqualTo(Mathf.Pow(1.18f, biome)).Within(.00001f));
             Assert.That(progression.NormalEnemyAttackMultiplier, Is.EqualTo(Mathf.Pow(1.15f, biome)).Within(.00001f));
             Assert.That(progression.EnemyBasicStatMultiplier, Is.EqualTo(1f + biome * .2f).Within(.00001f));
-            Assert.That(progression.BossHealthMultiplier, Is.EqualTo(Mathf.Pow(1.6f, biome)).Within(.00001f));
+            Assert.That(progression.BossHealthMultiplier, Is.EqualTo(RunProgressionManager.ResolveBossHealthMultiplier(biome)));
             progression.NotifyRoomCleared(bossRoom);
         }
         progression.ResetRun();
@@ -107,7 +108,7 @@ public class BiomeDifficultyCurveTests
         Assert.That(progression.NormalEnemyHealthMultiplier, Is.EqualTo(1f));
         Assert.That(progression.NormalEnemyAttackMultiplier, Is.EqualTo(1f));
         Assert.That(progression.EnemyBasicStatMultiplier, Is.EqualTo(1f));
-        Assert.That(progression.BossHealthMultiplier, Is.EqualTo(1f));
+        Assert.That(progression.BossHealthMultiplier, Is.EqualTo(2f));
     }
 
     [TestCase("Enm101/Enemy1.prefab", 0)]
@@ -136,7 +137,7 @@ public class BiomeDifficultyCurveTests
 
     [TestCase(BossPath, 0)] [TestCase(BossPath, 1)] [TestCase(BossPath, 2)] [TestCase(BossPath, 4)] [TestCase(BossPath, 5)]
     [TestCase(ObserverPath, 0)] [TestCase(ObserverPath, 1)] [TestCase(ObserverPath, 2)] [TestCase(ObserverPath, 4)] [TestCase(ObserverPath, 5)]
-    public void BothBossesCompoundHealthButKeepTheirOriginalAttackAndDefense(string path, int biome)
+    public void BothBossesUseHealthMilestonesAndLinearAttackAndDefense(string path, int biome)
     {
         progression.SetCurrentBiomeIndex(biome);
         var source = AssetDatabase.LoadAssetAtPath<GameObject>(path).GetComponent<EnemyController>();
@@ -146,7 +147,7 @@ public class BiomeDifficultyCurveTests
         RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
         float scale = 1f + biome * .2f;
         Assert.That(enemy.HasBossDriver, Is.True);
-        Assert.That(enemy.maxHP, Is.EqualTo(4000f * Mathf.Pow(1.6f, biome)).Within(.01f));
+        Assert.That(enemy.maxHP, Is.EqualTo(4000f * RunProgressionManager.ResolveBossHealthMultiplier(biome)).Within(.01f));
         Assert.That(enemy.currentHP, Is.EqualTo(enemy.maxHP));
         Assert.That(enemy.attackDamage, Is.EqualTo(source.attackDamage * scale).Within(.001f));
         Assert.That(enemy.defense, Is.EqualTo(source.defense * scale).Within(.001f));
@@ -223,7 +224,7 @@ public class BiomeDifficultyCurveTests
             var enemy = enemies[0];
             if (boss)
             {
-                Assert.That(enemy.maxHP, Is.EqualTo(source.maxHP * 2.56f).Within(.01f));
+                Assert.That(enemy.maxHP, Is.EqualTo(source.maxHP * 6f).Within(.01f));
                 Assert.That(enemy.attackDamage, Is.EqualTo(source.attackDamage * 1.4f).Within(.001f));
                 Assert.That(enemy.defense, Is.EqualTo(source.defense * 1.4f).Within(.001f));
             }
@@ -240,7 +241,7 @@ public class BiomeDifficultyCurveTests
 
     private static void AssertNormalStats(EnemyController enemy, EnemyController source, int biome)
     {
-        Assert.That(enemy.maxHP, Is.EqualTo(source.maxHP * Mathf.Pow(1.4f, biome)).Within(.001f));
+        Assert.That(enemy.maxHP, Is.EqualTo(source.maxHP * Mathf.Pow(1.18f, Mathf.Clamp(biome, 0, 9))).Within(.001f));
         Assert.That(enemy.currentHP, Is.EqualTo(enemy.maxHP));
         Assert.That(enemy.attackDamage, Is.EqualTo(source.attackDamage * Mathf.Pow(1.15f, biome)).Within(.001f));
         Assert.That(enemy.defense, Is.EqualTo(source.defense));

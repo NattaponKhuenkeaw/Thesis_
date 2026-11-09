@@ -329,49 +329,27 @@ public class ShopEconomyBalanceTests
         Assert.That(item.price, Is.EqualTo(assetPrice));
     }
 
-    [TestCase(RouteDifficulty.Easy, 80, 100)]
-    [TestCase(RouteDifficulty.Medium, 120, 150)]
-    [TestCase(RouteDifficulty.Hard, 180, 220)]
-    public void GeneratedCardsUseTheApprovedSoulRange(RouteDifficulty difficulty, int minimum, int maximum)
+    [Test]
+    public void GeneratedCardsRollOnlyMediumAndHardWithCoreWeights()
     {
-        var tables = Object.Instantiate(Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables"));
-        try
-        {
-            using (var data = new SerializedObject(tables))
-            {
-                var profiles = data.FindProperty("profiles");
-                for (int i = 0; i < profiles.arraySize; i++)
-                {
-                    var profile = profiles.GetArrayElementAtIndex(i);
-                    profile.FindPropertyRelative("rollWeight").floatValue =
-                        profile.FindPropertyRelative("difficulty").enumValueIndex == (int)difficulty ? 1f : 0f;
-                }
-                data.ApplyModifiedPropertiesWithoutUndo();
-            }
-            Assert.That(tables.GetProfile(difficulty).minCoins, Is.EqualTo(minimum));
-            Assert.That(tables.GetProfile(difficulty).maxCoins, Is.EqualTo(maximum));
+        WithProgression(0, _ => {
+            var tables = Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables");
+            Assert.That(tables.GetProfile(RouteDifficulty.Medium).rollWeight, Is.EqualTo(40f));
+            Assert.That(tables.GetProfile(RouteDifficulty.Hard).rollWeight, Is.EqualTo(60f));
             var room = Resources.Load<RoomData>("MapSO/LV/RoomData_LV_01");
-            Assert.That(room, Is.Not.Null);
-            Random.InitState(175 + (int)difficulty);
+            Random.InitState(175);
+            var difficulties = new HashSet<RouteDifficulty>();
             for (int i = 0; i < 128; i++)
             {
                 RoomChoiceOffer card = RouteOfferGenerator.BuildOffer(room, tables);
-                Assert.That(card.Difficulty, Is.EqualTo(difficulty));
-                if (difficulty == RouteDifficulty.Hard)
-                {
-                    Assert.That(card.Reward.IncludesBasePayout, Is.True);
-                    Assert.That(tables.HardRewardPatterns.Any(pattern =>
-                        pattern.artifactPulls == card.Reward.ArtifactPulls &&
-                        card.Reward.Coins >= pattern.minSoul && card.Reward.Coins <= pattern.maxSoul), Is.True);
-                }
-                else
-                {
-                    Assert.That(card.Reward.IncludesBasePayout, Is.False);
-                    Assert.That(card.Reward.Coins, Is.InRange(minimum, maximum));
-                }
+                difficulties.Add(card.Difficulty);
+                bool hard = card.Difficulty == RouteDifficulty.Hard;
+                Assert.That(card.Reward.IncludesBasePayout, Is.EqualTo(hard));
+                Assert.That(card.Reward.GrantsMemory, Is.EqualTo(hard));
+                Assert.That(card.Reward.Coins, Is.EqualTo(hard ? 219 : 175));
             }
-        }
-        finally { Object.DestroyImmediate(tables); }
+            CollectionAssert.AreEquivalent(new[] { RouteDifficulty.Medium, RouteDifficulty.Hard }, difficulties);
+        });
     }
 
     [TestCase(RouteDifficulty.Easy, 80)]
@@ -397,34 +375,19 @@ public class ShopEconomyBalanceTests
         });
     }
 
-    [TestCase(135, 0, 135)]
-    [TestCase(135, 1, 189)]
-    [TestCase(135, 2, 243)]
-    [TestCase(135, 4, 351)]
-    [TestCase(135, 9, 621)]
-    [TestCase(0, 99, 0)]
-    [TestCase(135, -1, 135)]
-    [TestCase(-1, 3, 0)]
-    [TestCase(int.MaxValue, int.MaxValue, int.MaxValue)]
-    public void CombatSoulUsesFortyPercentOfBasePerLevelWithoutCompounding(int coins, int biome, int expected)
-    {
-        var method = typeof(RouteOfferGenerator).GetMethod("ScaleCombatSoul", BindingFlags.Static | BindingFlags.NonPublic);
-        Assert.That(method.Invoke(null, new object[] { coins, biome }), Is.EqualTo(expected));
-    }
-
-    [TestCase(RouteDifficulty.Easy, 0)]
-    [TestCase(RouteDifficulty.Easy, 1)]
-    [TestCase(RouteDifficulty.Easy, 2)]
-    [TestCase(RouteDifficulty.Easy, 4)]
-    [TestCase(RouteDifficulty.Medium, 0)]
-    [TestCase(RouteDifficulty.Medium, 1)]
-    [TestCase(RouteDifficulty.Medium, 2)]
-    [TestCase(RouteDifficulty.Medium, 4)]
-    [TestCase(RouteDifficulty.Hard, 0)]
-    [TestCase(RouteDifficulty.Hard, 1)]
-    [TestCase(RouteDifficulty.Hard, 2)]
-    [TestCase(RouteDifficulty.Hard, 4)]
-    public void HigherLevelCardsScaleOnlySoulAndKeepTheSameArtifactDrawCount(RouteDifficulty difficulty, int biome)
+    [TestCase(RouteDifficulty.Medium, 0, 175)]
+    [TestCase(RouteDifficulty.Medium, 2, 175)]
+    [TestCase(RouteDifficulty.Medium, 3, 250)]
+    [TestCase(RouteDifficulty.Medium, 5, 250)]
+    [TestCase(RouteDifficulty.Medium, 6, 350)]
+    [TestCase(RouteDifficulty.Medium, 99, 350)]
+    [TestCase(RouteDifficulty.Hard, 0, 219)]
+    [TestCase(RouteDifficulty.Hard, 2, 219)]
+    [TestCase(RouteDifficulty.Hard, 3, 313)]
+    [TestCase(RouteDifficulty.Hard, 5, 313)]
+    [TestCase(RouteDifficulty.Hard, 6, 438)]
+    [TestCase(RouteDifficulty.Hard, 99, 438)]
+    public void HigherLevelCardsScaleOnlySoulAndKeepTheSameArtifactDrawCount(RouteDifficulty difficulty, int biome, int expected)
     {
         WithProgression(biome, progression => {
             var tables = Object.Instantiate(Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables"));
@@ -441,9 +404,8 @@ public class ShopEconomyBalanceTests
                     progression.SetCurrentBiomeIndex(biome);
                     Random.InitState(619 + i);
                     var scaled = RouteOfferGenerator.BuildOffer(room, tables);
-                    int expected = (int)System.Math.Round(baseline.Reward.Coins * (1d + .4d * biome),
-                        System.MidpointRounding.AwayFromZero);
                     Assert.That(scaled.Reward.Coins, Is.EqualTo(expected));
+                    Assert.That(scaled.Reward.GrantsMemory, Is.EqualTo(baseline.Reward.GrantsMemory));
                     Assert.That(scaled.Reward.ArtifactPulls, Is.EqualTo(baseline.Reward.ArtifactPulls));
                     Assert.That(scaled.Reward.GrantsArtifact, Is.EqualTo(baseline.Reward.GrantsArtifact));
                     Assert.That(scaled.Reward.IncludesBasePayout, Is.EqualTo(baseline.Reward.IncludesBasePayout));
@@ -460,20 +422,18 @@ public class ShopEconomyBalanceTests
         });
     }
 
-    [TestCase(RouteDifficulty.Easy)]
-    [TestCase(RouteDifficulty.Medium)]
-    public void ScaledCardPaysTheAdvertisedSoulOnceEvenIfTheLevelChangesLater(RouteDifficulty difficulty)
+    [Test]
+    public void ScaledCardPaysTheAdvertisedSoulOnceEvenIfTheLevelChangesLater()
     {
         WithProgression(4, progression => {
             var tables = Object.Instantiate(Resources.Load<RouteOfferTables>("MapSO/RouteOfferTables"));
             try
             {
-                foreach (var profile in tables.Profiles) profile.rollWeight = profile.difficulty == difficulty ? 1f : 0f;
+                foreach (var profile in tables.Profiles) profile.rollWeight = profile.difficulty == RouteDifficulty.Medium ? 1f : 0f;
                 var room = Resources.Load<RoomData>("MapSO/LV/RoomData_LV_01");
                 var card = RouteOfferGenerator.BuildOffer(room, tables);
                 int advertised = card.Reward.Coins;
-                Assert.That(advertised, Is.InRange(tables.GetProfile(difficulty).minCoins * 2.6,
-                    tables.GetProfile(difficulty).maxCoins * 2.6));
+                Assert.That(advertised, Is.EqualTo(250));
                 progression.SetCurrentBiomeIndex(9);
                 WithClearManagers(room, (runEnd, waves) => {
                     ActiveRouteOffer.Set(card);

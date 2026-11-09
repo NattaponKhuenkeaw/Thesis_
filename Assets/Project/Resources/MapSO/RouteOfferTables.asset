@@ -17,22 +17,6 @@ MonoBehaviour:
   aliveCap: 5
   spawnInterval: 0.35
   grantArtifacts: 0
-  hardRewardPatterns:
-  - weight: 25
-    artifactPulls: 2
-    grantsMemory: 1
-    minSoul: 0
-    maxSoul: 0
-  - weight: 50
-    artifactPulls: 1
-    grantsMemory: 1
-    minSoul: 180
-    maxSoul: 280
-  - weight: 25
-    artifactPulls: 0
-    grantsMemory: 1
-    minSoul: 300
-    maxSoul: 400
   profiles:
   - difficulty: 0
     rollWeight: 40
@@ -52,7 +36,7 @@ MonoBehaviour:
     - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
       weight: 1
   - difficulty: 1
-    rollWeight: 35
+    rollWeight: 40
     minWaves: 1
     maxWaves: 1
     minEnemiesPerWave: 6
@@ -69,7 +53,7 @@ MonoBehaviour:
     - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
       weight: 1
   - difficulty: 2
-    rollWeight: 25
+    rollWeight: 60
     minWaves: 1
     maxWaves: 1
     minEnemiesPerWave: 8
@@ -85,6 +69,22 @@ MonoBehaviour:
       weight: 2
     - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
       weight: 2
+  hardRewardPatterns:
+  - weight: 25
+    artifactPulls: 2
+    grantsMemory: 1
+    minSoul: 0
+    maxSoul: 0
+  - weight: 50
+    artifactPulls: 1
+    grantsMemory: 1
+    minSoul: 180
+    maxSoul: 280
+  - weight: 25
+    artifactPulls: 0
+    grantsMemory: 1
+    minSoul: 300
+    maxSoul: 400
   artifactPool:
   - {fileID: 0}
   - {fileID: 0}

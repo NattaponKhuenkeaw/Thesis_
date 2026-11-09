@@ -14,9 +14,13 @@ namespace Project.Core.ZoneState
         private const string DefaultMapResourcePath = "MapSO/Test_MapSO";
         private const string DefaultBossRoomId = "Boss_01";
         private const float DefaultBiomeStatBonus = 0.20f;
-        private const float DefaultBossHealthBonus = 0.60f;
-        private const float DefaultNormalEnemyHealthBonus = 0.40f;
+        private const float DefaultNormalEnemyHealthBonus = 0.18f;
         private const float DefaultNormalEnemyAttackBonus = 0.15f;
+        private const int LastTunedBiomeIndex = 9;
+        private static readonly float[] BossHealthMultipliers =
+        {
+            2f, 4f, 6f, 6.625f, 7.25f, 7.875f, 8.5f, 9.125f, 9.75f, 10.5f
+        };
 
         public static RunProgressionManager Instance { get; private set; }
 
@@ -32,11 +36,9 @@ namespace Project.Core.ZoneState
         public int roomsBeforeBoss = 4;
 
         [Header("Difficulty Curve")]
-        [Tooltip("Boss ATK / DEF gain this fraction of base stats per cleared level. HP has its own compounded curve.")]
+        [Tooltip("Boss ATK / DEF gain this fraction of base stats per cleared level. HP uses biome milestones.")]
         [SerializeField, Min(0f)] private float biomeBasicStatBonus = DefaultBiomeStatBonus;
-        [Tooltip("Boss HP compounds by this fraction per cleared level, independently of boss ATK / DEF.")]
-        [SerializeField, Min(0f)] private float bossHealthBonusPerLevel = DefaultBossHealthBonus;
-        [Tooltip("Normal enemy HP compounds by this fraction per cleared level. DEF is not scaled.")]
+        [Tooltip("Normal enemy HP compounds by this fraction through Level 10. DEF is not scaled.")]
         [SerializeField, Min(0f)] private float normalEnemyHealthBonusPerLevel = DefaultNormalEnemyHealthBonus;
         [Tooltip("Normal enemy ATK compounds by this fraction per cleared level.")]
         [SerializeField, Min(0f)] private float normalEnemyAttackBonusPerLevel = DefaultNormalEnemyAttackBonus;
@@ -65,18 +67,18 @@ namespace Project.Core.ZoneState
         /// Biome 0 = 1.0, Biome 1 = 1.20, Biome 2 = 1.40, ...
         /// </summary>
         public float EnemyBasicStatMultiplier => ResolveEnemyBasicStatMultiplier(CurrentBiomeIndex, BiomeBasicStatBonus);
-        public float BossHealthMultiplier => ResolveBossHealthMultiplier(CurrentBiomeIndex, bossHealthBonusPerLevel);
+        public float BossHealthMultiplier => ResolveBossHealthMultiplier(CurrentBiomeIndex);
         public float NormalEnemyHealthMultiplier => ResolveNormalEnemyHealthMultiplier(CurrentBiomeIndex, normalEnemyHealthBonusPerLevel);
         public float NormalEnemyAttackMultiplier => ResolveNormalEnemyAttackMultiplier(CurrentBiomeIndex, normalEnemyAttackBonusPerLevel);
 
-        public static float ResolveBossHealthMultiplier(int biomeIndex, float bonusPerLevel = DefaultBossHealthBonus)
+        public static float ResolveBossHealthMultiplier(int biomeIndex)
         {
-            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Max(0, biomeIndex));
+            return BossHealthMultipliers[Mathf.Clamp(biomeIndex, 0, BossHealthMultipliers.Length - 1)];
         }
 
         public static float ResolveNormalEnemyHealthMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyHealthBonus)
         {
-            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Max(0, biomeIndex));
+            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Clamp(biomeIndex, 0, LastTunedBiomeIndex));
         }
 
         public static float ResolveNormalEnemyAttackMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyAttackBonus)
@@ -98,7 +100,7 @@ namespace Project.Core.ZoneState
         }
 
         /// <summary>
-        /// Boss HP compounds independently; boss ATK / DEF retain their legacy curve.
+        /// Boss HP uses milestones; boss ATK / DEF retain their legacy curve.
         /// Normal enemies compound HP / ATK and retain base DEF.
         /// </summary>
         public static void ApplyBiomeDifficultyToEnemy(EnemyController enemy)

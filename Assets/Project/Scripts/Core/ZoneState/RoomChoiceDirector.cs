@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// One step in a biome act. Safe nodes inject at most one Shop/Level/Rest into the choice.
+    /// One step in a biome act. Legacy safe nodes retain their serialized values.
     /// </summary>
     public enum BiomeActNode
     {
@@ -12,13 +12,13 @@ namespace Project.Core.ZoneState
         Shop = 1,
         Level = 2,
         Rest = 3,
-        Boss = 4
+        Boss = 4,
+        SafeRoom = 5
     }
 
     /// <summary>
     /// Rolls next-room offers from a biome act template (not independent Shop/Level/Rest counters).
-    /// Rules: Safe ≤ 1 per choice, Rest/Level one-shot per biome (cleared on biome advance),
-    /// Boss when the act reaches the Boss node (template is authoritative).
+    /// Combat nodes can offer an optional safe room. Safe Room nodes offer only safe destinations.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class RoomChoiceDirector : MonoBehaviour
@@ -32,19 +32,20 @@ namespace Project.Core.ZoneState
         [SerializeField] private MapSO mapData;
 
         [Header("Offer Rules")]
-        [Tooltip("Normal route choices always show this many cards. Boss remains a single offer.")]
+        [Tooltip("Maximum cards for a normal route choice. Boss remains a single offer.")]
         [SerializeField, Min(3)] private int offerCount = 3;
+        [SerializeField, Range(0f, 1f)] private float optionalSafeRoomChance = 0.2f;
 
-        [Tooltip("Biome route. Combat nodes deepen the run; Shop/Level/Rest inject one safe; Boss forces the boss room.")]
+        [Tooltip("Biome route. Combat can roll an optional safe; Safe Room guarantees a break; Boss forces the boss room.")]
         [SerializeField] private List<BiomeActNode> biomeTemplate = new List<BiomeActNode>
         {
             BiomeActNode.Combat,
             BiomeActNode.Combat,
-            BiomeActNode.Shop,
+            BiomeActNode.SafeRoom,
             BiomeActNode.Combat,
-            BiomeActNode.Level,
+            BiomeActNode.SafeRoom,
             BiomeActNode.Combat,
-            BiomeActNode.Rest,
+            BiomeActNode.SafeRoom,
             BiomeActNode.Boss
         };
 
@@ -52,9 +53,6 @@ namespace Project.Core.ZoneState
         [SerializeField, Min(0)] private int actIndex;
         [SerializeField] private bool pendingPostBossRest;
         [SerializeField] private bool biomeHadShop;
-        [SerializeField] private bool biomeHadLevel;
-        [SerializeField] private bool biomeHadRest;
-        [SerializeField] private RoomKind lastSafeKindConsumed = (RoomKind)(-1);
 
         private readonly List<RoomData> candidateBuffer = new List<RoomData>(16);
         private readonly List<RoomChoiceOffer> offerBuffer = new List<RoomChoiceOffer>(4);
@@ -62,7 +60,6 @@ namespace Project.Core.ZoneState
         private readonly HashSet<string> visitedRoomIds = new HashSet<string>();
 
         private bool allowRevisits;
-        private bool allowShopInAnyFallback;
         private int pendingActOfferIndex = -1;
         private string preparedExitRoomId;
         private string lastClearedRoomId;
@@ -123,9 +120,6 @@ namespace Project.Core.ZoneState
             actIndex = 0;
             pendingPostBossRest = false;
             biomeHadShop = false;
-            biomeHadLevel = false;
-            biomeHadRest = false;
-            lastSafeKindConsumed = (RoomKind)(-1);
             pendingActOfferIndex = -1;
             preparedExitRoomId = null;
             lastClearedRoomId = null;
@@ -160,8 +154,7 @@ namespace Project.Core.ZoneState
                 visitedRoomIds.Add(room.RoomId);
             }
 
-            lastSafeKindConsumed = room.RoomKind;
-            MarkBiomeSafeConsumed(room.RoomKind);
+            if (room.RoomKind == RoomKind.Shop) biomeHadShop = true;
         }
 
         /// <summary>
@@ -208,11 +201,8 @@ namespace Project.Core.ZoneState
                 }
 
                 excludeRoomId = clearedRoom.RoomId;
-                if (CountsAsBiomeActSafe(clearedRoom))
-                {
-                    lastSafeKindConsumed = clearedRoom.RoomKind;
-                    MarkBiomeSafeConsumed(clearedRoom.RoomKind);
-                }
+                if (clearedRoom.RoomKind == RoomKind.Shop && CountsAsBiomeActSafe(clearedRoom))
+                    biomeHadShop = true;
             }
             else if (!string.IsNullOrWhiteSpace(excludeRoomId))
             {
@@ -238,10 +228,8 @@ namespace Project.Core.ZoneState
             if (pendingPostBossRest)
             {
                 pendingPostBossRest = false;
-                IReadOnlyList<RoomChoiceOffer> postBoss = BuildOffersForNode(
-                    BiomeActNode.Rest,
-                    excludeRoomId,
-                    consumeActOnEntry: false);
+                IReadOnlyList<RoomChoiceOffer> postBoss = GenerateOffers(
+                    excludeRoomId, includeShop: false, includeLevel: false, includeRest: true);
                 if (OfferBufferContainsKind(RoomKind.Rest))
                 {
                     return RememberExitOffers(postBoss, excludeRoomId);
@@ -264,12 +252,11 @@ namespace Project.Core.ZoneState
                 }
 
                 Debug.LogError(
-                    "[RoomChoiceDirector] Act is on Boss node but boss room could not be resolved. Check the configured boss room IDs in MapSO.",
+                    "[RoomChoiceDirector] Act is on Boss node but boss room could not be resolved. Check Boss_01 in MapSO.",
                     this);
             }
 
-            return RememberExitOffers(
-                BuildOffersForNode(node, excludeRoomId, consumeActOnEntry: true), excludeRoomId);
+            return RememberExitOffers(BuildOffersForNode(node, excludeRoomId), excludeRoomId);
         }
 
         /// <summary>
@@ -308,17 +295,8 @@ namespace Project.Core.ZoneState
                 }
             }
 
-            // Leaving a safe should not inject another safe of the same kind.
-            BiomeActNode leaveNode = node;
-            if (currentRoom != null && IsSafeKind(currentRoom.RoomKind) && NodeMatchesSafe(leaveNode, currentRoom.RoomKind))
-            {
-                leaveNode = BiomeActNode.Combat;
-            }
-
             IReadOnlyList<RoomChoiceOffer> offers = BuildOffersForNode(
-                leaveNode,
-                excludeRoomId,
-                consumeActOnEntry: true);
+                node, excludeRoomId);
             if (offers != null && offers.Count > 0)
             {
                 return RememberExitOffers(offers, excludeRoomId);
@@ -460,81 +438,22 @@ namespace Project.Core.ZoneState
             return Mathf.Max(1, count);
         }
 
-        private IReadOnlyList<RoomChoiceOffer> BuildOffersForNode(
-            BiomeActNode node,
-            string excludeRoomId,
-            bool consumeActOnEntry)
+        private IReadOnlyList<RoomChoiceOffer> BuildOffersForNode(BiomeActNode node, string excludeRoomId)
         {
-            ResolveNodeFlags(node, out bool includeShop, out bool includeLevel, out bool includeRest);
-            IReadOnlyList<RoomChoiceOffer> offers = BuildOffersRaw(
-                excludeRoomId,
-                includeShop,
-                includeLevel,
-                includeRest);
-
-            // Do NOT mark biomeHad* when a safe is merely offered — only NotifyLeavingRoom
-            // / actually visiting burns the opportunity. Offering Shop then picking Combat
-            // used to permanently suppress later safe gates.
-
-            if (includeShop && !OfferBufferContainsKind(RoomKind.Shop))
-            {
-                Debug.LogWarning(
-                    "[RoomChoiceDirector] Act Shop node could not add a Shop room. Check MapSO candidates.",
-                    this);
-            }
-
-            if (includeLevel && !OfferBufferContainsKind(RoomKind.Level))
-            {
-                Debug.LogWarning(
-                    "[RoomChoiceDirector] Act Level node could not add a Level room. Check MapSO / visited.",
-                    this);
-            }
-
-            if (includeRest && !OfferBufferContainsKind(RoomKind.Rest))
-            {
-                Debug.LogWarning(
-                    "[RoomChoiceDirector] Act Rest node could not add a Rest room. Check MapSO / visited.",
-                    this);
-            }
-
-            pendingActOfferIndex = consumeActOnEntry && offers.Count > 0 ? actIndex : -1;
-
-            return offers;
-        }
-
-        private void ResolveNodeFlags(
-            BiomeActNode node,
-            out bool includeShop,
-            out bool includeLevel,
-            out bool includeRest)
-        {
-            includeShop = false;
-            includeLevel = false;
-            includeRest = false;
-
-            switch (node)
-            {
-                case BiomeActNode.Shop:
-                    includeShop = !biomeHadShop && lastSafeKindConsumed != RoomKind.Shop;
-                    break;
-                case BiomeActNode.Level:
-                    includeLevel = !biomeHadLevel && lastSafeKindConsumed != RoomKind.Level;
-                    break;
-                case BiomeActNode.Rest:
-                    includeRest = !biomeHadRest && lastSafeKindConsumed != RoomKind.Rest;
-                    break;
-                case BiomeActNode.Combat:
-                case BiomeActNode.Boss:
-                default:
-                    break;
-            }
+            BuildOffersRaw(excludeRoomId, false, false, false,
+                safeOnly: node == BiomeActNode.SafeRoom,
+                rollOptionalSafe: node == BiomeActNode.Combat);
+            pendingActOfferIndex = offerBuffer.Count > 0 ? actIndex : -1;
+            return offerBuffer;
         }
 
         private IReadOnlyList<RoomChoiceOffer> BuildOffersRaw(
             string excludeRoomId,
             bool includeShop,
             bool includeLevel,
-            bool includeRest)
+            bool includeRest,
+            bool safeOnly = false,
+            bool rollOptionalSafe = false)
         {
             pendingActOfferIndex = -1;
             preparedExitRoomId = null;
@@ -547,7 +466,25 @@ namespace Project.Core.ZoneState
 
             offerBuffer.Clear();
             usedRoomIds.Clear();
-            allowShopInAnyFallback = includeShop;
+            if (safeOnly)
+            {
+                AddSafeOffers(excludeRoomId, offerCount);
+                // A shop can be revisited when all other safe rooms are spent.
+                if (offerBuffer.Count == 0)
+                    TryAddOfferOfKind(RoomKind.Shop, null);
+                if (offerBuffer.Count > 0) return offerBuffer;
+                Debug.LogWarning("[RoomChoiceDirector] Safe Room node has no eligible destination. Check MapSO.", this);
+            }
+
+            if (rollOptionalSafe)
+            {
+                int safeSlots = 0;
+                for (int i = 1; i < offerCount; i++)
+                {
+                    if (Random.value < optionalSafeRoomChance) safeSlots++;
+                }
+                if (safeSlots > 0) AddSafeOffers(excludeRoomId, safeSlots);
+            }
 
             // Safe ≤ 1: add at most one safe kind, Rest > Level > Shop priority if multiple requested.
             if (includeRest)
@@ -622,9 +559,6 @@ namespace Project.Core.ZoneState
         {
             actIndex = 0;
             biomeHadShop = false;
-            biomeHadLevel = false;
-            biomeHadRest = false;
-            lastSafeKindConsumed = (RoomKind)(-1);
             ClearOneShotSafeVisitsForNewBiome();
         }
 
@@ -653,22 +587,6 @@ namespace Project.Core.ZoneState
             for (int i = 0; i < remove.Count; i++)
             {
                 visitedRoomIds.Remove(remove[i]);
-            }
-        }
-
-        private void MarkBiomeSafeConsumed(RoomKind kind)
-        {
-            switch (kind)
-            {
-                case RoomKind.Shop:
-                    biomeHadShop = true;
-                    break;
-                case RoomKind.Level:
-                    biomeHadLevel = true;
-                    break;
-                case RoomKind.Rest:
-                    biomeHadRest = true;
-                    break;
             }
         }
 
@@ -746,21 +664,22 @@ namespace Project.Core.ZoneState
             {
                 biomeTemplate.Add(BiomeActNode.Combat);
                 biomeTemplate.Add(BiomeActNode.Combat);
-                biomeTemplate.Add(BiomeActNode.Shop);
+                biomeTemplate.Add(BiomeActNode.SafeRoom);
                 biomeTemplate.Add(BiomeActNode.Combat);
-                biomeTemplate.Add(BiomeActNode.Level);
+                biomeTemplate.Add(BiomeActNode.SafeRoom);
                 biomeTemplate.Add(BiomeActNode.Combat);
-                biomeTemplate.Add(BiomeActNode.Rest);
+                biomeTemplate.Add(BiomeActNode.SafeRoom);
                 biomeTemplate.Add(BiomeActNode.Boss);
             }
 
             bool hasBoss = false;
             for (int i = 0; i < biomeTemplate.Count; i++)
             {
+                if (biomeTemplate[i] is BiomeActNode.Shop or BiomeActNode.Level or BiomeActNode.Rest)
+                    biomeTemplate[i] = BiomeActNode.SafeRoom;
                 if (biomeTemplate[i] == BiomeActNode.Boss)
                 {
                     hasBoss = true;
-                    break;
                 }
             }
 
@@ -800,7 +719,7 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
-            offerBuffer.Add(BuildRolledOffer(picked));
+            offerBuffer.Add(RouteOfferGenerator.BuildOffer(picked));
             usedRoomIds.Add(picked.RoomId);
             return true;
         }
@@ -833,10 +752,7 @@ namespace Project.Core.ZoneState
                     continue;
                 }
 
-                if (room.RoomKind == RoomKind.Boss
-                    || room.RoomKind == RoomKind.Level
-                    || room.RoomKind == RoomKind.Rest
-                    || (room.RoomKind == RoomKind.Shop && !allowShopInAnyFallback))
+                if (room.RoomKind == RoomKind.Boss || room.ZoneMode == ZoneMode.SafeZone)
                 {
                     candidateBuffer.RemoveAt(i);
                 }
@@ -848,7 +764,7 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
-            offerBuffer.Add(BuildRolledOffer(picked));
+            offerBuffer.Add(RouteOfferGenerator.BuildOffer(picked));
             usedRoomIds.Add(picked.RoomId);
             return true;
         }
@@ -875,7 +791,7 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
-            offerBuffer.Add(BuildRolledOffer(picked));
+            offerBuffer.Add(RouteOfferGenerator.BuildOffer(picked));
             return true;
         }
 
@@ -967,43 +883,19 @@ namespace Project.Core.ZoneState
             }
         }
 
-        /// <summary>
-        /// Combat cards reroll a few times so the three paths are less likely to share
-        /// the same difficulty. Layout stays a corridor; the roll is the random part.
-        /// </summary>
-        private RoomChoiceOffer BuildRolledOffer(RoomData room)
+        private void AddSafeOffers(string excludeRoomId, int count)
         {
-            RoomChoiceOffer offer = RouteOfferGenerator.BuildOffer(room);
-            if (!offer.ShowsDifficulty)
+            mapData.CollectOfferCandidates(null, excludeRoomId, candidateBuffer, ActiveBiomeIndex);
+            RemoveAlreadyUsed(candidateBuffer);
+            candidateBuffer.RemoveAll(room => room.ZoneMode != ZoneMode.SafeZone || room.RoomKind == RoomKind.Boss);
+            while (offerBuffer.Count < count)
             {
-                return offer;
+                RoomData picked = PickWeighted(candidateBuffer);
+                if (picked == null) break;
+                offerBuffer.Add(new RoomChoiceOffer(picked));
+                usedRoomIds.Add(picked.RoomId);
+                candidateBuffer.Remove(picked);
             }
-
-            for (int attempt = 0; attempt < 3; attempt++)
-            {
-                if (!OfferBufferContainsDifficulty(offer.Difficulty))
-                {
-                    return offer;
-                }
-
-                offer = RouteOfferGenerator.BuildOffer(room);
-            }
-
-            return offer;
-        }
-
-        private bool OfferBufferContainsDifficulty(RouteDifficulty difficulty)
-        {
-            for (int i = 0; i < offerBuffer.Count; i++)
-            {
-                RoomChoiceOffer offer = offerBuffer[i];
-                if (offer.ShowsDifficulty && offer.Difficulty == difficulty)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private static bool IsSafeKind(RoomKind kind)
@@ -1025,13 +917,6 @@ namespace Project.Core.ZoneState
             return room.RoomKind == RoomKind.Shop
                 || room.RoomKind == RoomKind.Level
                 || room.RoomKind == RoomKind.Rest;
-        }
-
-        private static bool NodeMatchesSafe(BiomeActNode node, RoomKind kind)
-        {
-            return (node == BiomeActNode.Shop && kind == RoomKind.Shop)
-                || (node == BiomeActNode.Level && kind == RoomKind.Level)
-                || (node == BiomeActNode.Rest && kind == RoomKind.Rest);
         }
 
         private static string ResolveCurrentRoomId()

@@ -367,7 +367,7 @@ public class BossHealthHUDTests
             float resistance = enemy.damageRes;
             float healthMultiplier = Project.Core.ZoneState.RunProgressionManager.ResolveNormalEnemyHealthMultiplier(biome);
             float attackMultiplier = Project.Core.ZoneState.RunProgressionManager.ResolveNormalEnemyAttackMultiplier(biome);
-            Assert.That(healthMultiplier,Is.EqualTo(Mathf.Pow(1.4f,biome)).Within(.0001f));
+            Assert.That(healthMultiplier,Is.EqualTo(Mathf.Pow(1.18f,Mathf.Clamp(biome,0,9))).Within(.0001f));
             Assert.That(attackMultiplier,Is.EqualTo(Mathf.Pow(1.15f,biome)).Within(.0001f));
             enemy.ApplyStatMultipliers(healthMultiplier,attackMultiplier,1f);
             Assert.That(enemy.maxHP,Is.EqualTo(hp*healthMultiplier).Within(.001f));
@@ -414,9 +414,10 @@ public class BossHealthHUDTests
             Assert.That(enemy.attackDamage,Is.EqualTo(165f));
 
             float multiplier = Project.Core.ZoneState.RunProgressionManager.ResolveEnemyBasicStatMultiplier(biome);
-            enemy.ApplyBasicStatMultiplier(multiplier);
+            float health = Project.Core.ZoneState.RunProgressionManager.ResolveBossHealthMultiplier(biome);
+            enemy.ApplyStatMultipliers(health,multiplier,multiplier);
             Assert.That(enemy.defense,Is.Zero);
-            Assert.That(enemy.maxHP,Is.EqualTo(4000f*multiplier).Within(.001f));
+            Assert.That(enemy.maxHP,Is.EqualTo(4000f*health).Within(.01f));
             Assert.That(enemy.attackDamage,Is.EqualTo(165f*multiplier).Within(.001f));
         }
         finally { Object.DestroyImmediate(root); }

@@ -42,16 +42,10 @@ namespace Project.Core.ZoneState
                 return new RoomChoiceOffer(room);
             }
 
-            RouteDifficulty difficulty = RollDifficulty(room.RoomKind, tables);
-            if (room.RoomKind == RoomKind.Elite && difficulty == RouteDifficulty.Easy)
-            {
-                difficulty = RouteDifficulty.Medium;
-            }
-
-            RouteOfferTables.DifficultyProfile profile = tables.GetProfile(difficulty);
+            RouteOfferTables.DifficultyProfile profile = RollProfile(tables);
             if (profile == null)
             {
-                Debug.LogWarning($"[RouteOfferGenerator] Missing profile for {difficulty}; offering bare room '{room.RoomId}'.");
+                Debug.LogWarning($"[RouteOfferGenerator] Missing combat profiles; offering bare room '{room.RoomId}'.");
                 return new RoomChoiceOffer(room);
             }
 
@@ -69,7 +63,7 @@ namespace Project.Core.ZoneState
                     tables.SpawnInterval);
             }
 
-            return new RoomChoiceOffer(room, difficulty, encounter, reward);
+            return new RoomChoiceOffer(room, profile.difficulty, encounter, reward);
         }
 
         public static bool NeedsGeneratedCombat(RoomKind kind)
@@ -77,48 +71,15 @@ namespace Project.Core.ZoneState
             return kind == RoomKind.Combat || kind == RoomKind.Elite;
         }
 
-        private static RouteDifficulty RollDifficulty(RoomKind kind, RouteOfferTables tables)
+        private static RouteOfferTables.DifficultyProfile RollProfile(RouteOfferTables tables)
         {
-            if (kind == RoomKind.Elite)
-            {
-                // Elite biases toward Hard while still allowing Medium.
-                float eliteRoll = Random.value;
-                return eliteRoll < 0.55f ? RouteDifficulty.Hard : RouteDifficulty.Medium;
-            }
-
-            float total = 0f;
-            IReadOnlyList<RouteOfferTables.DifficultyProfile> profiles = tables.Profiles;
-            for (int i = 0; i < profiles.Count; i++)
-            {
-                if (profiles[i] != null)
-                {
-                    total += Mathf.Max(0f, profiles[i].rollWeight);
-                }
-            }
-
-            if (total <= 0f)
-            {
-                return RouteDifficulty.Easy;
-            }
-
-            float roll = Random.Range(0f, total);
-            float cursor = 0f;
-            for (int i = 0; i < profiles.Count; i++)
-            {
-                RouteOfferTables.DifficultyProfile profile = profiles[i];
-                if (profile == null)
-                {
-                    continue;
-                }
-
-                cursor += Mathf.Max(0f, profile.rollWeight);
-                if (roll <= cursor)
-                {
-                    return profile.difficulty;
-                }
-            }
-
-            return profiles[profiles.Count - 1].difficulty;
+            var medium = tables.GetProfile(RouteDifficulty.Medium);
+            var hard = tables.GetProfile(RouteDifficulty.Hard);
+            float mediumWeight = Mathf.Max(0f, medium?.rollWeight ?? 0f);
+            float hardWeight = Mathf.Max(0f, hard?.rollWeight ?? 0f);
+            if (hardWeight <= 0f) return medium ?? hard;
+            if (mediumWeight <= 0f) return hard;
+            return Random.value * (mediumWeight + hardWeight) < mediumWeight ? medium : hard;
         }
 
         public static int CountEncounterEnemies(GeneratedEncounter encounter)
@@ -197,18 +158,14 @@ namespace Project.Core.ZoneState
         private static RouteReward BuildReward(RouteOfferTables.DifficultyProfile profile, RouteOfferTables tables)
         {
             int biome = RunProgressionManager.Instance != null ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
+            int coins = ResolveCombatSoul(profile.difficulty, biome);
             if (profile.difficulty == RouteDifficulty.Hard && tables.HardRewardPatterns.Count > 0 &&
-                TryBuildHardReward(tables.HardRewardPatterns, biome, out RouteReward patterned))
+                TryBuildHardReward(tables.HardRewardPatterns, biome, coins, out RouteReward patterned))
                 return patterned;
 
-            int minCoins = Mathf.Min(profile.minCoins, profile.maxCoins);
-            int maxCoins = Mathf.Max(profile.minCoins, profile.maxCoins);
-            RouteReward reward = new RouteReward
-            {
-                Coins = ScaleCombatSoul(Random.Range(minCoins, maxCoins + 1), biome)
-            };
+            RouteReward reward = new RouteReward { Coins = coins };
 
-            if (!tables.GrantArtifacts)
+            if (profile.difficulty == RouteDifficulty.Medium || !tables.GrantArtifacts)
             {
                 return reward;
             }
@@ -230,13 +187,13 @@ namespace Project.Core.ZoneState
             return reward;
         }
 
-        private static int ScaleCombatSoul(int baseSoul, int biomeIndex)
+        private static int ResolveCombatSoul(RouteDifficulty difficulty, int biomeIndex)
         {
-            double scaled = (double)Mathf.Max(0, baseSoul) * (1d + 0.4d * Mathf.Max(0, biomeIndex));
-            return (int)System.Math.Min(int.MaxValue, System.Math.Round(scaled, System.MidpointRounding.AwayFromZero));
+            int baseline = biomeIndex < 3 ? 175 : biomeIndex < 6 ? 250 : 350;
+            return difficulty == RouteDifficulty.Hard ? Mathf.CeilToInt(baseline * 1.25f) : baseline;
         }
 
-        private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns, int biome,
+        private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns, int biome, int coins,
             out RouteReward reward)
         {
             reward = null;
@@ -260,7 +217,7 @@ namespace Project.Core.ZoneState
             }
 
             reward = RouteReward.Patterned(
-                ScaleCombatSoul(Random.Range(Mathf.Min(selected.minSoul, selected.maxSoul), Mathf.Max(selected.minSoul, selected.maxSoul) + 1), biome),
+                coins,
                 Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome, selected.grantsMemory);
             return true;
         }
