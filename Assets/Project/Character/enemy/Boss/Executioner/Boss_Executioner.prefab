@@ -2065,7 +2065,7 @@ MonoBehaviour:
   jumpTravelDuration: 0.9
   seismicJumpArcHeight: 5
   smashMarkerRadius: 1.9
-  chargeSpeed: 20
+  chargeSpeed: 25
   chargeDistance: 40
   chargeWallPadding: 0.35
   chargeStopAnimationDuration: 0.8
