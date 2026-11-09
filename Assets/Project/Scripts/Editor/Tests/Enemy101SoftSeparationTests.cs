@@ -481,6 +481,91 @@ public class Enemy101SoftSeparationTests
     }
 
     [UnityTest]
+    public IEnumerator ReiAirAttackPreservesLegacyTravelOnGroundedAndAirborneTargets()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        LoadReiGroundCombo(out var rei);
+        var action = rei.actionResolverTable.comboActions.Single(combo => combo.actionId == "char-1-camera_girl.basic.1");
+        var node = action.comboTree.rootNode;
+        Assert.That(node.defaultNext, Is.Null);
+        var step = node.stepData;
+        var hit = (NormalHitbox)step.hitData.hitboxes.Single();
+        Assert.That(hit.startFrameOffset, Is.Zero);
+        Assert.That(hit.useSnapToAnchor || hit.breaksGrab, Is.False);
+        Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Knockback));
+        Assert.That(hit.useAuthoredReactionTarget, Is.True);
+        Assert.That(hit.reactionTargetOffset, Is.EqualTo(new Vector2(.65f, 0f)));
+        Assert.That(hit.reactionTargetTravelFrames, Is.EqualTo(6));
+
+        var legacy = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(hit));
+        legacy.useAuthoredReactionTarget = false;
+        foreach (string path in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+        {
+            using var fixture = new Fixture(1, path);
+            yield return fixture.Ready();
+            var enemy = fixture.Enemies[0];
+            float groundY = enemy.rb.position.y;
+            var source = new GameObject("Rei air attack probe");
+            source.transform.position = new Vector2(.65f, .55f);
+            var shape = source.AddComponent<BoxCollider2D>();
+            shape.isTrigger = true;
+            shape.enabled = false;
+            var damage = source.AddComponent<HitBoxDamage>();
+            try
+            {
+                foreach (bool airborne in new[] { false, true })
+                {
+                    string context = $"{path} airborne={airborne}";
+                    float legacyTravel = 0f;
+                    foreach (var frame in new[] { legacy, hit })
+                    {
+                        enemy.hitReactionHandler.ForceClearReaction();
+                        enemy.rb.position = new Vector2(2.8f, groundY + (airborne ? .6f : 0f));
+                        enemy.rb.linearVelocity = Vector2.zero;
+                        Vector2 origin = enemy.rb.position;
+                        shape.offset = frame.offset;
+                        shape.size = frame.size;
+                        shape.enabled = true;
+                        Physics2D.SyncTransforms();
+                        Assert.That(enemy.hitReactionHandler.IsGroundedForCombat, Is.EqualTo(!airborne), context);
+                        Assert.That(shape.Distance(enemy.bodyCollider).isOverlapped, Is.True, context);
+                        damage.ResetActivationState();
+                        damage.SetHitData(1f, false, false, 0f, 0f, frame, AttackCategory.Normal, action.actionName,
+                            step, null, action.actionId);
+                        damage.ProcessHit(enemy, enemy.bodyCollider);
+                        Assert.That(enemy.hitReactionHandler.IsInReaction, Is.True, context);
+                        var reaction = (HitReactionData)typeof(EnemyHitReactionHandler)
+                            .GetField("currentReaction", Private).GetValue(enemy.hitReactionHandler);
+                        Assert.That(reaction.hasAuthoredReactionTarget, Is.EqualTo(frame == hit), context);
+                        shape.enabled = false;
+
+                        float highestY = origin.y;
+                        for (int i = 0; i < 45; i++)
+                        {
+                            yield return PhysicsStep();
+                            highestY = Mathf.Max(highestY, enemy.rb.position.y);
+                        }
+                        float travel = enemy.rb.position.x - origin.x;
+                        TestContext.WriteLine($"{context} authored={frame.useAuthoredReactionTarget} X={travel:F3} rise={highestY - origin.y:F3}");
+                        if (frame == legacy)
+                            legacyTravel = travel;
+                        else
+                            Assert.That(travel, Is.EqualTo(legacyTravel).Within(.02f), context);
+                        Assert.That(highestY - origin.y, Is.LessThan(.12f), context + ": knockback must not launch.");
+                        Assert.That(enemy.bodyCollider.bounds.min.y, Is.EqualTo(fixture.Floor.bounds.max.y).Within(.15f), context);
+                    }
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(source);
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
     public IEnumerator ReiGroundComboMeasuresLegacyPlacementAndKeepsFollowupsInReach()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
