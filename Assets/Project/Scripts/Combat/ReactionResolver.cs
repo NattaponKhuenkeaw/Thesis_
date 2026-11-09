@@ -22,7 +22,7 @@ public static class ReactionResolver
 
     public static void ResolveAgainstTarget(EnemyController enemy, ref HitReactionData reactionData)
     {
-        if (enemy == null || reactionData.reactionKind == EnemyReactionKind.Grab)
+        if (enemy == null || reactionData.reactionKind == EnemyReactionKind.Grab || reactionData.hasAuthoredReactionTarget)
         {
             return;
         }

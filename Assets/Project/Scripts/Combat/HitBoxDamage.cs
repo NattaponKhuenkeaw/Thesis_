@@ -577,6 +577,13 @@ public class HitBoxDamage : MonoBehaviour
                     currentNormalHitbox.useSnapToAnchor,
                     currentNormalHitbox.snapOffset);
 
+                if (currentNormalHitbox.useAuthoredReactionTarget && !currentNormalHitbox.useSnapToAnchor
+                    && currentNormalHitbox.reactionKind != EnemyReactionKind.Grab)
+                {
+                    data.hasAuthoredReactionTarget = true;
+                    data.reactionTargetOffset = currentNormalHitbox.reactionTargetOffset;
+                }
+
                 if (currentNormalHitbox.useSnapToAnchor)
                 {
                     data.hasSnapWorldPosition = true;

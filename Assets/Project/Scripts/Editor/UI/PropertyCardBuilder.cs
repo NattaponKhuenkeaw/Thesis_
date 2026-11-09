@@ -2312,7 +2312,7 @@ namespace CombatEditor.UI
             {
                 RecordUndo("Edit Deterministic Reaction");
                 hitbox.useDeterministicReaction = value;
-                MarkDirty();
+                MarkDirtyAndRebuild();
             });
 
             bool usesHorizontalSpeed = HitReactionData.UsesHorizontalSpeed(hitbox.reactionKind);
@@ -2366,7 +2366,30 @@ namespace CombatEditor.UI
                 MarkDirty();
             });
 
-            if (usesHorizontalSpeed)
+            bool canAuthorTarget = hitbox.useDeterministicReaction && !hitbox.useSnapToAnchor
+                && hitbox.reactionKind != EnemyReactionKind.Grab;
+            bool usesAuthoredTarget = canAuthorTarget && hitbox.useAuthoredReactionTarget;
+            if (canAuthorTarget)
+            {
+                AddToggle(body, "Use Authored Reaction Target", hitbox.useAuthoredReactionTarget, value =>
+                {
+                    RecordUndo("Toggle Authored Reaction Target");
+                    hitbox.useAuthoredReactionTarget = value;
+                    MarkDirtyAndRebuild();
+                });
+
+                if (usesAuthoredTarget)
+                {
+                    AddVector2Field(body, "Travel X / Knockup Apex Y", hitbox.reactionTargetOffset, value =>
+                    {
+                        RecordUndo("Edit Reaction Target Offset");
+                        hitbox.reactionTargetOffset = value;
+                        MarkDirty();
+                    });
+                }
+            }
+
+            if (usesHorizontalSpeed && !usesAuthoredTarget)
             {
                 AddFloatField(body, "Horizontal Speed", hitbox.horizontalSpeed, value =>
                 {
@@ -2376,7 +2399,7 @@ namespace CombatEditor.UI
                 });
             }
 
-            if (usesLaunchSpeed)
+            if (usesLaunchSpeed && !usesAuthoredTarget)
             {
                 AddFloatField(body, "Launch Up", hitbox.launchSpeed, value =>
                 {

@@ -92,6 +92,11 @@ public class NormalHitbox : HitboxBase
     [Tooltip("If true, snaps the enemy to the attacker's anchor on hit.")]
     public bool useSnapToAnchor = false;
     public Vector2 snapOffset = Vector2.zero;
+
+    [Tooltip("Use an explicit destination instead of legacy hit speeds. Snap to Anchor takes priority.")]
+    public bool useAuthoredReactionTarget;
+    [Tooltip("World units from the victim at impact: X away from the attacker; Y is the rise to the Knockup apex.")]
+    public Vector2 reactionTargetOffset;
     
     public EnemyLandingBehavior landingBehavior = EnemyLandingBehavior.Knockdown;
     public bool canAirJuggle = true;

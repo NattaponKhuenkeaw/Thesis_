@@ -158,12 +158,334 @@ public class Enemy101SoftSeparationTests
         yield return new ExitPlayMode();
     }
 
+    [UnityTest]
+    public IEnumerator ShinGroundComboReachesDummyAnd101WithAuthoredReactionTargets()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var table = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(
+            "Assets/Project/Character/Hero/test_0_Main/ActionResolverTable_main.asset");
+        var action = table.comboActions.Single(combo => combo.actionId == "char-0-main.basic.0");
+        foreach (string path in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+        {
+            using (var fixture = new Fixture(1, path))
+            {
+                yield return fixture.Ready();
+                var enemy = fixture.Enemies[0];
+                enemy.rb.position = new Vector2(2.5f, enemy.rb.position.y);
+                enemy.rb.linearVelocity = Vector2.zero;
+                var hitSource = new GameObject("Shin combo reach test");
+                hitSource.transform.SetParent(fixture.Root.transform);
+                var shape = hitSource.AddComponent<BoxCollider2D>();
+                shape.isTrigger = true;
+                shape.enabled = false;
+                var damage = hitSource.AddComponent<HitBoxDamage>();
+                typeof(HitBoxDamage).GetField("sourceCategory", Private).SetValue(damage, AttackCategory.Normal);
+                typeof(HitBoxDamage).GetField("sourceActionId", Private).SetValue(damage, action.actionId);
+                int targetCount = 0;
+                int snapCount = 0;
+                Vector2 launchOrigin = default;
+
+                for (ComboNode node = action.comboTree.rootNode; node != null; node = node.defaultNext)
+                {
+                    var step = node.stepData;
+                    float began = Time.time;
+                    float forward = step.motionData != null
+                        ? step.motionData.keyframes.Where(key => key.taskType == MotionTaskType.Relative).Sum(key => key.position.x) : 0f;
+                    hitSource.transform.position += Vector3.right * forward;
+                    foreach (var hit in step.hitData.hitboxes.OfType<NormalHitbox>().OrderBy(hit => hit.startFrameOffset))
+                    {
+                        float at = began + (step.startupFrames + hit.startFrameOffset) / 60f;
+                        while (Time.time < at) yield return PhysicsStep();
+                        shape.offset = hit.offset;
+                        shape.size = hit.size;
+                        shape.enabled = true;
+                        Physics2D.SyncTransforms();
+                        Assert.That(shape.bounds.Intersects(enemy.bodyCollider.bounds), Is.True,
+                            $"{path}, {step.stepName} frame {hit.startFrameOffset}: Shin's follow-up is out of reach.");
+                        typeof(HitBoxDamage).GetField("currentNormalHitbox", Private).SetValue(damage, hit);
+                        typeof(HitBoxDamage).GetField("sourceStepData", Private).SetValue(damage, step);
+                        var data = (HitReactionData)typeof(HitBoxDamage).GetMethod("BuildReactionData", Private)
+                            .Invoke(damage, new object[] { enemy, Vector2.right });
+                        Assert.That(data.hasAuthoredReactionTarget, Is.EqualTo(!hit.useSnapToAnchor));
+                        if (hit.useSnapToAnchor)
+                        {
+                            Assert.That(data.useSnapToAnchor && data.hasSnapWorldPosition, Is.True);
+                            snapCount++;
+                        }
+                        else
+                        {
+                            targetCount++;
+                            if (data.reactionKind == EnemyReactionKind.Knockup) launchOrigin = enemy.rb.position;
+                        }
+                        enemy.hitReactionHandler.StartReaction(data, hitSource.transform.position);
+                        shape.enabled = false;
+                    }
+                    if (node.defaultNext != null)
+                    {
+                        float next = began + Mathf.Max(step.startupFrames + step.activeFrames, step.cancelWindowStartFrame) / 60f;
+                        while (Time.time < next) yield return PhysicsStep();
+                    }
+                }
+
+                Assert.That(targetCount, Is.EqualTo(3));
+                Assert.That(snapCount, Is.EqualTo(1));
+                float apex = launchOrigin.y;
+                float xAtApex = launchOrigin.x;
+                for (int i = 0; i < 40; i++)
+                {
+                    yield return PhysicsStep();
+                    if (enemy.rb.position.y <= apex) continue;
+                    apex = enemy.rb.position.y;
+                    xAtApex = enemy.rb.position.x;
+                }
+                Assert.That(apex - launchOrigin.y, Is.EqualTo(1.55f).Within(.12f), path);
+                Assert.That(enemy.rb.position.x - launchOrigin.x, Is.EqualTo(.65f).Within(.06f), path);
+                Assert.That(enemy.rb.position.x, Is.GreaterThan(xAtApex + .05f), path);
+                Assert.That(enemy.bodyCollider.bounds.min.y, Is.EqualTo(fixture.Floor.bounds.max.y).Within(.15f), path);
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator ShinAirAttackPreservesLegacyTravelOnDummyAnd101()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var table = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(
+            "Assets/Project/Character/Hero/test_0_Main/ActionResolverTable_main.asset");
+        var action = table.comboActions.Single(combo => combo.actionId == "char-0-main.basic.1");
+        var node = action.comboTree.rootNode;
+        Assert.That(node.defaultNext, Is.Null);
+        var step = node.stepData;
+        var hit = (NormalHitbox)step.hitData.hitboxes.Single();
+        Assert.That(hit.useAuthoredReactionTarget, Is.True);
+        Assert.That(hit.useSnapToAnchor || hit.breaksGrab, Is.False);
+        Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Knockback));
+        Assert.That(hit.reactionTargetOffset, Is.EqualTo(new Vector2(.75f, 0f)));
+        var legacy = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(hit));
+        legacy.useAuthoredReactionTarget = false;
+
+        foreach (string path in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+        {
+            using var fixture = new Fixture(1, path);
+            yield return fixture.Ready();
+            var enemy = fixture.Enemies[0];
+            float groundY = enemy.rb.position.y;
+            var source = new GameObject("Shin air attack");
+            source.transform.SetParent(fixture.Root.transform);
+            var shape = source.AddComponent<BoxCollider2D>();
+            shape.isTrigger = true;
+            shape.enabled = false;
+            var damage = source.AddComponent<HitBoxDamage>();
+            typeof(HitBoxDamage).GetField("sourceCategory", Private).SetValue(damage, AttackCategory.Normal);
+            typeof(HitBoxDamage).GetField("sourceActionId", Private).SetValue(damage, action.actionId);
+            typeof(HitBoxDamage).GetField("sourceStepData", Private).SetValue(damage, step);
+
+            foreach (float facing in new[] { 1f, -1f })
+            {
+                float targetHeight = facing > 0f ? 0f : .6f;
+                float legacyTravel = 0f;
+                foreach (var frame in new[] { legacy, hit })
+                {
+                    enemy.hitReactionHandler.ForceClearReaction();
+                    enemy.rb.position = new Vector2(2.8f * facing, groundY + targetHeight);
+                    enemy.rb.linearVelocity = Vector2.zero;
+                    Vector2 origin = enemy.rb.position;
+                    source.transform.position = new Vector2(.65f * facing, .55f);
+                    shape.offset = new Vector2(frame.offset.x * facing, frame.offset.y);
+                    shape.size = frame.size;
+                    shape.enabled = true;
+                    Physics2D.SyncTransforms();
+                    Assert.That(shape.Distance(enemy.bodyCollider).isOverlapped, Is.True, path);
+                    typeof(HitBoxDamage).GetField("currentNormalHitbox", Private).SetValue(damage, frame);
+                    var data = (HitReactionData)typeof(HitBoxDamage).GetMethod("BuildReactionData", Private)
+                        .Invoke(damage, new object[] { enemy, Vector2.right * facing });
+                    Assert.That(data.hasAuthoredReactionTarget, Is.EqualTo(frame == hit));
+                    enemy.hitReactionHandler.StartReaction(data, source.transform.position);
+                    shape.enabled = false;
+
+                    float highestY = origin.y;
+                    for (int i = 0; i < 40; i++)
+                    {
+                        yield return PhysicsStep();
+                        highestY = Mathf.Max(highestY, enemy.rb.position.y);
+                    }
+
+                    float travel = (enemy.rb.position.x - origin.x) * facing;
+                    if (frame == legacy)
+                        legacyTravel = travel;
+                    else
+                    {
+                        Assert.That(travel, Is.EqualTo(.75f).Within(.06f), path);
+                        Assert.That(travel, Is.EqualTo(legacyTravel).Within(.10f), path);
+                        Assert.That(highestY, Is.LessThan(origin.y + .12f), path + ": this hit must not launch.");
+                        Assert.That(enemy.bodyCollider.bounds.min.y, Is.EqualTo(fixture.Floor.bounds.max.y).Within(.15f), path);
+                    }
+                }
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator ShinAttack4RecoilKeepsDummyAnd101InReachForAttack5GrabTransition()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        var table = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(
+            "Assets/Project/Character/Hero/test_0_Main/ActionResolverTable_main.asset");
+        var ground = table.comboActions.Single(action => action.actionId == "char-0-main.basic.0");
+        var attack3 = ground.comboTree.rootNode.defaultNext.defaultNext;
+        var attack4 = attack3.routes.Single(route => route.targetNode.stepData.stepName == "Attack4").targetNode;
+        var step = attack4.stepData;
+        var normals = step.hitData.hitboxes.OfType<NormalHitbox>().OrderBy(hit => hit.startFrameOffset).ToArray();
+        var opener = normals.Single(hit => hit.startFrameOffset == 3);
+        var snap = normals.Single(hit => hit.startFrameOffset == 6);
+        var recoil = normals.Single(hit => hit.startFrameOffset == 11);
+        var flinch = step.hitData.hitboxes.OfType<NormalHitbox>().Single(hit => hit.startFrameOffset == 14);
+        var legacyOpener = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(opener));
+        legacyOpener.useAuthoredReactionTarget = false;
+        var legacyRecoil = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(recoil));
+        legacyRecoil.useAuthoredReactionTarget = false;
+        var grab = step.hitData.hitboxes.OfType<GrabHitbox>().Single();
+        var attack5 = step.triggerWindows.Single(window => window.targetNode.stepData.stepName == "Attack5").targetNode;
+        Assert.That(opener.useAuthoredReactionTarget && !opener.useSnapToAnchor, Is.True);
+        Assert.That(opener.reactionTargetOffset, Is.EqualTo(Vector2.right));
+        Assert.That(recoil.useAuthoredReactionTarget && !recoil.useSnapToAnchor, Is.True);
+        Assert.That(recoil.reactionTargetOffset, Is.EqualTo(new Vector2(.75f, 0f)));
+        Assert.That(flinch.useAuthoredReactionTarget, Is.True);
+        Assert.That(flinch.reactionTargetOffset, Is.EqualTo(Vector2.zero));
+        Assert.That(snap.useSnapToAnchor && !snap.useAuthoredReactionTarget, Is.True);
+        Assert.That(attack5.stepData.hitData.hitboxes.OfType<NormalHitbox>()
+            .All(hit => hit.useSnapToAnchor && hit.breaksGrab && !hit.useAuthoredReactionTarget), Is.True);
+
+        foreach (string path in new[] { "enemy/EnemyCore/Enemy_Dummy.prefab", "enemy/Enm101/Enemy1.prefab" })
+        {
+            using var fixture = new Fixture(1, path);
+            yield return fixture.Ready();
+            var enemy = fixture.Enemies[0];
+            Vector2 origin = new Vector2(3f, enemy.rb.position.y);
+            var attacker = new GameObject("Shin Attack4");
+            attacker.transform.SetParent(fixture.Root.transform);
+            attacker.transform.localPosition = Vector3.left * .3f;
+            var combat = attacker.AddComponent<PlayerCombat>();
+            var shape = attacker.AddComponent<BoxCollider2D>();
+            shape.isTrigger = true;
+            shape.enabled = false;
+            var damage = attacker.AddComponent<HitBoxDamage>();
+            var resolver = new ActionResolver();
+            resolver.ForceTransitionToNode(attack4);
+
+            ResetTarget();
+            HitNormal(legacyOpener);
+            for (int i = 0; i < 70; i++) yield return PhysicsStep();
+            float legacyOpenerTravel = enemy.rb.position.x - origin.x;
+            TestContext.WriteLine($"{path}: frame 3 legacy full recoil = {legacyOpenerTravel:F3}");
+
+            ResetTarget();
+            HitNormal(opener);
+            for (int i = 0; i < 70; i++) yield return PhysicsStep();
+            float openerTravel = enemy.rb.position.x - origin.x;
+            Assert.That(openerTravel, Is.EqualTo(1f).Within(.06f), path);
+            Assert.That(openerTravel, Is.EqualTo(legacyOpenerTravel).Within(.06f), path);
+
+            ResetTarget();
+            HitNormal(legacyRecoil);
+            for (int i = 0; i < 40; i++) yield return PhysicsStep();
+            float legacyTravel = enemy.rb.position.x - origin.x;
+            TestContext.WriteLine($"{path}: frame 11 legacy full recoil = {legacyTravel:F3}");
+
+            ResetTarget();
+            HitNormal(recoil);
+            for (int i = 0; i < 40; i++) yield return PhysicsStep();
+            float authoredTravel = enemy.rb.position.x - origin.x;
+            Assert.That(authoredTravel, Is.EqualTo(.75f).Within(.06f), path);
+            Assert.That(authoredTravel, Is.EqualTo(legacyTravel).Within(.06f), path);
+
+            ResetTarget();
+            int frame = normals[0].startFrameOffset;
+            float recoilOriginX = 0f;
+            foreach (var normal in normals)
+            {
+                yield return WaitFrames(normal.startFrameOffset - frame);
+                frame = normal.startFrameOffset;
+                if (normal == snap)
+                {
+                    float travel = enemy.rb.position.x - origin.x;
+                    TestContext.WriteLine($"{path}: frame 3 to 6 travel = {travel:F3}");
+                    Assert.That(travel, Is.InRange(.02f, openerTravel + .03f), path);
+                }
+                if (normal == recoil) recoilOriginX = enemy.rb.position.x;
+                if (normal == flinch)
+                {
+                    float travel = enemy.rb.position.x - recoilOriginX;
+                    TestContext.WriteLine($"{path}: frame 11 to 14 travel = {travel:F3}");
+                    Assert.That(travel, Is.InRange(.02f, authoredTravel + .03f), path);
+                }
+                HitNormal(normal);
+                Assert.That(enemy.LastHitAppliedReaction, Is.True, $"{path}: frame {frame}");
+                if (normal == snap)
+                {
+                    var applied = (HitReactionData)typeof(EnemyHitReactionHandler).GetField("currentReaction", Private)
+                        .GetValue(enemy.hitReactionHandler);
+                    Assert.That(applied.useSnapToAnchor && applied.hasSnapWorldPosition, Is.True, path);
+                }
+            }
+            float originX = enemy.rb.position.x;
+            Assert.That(enemy.LastHitAppliedReaction, Is.True, path);
+            Assert.That(resolver.ResolveTriggers(default, flinch.startFrameOffset), Is.Null, path);
+            yield return WaitFrames(grab.startFrameOffset - flinch.startFrameOffset);
+            Assert.That(enemy.rb.position.x, Is.EqualTo(originX).Within(.03f), path);
+
+            damage.ResetActivationState();
+            damage.SetGrabData(0f, false, grab, false, AttackCategory.Normal, "Ground", step, null, ground.actionId);
+            Hit(grab.offset, grab.size);
+            Assert.That(enemy.IsGrabbed && combat.IsHoldingEnemy(enemy), Is.True, path);
+            var context = new StateContext { input = new InputContext { hasGrabbedEnemy = combat.HasGrabbedEnemy() } };
+            Assert.That(resolver.ResolveTriggers(context, grab.startFrameOffset), Is.SameAs(attack5.stepData), path);
+
+            IEnumerator WaitFrames(int count)
+            {
+                float deadline = Time.fixedTime + count / CombatCore.FrameDataConstants.LOGIC_FPS;
+                while (Time.fixedTime + .0001f < deadline) yield return PhysicsStep();
+            }
+
+            void ResetTarget()
+            {
+                enemy.hitReactionHandler.ForceClearReaction();
+                enemy.rb.position = origin;
+                enemy.rb.linearVelocity = Vector2.zero;
+            }
+
+            void HitNormal(NormalHitbox hit)
+            {
+                damage.ResetActivationState();
+                damage.SetHitData(1f, false, false, 0f, 0f, hit, AttackCategory.Normal, "Ground", step, null, ground.actionId);
+                Hit(hit.offset, hit.size);
+            }
+
+            void Hit(Vector2 offset, Vector2 size)
+            {
+                shape.offset = offset;
+                shape.size = size;
+                shape.enabled = true;
+                Physics2D.SyncTransforms();
+                Assert.That(shape.Distance(enemy.bodyCollider).isOverlapped, Is.True, path);
+                damage.ProcessHit(enemy, enemy.bodyCollider);
+                shape.enabled = false;
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
     private sealed class Fixture : System.IDisposable
     {
         public readonly GameObject Root = new GameObject("101 separation fixture");
         public readonly List<EnemyController> Enemies = new List<EnemyController>();
         public readonly BoxCollider2D Floor;
-        public Fixture(int count)
+        public Fixture(int count, string enemyPath = "enemy/Enm101/Enemy1.prefab")
         {
             var floor = new GameObject("Ground");
             floor.transform.SetParent(Root.transform);
@@ -177,7 +499,7 @@ public class Enemy101SoftSeparationTests
             holder.SetActive(false);
             for (int i = 0; i < count; i++)
             {
-                var instance = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(EnemyRoot + "enemy/Enm101/Enemy1.prefab"), holder.transform);
+                var instance = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(EnemyRoot + enemyPath), holder.transform);
                 instance.transform.localPosition = new Vector3(-3f + i * 1.5f, .06f, 0f);
                 var graph = instance.GetComponent<BehaviorGraphAgent>();
                 if (graph != null) graph.enabled = false;
