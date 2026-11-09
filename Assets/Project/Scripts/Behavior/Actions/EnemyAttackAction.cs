@@ -72,6 +72,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private bool m_RepeatChargePending;
     private float m_RepeatChargeAt;
     private EnemyChargeTelegraph m_ChargeTelegraph;
+    private Bounds m_ChargeWarningBounds;
     private bool IsBodyCharge => m_Controller != null && m_Controller.Kit != null && m_Controller.Kit.BodyCharge;
 
     protected override Status OnStart()
@@ -517,7 +518,10 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         float facing = EnemyFacingUtil.GetFacingSign(m_Controller.transform);
         Vector3 start = new Vector3(facing > 0f ? body.max.x : body.min.x,
             body.center.y, m_Controller.transform.position.z);
-        m_ChargeTelegraph.ShowLane(start, start + Vector3.right * (facing * ResolveLunge()), body.size.y, progress);
+        float length = ResolveLunge();
+        Vector3 end = start + Vector3.right * (facing * length);
+        m_ChargeWarningBounds = new Bounds((start + end) * .5f, new Vector3(length, body.size.y, 0f));
+        m_ChargeTelegraph.ShowLane(start, end, body.size.y, progress);
     }
 
     private void TickLunge()
@@ -609,11 +613,23 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_OriginalHitboxSize = m_ChargeHitbox.size;
         m_OriginalHitboxOffset = m_ChargeHitbox.offset;
         Bounds bounds = m_Controller.bodyCollider.bounds;
+        float width = bounds.size.x + .1f;
+        Vector3 center = bounds.center;
+        if (m_ChargeTelegraph != null)
+        {
+            // Sweep the mouth along the warned lane. The rear of the body is not an attack.
+            float facing = EnemyFacingUtil.GetFacingSign(m_Controller.transform);
+            const float frontPadding = .02f; // Keep this inside the wall-stop skin.
+            float depth = ResolveLunge() / ResolveHitWindow() * Time.fixedDeltaTime;
+            width = depth + frontPadding;
+            center.x += facing * (bounds.extents.x + (frontPadding - depth) * .5f);
+            m_ChargeHitbox.GetComponent<EnemyAttackHitbox>()?.SetWindowDamageLane(m_ChargeWarningBounds);
+        }
         Transform hitTransform = m_ChargeHitbox.transform;
         Vector3 scale = hitTransform.lossyScale;
-        m_ChargeHitbox.offset = hitTransform.InverseTransformPoint(bounds.center);
+        m_ChargeHitbox.offset = hitTransform.InverseTransformPoint(center);
         m_ChargeHitbox.size = new Vector2(
-            (bounds.size.x + 0.1f) / Mathf.Max(Mathf.Abs(scale.x), 0.0001f),
+            width / Mathf.Max(Mathf.Abs(scale.x), 0.0001f),
             bounds.size.y / Mathf.Max(Mathf.Abs(scale.y), 0.0001f));
     }
 
