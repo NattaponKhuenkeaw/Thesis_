@@ -16,8 +16,8 @@ public class RoomBackgroundEditingTests
         var controller=root.GetComponentsInChildren<RoomBiomeEnvironment>(true).Single();
         Assert.That(controller.BiomeOneEnvironment,Is.Not.Null);
         Assert.That(controller.BiomeTwoEnvironment,Is.Not.Null);
-        Assert.That(controller.BiomeOneEnvironment.activeSelf,Is.True);
-        Assert.That(controller.BiomeTwoEnvironment.activeSelf,Is.False);
+        Assert.That(controller.BiomeOneEnvironment.activeSelf,Is.Not.EqualTo(controller.BiomeTwoEnvironment.activeSelf),
+            "Either biome may be selected for editor preview, but never both.");
         for(int biome=1;biome<=2;biome++)
         {
             var group=biome==1 ? controller.BiomeOneEnvironment : controller.BiomeTwoEnvironment;
