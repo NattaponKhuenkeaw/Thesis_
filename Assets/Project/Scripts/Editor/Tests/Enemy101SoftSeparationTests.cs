@@ -1116,6 +1116,9 @@ public class Enemy101SoftSeparationTests
     [UnityTest]
     public IEnumerator ExecutionBreakdownActive96KeepsTheFinisherConnected() => CompareExecutionBreakdown(96);
 
+    [UnityTest]
+    public IEnumerator ExecutionBreakdownActive141KeepsTheFinisherConnected() => CompareExecutionBreakdown(141);
+
     private static IEnumerator CompareExecutionBreakdown(int comparedFrame)
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -1130,8 +1133,10 @@ public class Enemy101SoftSeparationTests
         var launch = hits.Single(hit => hit.startFrameOffset == 96);
         Assert.That(launch.useAuthoredReactionTarget && launch.preserveReactionMotionTiming, Is.True);
         Assert.That(launch.reactionTargetOffset, Is.EqualTo(new Vector2(0f, 1.9968f)));
-        Assert.That(hits.Single(hit => hit.startFrameOffset == 141).useAuthoredReactionTarget, Is.False);
-        var comparedHit = comparedFrame == 96 ? launch : final;
+        var followup = hits.Single(hit => hit.startFrameOffset == 141);
+        Assert.That(followup.useAuthoredReactionTarget && followup.preserveReactionMotionTiming, Is.True);
+        Assert.That(followup.reactionTargetOffset, Is.EqualTo(new Vector2(.75f, .1222f)));
+        var comparedHit = hits.Single(hit => hit.startFrameOffset == comparedFrame);
         Assert.That(final.useSnapToAnchor || final.breaksGrab, Is.False);
         Assert.That(final.useAuthoredReactionTarget && final.preserveReactionMotionTiming, Is.True);
         Assert.That(final.reactionTargetOffset, Is.EqualTo(new Vector2(1.5f, 1f)));
@@ -1165,6 +1170,7 @@ public class Enemy101SoftSeparationTests
                     bool sawFinal = false;
                     bool usedPosition = false;
                     bool? launchUsedPosition = null;
+                    bool? followupUsedPosition = null;
                     enemy.OnDamaged += reaction =>
                     {
                         if (reaction.sourceActionId != action.actionId || reaction.sourceStepData != step)
@@ -1190,6 +1196,11 @@ public class Enemy101SoftSeparationTests
                             var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
                             launchUsedPosition = enemy.LastHitAppliedReaction && reaction.hasAuthoredReactionTarget;
                         }
+                        if (activeFrame == 141 && connections.Any(hit => hit.activeFrame == activeFrame))
+                        {
+                            var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
+                            followupUsedPosition = enemy.LastHitAppliedReaction && reaction.hasAuthoredReactionTarget;
+                        }
                         if (frame == step.ActivePhaseStart + 142 && sawFinal)
                         {
                             var reaction = (HitReactionData)currentReaction.GetValue(enemy.hitReactionHandler);
@@ -1210,6 +1221,7 @@ public class Enemy101SoftSeparationTests
                     TestContext.WriteLine($"{context}: {string.Join(", ", connections.Select(hit => hit.activeFrame))}");
                     TestContext.WriteLine($"Active 142 actual authored={usedPosition}; travel X={travel.x:F3} Y={travel.y:F3}");
                     Assert.That(launchUsedPosition, Is.EqualTo(comparedFrame != 96 || useAuthored), context);
+                    Assert.That(followupUsedPosition, Is.False, "Keep the existing airborne follow-up motion after Active 96: " + context);
                     Assert.That(connections.Select(hit => hit.activeFrame), Is.SupersetOf(new[] { 1, 96 }), context);
                     Assert.That(connections.Count, Is.EqualTo(15), context);
                     Assert.That(connections.Select(hit => hit.activeFrame).TakeLast(2), Is.EqualTo(new[] { 141, 142 }), context);
@@ -1286,7 +1298,7 @@ public class Enemy101SoftSeparationTests
             foreach (var route in node.routes) nodes.Enqueue(route.targetNode);
             foreach (var trigger in step.triggerWindows) nodes.Enqueue(trigger.targetNode);
         }
-        Assert.That(candidates.Count, Is.EqualTo(5));
+        Assert.That(candidates.Count, Is.EqualTo(6));
         Assert.That(candidates.All(hit => hit.preserveReactionMotionTiming && !hit.useSnapToAnchor && !hit.breaksGrab), Is.True);
         var oldRandomState = UnityEngine.Random.state;
         float previousMaxStep = Time.maximumDeltaTime;
@@ -1302,7 +1314,7 @@ public class Enemy101SoftSeparationTests
                     foreach (var hit in candidates)
                         hit.useAuthoredReactionTarget = authored;
                     UnityEngine.Random.InitState(12);
-                    using var fixture = new Fixture(1, prefab);
+                    using var fixture = new Fixture(1, prefab, keepAiInactive: true);
                     yield return fixture.Ready();
                     var enemy = fixture.Enemies[0];
                     enemy.currentHP = 10000f;
@@ -1433,7 +1445,7 @@ public class Enemy101SoftSeparationTests
         yield return new EnterPlayMode();
         var hits = GetPositionMigrationHits(group).ToArray();
         Assert.That(hits, Is.Not.Empty);
-        int expectedMigrated = group switch { "skills" => 8, "cut" => 1, "projectiles" => 34, "qte" => 4, _ => 0 };
+        int expectedMigrated = group switch { "skills" => 10, "cut" => 1, "projectiles" => 35, "qte" => 4, _ => 0 };
         Assert.That(hits.Count(entry => entry.hit.useAuthoredReactionTarget && entry.hit.preserveReactionMotionTiming),
             Is.EqualTo(expectedMigrated));
         float priorScale = Time.timeScale;
@@ -1587,7 +1599,8 @@ public class Enemy101SoftSeparationTests
         public readonly GameObject Root = new GameObject("101 separation fixture");
         public readonly List<EnemyController> Enemies = new List<EnemyController>();
         public readonly BoxCollider2D Floor;
-        public Fixture(int count, string enemyPath = "enemy/Enm101/Enemy1.prefab")
+        public Fixture(int count, string enemyPath = "enemy/Enm101/Enemy1.prefab",
+            bool keepAiInactive = false)
         {
             var floor = new GameObject("Ground");
             floor.transform.SetParent(Root.transform);
@@ -1605,6 +1618,8 @@ public class Enemy101SoftSeparationTests
                 instance.transform.localPosition = new Vector3(-3f + i * 1.5f, .06f, 0f);
                 var graph = instance.GetComponent<BehaviorGraphAgent>();
                 if (graph != null) graph.enabled = false;
+                if (keepAiInactive && instance.TryGetComponent<EnemyBehaviorBrain>(out var brain))
+                    brain.enabled = false;
                 Enemies.Add(instance.GetComponent<EnemyController>());
             }
             holder.SetActive(true);

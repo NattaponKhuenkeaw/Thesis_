@@ -724,6 +724,9 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.85, y: 0}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -3760,6 +3763,9 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.75, y: 0.1222}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 1
