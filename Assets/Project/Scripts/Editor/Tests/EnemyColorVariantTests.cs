@@ -67,6 +67,38 @@ public class EnemyColorVariantTests
         finally { Object.DestroyImmediate(host); }
     }
 
+    [TestCase('a')] [TestCase('b')] [TestCase('c')]
+    public void BossCleaveUsesTheSelectedColorAndPivotAtEachPose(char color)
+    {
+        const string folder = "Assets/Project/Character/enemy/Boss/Executioner/animation/ColorVariants/";
+        var controller = AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(
+            $"{folder}ExecutionerAnimatorController_Color{char.ToUpperInvariant(color)}.overrideController");
+        var host = new GameObject("Boss cleave color fixture");
+        host.SetActive(false);
+        try
+        {
+            var renderer = host.AddComponent<SpriteRenderer>();
+            var animator = host.AddComponent<Animator>();
+            animator.runtimeAnimatorController = controller;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            host.SetActive(true);
+            animator.Rebind();
+            animator.SetInteger("LifecyclePhase", 1);
+            foreach (var (time, frame, pivot) in new[] { (0f, 6, .5f), (.8f, 7, .25f), (.9f, 8, .25f) })
+            {
+                animator.Play("Base Layer.AttackCleave", 0, time);
+                animator.Update(0f);
+                Assert.That(renderer.sprite, Is.Not.Null, $"Color {color}, frame {frame}");
+                Assert.That(AssetDatabase.GetAssetPath(renderer.sprite),
+                    Is.EqualTo(EnemyColorVariantAuthoring.VariantSheetPath(111, color)));
+                Assert.That(renderer.sprite.name, Is.EqualTo($"Boss_Final_256_{frame}"));
+                Assert.That(renderer.sprite.pivot.x, Is.EqualTo(renderer.sprite.rect.width * pivot).Within(.01f));
+                Assert.That(renderer.sprite.pivot.y, Is.Zero.Within(.01f));
+            }
+        }
+        finally { Object.DestroyImmediate(host); }
+    }
+
     [TestCase('a', "Idle")] [TestCase('b', "Idle")] [TestCase('c', "Idle")]
     [TestCase('a', "Walk")] [TestCase('b', "Walk")] [TestCase('c', "Walk")]
     public void Enemy101GroundColliderMatchesVisibleSpriteBase(char color, string pose)
@@ -218,6 +250,12 @@ public class EnemyColorVariantTests
                         var oldMask = EnemyColorVariantAuthoring.ReadMask(oldTexture, original.rect);
                         var mask = EnemyColorVariantAuthoring.ReadMask(texture, sprite.rect);
                         Assert.That(mask.count, Is.GreaterThan(0));
+                        if (id == 111 && original.name is "Boss_Final_256_7" or "Boss_Final_256_8")
+                        {
+                            // The cleave impact poses use a deliberate bottom-quarter pivot.
+                            Assert.That(sprite.pivot, Is.EqualTo(new Vector2(sprite.rect.width * .25f, 0f)), original.name);
+                            continue;
+                        }
                         Vector2 oldCenter = (oldMask.center - original.pivot) / original.pixelsPerUnit;
                         Vector2 center = (mask.center - sprite.pivot) / sprite.pixelsPerUnit;
                         Assert.That(Vector2.Distance(center, oldCenter), Is.LessThan(.0001f), original.name);
