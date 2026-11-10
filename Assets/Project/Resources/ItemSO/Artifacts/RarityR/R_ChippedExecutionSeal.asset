@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ART-R-006
   itemName: Chipped Execution Seal
   description: 
-  icon: {fileID: 21300000, guid: bb5ef72176f2d5a4c8aa23c93013592f, type: 3}
+  icon: {fileID: 21300000, guid: f8880452d7fe8ae448b5dabb16bf4801, type: 3}
   price: 350
   isEquippable: 1
   rarity: 1

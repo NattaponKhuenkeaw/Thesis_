@@ -20,6 +20,8 @@ namespace Project.Core.ZoneState
     [RequireComponent(typeof(Collider2D))]
     public class RoomWaveManager : MonoBehaviour
     {
+        private const float RewardSequenceStartDelaySeconds = 1f;
+
         private enum SpawnResult { Spawned, Occupied, Invalid }
 
         private sealed class SpawnEntry
@@ -72,7 +74,8 @@ namespace Project.Core.ZoneState
         private CombatStageController stageController;
         private ArtifactRewardPickerUI activeRewardPicker;
         private Coroutine rewardRoutine;
-        private bool holdsRewardInputLock;
+        private bool rewardSequenceDelayElapsed;
+        private float rewardSequenceNotBeforeRealtime;
         private int encounterVisit = -1;
         private readonly List<Vector3> livingEnemyPositions = new List<Vector3>();
         private readonly Dictionary<EnemyController, Vector3> spawnOrigins = new Dictionary<EnemyController, Vector3>();
@@ -1053,6 +1056,9 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            rewardSequenceDelayElapsed = false;
+            rewardSequenceNotBeforeRealtime = Time.realtimeSinceStartup + RewardSequenceStartDelaySeconds;
+
             bool bossFlow = useBossDeathFlow || spawnedBossEnemy || IsCurrentRoomBoss();
             RoomData room = (RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null)
                 ?? clearing?.CurrentRoom;
@@ -1110,8 +1116,7 @@ namespace Project.Core.ZoneState
             {
                 if (clearing != null && !clearing.SetClearing(visit, ClearingState.RewardPending))
                     yield break;
-                InputLockManager.Lock();
-                holdsRewardInputLock = true;
+                if (draws != null && draws.Length > 0) yield return WaitForRewardSequenceStart();
                 for (int index = 0; draws != null && index < draws.Length; index++)
                 {
                     ArtifactInstance[] candidates = draws[index];
@@ -1145,8 +1150,6 @@ namespace Project.Core.ZoneState
             CharacterProgressionState progression = ResolveRewardProgression();
             if (inventory == null || progression == null) yield break;
 
-            InputLockManager.Lock();
-            holdsRewardInputLock = true;
             try
             {
                 var prefab = Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath);
@@ -1184,6 +1187,7 @@ namespace Project.Core.ZoneState
                     candidates.Add((owned, string.IsNullOrWhiteSpace(name) ? owned.itemName : name, memory));
                 }
                 if (candidates.Count == 0) yield break;
+                yield return WaitForRewardSequenceStart();
 
                 bool granted = false;
                 ArtifactRewardPickerUI picker = Instantiate(prefab);
@@ -1218,9 +1222,14 @@ namespace Project.Core.ZoneState
         private void ReleaseRewardView()
         {
             DestroyRewardView();
-            if (!holdsRewardInputLock) return;
-            holdsRewardInputLock = false;
-            InputLockManager.Unlock();
+        }
+
+        private IEnumerator WaitForRewardSequenceStart()
+        {
+            if (rewardSequenceDelayElapsed) yield break;
+            float remaining = rewardSequenceNotBeforeRealtime - Time.realtimeSinceStartup;
+            if (remaining > 0f) yield return new WaitForSecondsRealtime(remaining);
+            rewardSequenceDelayElapsed = true;
         }
 
         private static CharacterInventoryState ResolveRewardInventory()

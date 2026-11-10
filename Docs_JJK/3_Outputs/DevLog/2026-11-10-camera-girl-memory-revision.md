@@ -15,3 +15,7 @@ The earlier kit update authored Rei's nodes while the Memory system still select
 ## Len Focus strike animation
 
 Len Focus skipped the multi-frame `cg_ult-projectile` clip and expired as soon as it spent its hit. The authored strike now plays the clip while its one-hit collider is active. The final frame holds for 0.1 seconds before the projectile returns to the pool. The Unity EditMode suite passed 64 cases, including actual sprite changes after the hit, the final loop and timed release.
+
+## Captured splash timing
+
+Skill Lv.6 checked for Captured after the source passive applied it. The explosion recipe now requires Captured before the hit, so the first hit marks and the next qualifying hit can splash. The regression covers first application, an already marked target, and a target whose mark was removed. Unity runtime and editor assemblies compiled successfully.

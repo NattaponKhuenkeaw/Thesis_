@@ -42,7 +42,7 @@ MonoBehaviour:
   audioData: {fileID: 11400000, guid: ef4f15f931ec82243bf22d736d76277c, type: 2}
   movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
   maxJumpOverride: 2
-  maxAirDashOverride: -1
+  maxAirDashOverride: 2
   _authoredFPS: 24
   upgrade:
     level: 1
@@ -589,11 +589,12 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.skill.dark_chain
-        noteId: main.skill.lv1
+        noteId: 
         priority: 1
-        appendNote: 1
-        description: Dark Chain increases enemy damage taken by <b><color=#a382ed>+20%</color></b>
-          for <b><color=#a382ed>10 seconds</color></b>.
+        appendNote: 0
+        description: "Unleash a chain across the field, Inflict DMG <b><color=#a382ed>350%</color></b>
+          of ATK\r\n\r\n<size=20><color=#C0C0C0>\u2022 Increases enemy damage taken
+          by <b><color=#a382ed>+20%</color></b> for <b><color=#a382ed>10 seconds</color></b></color></size>"
       track: 0
       level: 1
       fragmentCost: 0
@@ -660,10 +661,13 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.skill.dark_chain
-        noteId: main.skill.lv2
+        noteId: 
         priority: 2
-        appendNote: 1
-        description: Dark Chain gently pulls nearby enemies toward its center.
+        appendNote: 0
+        description: "Unleash a chain across the field <color=#B659E5>Which have
+          Strong Magnetism</color>, Inflict DMG <b><color=#a382ed>350%</color></b>
+          of ATK\r\n\r\n<size=20><color=#C0C0C0>\u2022 Increases enemy damage taken
+          by <b><color=#a382ed>+40%</color></b> for <b><color=#a382ed>10 seconds</color></b>"
       track: 0
       level: 2
       fragmentCost: 0
@@ -731,11 +735,14 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.skill.dark_chain
-        noteId: main.skill.lv3
+        noteId: 
         priority: 3
-        appendNote: 1
-        description: Using Dark Chain increases enemy damage taken by 40% for 10
-          seconds. Dark Chain stuns enemies for 0.5 seconds and has stronger Magnetism.
+        appendNote: 0
+        description: "Unleash a chain across the field <color=#B659E5>Which have
+          Strong Magnetism</color>, Inflict DMG <b><color=#a382ed>350%</color></b>
+          of ATK\r\n\r\n<size=20><color=#C0C0C0>\u2022 Increases enemy damage taken
+          by <b><color=#a382ed>+40%</color></b> for <b><color=#a382ed>10 seconds</color></b>
+          and Stun enemies for 0.5 seconds</color></size>"
       track: 0
       level: 3
       fragmentCost: 0
@@ -822,6 +829,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -841,6 +849,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -873,6 +882,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -895,6 +905,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -960,13 +971,18 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.skill.dark_chain
-        noteId: main.skill.lv4
+        noteId: 
         priority: 4
-        appendNote: 1
-        description: Summon a Dark Chain for 15 seconds. Every 2.5 seconds it attacks
-          the enemy nearest the active character for 200% of Main's ATK as Normal
-          DMG, followed by Additional Darkness DMG equal to 8% of Main's Max HP.
-          Continues after switching characters.
+        appendNote: 0
+        description: "Unleash a chain across the field <color=#B659E5>Which have
+          Strong Magnetism</color>, Inflict DMG <b><color=#a382ed>350%</color></b>
+          of ATK\r\n\r\n<size=20><color=#C0C0C0>\u2022 Increases enemy damage taken
+          by <b><color=#a382ed>+40%</color></b> for <b><color=#a382ed>10 seconds</color></b>
+          and Stun enemies for 0.5s</color></size>\r\n<size=20><color=#C0C0C0>\u2022
+          Summon a <b><color=#B659E5>Tormet Chain</color></b> for <b><color=#B659E5>15s</color></b></color></size>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Tormet Chain: Strike the Nearest Enemy, Inflict <b><color=#B659E5>200%</color></b>
+          of own ATK<b><color=#B659E5>+Additional Darnkness 8%</color></b> of own
+          Max HP every <b><color=#B659E5>2.5s</color></b></color></size>"
       track: 0
       level: 4
       fragmentCost: 0
@@ -1016,7 +1032,7 @@ MonoBehaviour:
             effectId: main.memory.chain_allies
             displayName: Dark Chain - Ally Buff
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: 6dc750ca22f921e47ba8e753fb4303a8, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -1071,6 +1087,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -1090,6 +1107,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -1122,6 +1140,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -1144,6 +1163,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -1208,12 +1228,21 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.skill.dark_chain
-        noteId: main.memory.skill.lv5
+        noteId: 
         priority: 5
-        appendNote: 1
-        description: On Dark Chain cast, allies gain <b><color=#a382ed>+1% ADI, DM,
-          and DI</color></b> per <b><color=#a382ed>120 of Main's Max HP</color></b>
-          for <b><color=#a382ed>10 seconds</color></b>.
+        appendNote: 0
+        description: "Unleash a chain across the field <color=#a382ed>Which have
+          Strong Magnetism</color>, Inflict DMG <b><color=#B659E5>350%</color></b>
+          of ATK\r\n\r\n<size=20><color=#C0C0C0>\u2022 Increases enemy damage taken
+          by <b><color=#a382ed>+40%</color></b> for <b><color=#a382ed>10 seconds</color></b>
+          and Stun enemies for 0.5 seconds</color></size>\r\n<size=20><color=#C0C0C0>\u2022
+          Summon a <b><color=#B659E5>Tormet Chain</color></b> for <b><color=#B659E5>15s</color></b></color></size>\r\n<size=20><color=#C0C0C0>\u2022
+          On Dark Chain cast, allies gain <b><color=#a382ed>+1% ADI, DM, and DI</color></b>
+          per <b><color=#a382ed>120 of Main's Max HP</color></b> for <b><color=#a382ed>10
+          seconds</color></b></color></size> \r\n\r\n<size=19><color=#00ffff>\u2022
+          Tormet Chain: Strike the Nearest Enemy, Inflict <b><color=#B659E5>200%</color></b>
+          of own ATK<b><color=#B659E5>+Additional Darnkness 8%</color></b> of own
+          Max HP every <b><color=#B659E5>2.5s</color></b></color></size>"
       track: 0
       level: 5
       fragmentCost: 0
@@ -1278,12 +1307,7 @@ MonoBehaviour:
       nodeName: Skill Memory Lv.6
       description: Dark Chain's base cooldown becomes <b><color=#a382ed>10 seconds</color></b>.
       skillPanelDescriptionOverride: 
-      kitInfoPatches:
-      - entryId: main.skill.dark_chain
-        noteId: main.memory.skill.lv6
-        priority: 6
-        appendNote: 1
-        description: Dark Chain's base cooldown becomes <b><color=#a382ed>10 seconds</color></b>.
+      kitInfoPatches: []
       track: 0
       level: 6
       fragmentCost: 0
@@ -1314,12 +1338,14 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.ultimate.jailbreak_punisher
-        noteId: main.ultimate.lv1
+        noteId: 
         priority: 1
-        appendNote: 1
-        description: Jailbreak Punisher creates a Void Area for <b><color=#a382ed>20
-          seconds</color></b>. It deals Void DMG equal to <b><color=#a382ed>200%
-          ATK</color></b> every <b><color=#a382ed>5 seconds</color></b>.
+        appendNote: 0
+        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
+          <b><color=#a382ed>500%</color></b> of ATK, Then Create a <b><color=#a382ed>Void
+          Area</color></b> for <b><color=#a382ed>20 seconds</color></b>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Void Area: Inflict DMG equal to <b><color=#a382ed>200% ATK</color></b>
+          every <b><color=#a382ed>5 seconds</color></b></color></size>"
       track: 1
       level: 1
       fragmentCost: 0
@@ -1351,10 +1377,14 @@ MonoBehaviour:
       - entryId: main.ultimate.jailbreak_punisher
         noteId: main.ultimate.lv2
         priority: 2
-        appendNote: 1
-        description: Enemies damaged by Void Area take <b><color=#a382ed>+15% damage</color></b>
-          for <b><color=#a382ed>7 seconds</color></b>. Repeated hits refresh the
-          effect.
+        appendNote: 0
+        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
+          <b><color=#a382ed>500%</color></b> of ATK, Then Create a <b><color=#a382ed>Void
+          Area</color></b> for <b><color=#a382ed>20 seconds</color></b>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Void Area: Inflict DMG equal to <b><color=#a382ed>200% ATK</color></b>
+          every <b><color=#a382ed>5 seconds</color></b> and Enemies damaged will
+          take <b><color=#a382ed>+15% damage</color></b> for <b><color=#a382ed>7
+          seconds</color></b></color></size>"
       track: 1
       level: 2
       fragmentCost: 0
@@ -1384,11 +1414,17 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.ultimate.jailbreak_punisher
-        noteId: main.ultimate.lv3
+        noteId: 
         priority: 3
-        appendNote: 1
-        description: Main gains <b><color=#a382ed>5 AE</color></b> whenever a Void
-          Area pulse deals damage.
+        appendNote: 0
+        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
+          <b><color=#a382ed>500%</color></b> of ATK, Then Create a <b><color=#a382ed>Void
+          Area</color></b> for <b><color=#a382ed>20 seconds</color></b>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Void Area: Inflict DMG equal to <b><color=#a382ed>200% ATK</color></b>
+          every <b><color=#a382ed>5 seconds</color></b> and Enemies damaged will
+          take <b><color=#a382ed>+15% damage</color></b> for <b><color=#a382ed>7
+          seconds</color></b>, self gains <b><color=#a382ed>5 AE</color></b> each
+          Void Area Damaging</color></size>"
       track: 1
       level: 3
       fragmentCost: 0
@@ -1451,16 +1487,22 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: main.ultimate.lv4
       nodeName: Ultimate Memory Lv.4
-      description: Void Area's first hit deals 500% ATK as Normal DMG. It then deals
-        Additional Darkness DMG equal to 6% of Main's Max HP.
+      description: Void Area's hit deals 500% ATK as Normal DMG. It then deals Additional
+        Darkness DMG equal to 6% of Main's Max HP.
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.ultimate.jailbreak_punisher
-        noteId: main.ultimate.lv4
+        noteId: 
         priority: 4
-        appendNote: 1
-        description: Void Area's first hit deals 500% ATK as Normal DMG. It then
-          deals Additional Darkness DMG equal to 6% of Main's Max HP.
+        appendNote: 0
+        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
+          <b><color=#a382ed>500%</color></b> of ATK, Then Create a <b><color=#a382ed>Void
+          Area</color></b> for <b><color=#a382ed>20 seconds</color></b>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Void Area: Inflict DMG equal to <b><color=#a382ed>500% ATK</color></b><b><color=#B659E5>+Additional
+          Darnkness 8%</color></b> of own Max HP every <b><color=#a382ed>5 seconds</color></b>
+          and Enemies damaged will take <b><color=#a382ed>+15% damage</color></b>
+          for <b><color=#a382ed>7 seconds</color></b>, self gains <b><color=#a382ed>5
+          AE</color></b> each Void Area Damaging</color></size>"
       track: 1
       level: 4
       fragmentCost: 0
@@ -1548,7 +1590,7 @@ MonoBehaviour:
             effectId: main.memory.ultimate_hp
             displayName: Ultimate - Max HP
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: f08d04cd066155e40889036a4fbd90d7, type: 3}
             fieldVisualPrefab: {fileID: 0}
             followActiveCharacter: 0
           policy:
@@ -1591,6 +1633,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -1610,6 +1653,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -1642,6 +1686,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -1664,6 +1709,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -1723,15 +1769,23 @@ MonoBehaviour:
       nodeId: main.memory.ultimate.lv5
       nodeName: Ultimate Memory Lv.5
       description: Void Area lasts 40 seconds. Using any Ultimate increases Main's
-        Max HP by 40% for 12 seconds. Recasting refreshes the effect without stacking.
+        Max HP by 40% for 12 seconds(Unstackable)
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.ultimate.jailbreak_punisher
-        noteId: main.memory.ultimate.lv5
+        noteId: 
         priority: 5
-        appendNote: 1
-        description: Void Area lasts 40 seconds. Using any Ultimate increases Main's
-          Max HP by 40% for 12 seconds. Recasting refreshes the effect without stacking.
+        appendNote: 0
+        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
+          <b><color=#a382ed>500%</color></b> of ATK, Then Create a <b><color=#a382ed>Void
+          Area</color></b> for <b><color=#a382ed>40 seconds</color></b>\r\n\r\n<size=20><color=#C0C0C0>\u2022
+          Increase own Max HP by <b><color=#a382ed>40%</color></b> for <b><color=#a382ed>12
+          seconds</color></b><size=18><color=#C0C0C0>(Unstackable)</color></size></color></size>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Void Area: Inflict DMG equal to <b><color=#a382ed>200% ATK</color></b><b><color=#B659E5>+Additional
+          Darnkness 8%</color></b> of own Max HP every <b><color=#a382ed>5 seconds</color></b>
+          and Enemies damaged will take <b><color=#a382ed>+15% damage</color></b>
+          for <b><color=#a382ed>7 seconds</color></b>, self gains <b><color=#a382ed>5
+          AE</color></b> each Void Area Damaging</color></size>"
       track: 1
       level: 5
       fragmentCost: 0
@@ -1799,11 +1853,19 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: main.ultimate.jailbreak_punisher
-        noteId: main.memory.ultimate.lv6
+        noteId: 
         priority: 6
-        appendNote: 1
-        description: Void Area's first hit deals 1000% ATK as Normal DMG. It then
-          deals Additional Darkness DMG equal to 12% of Main's Max HP.
+        appendNote: 0
+        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
+          <b><color=#a382ed>500%</color></b> of ATK, Then Create a <b><color=#a382ed>Void
+          Area</color></b> for <b><color=#a382ed>40 seconds</color></b>\r\n\r\n<size=20><color=#C0C0C0>\u2022
+          Increase own Max HP by <b><color=#a382ed>40%</color></b> for <b><color=#a382ed>12
+          seconds</color></b><size=18><color=#C0C0C0>(Unstackable)</color></size></color></size>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Void Area: Inflict DMG equal to <b><color=#a382ed>1000% ATK</color></b><b><color=#B659E5>+Additional
+          Darnkness 12%</color></b> of own Max HP every <b><color=#a382ed>5 seconds</color></b>
+          and Enemies damaged will take <b><color=#a382ed>+15% damage</color></b>
+          for <b><color=#a382ed>7 seconds</color></b>, self gains <b><color=#a382ed>5
+          AE</color></b> each Void Area Damaging</color></size>"
       track: 1
       level: 6
       fragmentCost: 0
@@ -1835,11 +1897,12 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: passive
-        noteId: main.passive.lv1
+        noteId: 
         priority: 1
-        appendNote: 1
-        description: "Shadow Meter capacity <b><color=#a382ed>+1 box</color></b>.
-          Unlocks <b><color=#a382ed>Normal Attack stages 4\u20135</color></b>."
+        appendNote: 0
+        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
+          3 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
+          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
       track: 2
       level: 1
       fragmentCost: 0
@@ -1910,12 +1973,19 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: passive
-        noteId: main.passive.lv2
+        noteId: 
         priority: 2
-        appendNote: 1
-        description: Shadow Meter capacity <b><color=#a382ed>+1 box</color></b>.
-          Dimension Cut gains <b><color=#a382ed>+15% CRIT Rate</color></b> and ignores
-          Defense on a critical hit.
+        appendNote: 0
+        description: Everytime successful actions will gain Shadow <size=19><color=#787878>(Max
+          4 stackable)</color></size>. When Dash will spend 20 Shadows and next Normal
+          Attack will perform <b><color=#a382ed>Dimension Cut</color></b>
+      - entryId: main.dash.dimension_cut
+        noteId: 
+        priority: 2
+        appendNote: 0
+        description: Dash through the target with a perfect cut, Inflict <b><color=#a382ed>350%</color></b>
+          of own ATK, <color=#C0C0C0>gains <b><color=#a382ed>+15% CRIT Rate</color></b>
+          and ignores Defense on a Critical Hit</color>
       track: 2
       level: 2
       fragmentCost: 0
@@ -1978,14 +2048,7 @@ MonoBehaviour:
         generates <b><color=#a382ed>5 Shadow per hit</color></b> and restores <b><color=#a382ed>8%
         Max HP</color></b> when the action ends.
       skillPanelDescriptionOverride: 
-      kitInfoPatches:
-      - entryId: passive
-        noteId: main.passive.lv3
-        priority: 3
-        appendNote: 1
-        description: Unlocks <b><color=#a382ed>Execution Breakdown</color></b>. It
-          generates <b><color=#a382ed>5 Shadow per hit</color></b> and restores <b><color=#a382ed>8%
-          Max HP</color></b> when the action ends.
+      kitInfoPatches: []
       track: 2
       level: 3
       fragmentCost: 0
@@ -2220,20 +2283,26 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: main.passive.lv4
       nodeName: Passive Memory Lv.4
-      description: "Shadow Meter reaches <b><color=#a382ed>5 boxes</color></b>. Five
+      description: 'Shadow Meter reaches <b><color=#a382ed>5 boxes</color></b>. Five
         paid Dimension Cuts open a <b><color=#a382ed>5-second</color></b> Skill follow-up
-        for Judgment Cut. Main gains <b><color=#a382ed>2\xD7 Shadow</color></b> inside
-        Void Area."
+        for Judgment Cut. Main '
       skillPanelDescriptionOverride: 
       kitInfoPatches:
-      - entryId: passive
-        noteId: main.passive.lv4
-        priority: 4
-        appendNote: 1
-        description: "Shadow Meter reaches <b><color=#a382ed>5 boxes</color></b>.
-          Five paid Dimension Cuts open a <b><color=#a382ed>5-second</color></b>
-          Skill follow-up for Judgment Cut. Main gains <b><color=#a382ed>2\xD7 Shadow</color></b>
-          inside Void Area."
+      - entryId: main.ultimate.jailbreak_punisher
+        noteId: 
+        priority: 7
+        appendNote: 0
+        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
+          <b><color=#a382ed>500%</color></b> of ATK, Then Create a <b><color=#a382ed>Void
+          Area</color></b> for <b><color=#a382ed>40 seconds</color></b>\r\n\r\n<size=20><color=#C0C0C0>\u2022
+          Increase own Max HP by <b><color=#a382ed>40%</color></b> for <b><color=#a382ed>12
+          seconds</color></b><size=18><color=#C0C0C0>(Unstackable)</color></size></color></size>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Void Area: Inflict DMG equal to <b><color=#a382ed>1000% ATK</color></b><b><color=#B659E5>+Additional
+          Darnkness 12%</color></b> of own Max HP every <b><color=#a382ed>5 seconds</color></b>
+          and Enemies damaged will take <b><color=#a382ed>+15% damage</color></b>
+          for <b><color=#a382ed>7 seconds</color></b>, self gains <b><color=#a382ed>5
+          AE</color></b> each Void Area Damaging and Gains <b><color=#a382ed>2\xD7
+          Shadow</color></b> inside Void Area</color></size>"
       track: 2
       level: 4
       fragmentCost: 0
@@ -2358,6 +2427,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -2377,6 +2447,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -2409,6 +2480,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -2431,6 +2503,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 64
                 requireCriticalHit: 0
               chance: 1
@@ -2494,18 +2567,37 @@ MonoBehaviour:
         Darkness DMG equal to <b><color=#a382ed>20% Max HP</color></b>.
       skillPanelDescriptionOverride: 
       kitInfoPatches:
-      - entryId: passive
-        noteId: main.memory.passive.lv5
-        priority: 5
-        appendNote: 1
-        description: Judgment Cut deals <b><color=#a382ed>850% ATK</color></b>. The
-          final hit of Jailbreak Punisher and Execution Breakdown deals additional
-          Darkness DMG equal to <b><color=#a382ed>20% Max HP</color></b>.
       - entryId: main.skill.dimension_slash
         noteId: 
         priority: 5
         appendNote: 0
-        description: Cut all enemies in range for <b><color=#a382ed>850% ATK</color></b>.
+        description: Perform a ultimate screen cut which deal damage to all enemies
+          in radius, Inflict <b><color=#a382ed>850%</color></b></color></size> of
+          own ATK
+      - entryId: main.ultimate.jailbreak_punisher
+        noteId: 
+        priority: 8
+        appendNote: 0
+        description: "Grab the Enemy then Perform a Jailbreak Punisher, Inflict DMG
+          <b><color=#a382ed>500%</color></b> of ATK<b><color=#B659E5>+Additional
+          Darnkness 20%</color></b> of own Max HP, Then Create a <b><color=#a382ed>Void
+          Area</color></b> for <b><color=#a382ed>40 seconds</color></b>\r\n\r\n<size=20><color=#C0C0C0>\u2022
+          Increase own Max HP by <b><color=#a382ed>40%</color></b> for <b><color=#a382ed>12
+          seconds</color></b><size=18><color=#C0C0C0>(Unstackable)</color></size></color></size>\r\n\r\n<size=19><color=#00ffff>\u2022
+          Void Area: Inflict DMG equal to <b><color=#a382ed>1000% ATK</color></b><b><color=#B659E5>+Additional
+          Darnkness 12%</color></b> of own Max HP every <b><color=#a382ed>5 seconds</color></b>
+          and Enemies damaged will take <b><color=#a382ed>+15% damage</color></b>
+          for <b><color=#a382ed>7 seconds</color></b>, self gains <b><color=#a382ed>5
+          AE</color></b> each Void Area Damaging and Gains <b><color=#a382ed>2\xD7
+          Shadow</color></b> inside Void Area</color></size>"
+      - entryId: main.ultimate.execution_breakdown
+        noteId: 
+        priority: 8
+        appendNote: 0
+        description: Lunge a Heavy Hit toward then execute a lightspeed slash, Inflict
+          DMG <b><color=#a382ed>1000%</color></b> of ATK<b><color=#B659E5>+Additional
+          Darnkness 20%</color></b> of own Max HP, This action will grant enormous
+          of Shadow Meter and <b><color=#52f22e>Regenrate 8% of own Max HP</color></b></color></size>
       track: 2
       level: 5
       fragmentCost: 0
@@ -2592,6 +2684,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -2611,6 +2704,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -2643,6 +2737,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -2665,6 +2760,7 @@ MonoBehaviour:
                 actionId: main.skill.dimension_slash
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 64
                 requireCriticalHit: 0
               chance: 1
@@ -2831,14 +2927,15 @@ MonoBehaviour:
         time.
       skillPanelDescriptionOverride: 
       kitInfoPatches:
-      - entryId: passive
-        noteId: main.memory.passive.lv6
+      - entryId: main.skill.dimension_slash
+        noteId: 
         priority: 6
-        appendNote: 1
-        description: Judgment Cut's last hit deals additional Darkness DMG equal
-          to 14% of Main's Max HP to every enemy in the room. After Judgment Cut,
-          restore 20 AE and reduce current Skill and Ultimate cooldowns by 50% of
-          their remaining time.
+        appendNote: 0
+        description: Perform a ultimate screen cut which deal damage to all enemies
+          in radius, Inflict <b><color=#a382ed>850%</color></b></color></size> of
+          own ATK<b><color=#B659E5>+Additional Darnkness 14%</color></b> of own Max
+          HP, <color=#C0C0C0>After action will restore 20 AE and Reduce current Skill
+          and Ultimate cooldowns by 50% of their remaining time</color>
       track: 2
       level: 6
       fragmentCost: 0

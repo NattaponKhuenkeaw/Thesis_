@@ -46,6 +46,8 @@ public class RuntimeEffectDamageFilter
     public string actionId;
     public List<string> actionIds = new List<string>();
     public string requiredTargetEffectKey;
+    [Tooltip("For source-owned on-hit reactions, require this effect on the target before the triggering hit.")]
+    public bool requireTargetEffectBeforeHit;
     public CombatDamageTag requiredDamageTags;
     public bool requireCriticalHit;
 
@@ -68,8 +70,13 @@ public class RuntimeEffectDamageFilter
 
         if (!string.IsNullOrWhiteSpace(actionId) && context.actionId != actionId) return false;
         if (actionIds != null && actionIds.Count > 0 && !actionIds.Contains(context.actionId)) return false;
-        if (!string.IsNullOrWhiteSpace(requiredTargetEffectKey) &&
-            (context.targetEnemy?.RuntimeEffects == null || context.targetEnemy.RuntimeEffects.GetStackCount(requiredTargetEffectKey) <= 0)) return false;
+        if (!string.IsNullOrWhiteSpace(requiredTargetEffectKey))
+        {
+            bool hasEffect = requireTargetEffectBeforeHit
+                ? context.targetEffectsBeforeHit?.Contains(requiredTargetEffectKey) == true
+                : context.targetEnemy?.RuntimeEffects?.GetStackCount(requiredTargetEffectKey) > 0;
+            if (!hasEffect) return false;
+        }
         if ((context.provenance.tags & requiredDamageTags) != requiredDamageTags) return false;
         return !filterByCategory || context.category == category;
     }

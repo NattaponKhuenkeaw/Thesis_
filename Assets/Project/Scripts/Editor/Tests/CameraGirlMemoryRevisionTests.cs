@@ -365,26 +365,48 @@ public class CameraGirlMemoryRevisionTests
     }
 
     [Test]
-    public void SkillSixSplashUsesSourceDefenseAndRespectsTheRadiusBoundary()
+    public void SkillSixSplashRequiresAnExistingMarkAndUsesSourceDefenseWithinItsRadius()
     {
+        CharacterMemoryTests.SetMemoryRanks(progression, cg, skill: 6, passive: 1);
         var target = Enemy("Splash center"); var near = Enemy("Splash neighbor"); var far = Enemy("Splash distant");
         near.transform.position = Vector3.right * 2.9f;
         far.transform.position = Vector3.right * 3.1f;
-        target.RuntimeEffects.ApplyEffect(Node(PotentialTrack.Passive, 1).runtimeEffects[0].recipe, cg, cg.stats);
         RoomEnemyRegistry.Register(target); RoomEnemyRegistry.Register(near); RoomEnemyRegistry.Register(far);
         var recipe = Node(PotentialTrack.Skill, 6).runtimeEffects.Single().recipe;
-        var instance = new RuntimeEffectInstance(); instance.Initialize(recipe, cg, cg.stats);
-        var events = new List<DamageResolvedEvent>(); System.Action<DamageResolvedEvent> capture = events.Add;
+        inventory.ApplyRuntimeEffect(cg, recipe, cg, cg.stats);
+        float sourceDefense = team.GetCharacterRuntimeStats(cg).defense;
+        var request = new DamageRequest
+        {
+            sourceCharacter = cg, sourceStats = cg.stats, sourceCombat = combat,
+            sourcePassiveController = passive, target = target, baseDamage = 100f,
+            actionId = "cg.skill", category = AttackCategory.Skill,
+            descriptor = new DamageDescriptor(DamageDelivery.Primary, ElementType.None, DamageCriticalPolicy.Prevent)
+        };
+        var events = new List<DamageResolvedEvent>();
+        void CaptureAdditional(DamageResolvedEvent damage)
+        {
+            if (damage.descriptor.delivery == DamageDelivery.Additional) events.Add(damage);
+        }
+        System.Action<DamageResolvedEvent> capture = CaptureAdditional;
         CombatEventHub.Shared.DamageResolved += capture;
         try
         {
-            recipe.definition.OnHitDealt(new RuntimeEffectDamageContext { instance = instance, sourceCharacter = cg,
-                sourceStats = cg.stats, targetEnemy = target, actionId = "cg.skill", damageDelivery = DamageDelivery.Primary });
+            CombatDamageProcessor.Apply(request);
+            Assert.That(target.RuntimeEffects.GetStackCount("cg.captured"), Is.EqualTo(1));
+            Assert.That(near.currentHP, Is.EqualTo(10000f));
+            Assert.That(events.Select(e => e.baseDamage), Is.EqualTo(new[] { sourceDefense * 3.5f }).Within(.01f));
+
+            events.Clear();
+            CombatDamageProcessor.Apply(request);
             Assert.That(events.Count, Is.EqualTo(3));
-            Assert.That(events.All(e => e.descriptor.delivery == DamageDelivery.Additional), Is.True);
-            Assert.That(events.Count(e => Mathf.Approximately(e.baseDamage, 1000f)), Is.EqualTo(2));
-            Assert.That(events.Count(e => Mathf.Approximately(e.baseDamage, 350f)), Is.EqualTo(1));
+            Assert.That(events.Count(e => Mathf.Approximately(e.baseDamage, sourceDefense * 10f)), Is.EqualTo(2));
+            Assert.That(events.Count(e => Mathf.Approximately(e.baseDamage, sourceDefense * 3.5f)), Is.EqualTo(1));
             Assert.That(far.currentHP, Is.EqualTo(10000f));
+
+            target.RuntimeEffects.RemoveEffectStacks("cg.captured", int.MaxValue);
+            events.Clear();
+            CombatDamageProcessor.Apply(request);
+            Assert.That(events.Select(e => e.baseDamage), Is.EqualTo(new[] { sourceDefense * 3.5f }).Within(.01f));
         }
         finally { CombatEventHub.Shared.DamageResolved -= capture; }
     }

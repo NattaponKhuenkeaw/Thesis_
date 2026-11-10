@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ART-R-008
   itemName: Severed Fang
   description: 
-  icon: {fileID: 21300000, guid: 3fc8c0317ef7d0440ab3b07ab97c0cac, type: 3}
+  icon: {fileID: 21300000, guid: 52ebf018f90dd0047aea034e0ffc4a47, type: 3}
   price: 450
   isEquippable: 1
   rarity: 1

@@ -165,7 +165,6 @@ public partial class CameraManager : MonoBehaviour
     private CinemachineGroupFraming _combatGroupFraming;
     private CinemachineConfiner2D _exploreConfiner;
     private float _authoredExploreSize;
-    private float _lastExploreRoomSize;
     private Vector2 _defaultCombatOrthoSizeRange = new Vector2(6.8f, 8f);
     private float _defaultCombatFramingSize = 0.47f;
     private bool _bossFramingActive;
@@ -206,8 +205,6 @@ public partial class CameraManager : MonoBehaviour
         {
             _cameraLookAhead = Object.FindFirstObjectByType<CameraLookAhead>();
         }
-
-        EnsurePlayerReferences();
 
         // Auto-find impulse source
         if (_impulseSource == null)
@@ -277,7 +274,7 @@ public partial class CameraManager : MonoBehaviour
         {
             _explorePositionComposer = _exploreCam.GetComponent<CinemachinePositionComposer>();
             _exploreConfiner = _exploreCam.GetComponent<CinemachineConfiner2D>();
-            _authoredExploreSize = _lastExploreRoomSize = _exploreCam.Lens.OrthographicSize;
+            _authoredExploreSize = _exploreCam.Lens.OrthographicSize;
         }
 
         CacheCombatGroupFraming();
@@ -337,9 +334,7 @@ public partial class CameraManager : MonoBehaviour
             Vector3 center = body != null ? body.bounds.center : _bossSpawnFocusTarget.position;
             _focusCam.transform.position = new Vector3(center.x, center.y, _focusCam.transform.position.z);
         }
-        EnsurePlayerReferences();
         TickEngagedEnemies();
-        FitCombatZoomToRoom();
     }
 
     private void FitExploreZoomToRoom()
@@ -351,37 +346,18 @@ public partial class CameraManager : MonoBehaviour
         Camera output = _brain != null ? _brain.OutputCamera : Camera.main;
         if (room != null && room.RoomKind == RoomKind.Combat && !room.UseStaticCamera
             && output != null && output.aspect > 0f && _exploreConfiner.enabled
-            && _exploreConfiner.BoundingShape2D is BoxCollider2D bounds && bounds.enabled)
+            && _exploreConfiner.BoundingShape2D is BoxCollider2D bounds && bounds.isActiveAndEnabled)
         {
-            // An oversized view collapses the confiner solution and can pull the camera off the floor.
-            float maxSize = bounds.bounds.size.x / (2f * output.aspect) - .05f;
+            // Leave a little room inside the confiner so the legal camera area cannot collapse.
+            Vector3 dimensions = bounds.bounds.size;
+            float maxSize = Mathf.Min(dimensions.x / output.aspect, dimensions.y) * .5f - .05f;
             size = Mathf.Min(size, Mathf.Max(.01f, maxSize));
         }
 
-        if (Mathf.Approximately(size, _lastExploreRoomSize)) return;
-        _lastExploreRoomSize = size;
+        if (Mathf.Approximately(size, _exploreCam.Lens.OrthographicSize)) return;
+
         SetCameraSize(_exploreCam, size);
         _exploreConfiner.InvalidateLensCache();
-        _exploreCam.PreviousStateIsValid = false;
-    }
-
-    private void FitCombatZoomToRoom()
-    {
-        if (_combatCam == null || _combatGroupFraming == null)
-            return;
-
-        Vector2 range = _bossFramingActive ? _bossOrthoSizeRange : _defaultCombatOrthoSizeRange;
-        RoomData room = _zoneStateProvider != null ? _zoneStateProvider.CurrentRoom : null;
-        Camera output = _brain != null ? _brain.OutputCamera : Camera.main;
-        var confiner = _combatCam.GetComponent<CinemachineConfiner2D>();
-        if (room != null && room.RoomKind == RoomKind.Combat && !room.UseStaticCamera
-            && output != null && confiner != null && confiner.enabled
-            && confiner.BoundingShape2D is BoxCollider2D bounds && bounds.enabled)
-        {
-            range = RoomBoundaryMath.LimitCombatOrthoRange(range, bounds.bounds.size.x, output.aspect);
-        }
-
-        _combatGroupFraming.OrthoSizeRange = range;
     }
 
     private void TickEngagedEnemies()
@@ -762,8 +738,6 @@ public partial class CameraManager : MonoBehaviour
     /// </summary>
     public void SnapToPlayerForRoomEnter(Vector3 warpDelta)
     {
-        EnsurePlayerReferences();
-
         ClearEngagedEnemies();
         ExitCombatMode();
         _cameraLookAhead?.SnapToPlayer();
@@ -1399,7 +1373,6 @@ public partial class CameraManager : MonoBehaviour
 
     private void UpdateCameraForRoom(RoomData room)
     {
-        FitExploreZoomToRoom();
         if (_trainingMode) { _isInCombat = true; SetCombatMode(); return; }
         if (room != null && room.UseStaticCamera)
         {
@@ -1755,28 +1728,6 @@ public partial class CameraManager : MonoBehaviour
         }
 
         return Mathf.Clamp01(Mathf.InverseLerp(zeroWeightSeparation, fullWeightSeparation, verticalSeparation));
-    }
-
-    private void EnsurePlayerReferences()
-    {
-        Rigidbody2D body = CameraLookAhead.ResolvePlayerBody(_playerTransform);
-        if (body == null)
-        {
-            GameObject playerObj = GameObject.FindWithTag("Player");
-            if (playerObj != null)
-                body = CameraLookAhead.ResolvePlayerBody(playerObj.transform);
-        }
-
-        if (body == null)
-        {
-            PlayerMovement movement = Object.FindFirstObjectByType<PlayerMovement>();
-            if (movement != null)
-                body = movement.GetComponent<Rigidbody2D>();
-        }
-
-        if (body == null) return;
-        _playerTransform = body.transform;
-        _cameraLookAhead?.BindPlayerRigidbody(body);
     }
 
     private IEnumerator EndTemporaryPlayerSnapAfterDelay(float duration)

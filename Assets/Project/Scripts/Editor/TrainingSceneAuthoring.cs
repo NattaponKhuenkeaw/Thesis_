@@ -192,9 +192,6 @@ public static class TrainingSceneAuthoring
         var previous = Button(box.transform, "<", new Vector2(-268, 72), new Vector2(56, 42));
         var next = Button(box.transform, ">", new Vector2(268, 72), new Vector2(56, 42));
         var character = Label(box.transform, "Character", new Vector2(0, 72), new Vector2(450, 44), 25);
-        var skill = SliderRow(box.transform, "Skill Potential", 10, out var skillValue);
-        var ultimate = SliderRow(box.transform, "Ultimate Potential", -55, out var ultimateValue);
-        var passive = SliderRow(box.transform, "Passive Potential", -120, out var passiveValue);
         var error = Label(box.transform, "", new Vector2(0, -178), new Vector2(620, 32), 20);
         error.color = new Color(1, .65f, .45f);
         var apply = Button(box.transform, "Apply", new Vector2(-155, -240), new Vector2(260, 52));
@@ -204,10 +201,7 @@ public static class TrainingSceneAuthoring
         Bind(controller, "applyButton", apply); Bind(controller, "cancelButton", cancel);
         Bind(controller, "previousCharacterButton", previous); Bind(controller, "nextCharacterButton", next);
         Bind(controller, "characterLabel", character); Bind(controller, "errorText", error);
-        Bind(controller, "teamLevel", level); Bind(controller, "skill", skill);
-        Bind(controller, "ultimate", ultimate); Bind(controller, "passive", passive);
-        Bind(controller, "teamLevelValue", levelValue); Bind(controller, "skillValue", skillValue);
-        Bind(controller, "ultimateValue", ultimateValue); Bind(controller, "passiveValue", passiveValue);
+        Bind(controller, "teamLevel", level); Bind(controller, "teamLevelValue", levelValue);
         shade.gameObject.SetActive(false);
         return controller;
     }

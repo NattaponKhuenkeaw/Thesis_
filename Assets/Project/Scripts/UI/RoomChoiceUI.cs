@@ -4,11 +4,12 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Project.Core.ZoneState;
+using TMPro;
 
 namespace Project.UI
 {
     /// <summary>
-    /// Proximity room-choice panel driven by an authored prefab (no runtime UI build).
+    /// Proximity room-choice panel driven by an authored prefab.
     /// Assign <see cref="panelRoot"/> + <see cref="cards"/> in the Inspector, or use
     /// Project > UI > Open Room Choice UI Prefab.
     /// </summary>
@@ -34,6 +35,11 @@ namespace Project.UI
         private bool choiceCommitted;
         private Coroutine pendingChoice;
         private bool ownsInputLock;
+        private RunDifficulty selectedDifficulty;
+        private Button difficultyButton;
+        private TMP_Text difficultyLabel;
+        private TMP_Text subtitle;
+        private string originalSubtitle;
 
         public bool IsShowing => visibilityTransition != null ? visibilityTransition.IsVisible : panelRoot != null && panelRoot.activeSelf;
         public bool HasCommittedChoice => choiceCommitted;
@@ -190,6 +196,7 @@ namespace Project.UI
                 return;
             }
 
+            RefreshDifficultyControl();
             ConfigureCardNavigation();
             RefreshRouteProgress();
 
@@ -272,6 +279,7 @@ namespace Project.UI
             }
 
             choiceCommitted = true;
+            if (difficultyButton != null) difficultyButton.interactable = false;
 
             for (int i = 0; i < activeCards.Count; i++)
             {
@@ -305,7 +313,7 @@ namespace Project.UI
                 yield break;
             }
 
-            if (!SceneTransitionManager.Instance.TryTransitionToRoom(roomId, entranceId))
+            if (!SceneTransitionManager.Instance.TryTransitionToRoom(roomId, entranceId, selectedDifficulty))
             {
                 Debug.LogWarning($"[RoomChoiceUI] Transition to '{roomId}' was rejected; re-arming exit triggers.", this);
                 ActiveRouteOffer.Clear();
@@ -367,8 +375,87 @@ namespace Project.UI
                 navigation.mode = Navigation.Mode.Explicit;
                 navigation.selectOnLeft = navigation.selectOnUp = activeCards[Mathf.Max(0, i - 1)].Button;
                 navigation.selectOnRight = navigation.selectOnDown = activeCards[Mathf.Min(activeCards.Count - 1, i + 1)].Button;
+                if (i == 0 && difficultyButton != null && difficultyButton.gameObject.activeSelf)
+                    navigation.selectOnUp = difficultyButton;
                 button.navigation = navigation;
             }
+        }
+
+        private void RefreshDifficultyControl()
+        {
+            RunProgressionManager progression = RunProgressionManager.Instance;
+            selectedDifficulty = progression != null ? progression.Difficulty : RunDifficulty.Normal;
+            bool canChoose = progression != null && !progression.IsDifficultyLocked &&
+                Project.Core.GameRunManager.Instance != null && Project.Core.GameRunManager.Instance.IsInLobby &&
+                !Project.Training.TrainingSession.IsTrainingContext;
+
+            if (subtitle == null)
+            {
+                Transform authoredSubtitle = panelRoot.transform.Find("Subtitle");
+                if (authoredSubtitle != null) subtitle = authoredSubtitle.GetComponent<TMP_Text>();
+                if (subtitle != null) originalSubtitle = subtitle.text;
+            }
+            if (subtitle != null)
+            {
+                subtitle.enabled = !canChoose;
+                subtitle.text = selectedDifficulty == RunDifficulty.Veteran
+                    ? "VETERAN  ·  " + originalSubtitle : originalSubtitle;
+            }
+            if (!canChoose)
+            {
+                if (difficultyButton != null) difficultyButton.gameObject.SetActive(false);
+                return;
+            }
+
+            if (difficultyButton == null) BuildDifficultyButton();
+            difficultyButton.gameObject.SetActive(true);
+            difficultyButton.interactable = true;
+            Button firstCard = activeCards[0].Button;
+            difficultyButton.navigation = new Navigation
+            {
+                mode = Navigation.Mode.Explicit, selectOnDown = firstCard, selectOnUp = firstCard
+            };
+            UpdateDifficultyLabel();
+        }
+
+        private void BuildDifficultyButton()
+        {
+            var control = new GameObject("Run Difficulty", typeof(RectTransform), typeof(Image), typeof(Button));
+            var rect = (RectTransform)control.transform;
+            rect.SetParent(panelRoot.transform, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+            rect.anchoredPosition = subtitle != null ? subtitle.rectTransform.anchoredPosition : new Vector2(0f, 390f);
+            rect.sizeDelta = new Vector2(680f, 42f);
+            difficultyButton = control.GetComponent<Button>();
+            difficultyButton.targetGraphic = control.GetComponent<Image>();
+            difficultyButton.onClick.AddListener(() =>
+            {
+                if (choiceCommitted) return;
+                selectedDifficulty = selectedDifficulty == RunDifficulty.Normal ? RunDifficulty.Veteran : RunDifficulty.Normal;
+                UpdateDifficultyLabel();
+            });
+
+            var label = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var labelRect = (RectTransform)label.transform;
+            labelRect.SetParent(rect, false);
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+            difficultyLabel = label.GetComponent<TextMeshProUGUI>();
+            if (subtitle != null) difficultyLabel.font = subtitle.font;
+            difficultyLabel.fontSize = 22f;
+            difficultyLabel.alignment = TextAlignmentOptions.Center;
+            difficultyLabel.raycastTarget = false;
+        }
+
+        private void UpdateDifficultyLabel()
+        {
+            bool veteran = selectedDifficulty == RunDifficulty.Veteran;
+            difficultyLabel.text = veteran
+                ? "VETERAN  ·  Recommended for full-Memory duos  ·  Change"
+                : "NORMAL  ·  Recommended for fresh profiles  ·  Change";
+            difficultyButton.targetGraphic.color = veteran
+                ? new Color(.42f, .17f, .12f, 1f) : new Color(.18f, .20f, .24f, 1f);
         }
 
         private void ClearCardClicks()

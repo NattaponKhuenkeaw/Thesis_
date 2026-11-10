@@ -61,7 +61,6 @@ namespace Project.TeamBuilder.UI
 
         private void Awake()
         {
-            panelRect = GetComponent<RectTransform>();
             ResolveMissingReferences();
             if (keepVisibleWhenEmpty)
             {
@@ -169,6 +168,7 @@ namespace Project.TeamBuilder.UI
                 for (int i = statItemContainer.childCount - 1; i >= 0; i--)
                 {
                     Transform child = statItemContainer.GetChild(i);
+                    if (!child.TryGetComponent<StatItemUI>(out _)) continue;
                     child.gameObject.SetActive(false);
                     if (Application.isPlaying) Destroy(child.gameObject);
                     else DestroyImmediate(child.gameObject);
@@ -179,6 +179,7 @@ namespace Project.TeamBuilder.UI
 
         private void ResolveMissingReferences()
         {
+            panelRect ??= (RectTransform)transform;
             TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
             Image[] images = GetComponentsInChildren<Image>(true);
             Button[] buttons = GetComponentsInChildren<Button>(true);
@@ -212,8 +213,7 @@ namespace Project.TeamBuilder.UI
 
             if (statItemContainer == null)
             {
-                Transform statsRoot = FindChildByName(transform, "Stats", "StatContainer", "Stat Item Container", "Content", "StatPanel");
-                statItemContainer = statsRoot != null ? statsRoot : transform;
+                statItemContainer = FindChildByName(transform, "Stats", "StatContainer", "Stat Item Container", "StatPanel");
             }
             if (statItemContainer != null && statItemContainer.TryGetComponent(out VerticalLayoutGroup statLayout))
             {
@@ -225,10 +225,10 @@ namespace Project.TeamBuilder.UI
 
         private void ConfigureDetailsScroll()
         {
-            if (descriptionText == null || statItemContainer == null || panelRect == null) return;
+            if (descriptionText == null) return;
             if (detailsScroll == null)
             {
-                var viewportObject = new GameObject("Artifact Details Viewport", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
+                var viewportObject = new GameObject("Artifact Passive Viewport", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
                 viewportObject.layer = gameObject.layer;
                 viewportObject.transform.SetParent(transform, false);
                 detailsScroll = viewportObject.GetComponent<ScrollRect>();
@@ -240,26 +240,13 @@ namespace Project.TeamBuilder.UI
             viewport.anchorMin = Vector2.zero;
             viewport.anchorMax = Vector2.one;
             viewport.pivot = new Vector2(.5f, .5f);
-            RectTransform headerRect = artifactIcon != null
-                ? artifactIcon.rectTransform
-                : artifactNameText != null ? artifactNameText.rectTransform : null;
-            GetLocalVerticalBounds(headerRect, out float iconBottom, out _);
-            float topInset = Mathf.Max(0f, panelRect.rect.yMax - iconBottom + 8f);
-            float bottomInset = 48f;
-            if (equipButton != null && equipButton.transform is RectTransform equipRect)
-            {
-                GetLocalVerticalBounds(equipRect, out _, out float buttonTop);
-                bottomInset = Mathf.Max(0f, buttonTop - panelRect.rect.yMin + 8f);
-            }
-            viewport.offsetMin = new Vector2(12f, bottomInset);
-            viewport.offsetMax = new Vector2(-12f, -topInset);
             var surface = viewport.GetComponent<Image>();
             surface.color = Color.clear;
             surface.raycastTarget = true;
 
             if (detailsContent == null)
             {
-                var contentObject = new GameObject("Artifact Details Content", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+                var contentObject = new GameObject("Artifact Passive Content", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
                 contentObject.layer = gameObject.layer;
                 contentObject.transform.SetParent(viewport, false);
                 detailsContent = (RectTransform)contentObject.transform;
@@ -288,8 +275,6 @@ namespace Project.TeamBuilder.UI
             detailsContent.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             if (descriptionText.transform.parent != detailsContent) descriptionText.transform.SetParent(detailsContent, false);
-            if (statItemContainer != detailsContent && statItemContainer.parent != detailsContent)
-                statItemContainer.SetParent(detailsContent, false);
             descriptionText.alignment = TextAlignmentOptions.TopLeft;
             descriptionText.enableAutoSizing = false;
             descriptionText.textWrappingMode = TextWrappingModes.Normal;
@@ -298,9 +283,6 @@ namespace Project.TeamBuilder.UI
             var descriptionSizing = descriptionText.GetComponent<LayoutElement>() ?? descriptionText.gameObject.AddComponent<LayoutElement>();
             descriptionSizing.minHeight = 0f;
             descriptionSizing.flexibleHeight = 0f;
-            var statSizing = statItemContainer.GetComponent<LayoutElement>() ?? statItemContainer.gameObject.AddComponent<LayoutElement>();
-            statSizing.minHeight = 0f;
-            statSizing.flexibleHeight = 0f;
 
             detailsScroll.viewport = viewport;
             detailsScroll.content = detailsContent;
@@ -311,6 +293,29 @@ namespace Project.TeamBuilder.UI
             detailsScroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
             viewport.SetAsLastSibling();
             if (equipButton != null) equipButton.transform.SetAsLastSibling();
+        }
+
+        private void PositionDescriptionViewport()
+        {
+            RectTransform header = artifactIcon != null ? artifactIcon.rectTransform : artifactNameText?.rectTransform;
+            GetLocalVerticalBounds(header, out float contentTop, out _);
+            if (statItemContainer is RectTransform stats)
+            {
+                GetLocalVerticalBounds(stats, out _, out float statsTop);
+                contentTop = Mathf.Min(contentTop, statsTop - LayoutUtility.GetPreferredHeight(stats));
+            }
+
+            float bottomInset = 48f;
+            if (equipButton != null && equipButton.transform is RectTransform equipRect)
+            {
+                GetLocalVerticalBounds(equipRect, out _, out float buttonTop);
+                bottomInset = Mathf.Max(0f, buttonTop - panelRect.rect.yMin + 8f);
+            }
+
+            var viewport = detailsScroll.viewport;
+            float topInset = Mathf.Max(0f, panelRect.rect.yMax - contentTop + 8f);
+            viewport.offsetMin = new Vector2(12f, bottomInset);
+            viewport.offsetMax = new Vector2(-12f, -topInset);
         }
 
         private void GetLocalVerticalBounds(RectTransform target, out float bottom, out float top)
@@ -335,6 +340,7 @@ namespace Project.TeamBuilder.UI
         {
             if (detailsScroll == null) return;
             Canvas.ForceUpdateCanvases();
+            PositionDescriptionViewport();
             LayoutRebuilder.ForceRebuildLayoutImmediate(detailsContent);
             detailsScroll.StopMovement();
             detailsScroll.verticalNormalizedPosition = 1f;
@@ -383,12 +389,6 @@ namespace Project.TeamBuilder.UI
                     : currentDefinition.passiveDescription;
             }
 
-            var statsSizing = statItemContainer != null ? statItemContainer.GetComponent<LayoutElement>() : null;
-            if (statsSizing != null)
-            {
-                statsSizing.minHeight = statItemContainer.childCount * 34f;
-                statsSizing.preferredHeight = statsSizing.minHeight;
-            }
             ResetDetailsScroll();
 
         }

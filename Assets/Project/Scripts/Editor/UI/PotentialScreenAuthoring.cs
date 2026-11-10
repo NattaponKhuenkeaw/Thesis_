@@ -108,7 +108,7 @@ namespace Project.EditorTools
                 back.gameObject.SetActive(true);
                 foreach (Transform child in back.transform) child.gameObject.SetActive(child.name == "exittext (TMP)");
                 if (panel.transform.Find("PotentialTitle") == null)
-                    Text("PotentialTitle", panel.transform, new Vector2(0.08f, 0.92f), new Vector2(0.7f, 0.99f), "PREVIOUS UPGRADES", 36, TextAlignmentOptions.MidlineLeft);
+                    Text("PotentialTitle", panel.transform, new Vector2(0.08f, 0.92f), new Vector2(0.7f, 0.99f), "CHARACTER MEMORY", 36, TextAlignmentOptions.MidlineLeft);
                 var backText = back.GetComponentInChildren<TMP_Text>();
                 if (backText != null) { backText.text = "BACK"; backText.font = Font; backText.fontSize = 22; backText.color = Color.white; }
                 Set(data, "exitButton", back); Set(data, "characterNameText", null); Set(data, "elementRoleText", null);

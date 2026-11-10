@@ -3,6 +3,12 @@ using UnityEngine;
 
 namespace Project.Core.ZoneState
 {
+    public enum RunDifficulty
+    {
+        Normal = 0,
+        Veteran = 1
+    }
+
     /// <summary>
     /// Tracks combat-room depth and biome index for the current run.
     /// Depth increments only on Combat/Elite clears. Shop/Reward/Safe do not count.
@@ -17,6 +23,8 @@ namespace Project.Core.ZoneState
         private const float DefaultNormalEnemyHealthBonus = 0.18f;
         private const float DefaultNormalEnemyAttackBonus = 0.15f;
         private const int LastTunedBiomeIndex = 9;
+        private const float VeteranOpeningBossHealthMultiplier = 45f;
+        private const float VeteranFinalBossHealthMultiplier = 450f;
         private static readonly float[] BossHealthMultipliers =
         {
             2f, 4f, 6f, 6.625f, 7.25f, 7.875f, 8.5f, 9.125f, 9.75f, 10.5f
@@ -60,14 +68,17 @@ namespace Project.Core.ZoneState
         public string BossRoomId => CurrentBiomeIndex % 2 == 1 && !string.IsNullOrWhiteSpace(alternateBossRoomId)
             ? alternateBossRoomId : string.IsNullOrWhiteSpace(bossRoomId) ? DefaultBossRoomId : bossRoomId;
         public int CurrentBiomeIndex => Mathf.Max(0, currentBiomeIndex);
+        public RunDifficulty Difficulty { get; private set; }
+        public bool IsDifficultyLocked => difficultyChosen || CurrentBiomeIndex > 0;
         public float BiomeBasicStatBonus => Mathf.Max(0f, biomeBasicStatBonus);
+        private bool difficultyChosen;
 
         /// <summary>
         /// Linear boss attack and defense multiplier.
         /// Biome 0 = 1.0, Biome 1 = 1.20, Biome 2 = 1.40, ...
         /// </summary>
         public float EnemyBasicStatMultiplier => ResolveEnemyBasicStatMultiplier(CurrentBiomeIndex, BiomeBasicStatBonus);
-        public float BossHealthMultiplier => ResolveBossHealthMultiplier(CurrentBiomeIndex);
+        public float BossHealthMultiplier => ResolveBossHealthMultiplier(CurrentBiomeIndex, Difficulty);
         public float NormalEnemyHealthMultiplier => ResolveNormalEnemyHealthMultiplier(CurrentBiomeIndex, normalEnemyHealthBonusPerLevel);
         public float NormalEnemyAttackMultiplier => ResolveNormalEnemyAttackMultiplier(CurrentBiomeIndex, normalEnemyAttackBonusPerLevel);
 
@@ -79,6 +90,26 @@ namespace Project.Core.ZoneState
         public static float ResolveBossHealthMultiplier(int biomeIndex)
         {
             return BossHealthMultipliers[Mathf.Clamp(biomeIndex, 0, BossHealthMultipliers.Length - 1)];
+        }
+
+        public static float ResolveBossHealthMultiplier(int biomeIndex, RunDifficulty difficulty)
+        {
+            if (difficulty != RunDifficulty.Veteran) return ResolveBossHealthMultiplier(biomeIndex);
+
+            // Use proportional growth between the two measured build endpoints for this trial.
+            float growth = VeteranFinalBossHealthMultiplier / VeteranOpeningBossHealthMultiplier;
+            return VeteranOpeningBossHealthMultiplier * Mathf.Pow(growth, ResolveVeteranCurveProgress(biomeIndex));
+        }
+
+        public static float ResolveVeteranEnemyHealthBonus(int biomeIndex, bool guardOrElite)
+        {
+            float progress = ResolveVeteranCurveProgress(biomeIndex);
+            return guardOrElite ? Mathf.Lerp(12f, 24f, progress) : Mathf.Lerp(8f, 12f, progress);
+        }
+
+        private static float ResolveVeteranCurveProgress(int biomeIndex)
+        {
+            return Mathf.Clamp(biomeIndex, 0, LastTunedBiomeIndex) / (float)LastTunedBiomeIndex;
         }
 
         public static float ResolveNormalEnemyAttackMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyAttackBonus)
@@ -111,16 +142,25 @@ namespace Project.Core.ZoneState
 
             RunProgressionManager progression = Instance ?? EnsureInstance();
             if (progression == null) return;
+            RunDifficulty difficulty = Project.Training.TrainingSession.IsTrainingContext
+                ? RunDifficulty.Normal : progression.Difficulty;
 
             // Elite variants use the normal enemy curve.
             if (enemy.HasBossDriver)
             {
                 float basicMultiplier = progression.EnemyBasicStatMultiplier;
-                enemy.ApplyStatMultipliers(progression.BossHealthMultiplier, basicMultiplier, basicMultiplier);
+                float bossHealth = ResolveBossHealthMultiplier(progression.CurrentBiomeIndex, difficulty);
+                enemy.ApplyStatMultipliers(bossHealth, basicMultiplier, basicMultiplier);
                 return;
             }
 
-            enemy.ApplyStatMultipliers(progression.NormalEnemyHealthMultiplier, progression.NormalEnemyAttackMultiplier, 1f);
+            float health = progression.NormalEnemyHealthMultiplier;
+            if (difficulty == RunDifficulty.Veteran)
+            {
+                bool guardOrElite = enemy.isEliteOrBoss || enemy.CombatRole == EnemyCombatRole.ShieldGuard;
+                health *= ResolveVeteranEnemyHealthBonus(progression.CurrentBiomeIndex, guardOrElite);
+            }
+            enemy.ApplyStatMultipliers(health, progression.NormalEnemyAttackMultiplier, 1f);
         }
 
         private void Awake()
@@ -213,6 +253,18 @@ namespace Project.Core.ZoneState
         {
             currentRoomDepth = 0;
             currentBiomeIndex = 0;
+            RestoreDifficulty(RunDifficulty.Normal, false);
+        }
+
+        internal void LockDifficulty(RunDifficulty difficulty)
+        {
+            if (!IsDifficultyLocked) RestoreDifficulty(difficulty, true);
+        }
+
+        internal void RestoreDifficulty(RunDifficulty difficulty, bool locked)
+        {
+            Difficulty = locked && difficulty == RunDifficulty.Veteran ? RunDifficulty.Veteran : RunDifficulty.Normal;
+            difficultyChosen = locked;
         }
 
         public void SetCurrentBiomeIndex(int biomeIndex)

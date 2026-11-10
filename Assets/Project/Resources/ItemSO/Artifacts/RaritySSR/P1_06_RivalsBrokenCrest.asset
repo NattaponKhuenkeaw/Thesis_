@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ART-P1-006
   itemName: Rival's Broken Crest
   description: Broken Chrono-Relic
-  icon: {fileID: 21300000, guid: 1abe204fa8edc784b9cff53a0e619fe7, type: 3}
+  icon: {fileID: 21300000, guid: aac813f65d3f8a04c8f21a94548a6122, type: 3}
   price: 3350
   isEquippable: 1
   rarity: 3

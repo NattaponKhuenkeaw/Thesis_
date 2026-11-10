@@ -38,7 +38,7 @@ MonoBehaviour:
   lifetime: 0.1
   hitIntervalSeconds: 0
   maxHits: 1
-  hitCountMode: 0
+  hitCountMode: 1
   routineHitbox:
     enabled: 0
     decrementsMaxHits: 1
@@ -110,6 +110,10 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 0
+        reactionTargetOffset: {x: 0, y: 0}
+        reactionTargetTravelFrames: 0
+        preserveReactionMotionTiming: 0
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85

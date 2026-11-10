@@ -15,27 +15,27 @@ namespace Project.UI
         internal IEnumerator PresentMemory(IReadOnlyList<(CharacterItem item, string name, CharacterMemoryProgress progress)> candidates,
             Func<int, PotentialTrack, bool> claim, Func<bool> isCurrent)
         {
-            const int portraitsPerRow = 5;
+            const int portraitsPerRow = 3;
             ResolveBindings();
             ReleasePauseHold();
-            releasePauseHold = GameFreezeManager.AcquirePauseHold();
             group = GetComponent<CanvasGroup>();
             group.alpha = 0f;
             group.interactable = false;
-            group.blocksRaycasts = true;
+            group.blocksRaycasts = false;
             acquiredText = "Memory acquired";
             SetRegion(pullLabel.rectTransform, .1f, .87f, .9f, .97f);
             pullLabel.enableAutoSizing = true;
             pullLabel.fontSizeMin = 20f;
 
-            ScrollRect roster = BuildMemoryRoster(candidates.Count, portraitsPerRow, out var rows);
+            ScrollRect roster = BuildMemoryRoster(candidates.Count, portraitsPerRow, out var rows,
+                out float portraitWidth, out float portraitHeight);
             var portraits = new Card[candidates.Count];
             for (int i = 0; i < candidates.Count; i++)
             {
-                portraits[i] = ClonePortraitCard(rows[i / portraitsPerRow].transform);
+                portraits[i] = ClonePortraitCard(rows[i / portraitsPerRow].transform, portraitWidth, portraitHeight);
                 var candidate = candidates[i];
-                BindMemoryCard(portraits[i], candidate.name, CharacterMemoryPanel.MemoryNodeIcon(candidate.item), string.Empty,
-                    $"Memory  {candidate.progress.CompletedSteps} / {CharacterMemoryProgress.StepCount}", Color.white, true);
+                BindMemoryCard(portraits[i], candidate.name, candidate.item.icon, Color.white, true);
+                portraits[i].stats.text = $"Memory  {candidate.progress.CompletedSteps} / {CharacterMemoryProgress.StepCount}";
             }
 
             var choices = CreateMemoryRow(transform, "Memory Choices");
@@ -44,7 +44,12 @@ namespace Project.UI
             {
                 Card card = cards[i];
                 int index = i;
-                AddMemoryCardToRow(card, choices.transform, 452f, 590f);
+                Vector2 cardSize = ((RectTransform)card.button.transform).rect.size;
+                AddMemoryCardToRow(card, choices.transform, cardSize.x, cardSize.y);
+                SetRegion(card.stats.rectTransform, .113f, .025f, .887f, .085f);
+                card.stats.alignment = TextAlignmentOptions.Center;
+                card.stats.enableAutoSizing = false;
+                card.stats.fontSize = card.stats.fontSizeMin;
                 card.button.onClick.AddListener(() => Select(index));
             }
             choices.gameObject.SetActive(false);
@@ -67,6 +72,9 @@ namespace Project.UI
             }
 
             pullLabel.text = "Choose a character";
+            if (!isCurrent()) yield break;
+            releasePauseHold = GameFreezeManager.AcquirePauseHold();
+            group.blocksRaycasts = true;
             yield return Fade(1f);
             if (!isCurrent()) yield break;
             PlayRevealSound();
@@ -137,15 +145,17 @@ namespace Project.UI
                     var family = (PotentialTrack)i;
                     bool available = !major || candidate.progress.HasRoomInFamily(family);
                     int rank = candidate.progress.CountFamilyUpgrades(family) + 1;
-                    string detail = !major ? "Track progress" : available
-                        ? $"Rank {rank} / {CharacterMemoryProgress.UpgradesPerFamily}" : "Family complete";
-                    BindMemoryCard(card, CharacterMemoryProgress.DescribeStep(step, family),
-                        major ? CharacterMemoryPanel.MemoryNodeIcon(candidate.item, family)
-                            : CharacterMemoryKit.GetGenericPageIcon(candidate.item?.characterObjectData, step)
-                                ?? CharacterMemoryPanel.MemoryNodeIcon(candidate.item),
-                        available ? CharacterMemoryPanel.DescribeMemoryEffect(candidate.item, step, family, rank)
-                            : "All ranks in this family have been earned.",
-                        detail, major ? MemoryFamilyColor(family) : Color.white, available);
+                    card.stats.text = !major ? string.Empty : available
+                        ? $"Rank {rank}/{CharacterMemoryProgress.UpgradesPerFamily}" : "Family complete";
+                    card.stats.gameObject.SetActive(major);
+                    Sprite icon = major ? CharacterMemoryPanel.MemoryNodeIcon(candidate.item, family)
+                        : CharacterMemoryKit.GetGenericPageIcon(candidate.item?.characterObjectData, step)
+                            ?? CharacterMemoryPanel.MemoryNodeIcon(candidate.item);
+                    string effect = available ? CharacterMemoryPanel.DescribeMemoryEffect(candidate.item, step, family, rank)
+                        : "All ranks in this family have been earned.";
+                    BindMemoryCard(card, CharacterMemoryProgress.DescribeStep(step, family), icon,
+                        major ? MemoryFamilyColor(family) : Color.white, available);
+                    BindDescription(card, effect);
 
                     card.button.navigation = new Navigation { mode = Navigation.Mode.Explicit };
                     if (!available) continue;
@@ -153,6 +163,7 @@ namespace Project.UI
                     var navigation = card.button.navigation;
                     navigation.selectOnLeft = previous;
                     navigation.selectOnDown = back;
+                    navigation.selectOnUp = card.detailsScroll.verticalScrollbar;
                     card.button.navigation = navigation;
                     if (previous != null)
                     {
@@ -171,6 +182,7 @@ namespace Project.UI
                     var rect = (RectTransform)card.button.transform;
                     rect.anchoredPosition = Vector2.zero;
                     card.restPosition = Vector2.zero;
+                    if (card.button.gameObject.activeInHierarchy) ResetDetailsScroll(card);
                 }
                 PlayRevealSound();
                 yield return RevealCard(choices.transform);
@@ -198,7 +210,8 @@ namespace Project.UI
             ReleasePauseHold();
         }
 
-        private ScrollRect BuildMemoryRoster(int count, int portraitsPerRow, out HorizontalLayoutGroup[] rows)
+        private ScrollRect BuildMemoryRoster(int count, int portraitsPerRow, out HorizontalLayoutGroup[] rows,
+            out float portraitWidth, out float portraitHeight)
         {
             var host = new GameObject("Living Characters", typeof(RectTransform), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
             host.transform.SetParent(transform, false);
@@ -217,14 +230,23 @@ namespace Project.UI
             vertical.childForceExpandWidth = true;
             vertical.childForceExpandHeight = false;
             vertical.spacing = 20f;
+            Canvas.ForceUpdateCanvases();
+
+            const float characterSlotWidth = 442.4065f;
+            const float characterSlotHeight = 756.3661f;
+            float characterSlotAspect = characterSlotHeight / characterSlotWidth;
+            float columnWidth = Mathf.Max(1f, (viewport.rect.width - 24f * (portraitsPerRow - 1)) / portraitsPerRow);
+            portraitWidth = Mathf.Min(characterSlotWidth, columnWidth, Mathf.Max(1f, viewport.rect.height) / characterSlotAspect);
+            portraitHeight = portraitWidth * characterSlotAspect;
+
             rows = new HorizontalLayoutGroup[(count + portraitsPerRow - 1) / portraitsPerRow];
             for (int i = 0; i < rows.Length; i++)
             {
                 rows[i] = CreateMemoryRow(content, "Portrait Row");
-                rows[i].gameObject.AddComponent<LayoutElement>().preferredHeight = 220f;
+                rows[i].gameObject.AddComponent<LayoutElement>().preferredHeight = portraitHeight;
             }
-            Canvas.ForceUpdateCanvases();
-            content.sizeDelta = new Vector2(0f, Mathf.Max(viewport.rect.height, rows.Length * 240f));
+            float contentHeight = rows.Length * portraitHeight + Mathf.Max(0, rows.Length - 1) * vertical.spacing;
+            content.sizeDelta = new Vector2(0f, Mathf.Max(viewport.rect.height, contentHeight));
             var scroll = host.GetComponent<ScrollRect>();
             scroll.horizontal = false;
             scroll.viewport = viewport;
@@ -234,23 +256,24 @@ namespace Project.UI
             return scroll;
         }
 
-        private Card ClonePortraitCard(Transform row)
+        private Card ClonePortraitCard(Transform row, float width, float height)
         {
             var button = Instantiate(cards[0].button, row);
             button.navigation = new Navigation { mode = Navigation.Mode.Automatic };
-            Transform root = button.transform;
-            var card = new Card
-            {
-                button = button,
-                icon = root.Find("Icon").GetComponent<Image>(),
-                frame = root.Find("Frame").GetComponent<Image>(),
-                title = root.Find("Title").GetComponent<TMP_Text>(),
-                passive = root.Find("Passive").GetComponent<TMP_Text>(),
-                stats = root.Find("Stats").GetComponent<TMP_Text>(),
-                stars = new[] { root.Find("RarityStar1").gameObject, root.Find("RarityStar2").gameObject, root.Find("RarityStar3").gameObject }
-            };
-            AddMemoryCardToRow(card, row, 200f, 196f);
-            SetRegion(card.icon.rectTransform, .16f, .3f, .84f, .77f);
+            var card = new Card { button = button };
+            ResolveCardBindings(card, button.transform);
+            AddMemoryCardToRow(card, row, width, height);
+            SetRegion(card.title.rectTransform, .07f, .78f, .93f, .96f);
+            SetRegion(card.icon.rectTransform, .1f, .2f, .9f, .78f);
+            SetRegion(card.stats.rectTransform, .08f, .04f, .92f, .16f);
+            card.stats.alignment = TextAlignmentOptions.Center;
+            card.stats.enableAutoSizing = true;
+            card.stats.fontSizeMin = 12f;
+            card.title.fontSizeMin = 12f;
+            card.passive.gameObject.SetActive(false);
+            if (card.iconFrame != null) card.iconFrame.gameObject.SetActive(false);
+            button.transform.Find("HeaderDivider")?.gameObject.SetActive(false);
+            button.transform.Find("DetailsDivider")?.gameObject.SetActive(false);
             return card;
         }
 
@@ -273,35 +296,23 @@ namespace Project.UI
             var size = slot.GetComponent<LayoutElement>();
             size.preferredWidth = width;
             size.preferredHeight = height;
-            card.button.transform.SetParent(slot.transform, false);
-            SetRegion((RectTransform)card.button.transform, 0f, 0f, 1f, 1f);
-            SetRegion(card.frame.rectTransform, 0f, 0f, 1f, 1f);
-            SetRegion(card.title.rectTransform, .07f, .78f, .93f, .96f);
-            SetRegion(card.icon.rectTransform, .23f, .38f, .77f, .77f);
-            SetRegion(card.passive.rectTransform, .08f, .14f, .92f, .38f);
-            SetRegion(card.stats.rectTransform, .08f, .04f, .92f, .16f);
-            foreach (var star in card.stars)
-                if (star != null) star.SetActive(false);
+            var rect = (RectTransform)card.button.transform;
+            rect.SetParent(slot.transform, false);
+            rect.pivot = new Vector2(.5f, .5f);
+            SetRegion(rect, 0f, 0f, 1f, 1f);
         }
 
-        private static void BindMemoryCard(Card card, string title, Sprite icon, string effect, string detail, Color tint, bool available)
+        private static void BindMemoryCard(Card card, string title, Sprite icon, Color tint, bool available)
         {
             card.title.text = title;
-            card.passive.text = effect;
-            card.stats.text = detail;
-            foreach (TMP_Text label in new[] { card.title, card.passive, card.stats })
-            {
-                label.enableAutoSizing = true;
-                label.fontSizeMin = 12;
-                label.alignment = TextAlignmentOptions.Center;
-                label.raycastTarget = false;
-            }
             card.icon.sprite = icon;
             card.icon.enabled = icon != null;
             card.icon.preserveAspect = true;
             card.icon.color = available ? Color.white : Color.gray;
             card.frame.color = available ? tint : Color.gray;
+            if (card.iconFrame != null) card.iconFrame.color = card.frame.color;
             card.frame.fillCenter = false;
+            if (card.rarityPanel != null) card.rarityPanel.SetActive(false);
             card.button.interactable = available;
         }
 

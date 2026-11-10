@@ -136,9 +136,10 @@ namespace Project.Core.ZoneState
             TryTransitionToRoom(roomId, entranceId);
         }
 
-        public bool TryTransitionToRoom(string roomId, string entranceId = "")
+        public bool TryTransitionToRoom(string roomId, string entranceId = "", RunDifficulty difficulty = RunDifficulty.Normal)
         {
-            return TryBeginTransition(ResolveRoom(roomId), roomId, entranceId);
+            return TryBeginTransition(ResolveRoom(roomId), roomId, entranceId, skipExitWalk: false,
+                allowTrainingContext: false, difficulty: difficulty);
         }
 
         public bool TryTransitionToScene(string sceneName, string entranceId = "")
@@ -257,7 +258,8 @@ namespace Project.Core.ZoneState
             string fallbackKey,
             string entranceId,
             bool skipExitWalk,
-            bool allowTrainingContext)
+            bool allowTrainingContext,
+            RunDifficulty difficulty = RunDifficulty.Normal)
         {
             bool fromTraining = Project.Training.TrainingSession.IsTrainingContext;
             if (fromTraining && !allowTrainingContext) return false;
@@ -287,7 +289,7 @@ namespace Project.Core.ZoneState
             {
                 Project.Training.TrainingSession.Instance.EndSession();
             }
-            StartCoroutine(TransitionRoutine(loadKey, room, targetEntrance, useLayoutSwap, skipExitWalk));
+            StartCoroutine(TransitionRoutine(loadKey, room, targetEntrance, useLayoutSwap, skipExitWalk, difficulty));
             return true;
         }
 
@@ -352,7 +354,8 @@ namespace Project.Core.ZoneState
         }
 
         private IEnumerator TransitionRoutine(
-            string sceneName, RoomData targetRoom, string entranceId, bool useLayoutSwap, bool skipExitWalk)
+            string sceneName, RoomData targetRoom, string entranceId, bool useLayoutSwap, bool skipExitWalk,
+            RunDifficulty difficulty)
         {
             isTransitioning = true;
             Time.timeScale = 1f;
@@ -368,7 +371,6 @@ namespace Project.Core.ZoneState
 
             try
             {
-                GameRunManager.Instance?.SaveCheckpointIfInLobby();
                 EnsureFadeOverlay();
 
                 if (transitionOutSFX != null && GameAudioManager.Instance != null)
@@ -401,6 +403,14 @@ namespace Project.Core.ZoneState
                 // Every room change (scene load OR layout swap) fades to full black first.
                 yield return exitFade;
                 SetFadeAlpha(1f);
+                GameRunManager run = GameRunManager.Instance;
+                if (run != null && run.IsInLobby)
+                {
+                    if (targetRoom != null && sceneName != run.LobbySceneName &&
+                        (useLayoutSwap || Application.CanStreamedLevelBeLoaded(sceneName)))
+                        RunProgressionManager.EnsureInstance().LockDifficulty(difficulty);
+                    run.SaveCheckpointIfInLobby();
+                }
                 ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
 
                 if (useLayoutSwap)

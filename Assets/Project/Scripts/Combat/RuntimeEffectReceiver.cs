@@ -124,6 +124,17 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return count;
     }
 
+    internal void CopyActiveEffectKeys(HashSet<string> keys)
+    {
+        foreach (RuntimeEffectInstance instance in activeEffects)
+        {
+            if (instance?.definition == null) continue;
+            keys.Add(instance.StackKey);
+            keys.Add(RuntimeEffectRuntimeUtility.GetStableId(instance.definition, instance.recipe));
+            keys.Add(instance.definition.StableId);
+        }
+    }
+
     public int RemoveEffectStacks(
         string effectIdOrStackKey,
         int count = 1,

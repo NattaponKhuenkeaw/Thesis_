@@ -67,6 +67,7 @@ namespace Project.Core
         public GameRunPhase CurrentPhase => currentPhase;
         public bool IsBoundaryLoading => isBoundaryLoading;
         public string LobbySceneName => lobbySceneName;
+        internal bool IsInLobby => string.Equals(SceneManager.GetActiveScene().name, lobbySceneName, StringComparison.Ordinal);
         public double PlaytimeSeconds { get; private set; }
         public int CurrentRoomNumber { get; private set; }
         public int CurrentRoomBiomeIndex { get; private set; }
@@ -253,9 +254,12 @@ namespace Project.Core
                 return;
             }
 
-            if (inventory != null && inventory.TryReadBossLobbyCheckpoint(out int biomeIndex, out double playtimeSeconds))
+            if (inventory != null && inventory.TryReadBossLobbyCheckpoint(out int biomeIndex, out double playtimeSeconds,
+                out RunDifficulty difficulty, out bool difficultyLocked))
             {
-                RunProgressionManager.EnsureInstance()?.SetCurrentBiomeIndex(biomeIndex);
+                RunProgressionManager progression = RunProgressionManager.EnsureInstance();
+                progression.SetCurrentBiomeIndex(biomeIndex);
+                progression.RestoreDifficulty(difficulty, difficultyLocked);
                 PlaytimeSeconds = playtimeSeconds;
             }
         }
@@ -309,23 +313,24 @@ namespace Project.Core
 
             isStartingRun = true;
 
-            int biomeIndex = RunProgressionManager.EnsureInstance() != null
-                ? RunProgressionManager.Instance.CurrentBiomeIndex
-                : 0;
+            RunProgressionManager progression = RunProgressionManager.EnsureInstance();
+            int biomeIndex = progression.CurrentBiomeIndex;
+            RunDifficulty difficulty = progression.Difficulty;
             bool keepBiome = !runInventory.DeathForcesLevelOne;
 
             RunEndController runEndController = RunEndController.Instance ?? FindFirstObjectByType<RunEndController>();
             runEndController?.ResetRunTracking();
             if (keepBiome)
             {
-                RunProgressionManager.EnsureInstance()?.SetCurrentBiomeIndex(biomeIndex);
+                progression.SetCurrentBiomeIndex(biomeIndex);
+                progression.RestoreDifficulty(difficulty, true);
             }
             else
             {
                 runInventory.ClearDeathForcesLevelOne();
-                RunProgressionManager.EnsureInstance()?.ResetRun();
+                progression.ResetRun();
+                progression.LockDifficulty(RunDifficulty.Normal);
             }
-
             TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
             if (teamLoader != null)
             {

@@ -462,9 +462,9 @@ MonoBehaviour:
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
           presentation:
             effectId: 
-            displayName: 
+            displayName: Crite Rate
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -507,6 +507,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -526,6 +527,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -558,6 +560,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -580,6 +583,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -618,9 +622,9 @@ MonoBehaviour:
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
           presentation:
             effectId: 
-            displayName: 
+            displayName: Crit Damage
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -663,6 +667,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -682,6 +687,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -714,6 +720,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -736,6 +743,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -814,6 +822,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -833,6 +842,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -865,6 +875,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -887,6 +898,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -1088,6 +1100,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -1107,6 +1120,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -1139,6 +1153,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0
@@ -1161,6 +1176,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 0
@@ -1322,6 +1338,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -1341,6 +1358,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -1373,6 +1391,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -1395,6 +1414,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -1521,6 +1541,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -1540,6 +1561,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -1572,6 +1594,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -1594,6 +1617,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -1711,7 +1735,7 @@ MonoBehaviour:
             effectId: 
             displayName: 
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -1740,7 +1764,7 @@ MonoBehaviour:
               operation: 0
               sourceStat: 1
               statRatioValueSource: 0
-              value: 31
+              value: 26
               maxIncrease: 0
             overrideDamageModifier: 0
             damageModifier:
@@ -1754,6 +1778,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -1773,6 +1798,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -1805,6 +1831,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -1827,6 +1854,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -1910,7 +1938,7 @@ MonoBehaviour:
             effectId: 
             displayName: 
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -1939,7 +1967,7 @@ MonoBehaviour:
               operation: 0
               sourceStat: 1
               statRatioValueSource: 0
-              value: 64
+              value: 48
               maxIncrease: 0
             overrideDamageModifier: 0
             damageModifier:
@@ -1953,6 +1981,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -1972,6 +2001,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -2004,6 +2034,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -2026,6 +2057,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -2143,7 +2175,7 @@ MonoBehaviour:
             effectId: 
             displayName: 
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -2172,7 +2204,7 @@ MonoBehaviour:
               operation: 0
               sourceStat: 1
               statRatioValueSource: 0
-              value: 31
+              value: 26
               maxIncrease: 0
             overrideDamageModifier: 0
             damageModifier:
@@ -2186,6 +2218,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -2205,6 +2238,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -2237,6 +2271,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -2259,6 +2294,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -2342,7 +2378,7 @@ MonoBehaviour:
             effectId: 
             displayName: 
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -2371,7 +2407,7 @@ MonoBehaviour:
               operation: 0
               sourceStat: 1
               statRatioValueSource: 0
-              value: 64
+              value: 48
               maxIncrease: 0
             overrideDamageModifier: 0
             damageModifier:
@@ -2385,6 +2421,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -2404,6 +2441,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -2436,6 +2474,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -2458,6 +2497,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -2541,7 +2581,7 @@ MonoBehaviour:
             effectId: 
             displayName: 
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: 31d890a2823345a428cdd1e65dace3a2, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -2584,6 +2624,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -2603,6 +2644,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -2635,6 +2677,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -2657,6 +2700,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -2863,6 +2907,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -2882,6 +2927,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -2914,6 +2960,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -2936,6 +2983,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -3062,6 +3110,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -3081,6 +3130,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -3113,6 +3163,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -3135,6 +3186,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -3291,6 +3343,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -3310,6 +3363,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -3342,6 +3396,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -3364,6 +3419,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -3710,7 +3766,7 @@ MonoBehaviour:
               operation: 3
               sourceStat: 2
               statRatioValueSource: 0
-              value: 5
+              value: 2
               maxIncrease: 900
             overrideDamageModifier: 0
             damageModifier:
@@ -3724,6 +3780,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -3743,6 +3800,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -3775,6 +3833,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -3797,6 +3856,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -3892,7 +3952,7 @@ MonoBehaviour:
         actionName: 
         triggerChance: 1
         internalCooldown: 1.5
-        damageMultiplierOverride: 6.5
+        damageMultiplierOverride: 5
         hitboxScaleMultiplier: 1
         auraEnergyRewardOnHit: 3
         maxSimultaneousActive: 1
@@ -3908,7 +3968,7 @@ MonoBehaviour:
       nodeId: cg.ultimate.lv5
       nodeName: Ultimate Lv.5
       description: Shadow Assist triggers at 100% chance and Shadow Attack deals
-        650% of Camera Girl's DEF.
+        500% of Camera Girl's DEF.
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: cg.ult
@@ -3916,7 +3976,7 @@ MonoBehaviour:
         priority: 5
         appendNote: 1
         description: Shadow Assist triggers at 100% chance and Shadow Attack deals
-          650% of Camera Girl's DEF.
+          500% of Camera Girl's DEF.
       track: 1
       level: 5
       fragmentCost: 1
@@ -3966,7 +4026,7 @@ MonoBehaviour:
             effectId: 
             displayName: 
             showRemainingTime: 0
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: 50e134dab34d29b46956f7a61a913a76, type: 3}
             fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
             followActiveCharacter: 0
           policy:
@@ -3995,7 +4055,7 @@ MonoBehaviour:
               operation: 0
               sourceStat: 1
               statRatioValueSource: 0
-              value: 100
+              value: 40
               maxIncrease: 0
             overrideDamageModifier: 0
             damageModifier:
@@ -4009,6 +4069,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -4028,6 +4089,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -4060,6 +4122,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -4082,6 +4145,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -4140,14 +4204,14 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: cg.ultimate.lv6
       nodeName: Ultimate Lv.6
-      description: Send Da Btch grants Camera Girl +100% ADI for 20s.
+      description: Send Da Btch grants Camera Girl +40% ADI for 20s.
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: cg.ult
         noteId: cg.ultimate.lv6
         priority: 6
         appendNote: 1
-        description: Send Da Btch grants Camera Girl +100% ADI for 20s.
+        description: Send Da Btch grants Camera Girl +40% ADI for 20s.
       track: 1
       level: 6
       fragmentCost: 1
@@ -4234,6 +4298,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -4253,6 +4318,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -4285,6 +4351,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -4307,6 +4374,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -4371,8 +4439,14 @@ MonoBehaviour:
               dashCooldownMultiplier: 1
               overrideDefense: 0
               evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
+              overrideStatModifiers: 1
+              statModifiers:
+              - target: 2
+                operation: 1
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 0.8
+                maxIncrease: 0
               overrideDamageModifier: 0
               damageModifier:
                 filter:
@@ -4385,11 +4459,12 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
                 incomingDamageTakenPercentAdd: 0
-              overrideDamageInput: 1
+              overrideDamageInput: 0
               damageInput:
                 applyToAllDeliveries: 0
                 overrideDelivery: 0
@@ -4404,9 +4479,10 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
+                defenderDefensePercentAdd: -20
                 defenderDamageResistancePercentAdd: 0
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
@@ -4436,6 +4512,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -4458,306 +4535,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                chance: 1
-                internalCooldown: 0
-                sharedCooldownTag: 
-                attackRatio: 0.2
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 1
-                targetMaxHpDamageCapRatio: 1
-                elementType: 0
-              overrideProjectile: 0
-              projectile:
-                roundRobinTargets: 0
-                useActivePlayerOrigin: 0
-                projectile: {fileID: 0}
-                tickInterval: 1
-                category: 1
-                actionId: 
-                actionName: 
-              overrideStatus: 0
-              status:
-                status: 5
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-          - recipeId: cg.captured.defense.Dot
-            definition: {fileID: 11400000, guid: c2e9f48d001b4314baa77538c4175faa, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              showRemainingTime: 0
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-              followActiveCharacter: 0
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 1
-              refreshDurationOnReapply: 1
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: cg.captured.defense.Dot
-              requiredSourceEffectKey: 
-            parameters:
-              overrideReaction: 0
-              reaction:
-                rid: -2
-              overrideMovement: 0
-              dashCooldownMultiplier: 1
-              overrideDefense: 0
-              evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
-              overrideDamageModifier: 0
-              damageModifier:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 0
-              overrideDamageInput: 1
-              damageInput:
-                applyToAllDeliveries: 0
-                overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 1
-                  delivery: 1
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: 0
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-                tickInterval: 1
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                damageDealtRatio: 0.5
-                lowHpThreshold: 0.3
-                lowHpMultiplier: 2
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                splash: {fileID: 0}
-                applyNativeDot: 0
-                targetAllRoomEnemies: 0
-                oncePerExecution: 0
-                confirmedDamageRatio: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                chance: 1
-                internalCooldown: 0
-                sharedCooldownTag: 
-                attackRatio: 0.2
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 1
-                targetMaxHpDamageCapRatio: 1
-                elementType: 0
-              overrideProjectile: 0
-              projectile:
-                roundRobinTargets: 0
-                useActivePlayerOrigin: 0
-                projectile: {fileID: 0}
-                tickInterval: 1
-                category: 1
-                actionId: 
-                actionName: 
-              overrideStatus: 0
-              status:
-                status: 5
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-          - recipeId: cg.captured.defense.Additional
-            definition: {fileID: 11400000, guid: c2e9f48d001b4314baa77538c4175faa, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              showRemainingTime: 0
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-              followActiveCharacter: 0
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 1
-              refreshDurationOnReapply: 1
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: cg.captured.defense.Additional
-              requiredSourceEffectKey: 
-            parameters:
-              overrideReaction: 0
-              reaction:
-                rid: -2
-              overrideMovement: 0
-              dashCooldownMultiplier: 1
-              overrideDefense: 0
-              evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
-              overrideDamageModifier: 0
-              damageModifier:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 0
-              overrideDamageInput: 1
-              damageInput:
-                applyToAllDeliveries: 0
-                overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 1
-                  delivery: 2
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: 0
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-                tickInterval: 1
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                damageDealtRatio: 0.5
-                lowHpThreshold: 0.3
-                lowHpMultiplier: 2
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                splash: {fileID: 0}
-                applyNativeDot: 0
-                targetAllRoomEnemies: 0
-                oncePerExecution: 0
-                confirmedDamageRatio: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -4877,6 +4655,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -4896,6 +4675,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -4928,6 +4708,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -4950,6 +4731,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -5014,8 +4796,14 @@ MonoBehaviour:
               dashCooldownMultiplier: 1
               overrideDefense: 0
               evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
+              overrideStatModifiers: 1
+              statModifiers:
+              - target: 2
+                operation: 1
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 0.8
+                maxIncrease: 0
               overrideDamageModifier: 0
               damageModifier:
                 filter:
@@ -5028,11 +4816,12 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
                 incomingDamageTakenPercentAdd: 0
-              overrideDamageInput: 1
+              overrideDamageInput: 0
               damageInput:
                 applyToAllDeliveries: 0
                 overrideDelivery: 0
@@ -5047,6 +4836,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 defenderDefensePercentAdd: -40
@@ -5079,6 +4869,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -5101,306 +4892,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                chance: 1
-                internalCooldown: 0
-                sharedCooldownTag: 
-                attackRatio: 0.2
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 1
-                targetMaxHpDamageCapRatio: 1
-                elementType: 0
-              overrideProjectile: 0
-              projectile:
-                roundRobinTargets: 0
-                useActivePlayerOrigin: 0
-                projectile: {fileID: 0}
-                tickInterval: 1
-                category: 1
-                actionId: 
-                actionName: 
-              overrideStatus: 0
-              status:
-                status: 5
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-          - recipeId: cg.captured.defense.Dot
-            definition: {fileID: 11400000, guid: c2e9f48d001b4314baa77538c4175faa, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              showRemainingTime: 0
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-              followActiveCharacter: 0
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 1
-              refreshDurationOnReapply: 1
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: cg.captured.defense.Dot
-              requiredSourceEffectKey: 
-            parameters:
-              overrideReaction: 0
-              reaction:
-                rid: -2
-              overrideMovement: 0
-              dashCooldownMultiplier: 1
-              overrideDefense: 0
-              evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
-              overrideDamageModifier: 0
-              damageModifier:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 0
-              overrideDamageInput: 1
-              damageInput:
-                applyToAllDeliveries: 0
-                overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 1
-                  delivery: 1
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: 0
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-                tickInterval: 1
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                damageDealtRatio: 0.5
-                lowHpThreshold: 0.3
-                lowHpMultiplier: 2
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                splash: {fileID: 0}
-                applyNativeDot: 0
-                targetAllRoomEnemies: 0
-                oncePerExecution: 0
-                confirmedDamageRatio: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                chance: 1
-                internalCooldown: 0
-                sharedCooldownTag: 
-                attackRatio: 0.2
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 1
-                targetMaxHpDamageCapRatio: 1
-                elementType: 0
-              overrideProjectile: 0
-              projectile:
-                roundRobinTargets: 0
-                useActivePlayerOrigin: 0
-                projectile: {fileID: 0}
-                tickInterval: 1
-                category: 1
-                actionId: 
-                actionName: 
-              overrideStatus: 0
-              status:
-                status: 5
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-          - recipeId: cg.captured.defense.Additional
-            definition: {fileID: 11400000, guid: c2e9f48d001b4314baa77538c4175faa, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              showRemainingTime: 0
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-              followActiveCharacter: 0
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 1
-              refreshDurationOnReapply: 1
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: cg.captured.defense.Additional
-              requiredSourceEffectKey: 
-            parameters:
-              overrideReaction: 0
-              reaction:
-                rid: -2
-              overrideMovement: 0
-              dashCooldownMultiplier: 1
-              overrideDefense: 0
-              evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
-              overrideDamageModifier: 0
-              damageModifier:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 0
-              overrideDamageInput: 1
-              damageInput:
-                applyToAllDeliveries: 0
-                overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 1
-                  delivery: 2
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: 0
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-                tickInterval: 1
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                damageDealtRatio: 0.5
-                lowHpThreshold: 0.3
-                lowHpMultiplier: 2
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                splash: {fileID: 0}
-                applyNativeDot: 0
-                targetAllRoomEnemies: 0
-                oncePerExecution: 0
-                confirmedDamageRatio: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -5459,7 +4951,7 @@ MonoBehaviour:
       nodeId: cg.passive.lv1
       nodeName: Expose Weakness
       description: Attack3 or Capture Da Soul marks hit enemies as Captured for 10s,
-        reducing their DEF by 40%.
+        reducing their DEF by 20%.
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: passive
@@ -5467,7 +4959,7 @@ MonoBehaviour:
         priority: 1
         appendNote: 1
         description: Attack3 or Capture Da Soul marks hit enemies as Captured for
-          10s, reducing their DEF by 40%.
+          10s, reducing their DEF by 20%.
       track: 2
       level: 1
       fragmentCost: 1
@@ -5554,6 +5046,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -5573,6 +5066,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -5605,6 +5099,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -5627,6 +5122,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -5669,11 +5165,11 @@ MonoBehaviour:
               displayName: 
               showRemainingTime: 0
               icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
+              fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
               followActiveCharacter: 0
             policy:
-              kind: 0
-              appliesOn: 0
+              kind: 1
+              appliesOn: 1
               durationType: 0
               durationSeconds: 10
               stackMode: 1
@@ -5705,15 +5201,16 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 0
+                incomingDamageTakenPercentAdd: 20
               overrideDamageInput: 1
               damageInput:
                 applyToAllDeliveries: 0
                 overrideDelivery: 0
-                delivery: 0
+                delivery: 1
                 filter:
                   filterByDelivery: 1
                   delivery: 0
@@ -5724,10 +5221,11 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: -40
+                defenderDefensePercentAdd: -20
+                defenderDamageResistancePercentAdd: -20
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
                 ignoreTypeReduction: 0
@@ -5756,6 +5254,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -5778,6 +5277,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -5822,8 +5322,8 @@ MonoBehaviour:
               fieldVisualPrefab: {fileID: 0}
               followActiveCharacter: 0
             policy:
-              kind: 0
-              appliesOn: 0
+              kind: 1
+              appliesOn: 1
               durationType: 0
               durationSeconds: 10
               stackMode: 1
@@ -5855,6 +5355,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
@@ -5863,7 +5364,7 @@ MonoBehaviour:
               damageInput:
                 applyToAllDeliveries: 0
                 overrideDelivery: 0
-                delivery: 0
+                delivery: 2
                 filter:
                   filterByDelivery: 1
                   delivery: 1
@@ -5874,10 +5375,11 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: -40
+                defenderDefensePercentAdd: -20
+                defenderDamageResistancePercentAdd: -20
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
                 ignoreTypeReduction: 0
@@ -5906,6 +5408,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -5928,6 +5431,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -5962,8 +5466,8 @@ MonoBehaviour:
                 valueRatio: 0.1
                 flatValue: 0
                 useSourceStats: 1
-          - recipeId: cg.captured.defense.Additional
-            definition: {fileID: 11400000, guid: c2e9f48d001b4314baa77538c4175faa, type: 2}
+          - recipeId: cg.captured.defense.Mod
+            definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
             presentation:
               effectId: 
               displayName: 
@@ -5972,8 +5476,8 @@ MonoBehaviour:
               fieldVisualPrefab: {fileID: 0}
               followActiveCharacter: 0
             policy:
-              kind: 0
-              appliesOn: 0
+              kind: 1
+              appliesOn: 1
               durationType: 0
               durationSeconds: 10
               stackMode: 1
@@ -5981,7 +5485,7 @@ MonoBehaviour:
               refreshDurationOnReapply: 1
               stackable: 0
               removeOnOwnerDamaged: 0
-              stackKey: cg.captured.defense.Additional
+              stackKey: cg.captured.defense.Mod
               requiredSourceEffectKey: 
             parameters:
               overrideReaction: 0
@@ -6005,6 +5509,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
@@ -6013,138 +5518,7 @@ MonoBehaviour:
               damageInput:
                 applyToAllDeliveries: 0
                 overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 1
-                  delivery: 2
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: -40
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-                tickInterval: 1
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                damageDealtRatio: 0.5
-                lowHpThreshold: 0.3
-                lowHpMultiplier: 2
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                splash: {fileID: 0}
-                applyNativeDot: 0
-                targetAllRoomEnemies: 0
-                oncePerExecution: 0
-                confirmedDamageRatio: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                chance: 1
-                internalCooldown: 0
-                sharedCooldownTag: 
-                attackRatio: 0.2
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 1
-                targetMaxHpDamageCapRatio: 1
-                elementType: 0
-              overrideProjectile: 0
-              projectile:
-                roundRobinTargets: 0
-                useActivePlayerOrigin: 0
-                projectile: {fileID: 0}
-                tickInterval: 1
-                category: 1
-                actionId: 
-                actionName: 
-              overrideStatus: 0
-              status:
-                status: 5
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-          - recipeId: cg.captured.Dot
-            definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              showRemainingTime: 0
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-              followActiveCharacter: 0
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 1
-              refreshDurationOnReapply: 1
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: cg.captured.Dot
-              requiredSourceEffectKey: 
-            parameters:
-              overrideReaction: 0
-              reaction:
-                rid: -2
-              overrideMovement: 0
-              dashCooldownMultiplier: 1
-              overrideDefense: 0
-              evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
-              overrideDamageModifier: 1
-              damageModifier:
+                delivery: 2
                 filter:
                   filterByDelivery: 1
                   delivery: 1
@@ -6155,29 +5529,11 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 40
-              overrideDamageInput: 0
-              damageInput:
-                applyToAllDeliveries: 0
-                overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: 0
-                defenderDamageResistancePercentAdd: 0
+                defenderDefensePercentAdd: -20
+                defenderDamageResistancePercentAdd: -20
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
                 ignoreTypeReduction: 0
@@ -6206,6 +5562,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -6228,156 +5585,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                chance: 1
-                internalCooldown: 0
-                sharedCooldownTag: 
-                attackRatio: 0.2
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 1
-                targetMaxHpDamageCapRatio: 1
-                elementType: 0
-              overrideProjectile: 0
-              projectile:
-                roundRobinTargets: 0
-                useActivePlayerOrigin: 0
-                projectile: {fileID: 0}
-                tickInterval: 1
-                category: 1
-                actionId: 
-                actionName: 
-              overrideStatus: 0
-              status:
-                status: 5
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-          - recipeId: cg.captured.Additional
-            definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              showRemainingTime: 0
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-              followActiveCharacter: 0
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 1
-              refreshDurationOnReapply: 1
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: cg.captured.Additional
-              requiredSourceEffectKey: 
-            parameters:
-              overrideReaction: 0
-              reaction:
-                rid: -2
-              overrideMovement: 0
-              dashCooldownMultiplier: 1
-              overrideDefense: 0
-              evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
-              overrideDamageModifier: 1
-              damageModifier:
-                filter:
-                  filterByDelivery: 1
-                  delivery: 2
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 40
-              overrideDamageInput: 0
-              damageInput:
-                applyToAllDeliveries: 0
-                overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: 0
-                defenderDamageResistancePercentAdd: 0
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-                tickInterval: 1
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                damageDealtRatio: 0.5
-                lowHpThreshold: 0.3
-                lowHpMultiplier: 2
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                splash: {fileID: 0}
-                applyNativeDot: 0
-                targetAllRoomEnemies: 0
-                oncePerExecution: 0
-                confirmedDamageRatio: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -6497,6 +5705,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -6516,6 +5725,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -6548,6 +5758,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -6570,6 +5781,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -6612,11 +5824,11 @@ MonoBehaviour:
               displayName: 
               showRemainingTime: 0
               icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
+              fieldVisualPrefab: {fileID: 1808717883460548045, guid: 1870efd1a41bdc846a9773df31d2827f, type: 3}
               followActiveCharacter: 0
             policy:
-              kind: 0
-              appliesOn: 0
+              kind: 1
+              appliesOn: 1
               durationType: 0
               durationSeconds: 10
               stackMode: 1
@@ -6648,15 +5860,16 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 0
+                incomingDamageTakenPercentAdd: 20
               overrideDamageInput: 1
               damageInput:
                 applyToAllDeliveries: 0
                 overrideDelivery: 0
-                delivery: 0
+                delivery: 1
                 filter:
                   filterByDelivery: 1
                   delivery: 0
@@ -6667,10 +5880,11 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: -40
+                defenderDefensePercentAdd: -20
+                defenderDamageResistancePercentAdd: -20
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
                 ignoreTypeReduction: 0
@@ -6699,6 +5913,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -6721,6 +5936,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -6765,8 +5981,8 @@ MonoBehaviour:
               fieldVisualPrefab: {fileID: 0}
               followActiveCharacter: 0
             policy:
-              kind: 0
-              appliesOn: 0
+              kind: 1
+              appliesOn: 1
               durationType: 0
               durationSeconds: 10
               stackMode: 1
@@ -6798,6 +6014,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
@@ -6806,7 +6023,7 @@ MonoBehaviour:
               damageInput:
                 applyToAllDeliveries: 0
                 overrideDelivery: 0
-                delivery: 0
+                delivery: 2
                 filter:
                   filterByDelivery: 1
                   delivery: 1
@@ -6817,10 +6034,11 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: -40
+                defenderDefensePercentAdd: -20
+                defenderDamageResistancePercentAdd: -20
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
                 ignoreTypeReduction: 0
@@ -6849,6 +6067,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -6871,6 +6090,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -6905,8 +6125,8 @@ MonoBehaviour:
                 valueRatio: 0.1
                 flatValue: 0
                 useSourceStats: 1
-          - recipeId: cg.captured.defense.Additional
-            definition: {fileID: 11400000, guid: c2e9f48d001b4314baa77538c4175faa, type: 2}
+          - recipeId: cg.captured.defense.Mod
+            definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
             presentation:
               effectId: 
               displayName: 
@@ -6915,8 +6135,8 @@ MonoBehaviour:
               fieldVisualPrefab: {fileID: 0}
               followActiveCharacter: 0
             policy:
-              kind: 0
-              appliesOn: 0
+              kind: 1
+              appliesOn: 1
               durationType: 0
               durationSeconds: 10
               stackMode: 1
@@ -6924,7 +6144,7 @@ MonoBehaviour:
               refreshDurationOnReapply: 1
               stackable: 0
               removeOnOwnerDamaged: 0
-              stackKey: cg.captured.defense.Additional
+              stackKey: cg.captured.defense.Mod
               requiredSourceEffectKey: 
             parameters:
               overrideReaction: 0
@@ -6948,6 +6168,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
@@ -6956,138 +6177,7 @@ MonoBehaviour:
               damageInput:
                 applyToAllDeliveries: 0
                 overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 1
-                  delivery: 2
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: -40
-                defenderDamageResistancePercentAdd: -40
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-                tickInterval: 1
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                damageDealtRatio: 0.5
-                lowHpThreshold: 0.3
-                lowHpMultiplier: 2
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                splash: {fileID: 0}
-                applyNativeDot: 0
-                targetAllRoomEnemies: 0
-                oncePerExecution: 0
-                confirmedDamageRatio: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                chance: 1
-                internalCooldown: 0
-                sharedCooldownTag: 
-                attackRatio: 0.2
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 1
-                targetMaxHpDamageCapRatio: 1
-                elementType: 0
-              overrideProjectile: 0
-              projectile:
-                roundRobinTargets: 0
-                useActivePlayerOrigin: 0
-                projectile: {fileID: 0}
-                tickInterval: 1
-                category: 1
-                actionId: 
-                actionName: 
-              overrideStatus: 0
-              status:
-                status: 5
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-          - recipeId: cg.captured.Dot
-            definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              showRemainingTime: 0
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-              followActiveCharacter: 0
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 1
-              refreshDurationOnReapply: 1
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: cg.captured.Dot
-              requiredSourceEffectKey: 
-            parameters:
-              overrideReaction: 0
-              reaction:
-                rid: -2
-              overrideMovement: 0
-              dashCooldownMultiplier: 1
-              overrideDefense: 0
-              evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
-              overrideDamageModifier: 1
-              damageModifier:
+                delivery: 2
                 filter:
                   filterByDelivery: 1
                   delivery: 1
@@ -7098,29 +6188,11 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 40
-              overrideDamageInput: 0
-              damageInput:
-                applyToAllDeliveries: 0
-                overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: 0
-                defenderDamageResistancePercentAdd: 0
+                defenderDefensePercentAdd: -20
+                defenderDamageResistancePercentAdd: -20
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
                 ignoreTypeReduction: 0
@@ -7149,6 +6221,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -7171,156 +6244,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                chance: 1
-                internalCooldown: 0
-                sharedCooldownTag: 
-                attackRatio: 0.2
-                sourceStatDamageSource: 0
-                sourceStatRatio: 0
-                targetMaxHpRatio: 0
-                sourceRuntimeEffectStackKey: 
-                attackRatioPerSourceRuntimeEffectStack: 0
-                maxSourceRuntimeEffectStacks: 0
-                capTargetMaxHpDamage: 0
-                targetMaxHpDamageCapSource: 1
-                targetMaxHpDamageCapRatio: 1
-                elementType: 0
-              overrideProjectile: 0
-              projectile:
-                roundRobinTargets: 0
-                useActivePlayerOrigin: 0
-                projectile: {fileID: 0}
-                tickInterval: 1
-                category: 1
-                actionId: 
-                actionName: 
-              overrideStatus: 0
-              status:
-                status: 5
-              overrideShield: 0
-              shield:
-                valueSource: 0
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-          - recipeId: cg.captured.Additional
-            definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-            presentation:
-              effectId: 
-              displayName: 
-              showRemainingTime: 0
-              icon: {fileID: 0}
-              fieldVisualPrefab: {fileID: 0}
-              followActiveCharacter: 0
-            policy:
-              kind: 0
-              appliesOn: 0
-              durationType: 0
-              durationSeconds: 10
-              stackMode: 1
-              stackLimit: 1
-              refreshDurationOnReapply: 1
-              stackable: 0
-              removeOnOwnerDamaged: 0
-              stackKey: cg.captured.Additional
-              requiredSourceEffectKey: 
-            parameters:
-              overrideReaction: 0
-              reaction:
-                rid: -2
-              overrideMovement: 0
-              dashCooldownMultiplier: 1
-              overrideDefense: 0
-              evasionChanceAdd: 0
-              overrideStatModifiers: 0
-              statModifiers: []
-              overrideDamageModifier: 1
-              damageModifier:
-                filter:
-                  filterByDelivery: 1
-                  delivery: 2
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                outgoingDamagePercentAdd: 0
-                incomingDamageTakenPercentAdd: 40
-              overrideDamageInput: 0
-              damageInput:
-                applyToAllDeliveries: 0
-                overrideDelivery: 0
-                delivery: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                defenderDefensePercentAdd: 0
-                defenderDamageResistancePercentAdd: 0
-                ignoreDefense: 0
-                ignoreDamageResistance: 0
-                ignoreTypeReduction: 0
-              overridePeriodicHeal: 0
-              periodicHeal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-                tickInterval: 1
-              overrideHeal: 0
-              heal:
-                valueSource: 1
-                valueRatio: 0.1
-                flatValue: 0
-                useSourceStats: 1
-              overrideLifesteal: 0
-              lifesteal:
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
-                  requiredDamageTags: 0
-                  requireCriticalHit: 0
-                damageDealtRatio: 0.5
-                lowHpThreshold: 0.3
-                lowHpMultiplier: 2
-              overrideAdditionalDamage: 0
-              additionalDamage:
-                splash: {fileID: 0}
-                applyNativeDot: 0
-                targetAllRoomEnemies: 0
-                oncePerExecution: 0
-                confirmedDamageRatio: 0
-                filter:
-                  filterByDelivery: 0
-                  delivery: 0
-                  filterByElement: 0
-                  elementType: 0
-                  filterByCategory: 0
-                  category: 0
-                  actionId: 
-                  actionIds: []
-                  requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -7378,16 +6302,16 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: cg.passive.lv2
       nodeName: Armor Fracture
-      description: Captured reduces DEF and RES by 40% and increases incoming DOT
-        and Additional damage by 40% for 10s.
+      description: Captured reduces DEF and RES by 20% and increases incoming DOT
+        and Additional damage by 20% for 10s.
       skillPanelDescriptionOverride: 
       kitInfoPatches:
       - entryId: passive
         noteId: cg.passive.lv2
         priority: 2
         appendNote: 1
-        description: Captured reduces DEF and RES by 40% and increases incoming DOT
-          and Additional damage by 40% for 10s.
+        description: Captured reduces DEF and RES by 20% and increases incoming DOT
+          and Additional damage by 20% for 10s.
       track: 2
       level: 2
       fragmentCost: 1
@@ -7590,6 +6514,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -7609,6 +6534,7 @@ MonoBehaviour:
                 actionId: Skill.super.ex
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -7641,6 +6567,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -7663,6 +6590,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -7851,6 +6779,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -7870,6 +6799,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -7902,6 +6832,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -7924,6 +6855,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -8079,6 +7011,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               outgoingDamagePercentAdd: 0
@@ -8098,6 +7031,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               defenderDefensePercentAdd: 0
@@ -8130,6 +7064,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               damageDealtRatio: 0.5
@@ -8152,6 +7087,7 @@ MonoBehaviour:
                 actionId: 
                 actionIds: []
                 requiredTargetEffectKey: 
+                requireTargetEffectBeforeHit: 0
                 requiredDamageTags: 0
                 requireCriticalHit: 0
               chance: 1
@@ -8325,6 +7261,7 @@ MonoBehaviour:
           actionId: 
           actionIds: []
           requiredTargetEffectKey: cg.captured
+          requireTargetEffectBeforeHit: 0
           requiredDamageTags: 0
           requireCriticalHit: 0
         internalCooldown: 1.5
@@ -8373,6 +7310,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
@@ -8392,6 +7330,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 defenderDefensePercentAdd: 0
@@ -8424,6 +7363,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -8446,6 +7386,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -8505,6 +7446,7 @@ MonoBehaviour:
           - cg.skill
           - cg.skill.ex
           requiredTargetEffectKey: 
+          requireTargetEffectBeforeHit: 0
           requiredDamageTags: 0
           requireCriticalHit: 0
         internalCooldown: 0
@@ -8553,6 +7495,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
@@ -8572,6 +7515,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 defenderDefensePercentAdd: 0
@@ -8604,6 +7548,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -8626,6 +7571,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: cg.captured
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -8713,6 +7659,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
@@ -8732,6 +7679,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 defenderDefensePercentAdd: 0
@@ -8764,6 +7712,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -8786,6 +7735,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1
@@ -8793,7 +7743,7 @@ MonoBehaviour:
                 sharedCooldownTag: 
                 attackRatio: 0
                 sourceStatDamageSource: 2
-                sourceStatRatio: 3.5
+                sourceStatRatio: 2.5
                 targetMaxHpRatio: 0
                 sourceRuntimeEffectStackKey: 
                 attackRatioPerSourceRuntimeEffectStack: 0
@@ -8843,6 +7793,7 @@ MonoBehaviour:
           actionId: 
           actionIds: []
           requiredTargetEffectKey: cg.captured
+          requireTargetEffectBeforeHit: 0
           requiredDamageTags: 0
           requireCriticalHit: 0
         internalCooldown: 0
@@ -8903,6 +7854,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 outgoingDamagePercentAdd: 0
@@ -8922,6 +7874,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 defenderDefensePercentAdd: 0
@@ -8954,6 +7907,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 damageDealtRatio: 0.5
@@ -8976,6 +7930,7 @@ MonoBehaviour:
                   actionId: 
                   actionIds: []
                   requiredTargetEffectKey: 
+                  requireTargetEffectBeforeHit: 0
                   requiredDamageTags: 0
                   requireCriticalHit: 0
                 chance: 1

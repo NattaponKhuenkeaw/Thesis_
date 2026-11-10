@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ART-R-004
   itemName: Faded Hourglass
   description: 
-  icon: {fileID: 21300000, guid: 617a139b13ca83642963dc59f06ec87d, type: 3}
+  icon: {fileID: 21300000, guid: c0e6e319e7ead0540ac967bc3ce54ef3, type: 3}
   price: 400
   isEquippable: 1
   rarity: 1

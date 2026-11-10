@@ -35,7 +35,17 @@ public sealed class ArtifactUiPolishTests
             var card = picker.transform.Find("Card1");
             card.gameObject.SetActive(true);
             var scroll = card.GetComponentInChildren<ScrollRect>(true);
-            var passive = card.GetComponentsInChildren<TMP_Text>(true).First(t => t.name == "Passive");
+            var stats = scroll.content.GetChild(0);
+            var passive = scroll.content.GetChild(1).GetComponent<TMP_Text>();
+            Assert.That(stats.name, Is.EqualTo("Stats"));
+            var rows = stats.GetComponentsInChildren<StatItemUI>();
+            Assert.That(rows, Is.Not.Empty);
+            var statName = Get<TMP_Text>(rows[0], "statNameText");
+            var statValue = Get<TMP_Text>(rows[0], "statValueText");
+            Assert.That(statName.text, Is.EqualTo(ArtifactStatCatalog.GetLabel(definition.fixedStatBonus.statKind)));
+            Assert.That(statName.alignment, Is.EqualTo(TextAlignmentOptions.MidlineLeft));
+            Assert.That(statValue.alignment, Is.EqualTo(TextAlignmentOptions.MidlineRight));
+            Assert.That(passive.name, Is.EqualTo("Passive"));
             passive.text = string.Join(" ", Enumerable.Repeat("A long passive effect that must wrap and remain readable.", 40));
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(scroll.content);
@@ -50,6 +60,7 @@ public sealed class ArtifactUiPolishTests
             picker.Present(choices, inventory, 2, 2, _ => false).MoveNext();
             Assert.That(scroll.content.anchoredPosition.y, Is.EqualTo(0f).Within(.1f));
             Assert.That(card.GetComponentsInChildren<ScrollRect>(true).Length, Is.EqualTo(1));
+            Assert.That(stats.GetComponentsInChildren<StatItemUI>(true).Length, Is.EqualTo(rows.Length));
         }
         finally { Object.DestroyImmediate(picker.gameObject); Object.DestroyImmediate(inventory); }
     }
@@ -111,6 +122,7 @@ public sealed class ArtifactUiPolishTests
             int chosen = -1;
             var routine = picker.Present(choices, inventory, 1, 1, index => { chosen = index; return ++calls > 1; });
             Assert.That(routine.MoveNext(), Is.True);
+            for (int i = 1; i <= 3; i++) picker.transform.Find($"Card{i}").gameObject.SetActive(true);
             picker.GetComponent<CanvasGroup>().interactable = true;
             var first = picker.transform.Find("Card1").GetComponent<Button>();
             var second = picker.transform.Find("Card2").GetComponent<Button>();
@@ -178,6 +190,7 @@ public sealed class ArtifactUiPolishTests
         var definition = ScriptableObject.CreateInstance<ArtifactDefinition>();
         try
         {
+            root.transform.localScale = Vector3.one;
             definition.itemName = "Rich text test";
             definition.passiveDescription = "<b>Attack</b> <color=#FFCC00>bonus</color>";
             definition.description = "<i>Artifact lore</i>";
@@ -188,7 +201,10 @@ public sealed class ArtifactUiPolishTests
             preview.Open(new ArtifactInstance { rolls = new List<ArtifactRoll>
             {
                 new ArtifactRoll(ArtifactStatKind.AdditionalDamageIncrease, 1234, ArtifactRollSource.Generated),
-                new ArtifactRoll(ArtifactStatKind.FlatMaxHP, 99999, ArtifactRollSource.Generated)
+                new ArtifactRoll(ArtifactStatKind.FlatMaxHP, 99999, ArtifactRollSource.Generated),
+                new ArtifactRoll(ArtifactStatKind.CritRate, 500, ArtifactRollSource.Generated),
+                new ArtifactRoll(ArtifactStatKind.FlatDefense, 42, ArtifactRollSource.Generated),
+                new ArtifactRoll(ArtifactStatKind.FlatAttack, 51, ArtifactRollSource.Generated)
             } }, definition, null);
             var description = Get<TMP_Text>(preview, "descriptionText");
             var textInfo = description.GetTextInfo(description.text);
@@ -196,10 +212,20 @@ public sealed class ArtifactUiPolishTests
             string parsed = new string(textInfo.characterInfo.Take(textInfo.characterCount).Select(c => c.character).ToArray());
             Assert.That(parsed, Does.Contain("Attack bonus").And.Not.Contain("<b>"));
             var stats = (RectTransform)Get<Transform>(preview, "statItemContainer");
+            var scroll = Get<ScrollRect>(preview, "detailsScroll");
+            Assert.That(stats.parent, Is.EqualTo(preview.transform));
+            Assert.That(description.transform.parent, Is.EqualTo(scroll.content));
+            Assert.That(description.text, Is.EqualTo(definition.passiveDescription));
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)preview.transform);
             var rows = stats.GetComponentsInChildren<StatItemUI>();
-            Assert.That(rows.Length, Is.EqualTo(2));
+            Assert.That(rows.Length, Is.EqualTo(5));
+            var bottomRowCorners = new Vector3[4];
+            var viewportCorners = new Vector3[4];
+            ((RectTransform)rows[4].transform).GetWorldCorners(bottomRowCorners);
+            scroll.viewport.GetWorldCorners(viewportCorners);
+            Assert.That(bottomRowCorners[0].y, Is.GreaterThan(viewportCorners[1].y),
+                $"Stats rect {stats.rect}, passive viewport {scroll.viewport.rect}");
             typeof(TeamBuilderInventoryValidation).GetMethod("Capture", BindingFlags.Static | BindingFlags.NonPublic)
                 .Invoke(null, new object[] { root, "artifact-rich-text-stats", 1280, 720 });
             foreach (var row in rows)

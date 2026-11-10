@@ -16,7 +16,7 @@ MonoBehaviour:
   itemName: Shroud of Deprivation
   description: A dark wrap that blocks out sight. "The horrors of this place are
     easier to fight when you shut out the terror of seeing them."
-  icon: {fileID: 21300000, guid: 72b32f581ae5349448a72b3a2ace5e07, type: 3}
+  icon: {fileID: 21300000, guid: e283a97733bb64148a71e5e92bc0813f, type: 3}
   price: 950
   isEquippable: 1
   rarity: 2

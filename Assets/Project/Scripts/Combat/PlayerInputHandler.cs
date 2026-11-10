@@ -31,6 +31,7 @@ public class InputHandler_Player : MonoBehaviour
     private float ultimatePressedAt;
     private float ultimateHoldDuration;
     private CharacterObject ultimateInputCharacter;
+    private static int lastAdminConsoleToggleFrame = -1;
     void Awake()
     {
         if (playerInput == null)
@@ -58,6 +59,7 @@ public class InputHandler_Player : MonoBehaviour
     void Start()
     {
         EnsurePlayerActionMap();
+        Debug.Log($"[AdminConsoleShortcut] Player input polling is active on '{name}'. Press Ctrl+Alt+C.");
     }
 
     private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -79,6 +81,8 @@ public class InputHandler_Player : MonoBehaviour
 
     void Update()
     {
+        HandleAdminConsoleShortcut();
+
         if (Project.UI.InputLockManager.IsLocked)
         {
             CancelUltimateGesture();
@@ -102,6 +106,40 @@ public class InputHandler_Player : MonoBehaviour
         }
 
         HandleTeamSwitchInput();
+    }
+
+    private static void HandleAdminConsoleShortcut()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
+        {
+            return;
+        }
+
+        bool ctrlPressed = keyboard.leftCtrlKey.isPressed || keyboard.rightCtrlKey.isPressed;
+        bool altPressed = keyboard.leftAltKey.isPressed || keyboard.rightAltKey.isPressed;
+
+        if (!keyboard.cKey.wasPressedThisFrame)
+        {
+            return;
+        }
+
+        Debug.Log($"[AdminConsoleShortcut] Game input received C. Ctrl={ctrlPressed}, Alt={altPressed}.");
+        if (!ctrlPressed || !altPressed || lastAdminConsoleToggleFrame == Time.frameCount)
+        {
+            return;
+        }
+
+        lastAdminConsoleToggleFrame = Time.frameCount;
+        AdminConsole adminConsole = Object.FindFirstObjectByType<AdminConsole>(FindObjectsInactive.Include);
+        if (adminConsole == null)
+        {
+            Debug.LogWarning("[AdminConsoleShortcut] Runtime received Ctrl+Alt+C, but no AdminConsole was found in the loaded scenes.");
+            return;
+        }
+
+        Debug.Log($"[AdminConsoleShortcut] Game input matched Ctrl+Alt+C; toggling '{adminConsole.name}' in scene '{adminConsole.gameObject.scene.name}', activeSelf={adminConsole.gameObject.activeSelf}.");
+        adminConsole.ToggleAdminControl();
     }
 
     // =========================================================

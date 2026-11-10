@@ -184,7 +184,7 @@ public class ArtifactInstanceSystemTests
         var picker = Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath);
         Assert.That(picker, Is.Not.Null);
         Assert.That(picker.IsConfigured, Is.True);
-        Assert.That(picker.transform.Find("Card3/RarityStar3"), Is.Not.Null);
+        Assert.That(picker.transform.Find("Card3/RarityPanel/RarityStar3"), Is.Not.Null);
         Assert.That(Resources.Load<ArtifactCopyMenuUI>(ArtifactCopyMenuUI.MenuPath), Is.Not.Null);
         Assert.That(Resources.Load<ArtifactCopyMenuUI>(ArtifactCopyMenuUI.DialogPath), Is.Not.Null);
         var tile = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/UI/TeamArtifactInventoryCard.prefab");
@@ -240,6 +240,7 @@ public class ArtifactInstanceSystemTests
             });
             Assert.That(presentation.MoveNext(), Is.True);
             Assert.That(picker.transform.Find("Card2/Title").GetComponent<TMPro.TMP_Text>().text, Is.EqualTo(common.itemName));
+            for (int i = 1; i <= 3; i++) picker.transform.Find($"Card{i}").gameObject.SetActive(true);
             picker.GetComponent<CanvasGroup>().interactable = true;
             picker.transform.Find("Card2").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
             Assert.That(calls, Is.Zero, "The first click previews without claiming.");
@@ -251,7 +252,10 @@ public class ArtifactInstanceSystemTests
             Assert.That(claimed.rolls, Is.EqualTo(choices[1].rolls));
             Assert.That(inventory.TryGetArtifactInstance("candidate-0", out _), Is.False);
             Assert.That(inventory.TryGetArtifactInstance("candidate-2", out _), Is.False);
-            Assert.That(picker.transform.Find("Card2/RarityStar2").gameObject.activeSelf, Is.False);
+            var rarity = picker.transform.Find("Card2/RarityPanel");
+            Assert.That(rarity.Find("RarityStar1").gameObject.activeSelf, Is.True);
+            Assert.That(rarity.Find("RarityStar2").gameObject.activeSelf, Is.False);
+            Assert.That(rarity.Find("RarityStar3").gameObject.activeSelf, Is.False);
         }
         finally
         {

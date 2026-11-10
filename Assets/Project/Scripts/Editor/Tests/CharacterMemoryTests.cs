@@ -283,6 +283,7 @@ public sealed class CharacterMemoryTests
             var serialized = new SerializedObject(panel);
             var scroll = (ScrollRect)serialized.FindProperty("contentScrollRect").objectReferenceValue;
             RectTransform potentialContent = scroll.content;
+            Vector2 potentialViewportOffset = scroll.viewport.offsetMax;
             var upgradeWindow = (CharacterPotentialUpgradeWindow)serialized.FindProperty("upgradeWindow").objectReferenceValue;
             var nodeSlots = serialized.FindProperty("nodeSlots");
             var potentialNode = (CharacterPotentialNodeUI)nodeSlots.GetArrayElementAtIndex(0).objectReferenceValue;
@@ -308,6 +309,16 @@ public sealed class CharacterMemoryTests
             Assert.That(((RectTransform)first.parent).anchoredPosition.y,
                 Is.LessThan(((RectTransform)final.transform).anchoredPosition.y));
             Assert.That(final.navigation.selectOnDown.name, Is.EqualTo("Generic Memory 17"));
+            var goToTop = scroll.transform.Find("Go to Top").GetComponent<Button>();
+            var goToBottom = scroll.transform.Find("Go to Bottom").GetComponent<Button>();
+            Assert.That(final.navigation.selectOnUp, Is.SameAs(goToTop));
+            Assert.That(scroll.viewport.offsetMax.y, Is.LessThan(potentialViewportOffset.y));
+            scroll.velocity = new Vector2(10f, 50f);
+            goToTop.onClick.Invoke();
+            Assert.That(scroll.verticalNormalizedPosition, Is.EqualTo(1f).Within(.001f));
+            Assert.That(scroll.velocity, Is.EqualTo(Vector2.zero));
+            goToBottom.onClick.Invoke();
+            Assert.That(scroll.verticalNormalizedPosition, Is.EqualTo(0f).Within(.001f));
             final.onClick.Invoke();
             Assert.That(upgradeWindow.gameObject.activeSelf, Is.True);
             var window = new SerializedObject(upgradeWindow);
@@ -334,20 +345,21 @@ public sealed class CharacterMemoryTests
             Assert.That(notice.gameObject.activeSelf, Is.False);
             Assert.That(pageOne.gameObject.activeSelf, Is.False);
             Assert.That(((RectTransform)pages.GetArrayElementAtIndex(1).objectReferenceValue).gameObject.activeSelf, Is.True);
-            var switchView = panel.transform.Find("Switch Upgrade View").GetComponent<Button>();
-            switchView.onClick.Invoke();
-            Assert.That(scroll.content, Is.SameAs(potentialContent));
-            Assert.That(upgradeWindow.gameObject.activeSelf, Is.False);
-            switchView.onClick.Invoke();
-            Assert.That(scroll.content, Is.SameAs(memoryPanel.transform));
+            goToTop.onClick.Invoke();
+            Assert.That(scroll.verticalNormalizedPosition, Is.EqualTo(1f).Within(.001f));
+            Assert.That(panel.transform.Find("Switch Upgrade View"), Is.Null);
             panel.Hide();
+            Assert.That(scroll.content, Is.SameAs(potentialContent));
+            Assert.That(goToTop.gameObject.activeSelf || goToBottom.gameObject.activeSelf, Is.False);
+            Assert.That(scroll.viewport.offsetMax, Is.EqualTo(potentialViewportOffset));
+            Assert.That(upgradeWindow.gameObject.activeSelf, Is.False);
             panel.Show();
             Assert.That(panel.TryGetComponent<CanvasGroup>(out _), Is.False);
+            Assert.That(scroll.content, Is.SameAs(memoryPanel.transform));
+            Assert.That(goToTop.isActiveAndEnabled && goToBottom.isActiveAndEnabled, Is.True);
             Assert.That(panel.GetComponentInChildren<CharacterMemoryPanel>().isActiveAndEnabled, Is.True);
             Assert.That(upgradeWindow.gameObject.activeSelf, Is.False);
 
-            switchView.onClick.Invoke();
-            Assert.That(scroll.content, Is.SameAs(potentialContent));
             var rei = AssetDatabase.LoadAssetAtPath<CharacterObject>(
                 "Assets/Project/Character/Hero/test_1_CameraGirl/CharacterObject_cg.asset");
             var reiItem = Object.Instantiate(item);
@@ -355,8 +367,7 @@ public sealed class CharacterMemoryTests
             {
                 reiItem.characterObjectData = rei;
                 panel.PopulateData(reiItem, null);
-                Assert.That(switchView.gameObject.activeSelf, Is.False);
-                switchView.onClick.Invoke();
+                Assert.That(panel.transform.Find("Switch Upgrade View"), Is.Null);
                 Assert.That(scroll.content, Is.SameAs(memoryPanel.transform));
                 var firstReiNode = scroll.content.Find("Connections and Major Nodes/Step 1/Skill Memory").GetComponent<Button>();
                 firstReiNode.onClick.Invoke();
@@ -407,7 +418,9 @@ public sealed class CharacterMemoryTests
                 var group = picker.GetComponent<CanvasGroup>();
                 yield return WaitForMemoryInput(group);
                 var roster = picker.transform.Find("Living Characters");
-                roster.GetComponentInChildren<Button>().onClick.Invoke();
+                var portrait = roster.GetComponentInChildren<Button>();
+                Assert.That(portrait.transform.Find("HeaderDivider").gameObject.activeSelf, Is.False);
+                portrait.onClick.Invoke();
                 yield return null;
                 yield return WaitForMemoryInput(group);
 
@@ -426,6 +439,19 @@ public sealed class CharacterMemoryTests
                     chosen = choices[0];
                     float center = row.InverseTransformPoint(chosen.transform.position).x;
                     Assert.That(center, Is.EqualTo(0f).Within(1f));
+                }
+                Assert.That(chosen.transform.Find("HeaderDivider").gameObject.activeSelf, Is.True);
+                Assert.That(chosen.transform.Find("DetailsDivider").gameObject.activeSelf, Is.True);
+                Assert.That(chosen.transform.Find("RarityPanel").gameObject.activeSelf, Is.False);
+                var details = chosen.GetComponentInChildren<ScrollRect>();
+                Assert.That(details.content.GetChild(0).name, Is.EqualTo("Passive"));
+                var footer = chosen.transform.Find("Stats").GetComponent<TMP_Text>();
+                Assert.That(footer.gameObject.activeSelf, Is.EqualTo(major));
+                if (major)
+                {
+                    Assert.That(footer.text, Does.Match(@"^Rank \d/6$"));
+                    Assert.That(footer.alignment, Is.EqualTo(TextAlignmentOptions.Center));
+                    Assert.That(footer.rectTransform.anchorMax.y, Is.LessThan(details.viewport.anchorMin.y));
                 }
                 chosen.onClick.Invoke();
                 Assert.That(claims, Is.Zero);

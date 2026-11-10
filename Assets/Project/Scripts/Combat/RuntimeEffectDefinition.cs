@@ -344,6 +344,7 @@ public sealed class RuntimeEffectDamageContext
     public CharacterObject sourceCharacter;
     public CharacterStats sourceStats;
     public EnemyController targetEnemy;
+    internal HashSet<string> targetEffectsBeforeHit;
     public AttackCategory category;
     public string actionId;
     public string actionName;

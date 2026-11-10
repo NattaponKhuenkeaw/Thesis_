@@ -17,6 +17,7 @@ public class AdminConsole : MonoBehaviour
     [Header("Reset Systems")]
     [SerializeField] private Project.ShopSystem.CharacterInventoryState runInventory;
     [SerializeField] private Project.Progression.CharacterProgressionState progressionInventory;
+    private static int lastToggleFrame = -1;
 
     private void Awake()
     {
@@ -29,6 +30,25 @@ public class AdminConsole : MonoBehaviour
     private void Start()
     {
         EnsureCheatButtons();
+    }
+
+    public void ToggleAdminControl()
+    {
+        if (lastToggleFrame == Time.frameCount)
+        {
+            Debug.Log("[AdminConsole] Ignored a duplicate toggle in the same frame.");
+            return;
+        }
+
+        lastToggleFrame = Time.frameCount;
+        bool show = !gameObject.activeSelf;
+        if (show && transform.localScale.sqrMagnitude < 0.0001f)
+        {
+            transform.localScale = Vector3.one;
+        }
+
+        gameObject.SetActive(show);
+        Debug.Log($"[AdminConsole] Admin Control is now {(gameObject.activeSelf ? "open" : "closed")} on '{name}' in scene '{gameObject.scene.name}'.");
     }
 
     private void EnsureCheatButtons()

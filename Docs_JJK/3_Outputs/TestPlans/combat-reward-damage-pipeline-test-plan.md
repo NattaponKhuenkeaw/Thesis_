@@ -32,6 +32,13 @@ blocked_by: []
 - [ ] Additional Damage killing the target selects the on-kill AE branch.
 - [ ] Genocide Cutter's three equal hits total 300% ATK before modifiers.
 - [ ] Projectiles use the action reward and damage context that spawned them.
+- [ ] Keep an enemy inside a projectile with an Additional Damage hit effect.
+      Confirm the damage follows the authored hit interval and hit limit and
+      Unity reports no pool disposal exception.
+- [ ] Repeat with Additional Damage from a source character's on-hit recipe.
+      For a recipe that requires a pre-existing target mark, confirm the hit
+      that applies the mark does not trigger the mark-gated bonus. Confirm a
+      subsequent eligible hit does.
 - [ ] A swapped-out background Ultimate preserves the casting character's
       damage stats and reward ownership.
 - [ ] Equipping an ATK artifact changes the matching slot's runtime damage.

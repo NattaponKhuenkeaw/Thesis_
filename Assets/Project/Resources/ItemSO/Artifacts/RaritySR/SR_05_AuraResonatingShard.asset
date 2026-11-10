@@ -16,7 +16,7 @@ MonoBehaviour:
   itemName: Aura-Resonating Shard
   description: Clashing Auras from player swaps release shockwaves of raw fighting
     spirit that Fiends fear.
-  icon: {fileID: 21300000, guid: cae8a6bf811d9e848ba61b1d82ac6877, type: 3}
+  icon: {fileID: 21300000, guid: f860825b2df508c47925faaef77c0ee3, type: 3}
   price: 800
   isEquippable: 1
   rarity: 2

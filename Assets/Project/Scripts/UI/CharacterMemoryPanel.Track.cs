@@ -5,6 +5,7 @@ using Project.Progression;
 using Project.TeamBuilder.UI.Panels;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Project.UI
@@ -16,7 +17,13 @@ namespace Project.UI
         private RectTransform _connectedRows;
         private RectTransform[] _genericPages;
         private CharacterPotentialNodeUI[][] _genericNodes;
+        private Button[] _jumpButtons;
+        private Vector2 _viewportOffsetMax;
+        private Selectable _topNode;
+        private Selectable _bottomNode;
         private const float BoardScale = .85f;
+        private const float JumpButtonHeight = 42f;
+        private const float JumpButtonGap = 8f;
 
         internal bool IsScreenPointInsideNode(Vector2 screenPosition)
         {
@@ -49,7 +56,8 @@ namespace Project.UI
             return RectTransformUtility.RectangleContainsScreenPoint(rect, screenPosition, eventCamera);
         }
 
-        internal static CharacterMemoryPanel CreateBoard(ScrollRect scroll, RectTransform[] genericPages)
+        internal static CharacterMemoryPanel CreateBoard(ScrollRect scroll, RectTransform[] genericPages,
+            TMP_FontAsset font, Sprite controlSprite)
         {
             var board = new GameObject("Memory Node Map", typeof(RectTransform), typeof(CharacterMemoryPanel));
             RectTransform viewport = scroll.viewport != null ? scroll.viewport : (RectTransform)scroll.transform;
@@ -57,6 +65,12 @@ namespace Project.UI
             board.transform.SetParent(viewport, false);
             var panel = board.GetComponent<CharacterMemoryPanel>();
             panel._scroll = scroll;
+            panel._jumpButtons = new[]
+            {
+                panel.CreateJumpButton("Go to Top", true, font, controlSprite),
+                panel.CreateJumpButton("Go to Bottom", false, font, controlSprite)
+            };
+            if (scroll.viewport != null) panel._viewportOffsetMax = scroll.viewport.offsetMax;
             panel._list = (RectTransform)board.transform;
             panel._list.localScale = Vector3.one * BoardScale;
             panel._connectedRows = (RectTransform)new GameObject("Connections and Major Nodes", typeof(RectTransform)).transform;
@@ -72,6 +86,33 @@ namespace Project.UI
                     ((RectTransform)a.transform).anchoredPosition.y.CompareTo(((RectTransform)b.transform).anchoredPosition.y));
             }
             return panel;
+        }
+
+        private Button CreateJumpButton(string caption, bool top, TMP_FontAsset font, Sprite sprite)
+        {
+            Button button = CreateButton(_scroll.transform, caption, font, sprite);
+            float width = button.GetComponentInChildren<TMP_Text>().preferredWidth + 20f;
+            float left = top ? -width - JumpButtonGap / 2f : JumpButtonGap / 2f;
+            Place((RectTransform)button.transform, 1f, left, -JumpButtonHeight, left + width, 0f, .5f, .5f);
+            button.onClick.AddListener(() => JumpToEdge(top));
+            return button;
+        }
+
+        internal void SetJumpControlsVisible(bool visible)
+        {
+            foreach (Button button in _jumpButtons) button.gameObject.SetActive(visible);
+            if (_scroll.viewport != null)
+                _scroll.viewport.offsetMax = visible
+                    ? _viewportOffsetMax - Vector2.up * (JumpButtonHeight + JumpButtonGap / 2f)
+                    : _viewportOffsetMax;
+        }
+
+        private void JumpToEdge(bool top)
+        {
+            _scroll.StopMovement();
+            _scroll.verticalNormalizedPosition = top ? 1f : 0f;
+            Selectable destination = top ? _topNode : _bottomNode;
+            if (destination != null) EventSystem.current?.SetSelectedGameObject(destination.gameObject);
         }
 
         internal void ShowConnectedTrack(CharacterItem character, CharacterMemoryProgress memory, Selectable[] headerButtons,
@@ -182,7 +223,10 @@ namespace Project.UI
             }
 
             Selectable focus = focused != null ? focused : rows[0][1];
+            _bottomNode = rows[0][1];
             rows.Reverse();
+            _topNode = rows[0][0];
+            rows.Insert(0, _jumpButtons);
             if (headerButtons.Length > 0) rows.Insert(0, headerButtons);
             if (footerRows != null)
                 foreach (Selectable[] footer in footerRows)

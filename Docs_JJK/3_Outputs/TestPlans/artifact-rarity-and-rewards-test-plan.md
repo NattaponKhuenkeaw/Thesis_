@@ -22,6 +22,8 @@ Run `Tools/Project/Field Effects/Run Artifact Regression Tests` for the broader 
 
 Inspect the reward picker at 1920×1080 and 1024×768, the rarity tiles, the item menu and the discard dialog. Check that stars use sprites, the Favourite and New badges occupy separate corners, names wrap within the tile, passive descriptions fit, and the confirmation controls stay within the frame.
 
+On the reward picker, check that the title and framed icon are separated by the header divider and the second divider sits above the details. Verify that one, two, and three stars stay centered and that Artifact stats appear in compact rows above the passive, with names on the left and values on the right. Scroll a long description to its final line, then check that the next draw starts at the first stat. In the Artifact Preview Panel, check that the stat rows stay beside the icon while the passive scrolls below them. For Memory, check the small centered rank footer on major choices and that generic choices show only the effect below the icon. Return to the character chooser and confirm that the large portraits still fit their cards.
+
 ## Playtest script
 
 1. Start a fresh run. Inspect early shop Artifact stock, buy an R and compare the preview and deployed stats. Reroll and check Soul spending and the tier mix. At later biome shops, verify SR availability and late SSR purchase availability.

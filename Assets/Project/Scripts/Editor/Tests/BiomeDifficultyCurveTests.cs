@@ -55,6 +55,38 @@ public class BiomeDifficultyCurveTests
         Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(-2), Is.EqualTo(1f));
     }
 
+    [Test]
+    public void VeteranDifficultyIsFixedUntilTheRunResets()
+    {
+        MethodInfo lockDifficulty = typeof(RunProgressionManager).GetMethod("LockDifficulty", Private);
+        lockDifficulty.Invoke(progression, new object[] { RunDifficulty.Veteran });
+        progression.NotifyRoomCleared(Resources.Load<RoomData>("MapSO/RoomData_Boss_01"));
+        lockDifficulty.Invoke(progression, new object[] { RunDifficulty.Normal });
+
+        Assert.That(progression.Difficulty, Is.EqualTo(RunDifficulty.Veteran));
+        Assert.That(progression.IsDifficultyLocked, Is.True);
+        Assert.That(progression.BossHealthMultiplier, Is.GreaterThan(45f));
+
+        progression.ResetRun();
+        Assert.That(progression.Difficulty, Is.EqualTo(RunDifficulty.Normal));
+        Assert.That(progression.IsDifficultyLocked, Is.False);
+    }
+
+    [TestCase(0, 180000f)]
+    [TestCase(9, 1800000f)]
+    public void VeteranBossReceivesItsTrialHealthBudgetWithoutExtraAttackScaling(int biome, float expectedHP)
+    {
+        typeof(RunProgressionManager).GetMethod("LockDifficulty", Private)
+            .Invoke(progression, new object[] { RunDifficulty.Veteran });
+        progression.SetCurrentBiomeIndex(biome);
+        var source = AssetDatabase.LoadAssetAtPath<GameObject>(BossPath).GetComponent<EnemyController>();
+        var boss = Object.Instantiate(source, holder.transform);
+        RunProgressionManager.ApplyBiomeDifficultyToEnemy(boss);
+
+        Assert.That(boss.currentHP, Is.EqualTo(expectedHP).Within(1f));
+        Assert.That(boss.attackDamage, Is.EqualTo(source.attackDamage * (1f + biome * .2f)).Within(.001f));
+    }
+
     [TestCase(-2, 1f, 1f)]
     [TestCase(0, 1f, 1f)]
     [TestCase(1, 1.18f, 1.15f)]

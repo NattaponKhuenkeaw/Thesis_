@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 public static class CombatDamageProcessor
 {
@@ -228,6 +230,15 @@ public static class CombatDamageProcessor
 
         DamageProcPolicy policy = request.ResolveProcPolicy();
 
+        bool dispatchRuntimeHit = request.sourceCombat != null && request.sourceCharacter != null
+            && (policy & DamageProcPolicy.TriggerOrdinaryOnHit) != 0;
+        var targetEffects = dispatchRuntimeHit && result.Damage > 0 ? request.target.RuntimeEffects : null;
+        HashSet<string> targetEffectsBeforeHit = null;
+        using PooledObject<HashSet<string>>? snapshot = targetEffects?.ActiveEffects.Count > 0
+            ? HashSetPool<string>.Get(out targetEffectsBeforeHit)
+            : null;
+        if (targetEffectsBeforeHit != null) targetEffects.CopyActiveEffectKeys(targetEffectsBeforeHit);
+
         reactionData.damage = result.Damage;
         reactionData.isCriticalHit = result.IsCriticalHit;
         reactionData.elementType = result.Descriptor.elementType;
@@ -271,7 +282,7 @@ public static class CombatDamageProcessor
                     damageDealt,
                     killedEnemy);
 
-                if (request.sourceCombat != null && request.sourceCharacter != null)
+                if (dispatchRuntimeHit)
                 {
                     RuntimeEffectDamageContext hitContext = new RuntimeEffectDamageContext
                     {
@@ -279,6 +290,7 @@ public static class CombatDamageProcessor
                         sourceCharacter = request.sourceCharacter,
                         sourceStats = request.sourceStats,
                         targetEnemy = request.target,
+                        targetEffectsBeforeHit = targetEffectsBeforeHit,
                         category = request.category,
                         actionId = request.actionId,
                         actionName = request.actionName,

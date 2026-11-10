@@ -16,7 +16,7 @@ MonoBehaviour:
   itemName: Shin's Rusty Dagger
   description: Shin's starting blade. Useless against giant Fiends, yet his refusal
     to let go gave birth to his Aura.
-  icon: {fileID: 21300000, guid: 25f44d725976c2f46a83e2ad93aca1a9, type: 3}
+  icon: {fileID: 21300000, guid: 568f00f645d5ca94cbf640147d61873a, type: 3}
   price: 4100
   isEquippable: 1
   rarity: 3

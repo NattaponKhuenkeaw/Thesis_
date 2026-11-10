@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ART-R-009
   itemName: Echo Bell
   description: 
-  icon: {fileID: 21300000, guid: 72b32f581ae5349448a72b3a2ace5e07, type: 3}
+  icon: {fileID: 21300000, guid: 633304b125caeaf439fc83b4a792ff0f, type: 3}
   price: 325
   isEquippable: 1
   rarity: 1

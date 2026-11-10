@@ -34,13 +34,7 @@ namespace Project.UI.Training
         [SerializeField] private TMP_Text characterLabel;
         [Header("Configuration")]
         [SerializeField] private Slider teamLevel;
-        [SerializeField] private Slider skill;
-        [SerializeField] private Slider ultimate;
-        [SerializeField] private Slider passive;
         [SerializeField] private TMP_Text teamLevelValue;
-        [SerializeField] private TMP_Text skillValue;
-        [SerializeField] private TMP_Text ultimateValue;
-        [SerializeField] private TMP_Text passiveValue;
 
         private TrainingConfiguration _draft;
         private readonly List<CharacterItem> _roster = new();
@@ -50,10 +44,7 @@ namespace Project.UI.Training
         private TMP_Text _statsLabel;
         private TeamUI _teamUI;
         private CharacterPotentialPanel _memoryWindow;
-        private GameObject _legacyPanel;
-        private Button _legacyButton;
         private Button _resetMemoryButton;
-        private bool _showLegacy;
         public bool IsOpen { get; private set; }
         public bool IsLoadoutOpen => _teamUI != null && _teamUI.IsTeamBuilderOpen;
         public bool AreToolsVisible => toolsDrawer != null && toolsDrawer.IsPresented;
@@ -74,9 +65,6 @@ namespace Project.UI.Training
             previousCharacterButton.onClick.AddListener(() => SelectCharacter(-1));
             nextCharacterButton.onClick.AddListener(() => SelectCharacter(1));
             teamLevel.onValueChanged.AddListener(_ => ReadGlobalLevel());
-            skill.onValueChanged.AddListener(_ => RefreshRankLabels());
-            ultimate.onValueChanged.AddListener(_ => RefreshRankLabels());
-            passive.onValueChanged.AddListener(_ => RefreshRankLabels());
             content.SetActive(false);
         }
 
@@ -93,8 +81,7 @@ namespace Project.UI.Training
                 || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame)))
             {
                 if (_memoryWindow != null && _memoryWindow.DismissPracticePreview()) return;
-                if (_showLegacy && _memoryWindow != null) ToggleLegacy();
-                else Close();
+                Close();
             }
         }
 
@@ -105,7 +92,6 @@ namespace Project.UI.Training
                 : FindFirstObjectByType<CharacterPotentialPanel>(FindObjectsInactive.Include);
             if (template == null) return;
 
-            _legacyPanel = skill.transform.parent.gameObject;
             _memoryWindow = Instantiate(template, content.transform);
             _memoryWindow.gameObject.SetActive(false);
             _memoryWindow.name = "Training Memory Window";
@@ -115,8 +101,6 @@ namespace Project.UI.Training
             var footer = new GameObject("Training Configuration Controls", typeof(RectTransform), typeof(Image));
             footer.GetComponent<Image>().color = new Color(.055f, .065f, .09f, .98f);
             Place(footer.transform, content.transform, Vector2.zero, Vector2.right, Vector2.zero, new Vector2(0, 100));
-            _legacyButton = _memoryWindow.CreateMemoryControl(footer.transform, "Previous upgrades");
-            _legacyButton.onClick.AddListener(ToggleLegacy);
             _resetMemoryButton = _memoryWindow.CreateMemoryControl(footer.transform, "Reset All Memory");
             _resetMemoryButton.onClick.AddListener(ResetMemory);
             foreach (Button button in new[] { previousCharacterButton, nextCharacterButton, applyButton, cancelButton })
@@ -126,8 +110,7 @@ namespace Project.UI.Training
             teamLevelValue.fontSizeMin = 14f;
             teamLevelValue.fontSizeMax = 24f;
             PlaceFooter(teamLevel.transform, footer.transform, .19f, .40f);
-            PlaceFooter(_legacyButton.transform, footer.transform, .42f, .55f);
-            PlaceFooter(_resetMemoryButton.transform, footer.transform, .56f, .70f);
+            PlaceFooter(_resetMemoryButton.transform, footer.transform, .42f, .70f);
             PlaceFooter(applyButton.transform, footer.transform, .71f, .83f);
             PlaceFooter(cancelButton.transform, footer.transform, .84f, .98f);
             Place(errorText.transform, footer.transform, new Vector2(.02f, .56f), new Vector2(.98f, 1f), Vector2.zero, Vector2.zero);
@@ -135,9 +118,12 @@ namespace Project.UI.Training
                 new Vector2(14f, -36f), new Vector2(86f, 36f));
             Place(nextCharacterButton.transform, content.transform, new Vector2(1f, .5f), new Vector2(1f, .5f),
                 new Vector2(-86f, -36f), new Vector2(-14f, 36f));
+            // The authored Training box held the old rank controls. The Memory window owns the content now.
+            if (characterLabel.transform.parent != content.transform)
+                characterLabel.transform.parent.gameObject.SetActive(false);
 
             _memoryWindow.ConfigurePractice(new Selectable[] { previousCharacterButton, nextCharacterButton },
-                new[] { new Selectable[] { teamLevel }, new Selectable[] { _legacyButton, _resetMemoryButton, applyButton, cancelButton } });
+                new[] { new Selectable[] { teamLevel }, new Selectable[] { _resetMemoryButton, applyButton, cancelButton } });
         }
 
         private static void PlaceFooter(Transform control, Transform footer, float left, float right) =>
@@ -153,18 +139,9 @@ namespace Project.UI.Training
             rect.offsetMax = offsetMax;
         }
 
-        private void ToggleLegacy()
-        {
-            CaptureRanks();
-            _showLegacy = !_showLegacy;
-            ShowCharacter();
-            EventSystem.current?.SetSelectedGameObject(_legacyButton.gameObject);
-        }
-
         private void ResetMemory()
         {
-            if (!IsOpen || _draft == null || _roster.Count == 0 || _showLegacy) return;
-            CaptureRanks();
+            if (!IsOpen || _draft == null || _roster.Count == 0) return;
             var character = _draft.characters[_index];
             character.memory = new CharacterMemoryProgress(character.characterId);
             ShowCharacter();
@@ -175,6 +152,8 @@ namespace Project.UI.Training
         public void Open()
         {
             if (IsOpen || session == null || !session.IsActive) return;
+            EnsureMemoryWindow();
+            if (_memoryWindow == null) return;
             _draft = session.CaptureConfiguration();
             _roster.Clear();
             for (int index = 0; index < _draft.characters.Count; index++)
@@ -186,13 +165,11 @@ namespace Project.UI.Training
                 else _draft.characters.RemoveAt(index--);
             }
             _index = 0;
-            _showLegacy = false;
             IsOpen = true;
             InputLockManager.Lock();
             _ownsLock = true;
             _releasePauseHold = GameFreezeManager.AcquirePauseHold();
             EnsureModalCanvasAvailable();
-            EnsureMemoryWindow();
             content.SetActive(true);
             errorText.text = "";
             teamLevel.minValue = 1;
@@ -206,7 +183,6 @@ namespace Project.UI.Training
         private void SelectCharacter(int direction)
         {
             if (!IsOpen || _roster.Count < 2) return;
-            CaptureRanks();
             var selected = EventSystem.current?.currentSelectedGameObject;
             _index = (_index + direction + _roster.Count) % _roster.Count;
             ShowCharacter();
@@ -220,58 +196,19 @@ namespace Project.UI.Training
             if (_roster.Count == 0)
             {
                 characterLabel.text = "No deployed character";
-                skill.interactable = ultimate.interactable = passive.interactable = false;
-                if (_memoryWindow != null)
-                {
-                    _legacyPanel.SetActive(false);
-                    _legacyButton.gameObject.SetActive(false);
-                    _resetMemoryButton.gameObject.SetActive(false);
-                    _memoryWindow.Hide();
-                    errorText.text = "Deploy a character to edit Memory.";
-                    CharacterMemoryPanel.BindNavigation(new[] { new Selectable[] { teamLevel }, new Selectable[] { applyButton, cancelButton } });
-                }
+                _resetMemoryButton.gameObject.SetActive(false);
+                _memoryWindow.Hide();
+                errorText.text = "Deploy a character to edit Memory.";
+                CharacterMemoryPanel.BindNavigation(new[] { new Selectable[] { teamLevel }, new Selectable[] { applyButton, cancelButton } });
                 return;
             }
             CharacterItem item = _roster[_index];
             var character = item.characterObjectData;
             characterLabel.text = CombatCore.TrainingDebugManager.GetCharacterDisplayName(character);
             var values = _draft.characters[_index];
-            SetTrack(skill, character, PotentialTrack.Skill, values.skill);
-            SetTrack(ultimate, character, PotentialTrack.Ultimate, values.ultimate);
-            SetTrack(passive, character, PotentialTrack.Passive, values.passive);
-            RefreshRankLabels();
-            if (_memoryWindow == null) return;
-
-            bool legacyAvailable = !CharacterMemoryKit.AppliesTo(character);
-            _showLegacy &= legacyAvailable;
-            _legacyButton.gameObject.SetActive(legacyAvailable);
-            _resetMemoryButton.gameObject.SetActive(!_showLegacy);
-            if (legacyAvailable)
-                _legacyButton.GetComponentInChildren<TMP_Text>().text = _showLegacy ? "Memory" : "Previous upgrades";
-            _legacyPanel.SetActive(_showLegacy);
-            if (_showLegacy)
-            {
-                _memoryWindow.Hide();
-                var rows = new List<Selectable[]>();
-                if (previousCharacterButton.interactable) rows.Add(new Selectable[] { previousCharacterButton, nextCharacterButton });
-                foreach (Slider rank in new[] { skill, ultimate, passive })
-                    if (rank.interactable) rows.Add(new Selectable[] { rank });
-                rows.Add(new Selectable[] { teamLevel });
-                rows.Add(new Selectable[] { _legacyButton, applyButton, cancelButton });
-                CharacterMemoryPanel.BindNavigation(rows, _legacyButton);
-                return;
-            }
-
+            _resetMemoryButton.gameObject.SetActive(true);
             values.memory ??= new CharacterMemoryProgress(character.characterId);
             _memoryWindow.ShowPracticeMemory(item, values.memory);
-        }
-
-        private static void SetTrack(Slider slider, CharacterObject character, PotentialTrack track, int value)
-        {
-            slider.minValue = 0;
-            slider.maxValue = CharacterMemoryKit.AppliesTo(character) ? 0 : TrainingSession.GetMaxPotentialLevel(character, track);
-            slider.interactable = slider.maxValue > 0;
-            slider.SetValueWithoutNotify(value);
         }
 
         private void ReadGlobalLevel()
@@ -281,26 +218,9 @@ namespace Project.UI.Training
             teamLevelValue.text = $"Global Level {_draft.teamLevel} / {session.Inventory.GlobalMaxLevel}";
         }
 
-        private void CaptureRanks()
-        {
-            if (_draft == null || _roster.Count == 0 || CharacterMemoryKit.AppliesTo(_roster[_index].characterObjectData)) return;
-            var values = _draft.characters[_index];
-            values.skill = Mathf.RoundToInt(skill.value);
-            values.ultimate = Mathf.RoundToInt(ultimate.value);
-            values.passive = Mathf.RoundToInt(passive.value);
-        }
-
-        private void RefreshRankLabels()
-        {
-            skillValue.text = $"{Mathf.RoundToInt(skill.value)} / {Mathf.RoundToInt(skill.maxValue)}";
-            ultimateValue.text = $"{Mathf.RoundToInt(ultimate.value)} / {Mathf.RoundToInt(ultimate.maxValue)}";
-            passiveValue.text = $"{Mathf.RoundToInt(passive.value)} / {Mathf.RoundToInt(passive.maxValue)}";
-        }
-
         public void Apply()
         {
             if (!IsOpen || session == null) return;
-            CaptureRanks();
             if (!session.TryApply(_draft, out string error)) { errorText.text = error; return; }
             Close();
         }

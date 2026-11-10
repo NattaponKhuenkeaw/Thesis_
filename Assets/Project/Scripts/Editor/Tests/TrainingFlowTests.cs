@@ -208,10 +208,9 @@ public sealed class TrainingFlowTests
         Assert.That(TrainingDebugHUD.IsPointerOverHud(new Vector2(Screen.width * .5f, Screen.height - 10f)), Is.True);
         Assert.That(Time.timeScale, Is.Zero);
         int targetLevel = originalLevel == 10 ? 11 : 10;
+        Assert.That(configContent.transform.Find("Training Configuration Controls/Previous upgrades"), Is.Null);
+        Assert.That(configContent.transform.Find("Training Panel").gameObject.activeSelf, Is.False);
         Get<Slider>(panel, "teamLevel").value = targetLevel;
-        Get<Slider>(panel, "skill").value = 0;
-        Get<Slider>(panel, "ultimate").value = 0;
-        Get<Slider>(panel, "passive").value = 0;
         ScreenCapture.CaptureScreenshot(Report + "configuration.png");
         yield return null;
         panel.Apply();

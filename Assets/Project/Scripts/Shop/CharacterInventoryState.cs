@@ -222,6 +222,8 @@ namespace Project.ShopSystem
         public int currency = 1000;
         public int globalLevel = 1;
         public int biomeIndex;
+        public RunDifficulty runDifficulty;
+        public bool runDifficultyLocked;
         public double playtimeSeconds;
         public int activeTeamSlotIndex;
         public List<SavedInventoryItemRecord> items = new List<SavedInventoryItemRecord>();
@@ -887,6 +889,7 @@ namespace Project.ShopSystem
         /// </summary>
         public void ResetRunStateForMenuStart(bool resetCurrency = true)
         {
+            RunProgressionManager.Instance?.ResetRun();
             hasLoadedPersistentState = true;
             isDeathTeardown = false;
             isDeathLobby = false;
@@ -2761,20 +2764,25 @@ namespace Project.ShopSystem
             EnsureInventoryData();
             EnsureTeamSlotCapacity(DefaultTeamSlotCount);
             ApplyPersistentState(data);
-            ApplyBossLobbyBiome(data.biomeIndex);
+            RunProgressionManager progression = RunProgressionManager.EnsureInstance();
+            progression.SetCurrentBiomeIndex(data.biomeIndex);
+            progression.RestoreDifficulty(data.runDifficulty, data.runDifficultyLocked);
             RestoreBossLobbyMeta();
             return true;
         }
 
         public bool TryReadBossLobbyBiome(out int biomeIndex)
         {
-            return TryReadBossLobbyCheckpoint(out biomeIndex, out _);
+            return TryReadBossLobbyCheckpoint(out biomeIndex, out _, out _, out _);
         }
 
-        internal bool TryReadBossLobbyCheckpoint(out int biomeIndex, out double playtimeSeconds)
+        internal bool TryReadBossLobbyCheckpoint(out int biomeIndex, out double playtimeSeconds,
+            out RunDifficulty difficulty, out bool difficultyLocked)
         {
             biomeIndex = 0;
             playtimeSeconds = 0d;
+            difficulty = RunDifficulty.Normal;
+            difficultyLocked = false;
             SaveSlotStore.EnsureMigrated();
             string json = PlayerPrefs.GetString(BossLobbySaveKey, string.Empty);
             if (string.IsNullOrWhiteSpace(json))
@@ -2789,15 +2797,11 @@ namespace Project.ShopSystem
             }
 
             biomeIndex = Mathf.Max(0, data.biomeIndex);
+            difficulty = data.runDifficulty;
+            difficultyLocked = data.runDifficultyLocked;
             if (!double.IsNaN(data.playtimeSeconds) && !double.IsInfinity(data.playtimeSeconds))
                 playtimeSeconds = Math.Max(0d, data.playtimeSeconds);
             return true;
-        }
-
-        private static void ApplyBossLobbyBiome(int biomeIndex)
-        {
-            RunProgressionManager progression = RunProgressionManager.EnsureInstance();
-            progression?.SetCurrentBiomeIndex(biomeIndex);
         }
 
         public void RestoreBossLobbyMeta()
@@ -2985,15 +2989,15 @@ namespace Project.ShopSystem
 
         private SavedPlayerRunInventoryData CaptureRunSnapshot()
         {
-
+            RunProgressionManager progression = RunProgressionManager.Instance;
             SavedPlayerRunInventoryData data = new SavedPlayerRunInventoryData
             {
                 schemaVersion = 3,
                 currency = currency,
                 globalLevel = _globalLevel,
-                biomeIndex = RunProgressionManager.Instance != null
-                    ? RunProgressionManager.Instance.CurrentBiomeIndex
-                    : 0,
+                biomeIndex = progression != null ? progression.CurrentBiomeIndex : 0,
+                runDifficulty = progression != null ? progression.Difficulty : RunDifficulty.Normal,
+                runDifficultyLocked = progression != null && progression.IsDifficultyLocked,
                 activeTeamSlotIndex = activeTeamSlotIndex
             };
 

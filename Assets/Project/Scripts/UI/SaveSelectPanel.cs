@@ -24,7 +24,7 @@ namespace Project.UI
         [Header("Shared Save Actions (optional)")]
         [SerializeField] private GameObject actionPanel;
         [SerializeField] private Text actionTitleText;
-        [SerializeField] private Text actionCurrencyText;
+        [SerializeField] private Text actionBiomeText;
         [SerializeField] private Button actionPlayButton;
         [SerializeField] private Button actionDeleteButton;
         [SerializeField] private Button actionCancelButton;
@@ -209,10 +209,11 @@ namespace Project.UI
             {
                 selectedSlot = index;
                 if (actionTitleText != null) actionTitleText.text = $"Play Save {index + 1}?";
-                if (actionCurrencyText != null)
+                if (actionBiomeText != null)
                 {
                     SaveSlotStore.TryReadHeader(index, out SaveSlotHeader header);
-                    actionCurrencyText.text = (header != null ? header.currency : 0).ToString("N0");
+                    int biomeIndex = header != null ? header.biomeIndex : 0;
+                    actionBiomeText.text = (Mathf.Max(0, biomeIndex) + 1).ToString();
                 }
                 SetActionsVisible(true);
                 if (actionPlayButton != null && EventSystem.current != null)
@@ -247,7 +248,7 @@ namespace Project.UI
             {
                 windowGroup.interactable = !show;
                 windowGroup.blocksRaycasts = !show;
-                windowGroup.alpha = show ? .45f : 1f;
+                windowGroup.alpha = 1f;
             }
             if (slots != null)
                 for (int i = 0; i < slots.Length; i++) slots[i]?.SetActionSelection(show && i == selectedSlot);

@@ -76,7 +76,13 @@ MonoBehaviour:
         stackable: 0
         removeOnOwnerDamaged: 0
         stackKey: main.memory.void_exposure
+        requiredSourceEffectKey: 
       parameters:
+        overrideReaction: 0
+        reaction:
+          rid: -2
+        overrideMovement: 0
+        dashCooldownMultiplier: 1
         overrideDefense: 0
         evasionChanceAdd: 0
         overrideStatModifiers: 0
@@ -90,12 +96,18 @@ MonoBehaviour:
             elementType: 0
             filterByCategory: 0
             category: 0
-            actionId:
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
             requiredDamageTags: 0
+            requireCriticalHit: 0
           outgoingDamagePercentAdd: 0
           incomingDamageTakenPercentAdd: 15
         overrideDamageInput: 0
         damageInput:
+          applyToAllDeliveries: 0
+          overrideDelivery: 0
+          delivery: 0
           filter:
             filterByDelivery: 0
             delivery: 0
@@ -103,8 +115,11 @@ MonoBehaviour:
             elementType: 0
             filterByCategory: 0
             category: 0
-            actionId:
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
             requiredDamageTags: 0
+            requireCriticalHit: 0
           defenderDefensePercentAdd: 0
           defenderDamageResistancePercentAdd: 0
           ignoreDefense: 0
@@ -132,16 +147,21 @@ MonoBehaviour:
             elementType: 0
             filterByCategory: 0
             category: 0
-            actionId:
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
             requiredDamageTags: 0
+            requireCriticalHit: 0
           damageDealtRatio: 0.5
           lowHpThreshold: 0.3
           lowHpMultiplier: 2
         overrideAdditionalDamage: 0
         additionalDamage:
+          splash: {fileID: 0}
           applyNativeDot: 0
           targetAllRoomEnemies: 0
           oncePerExecution: 0
+          confirmedDamageRatio: 0
           filter:
             filterByDelivery: 0
             delivery: 0
@@ -149,15 +169,19 @@ MonoBehaviour:
             elementType: 0
             filterByCategory: 0
             category: 0
-            actionId:
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
             requiredDamageTags: 0
+            requireCriticalHit: 0
           chance: 1
           internalCooldown: 0
+          sharedCooldownTag: 
           attackRatio: 0.2
           sourceStatDamageSource: 0
           sourceStatRatio: 0
           targetMaxHpRatio: 0
-          sourceRuntimeEffectStackKey:
+          sourceRuntimeEffectStackKey: 
           attackRatioPerSourceRuntimeEffectStack: 0
           maxSourceRuntimeEffectStacks: 0
           capTargetMaxHpDamage: 0
@@ -166,11 +190,13 @@ MonoBehaviour:
           elementType: 0
         overrideProjectile: 0
         projectile:
+          roundRobinTargets: 0
+          useActivePlayerOrigin: 0
           projectile: {fileID: 0}
           tickInterval: 1
           category: 1
-          actionId:
-          actionName:
+          actionId: 
+          actionName: 
         overrideStatus: 0
         status:
           status: 5
@@ -220,7 +246,13 @@ MonoBehaviour:
         stackable: 0
         removeOnOwnerDamaged: 0
         stackKey: main.void_area.shadow_gain
+        requiredSourceEffectKey: 
       parameters:
+        overrideReaction: 0
+        reaction:
+          rid: -2
+        overrideMovement: 0
+        dashCooldownMultiplier: 1
         overrideDefense: 0
         evasionChanceAdd: 0
         overrideStatModifiers: 1
@@ -234,12 +266,18 @@ MonoBehaviour:
             elementType: 0
             filterByCategory: 0
             category: 0
-            actionId:
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
             requiredDamageTags: 0
+            requireCriticalHit: 0
           outgoingDamagePercentAdd: 0
           incomingDamageTakenPercentAdd: 0
         overrideDamageInput: 0
         damageInput:
+          applyToAllDeliveries: 0
+          overrideDelivery: 0
+          delivery: 0
           filter:
             filterByDelivery: 0
             delivery: 0
@@ -247,8 +285,11 @@ MonoBehaviour:
             elementType: 0
             filterByCategory: 0
             category: 0
-            actionId:
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
             requiredDamageTags: 0
+            requireCriticalHit: 0
           defenderDefensePercentAdd: 0
           defenderDamageResistancePercentAdd: 0
           ignoreDefense: 0
@@ -276,16 +317,21 @@ MonoBehaviour:
             elementType: 0
             filterByCategory: 0
             category: 0
-            actionId:
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
             requiredDamageTags: 0
+            requireCriticalHit: 0
           damageDealtRatio: 0.5
           lowHpThreshold: 0.3
           lowHpMultiplier: 2
         overrideAdditionalDamage: 0
         additionalDamage:
+          splash: {fileID: 0}
           applyNativeDot: 0
           targetAllRoomEnemies: 0
           oncePerExecution: 0
+          confirmedDamageRatio: 0
           filter:
             filterByDelivery: 0
             delivery: 0
@@ -293,15 +339,19 @@ MonoBehaviour:
             elementType: 0
             filterByCategory: 0
             category: 0
-            actionId:
+            actionId: 
+            actionIds: []
+            requiredTargetEffectKey: 
             requiredDamageTags: 0
+            requireCriticalHit: 0
           chance: 1
           internalCooldown: 0
+          sharedCooldownTag: 
           attackRatio: 0.2
           sourceStatDamageSource: 0
           sourceStatRatio: 0
           targetMaxHpRatio: 0
-          sourceRuntimeEffectStackKey:
+          sourceRuntimeEffectStackKey: 
           attackRatioPerSourceRuntimeEffectStack: 0
           maxSourceRuntimeEffectStacks: 0
           capTargetMaxHpDamage: 0
@@ -310,11 +360,13 @@ MonoBehaviour:
           elementType: 0
         overrideProjectile: 0
         projectile:
+          roundRobinTargets: 0
+          useActivePlayerOrigin: 0
           projectile: {fileID: 0}
           tickInterval: 1
           category: 1
-          actionId:
-          actionName:
+          actionId: 
+          actionName: 
         overrideStatus: 0
         status:
           status: 5
@@ -355,7 +407,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        elementType: 5
+        elementType: 0
         damageTags: 128
         suppressImpactFeedback: 0
         suppressContactVfx: 0
@@ -378,6 +430,10 @@ MonoBehaviour:
         launchSpeed: 0
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 0
+        reactionTargetOffset: {x: 0, y: 0}
+        reactionTargetTravelFrames: 0
+        preserveReactionMotionTiming: 0
         landingBehavior: 0
         canAirJuggle: 1
         juggleLaunchScale: 1

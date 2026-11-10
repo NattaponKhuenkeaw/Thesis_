@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ART-R-010
   itemName: Spent Aura Coil
   description: 
-  icon: {fileID: 21300000, guid: 155d7be2a90fd78418313228d21bd149, type: 3}
+  icon: {fileID: 21300000, guid: 6c128f92323034a46a12f2f52365802c, type: 3}
   price: 375
   isEquippable: 1
   rarity: 1

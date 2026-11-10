@@ -16,7 +16,7 @@ MonoBehaviour:
   itemName: Broken Chrono-Relic
   description: In the Cursed Realm, time is your ultimate executioner. Run faster,
     kill faster, or forget your name.
-  icon: {fileID: 21300000, guid: 3ed122e6e9a0b0e428a23d53ba9f97a6, type: 3}
+  icon: {fileID: 21300000, guid: 946abb99bba01aa42a20786c58b950ae, type: 3}
   price: 4250
   isEquippable: 1
   rarity: 3

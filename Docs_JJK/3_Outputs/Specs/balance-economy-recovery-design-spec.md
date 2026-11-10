@@ -11,7 +11,48 @@ Status: first combat and economy pass implemented. The remaining sections descri
 - Medium combat clears award 175, 250, or 350 Soul in biomes 1–3, 4–6, or 7 onward. Hard clears award 219, 313, or 438. The current Hard artifact patterns and Character Memory draw accompany that fixed Soul payout.
 - Boss victories offer one permanent Character Memory for an eligible owned character. The picker follows the death presentation and resolves before the boss continue prompt. The existing Character Memory track has 54 steps.
 
-Shop prices, level cadence, artifact cadence, and selectable Nightmare remain proposed work.
+Shop prices, level cadence, and artifact cadence remain proposed work.
+
+## Enemy calibration after the player damage refactor
+
+Updated 2026-11-10. The benchmarks in this section supersede the DPS assumptions and the proposed fixed ×12 Nightmare HP factor below. The implemented health curves above describe the current build.
+
+The owner recorded these averages over 30 seconds. Character level labels follow the test setup.
+
+| Build | Shin | Rei | Goenitz | Shin / Rei | Goenitz / Rei | Goenitz / Shin |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Lv.0, zero Memory, R artifacts | 230 | — | — | 260–300 | 180–230 | — |
+| Lv.0, full Memory, no artifacts | 1,000–1,400 | 1,600–2,000 | 2,600–3,000 | 6,000 | 7,000 | 3,000 |
+| Lv.10, one character with full Memory, full SR | — | — | — | — | — | — |
+| Lv.30, full Memory, full SSR | — | — | — | 70,000 | 55,000 | 30,000 |
+
+| Matchup | Current boss HP | HP divided by dummy DPS |
+| --- | ---: | ---: |
+| Fresh team at the first boss | 8,000 | 27–44 seconds |
+| Full-Memory team at the first boss | 8,000 | 1.1–2.7 seconds |
+| Max-build team against the biome 10 boss | 42,000 | 0.6–1.4 seconds |
+
+The last row pairs a benchmark build with the current boss as a scenario. The actual biome where players reach that build is unknown. HP divided by dummy DPS expresses the amount of damage required at the measured rate. Live damage depends on the first punish window, movement, target access, defenses, and resource state.
+
+Keep the first boss as the fresh-profile baseline until a live timing test shows a need to adjust it. Develop a selectable veteran curve with separate health budgets at the start, middle, and end of the run. Keep the difficulty fixed when a player switches builds during the run. The old proposal of 504,000 endgame boss HP gives roughly 12–28 seconds at the new max-build DPS range under the illustrative 60% damage-delivery assumption.
+
+Starting playtest values for a veteran boss are 180,000 HP at the opening benchmark and 1.8 million HP at the max-build benchmark. These use 5,000 and 50,000 dummy DPS as trial reference points, 60% assumed effective damage delivery, and a 60-second reference fight. Under the same assumption the tested teams span about 43–100 seconds at each endpoint. Playtest the weakest and strongest teams alongside the reference. Adjust each boss's HP after recording time from first damage to death and damage dealt in its first punish window. Check whether ordinary teams see the intended attack patterns and can recover from mistakes. Use measured damage delivery to recalculate both trial values before shipping.
+
+### Veteran trial in the current build
+
+Choose Normal or Veteran on the first lobby exit's room selection screen. Leaving the lobby commits the mode to the run checkpoint. A fresh run defaults to Normal and the save loader reads older checkpoints as Normal. Veteran is recommended for full-Memory duos.
+
+| Biome | Veteran boss HP | Basic enemy HP vs. Normal | Guard or elite HP vs. Normal |
+| ---: | ---: | ---: | ---: |
+| 1 | 180,000 | ×8 | ×12 |
+| 5 | ~501,000 | ×9.8 | ×17.3 |
+| 10+ | 1,800,000 | ×12 | ×24 |
+
+Boss health grows proportionally between the endpoints. The biome 5 estimate is an interpolation until the Lv.10 tests are available. Basic enemies use the smaller multiplier to preserve short kills. Guards and elites have a higher budget to create targeting decisions. Both sets of Veteran multipliers hold at biome 10. Validate enemy roles against live pack clear time and adjust the role that consumes too much time. If ordinary enemies are slow to clear, lower the basic multiplier before changing the guard or elite budget.
+
+Test Lv.10/full SR with the same pairings at zero Memory and with one character at full Memory. Keep the gear, rotation, and starting resources matched. A Lv.30/full SSR/zero Memory run on the new damage system is also needed to set the fresh-profile late-game budget. Use actual character level, gear, and Memory at representative biome saves to place these test anchors along the run.
+
+For regular enemies, retain their short individual lifetimes and tune from the active fight time of a representative room. At biome 10 the current 200-base-HP melee enemy has about 887 HP. Test melee packs, ranged pressure, guards, and elites separately. If travel and spawn delays dominate a room, adjust those before increasing pack health. If ordinary packs disappear before players have a targeting decision, tune pack composition and role health in the veteran curve.
 
 ## Constraints and player goal
 

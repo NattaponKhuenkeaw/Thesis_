@@ -569,6 +569,8 @@ public class RuntimeEffectDamageFilterDrawer : FoldoutPropertyDrawer
         EffectDrawerUtility.Draw(ref position, Prop(property, "actionIds"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "requireCriticalHit"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "requiredTargetEffectKey"));
+        if (!string.IsNullOrWhiteSpace(Prop(property, "requiredTargetEffectKey").stringValue))
+            EffectDrawerUtility.Draw(ref position, Prop(property, "requireTargetEffectBeforeHit"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "actionId"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "requiredDamageTags"));
         DrawFilter(ref position, property, "filterByDelivery", "delivery");
@@ -580,6 +582,8 @@ public class RuntimeEffectDamageFilterDrawer : FoldoutPropertyDrawer
     {
         return EffectDrawerUtility.Height(Prop(property, "actionIds")) + EffectDrawerUtility.Height(Prop(property, "requireCriticalHit"))
             + EffectDrawerUtility.Height(Prop(property, "requiredTargetEffectKey")) + EffectDrawerUtility.Height(Prop(property, "actionId"))
+            + (string.IsNullOrWhiteSpace(Prop(property, "requiredTargetEffectKey").stringValue)
+                ? 0f : EffectDrawerUtility.Height(Prop(property, "requireTargetEffectBeforeHit")))
             + EffectDrawerUtility.Height(Prop(property, "requiredDamageTags"))
             + FilterHeight(property, "filterByDelivery", "delivery")
             + FilterHeight(property, "filterByElement", "elementType")

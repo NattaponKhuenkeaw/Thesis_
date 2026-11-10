@@ -93,13 +93,11 @@ namespace Project.TeamBuilder.UI.Panels
         private int _ignoreOutsideClickFrame = -1;
         private CharacterMemoryPanel _memoryPanel;
         private CharacterObject _memoryCharacter;
-        private bool _showPreviousUpgrades;
         private RectTransform _potentialContent;
         private float _potentialScrollSensitivity;
         private Navigation _potentialExitNavigation;
         private TMP_Text _panelTitle;
         private string _potentialTitle;
-        private Button _switchUpgradeView;
         private Button _memoryPreviewSource;
         private CharacterMemoryProgress _practiceMemory;
         private Selectable[] _practiceHeader;
@@ -136,7 +134,6 @@ namespace Project.TeamBuilder.UI.Panels
             UnbindButtons();
             UnbindFragmentEvents();
             CloseUpgradeWindow();
-            _showPreviousUpgrades = false;
             _memoryCharacter = null;
             _memoryPage = -1;
             RestorePotentialView();
@@ -150,10 +147,7 @@ namespace Project.TeamBuilder.UI.Panels
         public void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts)
         {
             if (_currentCharacterItem != character)
-            {
-                _showPreviousUpgrades = false;
                 _memoryPage = -1;
-            }
             _currentCharacterItem = character;
             _currentCharacter = character != null ? character.characterObjectData : null;
             _currentArtifacts = equippedArtifacts ?? Array.Empty<ArtifactInstance>();
@@ -214,7 +208,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void PresentMemoryTrack((int step, PotentialTrack family)? focus = null, Vector2? scrollPosition = null)
         {
-            if (!Application.isPlaying || !isActiveAndEnabled || _currentCharacter == null || _showPreviousUpgrades ||
+            if (!Application.isPlaying || !isActiveAndEnabled || _currentCharacter == null ||
                 contentScrollRect == null || contentScrollRect.content == null ||
                 (_memoryCharacter == _currentCharacter && _memoryPanel != null && _memoryPanel.gameObject.activeSelf))
                 return;
@@ -229,6 +223,7 @@ namespace Project.TeamBuilder.UI.Panels
                     return;
                 _potentialContent = contentScrollRect.content;
                 _potentialScrollSensitivity = contentScrollRect.scrollSensitivity;
+                if (exitButton != null) _potentialExitNavigation = exitButton.navigation;
                 _panelTitle = transform.Find("PotentialTitle")?.GetComponent<TMP_Text>();
                 _potentialTitle = _panelTitle?.text;
                 if (_panelTitle != null) _potentialTitleAnchorMax = _panelTitle.rectTransform.anchorMax;
@@ -237,16 +232,16 @@ namespace Project.TeamBuilder.UI.Panels
                     Transform trackTitle = transform.Find(name);
                     if (trackTitle != null && trackTitle.gameObject.activeSelf) _legacyTrackHeaders.Add(trackTitle.gameObject);
                 }
-                _memoryPanel = CharacterMemoryPanel.CreateBoard(contentScrollRect, genericMemoryPages);
+                _memoryPanel = CharacterMemoryPanel.CreateBoard(contentScrollRect, genericMemoryPages, memoryFont, memoryControlSprite);
                 CreateMemoryPageButtons();
                 CreateMemoryLockNotice();
-                if (_practiceFooter == null) CreateUpgradeViewButton();
             }
 
             CloseUpgradeWindow();
             HideMemoryLockNotice();
             _potentialContent.gameObject.SetActive(false);
             _memoryPanel.gameObject.SetActive(true);
+            _memoryPanel.SetJumpControlsVisible(true);
             _memoryCharacter = _currentCharacter;
             var memory = _practiceMemory ?? progression.CaptureMemory(_currentCharacter.characterId);
             _lastUnlockedMemoryPage = memory.LastUnlockedPage;
@@ -257,12 +252,6 @@ namespace Project.TeamBuilder.UI.Panels
                 _panelTitle.rectTransform.anchorMax = new Vector2(.36f, _potentialTitleAnchorMax.y);
                 _panelTitle.text = ResolveCharacterDisplayName();
             }
-            bool canShowPrevious = _switchUpgradeView != null && !CharacterMemoryKit.AppliesTo(_currentCharacter);
-            if (_switchUpgradeView != null)
-                _switchUpgradeView.gameObject.SetActive(canShowPrevious);
-            if (canShowPrevious)
-                _switchUpgradeView.GetComponentInChildren<TMP_Text>(true).text = "PREVIOUS UPGRADES";
-
             var header = new List<Selectable>();
             if (exitButton != null && exitButton.isActiveAndEnabled) header.Add(exitButton);
             for (int page = 0; page < _memoryPageButtons.Length; page++)
@@ -275,7 +264,6 @@ namespace Project.TeamBuilder.UI.Panels
                 button.GetComponentInChildren<TMP_Text>().color = page == _memoryPage ? new Color(1f, .86f, .35f) : Color.white;
                 header.Add(button);
             }
-            if (canShowPrevious) header.Add(_switchUpgradeView);
             if (_practiceHeader != null) header.AddRange(ActiveControls(_practiceHeader));
             var footer = _practiceFooter == null ? null : Array.ConvertAll(_practiceFooter, ActiveControls);
             CharacterPotentialNodeUI major = nodeSlots.Length > 0 ? nodeSlots[0] : null;
@@ -381,43 +369,6 @@ namespace Project.TeamBuilder.UI.Panels
         private static Selectable[] ActiveControls(Selectable[] controls) =>
             Array.FindAll(controls, control => control != null && control.isActiveAndEnabled && control.IsInteractable());
 
-        private void CreateUpgradeViewButton()
-        {
-            if (exitButton == null) return;
-            _potentialExitNavigation = exitButton.navigation;
-            _switchUpgradeView = Instantiate(exitButton, transform);
-            _switchUpgradeView.name = "Switch Upgrade View";
-            _switchUpgradeView.onClick = new Button.ButtonClickedEvent();
-            _switchUpgradeView.onClick.AddListener(SwitchUpgradeView);
-            var rect = (RectTransform)_switchUpgradeView.transform;
-            rect.anchorMin = rect.anchorMax = new Vector2(1f, rect.anchorMin.y);
-            rect.pivot = new Vector2(1f, rect.pivot.y);
-            rect.anchoredPosition = new Vector2(-Mathf.Abs(rect.anchoredPosition.x), rect.anchoredPosition.y);
-            TMP_Text label = _switchUpgradeView.GetComponentInChildren<TMP_Text>(true);
-            if (label == null)
-            {
-                Destroy(_switchUpgradeView.gameObject);
-                _switchUpgradeView = null;
-                return;
-            }
-            rect.sizeDelta = new Vector2(label.GetPreferredValues("PREVIOUS UPGRADES").x + 32f, rect.sizeDelta.y);
-        }
-
-        private void SwitchUpgradeView()
-        {
-            if (CharacterMemoryKit.AppliesTo(_currentCharacter)) return;
-            CloseUpgradeWindow();
-            _showPreviousUpgrades = !_showPreviousUpgrades;
-            if (!_showPreviousUpgrades)
-            {
-                PresentMemoryTrack();
-                return;
-            }
-
-            RestorePotentialView();
-            EventSystem.current?.SetSelectedGameObject(_switchUpgradeView.gameObject);
-        }
-
         private void RestorePotentialView()
         {
             if (_memoryPanel == null) return;
@@ -425,6 +376,7 @@ namespace Project.TeamBuilder.UI.Panels
             contentScrollRect.content = _potentialContent;
             contentScrollRect.scrollSensitivity = _potentialScrollSensitivity;
             _memoryPanel.gameObject.SetActive(false);
+            _memoryPanel.SetJumpControlsVisible(false);
             _potentialContent.gameObject.SetActive(true);
             if (_panelTitle != null)
             {
@@ -435,11 +387,6 @@ namespace Project.TeamBuilder.UI.Panels
             foreach (GameObject header in _legacyTrackHeaders) header.SetActive(true);
             HideMemoryLockNotice();
             if (exitButton != null) exitButton.navigation = _potentialExitNavigation;
-            if (_switchUpgradeView != null)
-            {
-                _switchUpgradeView.GetComponentInChildren<TMP_Text>(true).text = "MEMORY TRACK";
-                _switchUpgradeView.navigation = new Navigation { mode = Navigation.Mode.Automatic };
-            }
         }
 
         private void OpenMemoryPreview(Button source, string title, int step, PotentialTrack family, string description,
