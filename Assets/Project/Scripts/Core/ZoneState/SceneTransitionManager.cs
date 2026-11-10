@@ -226,22 +226,31 @@ namespace Project.Core.ZoneState
             }
             ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
 
-            Vector3 previousPosition = player.transform.position;
             Vector3 target = exitCollider.bounds.center;
-            target.z = previousPosition.z;
+            target.z = player.transform.position.z;
             player.StateMachine?.ChangeState(player.StateMachine.IdleState);
             player.StateMachine?.InputBuffer?.ClearAll();
             player.Movement?.SetHorizontalInput(0f);
-            player.transform.position = target;
-            Rigidbody2D body = player.GetComponent<Rigidbody2D>();
+            PlacePlayerForRoomEntry(player, target);
+            return true;
+        }
+
+        private static void PlacePlayerForRoomEntry(PlayerCharacter player, Vector3 position)
+        {
+            Vector3 previousPosition = player.transform.position;
+            Rigidbody2D body = player.Movement != null ? player.Movement.RB : null;
+            if (body == null)
+                body = player.GetComponent<Rigidbody2D>();
+
             if (body != null)
             {
-                body.position = target;
+                body.position = position;
                 body.linearVelocity = Vector2.zero;
             }
+            player.transform.position = position;
+            // The motor and camera read the physics pose before the next fixed step.
             Physics2D.SyncTransforms();
-            CameraManager.instance?.SnapToPlayerForRoomEnter(target - previousPosition);
-            return true;
+            CameraManager.instance?.SnapToPlayerForRoomEnter(position - previousPosition, body);
         }
 
         /// <summary>
@@ -519,16 +528,9 @@ namespace Project.Core.ZoneState
                 {
                     activeBoundaryController?.PrepareForIntro(targetEntrance);
                     Debug.Log($"[SceneTransitionManager] Teleporting player from {player.transform.position} to entrance spawn {targetEntrance.SpawnPosition}; stop point is {targetEntrance.StopPosition}.");
-                    Vector3 previousPosition = player.transform.position;
-                    player.transform.position = targetEntrance.SpawnPosition;
-
-                    Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-                    if (rb != null)
-                    {
-                        rb.linearVelocity = Vector2.zero;
-                    }
-
-                    CameraManager.instance?.SnapToPlayerForRoomEnter(player.transform.position - previousPosition);
+                    PlacePlayerForRoomEntry(player, targetEntrance.SpawnPosition);
+                    // Let Cinemachine render the new pose once while the screen is black.
+                    yield return null;
                 }
 
                 if (transitionInSFX != null && GameAudioManager.Instance != null)

@@ -280,7 +280,10 @@ public class PlayerIntroRevealTests
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
         var player = CreatePlayer(true, out var profile); player.tag = "Player";
-        player.transform.position = new Vector3(-4f, 0f); player.Movement.RB.position = new Vector2(-4f, 0f);
+        var body = player.Movement.RB;
+        body.interpolation = RigidbodyInterpolation2D.Interpolate;
+        body.position = new Vector2(35f, 10f);
+        player.transform.position = body.position;
         var driver = AttachRealAnimator(player, characterPath);
         var room = ScriptableObject.CreateInstance<RoomData>();
         typeof(RoomData).GetField("sceneName", Private).SetValue(room, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
@@ -288,6 +291,10 @@ public class PlayerIntroRevealTests
         var source = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefab/Camera/CameraSetUp.prefab");
         var rig = Object.Instantiate(source);
         var cameraManager = rig.GetComponent<CameraManager>();
+        var lookAhead = rig.GetComponentInChildren<CameraLookAhead>();
+        var staleBody = new GameObject("Previous room body").AddComponent<Rigidbody2D>();
+        staleBody.simulated = false;
+        lookAhead.BindPlayerRigidbody(staleBody);
         typeof(CameraManager).GetField("_zoneStateProvider", Private).SetValue(cameraManager, provider);
         var output = rig.GetComponentInChildren<Camera>(); output.aspect = aspect;
         var layout = CreateBoundary(out var boundary, out _, out _);
@@ -297,8 +304,14 @@ public class PlayerIntroRevealTests
         {
             Physics2D.SyncTransforms();
             boundary.PrepareForIntro(entrance);
-            cameraManager.SnapToPlayerForRoomEnter(Vector3.zero);
+            typeof(SceneTransitionManager).GetMethod("PlacePlayerForRoomEntry", BindingFlags.Static | BindingFlags.NonPublic)
+                .Invoke(null, new object[] { player, entrance.SpawnPosition });
+            Assert.That(body.position, Is.EqualTo((Vector2)entrance.SpawnPosition));
+            Assert.That(lookAhead.playerRigidbody, Is.SameAs(body));
+            Assert.That(lookAhead.transform.position.y, Is.EqualTo(entrance.SpawnPosition.y));
             for (int i = 0; i < 5; i++) yield return null;
+            Assert.That(player.transform.position.x, Is.EqualTo(entrance.SpawnPosition.x).Within(.05f),
+                "The interpolated player must stay at the new entrance until the intro starts.");
             Assert.That(output.WorldToViewportPoint(player.transform.position).x, Is.LessThan(0f), "The entrance must really start outside the camera frame");
             float fixedCameraX = output.transform.position.x;
             float fixedCameraY = output.transform.position.y;
@@ -342,6 +355,7 @@ public class PlayerIntroRevealTests
         {
             Object.DestroyImmediate(layout); Object.DestroyImmediate(manager.gameObject);
             Object.DestroyImmediate(rig); Object.DestroyImmediate(player.gameObject);
+            Object.DestroyImmediate(staleBody.gameObject);
             Object.DestroyImmediate(entrance.gameObject); Object.DestroyImmediate(profile);
             Object.DestroyImmediate(provider); Object.DestroyImmediate(room);
         }

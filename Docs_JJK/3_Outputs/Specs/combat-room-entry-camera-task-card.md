@@ -16,6 +16,11 @@ Workflow `/fix-bug`
 
 Enter Combat01 through the normal room transition. Before the first hit, the Explore camera can sit high above the player. Combat framing or opening the gate makes the view recover.
 
+Follow-up reports the camera pointing above the player in Biome 2 combat rooms and a visible right-to-left air run after returning from Shop, Rest, or Level. The earlier captured X also matches the midpoint of Combat08's closed first chamber.
+
+Boss112 follow-up requires the encounter trigger to stay unarmed during room loading. A new layout can overlap the previous room's player pose before entrance placement, prematurely spawning the boss and sealing its arena gate outside the player.
+
 - Keep the player visible as the room fades in with the first gate closed.
-- Fit the Explore view to the active bounds before the entry snap and as the room opens up. Recover the authored zoom when the view fits again.
+- Fit both follow and combat framing to the active bounds, including the first enemy engagement. Recover authored zoom as the room opens up.
+- Move the player's physics body and snap the camera to that same body under black before starting the entrance walk.
 - Verify at standard and ultrawide aspects with `CombatChamberCameraTests`. Review entrance framing in the running game.

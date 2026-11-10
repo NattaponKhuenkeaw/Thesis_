@@ -21,6 +21,8 @@ blocked_by: []
 - [ ] กล้องไม่ไหลไปข้างนอกห้อง
 - [ ] ยืนชิดกำแพงแล้วผู้เล่นอยู่ **ขอบจอ** ไม่ใช่กลางจอพร้อมฉากว่างข้างนอก
 - [ ] Enter Combat01 from the lobby at 16:9 and 21:9. The player stays visible as the fade reveals the intro walk, before attacking and while the first gate is closed.
+- [ ] Enter Combat08 in Biome 2 at 16:9 and 21:9. Check the first visible frame, then let an enemy engage. The floor and player stay in frame during the Explore-to-Combat blend.
+- [ ] Enter Boss_02 from Shop in Biome 2. The boss stays unspawned and the arena gate stays open through loading and the entrance walk. Walk past the arena gate to start the boss reveal, then verify the gate closes behind the player.
 
 ### B. เคลียร์แล้ว
 

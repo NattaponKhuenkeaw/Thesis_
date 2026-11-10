@@ -54,7 +54,7 @@ public class CameraLookAhead : MonoBehaviour
     // =========================================================
     // Unity Methods
     // =========================================================
-    private void Awake()
+    private void Start()
     {
         TryResolvePlayerRigidbody();
     }
@@ -159,10 +159,9 @@ public class CameraLookAhead : MonoBehaviour
             GameObject playerObject = GameObject.FindWithTag("Player");
             if (playerObject != null)
             {
-                PlayerMovement movement = playerObject.GetComponent<PlayerMovement>()
+                PlayerMovement movement = playerObject.GetComponentInParent<PlayerMovement>()
                     ?? playerObject.GetComponentInChildren<PlayerMovement>(true);
-                Rigidbody2D body = movement != null ? movement.RB : null;
-                BindPlayerRigidbody(body != null ? body : playerObject.GetComponent<Rigidbody2D>());
+                BindPlayerRigidbody(movement != null ? movement.RB : playerObject.GetComponent<Rigidbody2D>());
             }
 
             if (playerRigidbody == null)

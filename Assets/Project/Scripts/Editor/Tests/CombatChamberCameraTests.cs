@@ -124,6 +124,10 @@ public class CombatChamberCameraTests
     public IEnumerator Lv1FirstChamberKeepsTheWideCombatViewportBehindTheClosedGate()
         => VerifyFirstChamber(true, 21f / 9f);
 
+    [UnityTest]
+    public IEnumerator Lv8FirstChamberKeepsTheCombatViewportBehindTheClosedGateAt16By9()
+        => VerifyFirstChamber(true, 16f / 9f, 8);
+
     [UnityTest] public IEnumerator Lv2FirstChamberKeepsTheWideCombatViewportBehindTheClosedGate() => VerifyFirstChamber(true, 21f / 9f, 2);
     [UnityTest] public IEnumerator Lv3FirstChamberKeepsTheWideCombatViewportBehindTheClosedGate() => VerifyFirstChamber(true, 21f / 9f, 3);
     [UnityTest] public IEnumerator Lv4FirstChamberKeepsTheWideCombatViewportBehindTheClosedGate() => VerifyFirstChamber(true, 21f / 9f, 4);

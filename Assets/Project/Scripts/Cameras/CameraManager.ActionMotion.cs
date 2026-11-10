@@ -83,6 +83,7 @@ public partial class CameraManager
     private void Update()
     {
         FitExploreZoomToRoom();
+        FitCombatZoomToRoom();
         if (!HasTimedCamera) return;
         if (!HasActionCamera) { ClearActionCamera(); return; }
         var stateMachine = _actionMotionExecution.owner.playerCharacter.StateMachine;

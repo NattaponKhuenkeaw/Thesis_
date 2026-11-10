@@ -164,7 +164,9 @@ public partial class CameraManager : MonoBehaviour
 
     private CinemachineGroupFraming _combatGroupFraming;
     private CinemachineConfiner2D _exploreConfiner;
+    private CinemachineConfiner2D _combatConfiner;
     private float _authoredExploreSize;
+    private float _authoredCombatSize;
     private Vector2 _defaultCombatOrthoSizeRange = new Vector2(6.8f, 8f);
     private float _defaultCombatFramingSize = 0.47f;
     private bool _bossFramingActive;
@@ -276,6 +278,11 @@ public partial class CameraManager : MonoBehaviour
             _exploreConfiner = _exploreCam.GetComponent<CinemachineConfiner2D>();
             _authoredExploreSize = _exploreCam.Lens.OrthographicSize;
         }
+        if (_combatCam != null)
+        {
+            _combatConfiner = _combatCam.GetComponent<CinemachineConfiner2D>();
+            _authoredCombatSize = _combatCam.Lens.OrthographicSize;
+        }
 
         CacheCombatGroupFraming();
 
@@ -342,15 +349,10 @@ public partial class CameraManager : MonoBehaviour
         if (_exploreCam == null || _exploreConfiner == null) return;
 
         float size = _authoredExploreSize;
-        RoomData room = _zoneStateProvider != null ? _zoneStateProvider.CurrentRoom : null;
-        Camera output = _brain != null ? _brain.OutputCamera : Camera.main;
-        if (room != null && room.RoomKind == RoomKind.Combat && !room.UseStaticCamera
-            && output != null && output.aspect > 0f && _exploreConfiner.enabled
-            && _exploreConfiner.BoundingShape2D is BoxCollider2D bounds && bounds.isActiveAndEnabled)
+        if (TryGetCombatRoomBounds(_exploreConfiner, out Vector3 dimensions, out float aspect))
         {
             // Leave a little room inside the confiner so the legal camera area cannot collapse.
-            Vector3 dimensions = bounds.bounds.size;
-            float maxSize = Mathf.Min(dimensions.x / output.aspect, dimensions.y) * .5f - .05f;
+            float maxSize = Mathf.Min(dimensions.x / aspect, dimensions.y) * .5f - .05f;
             size = Mathf.Min(size, Mathf.Max(.01f, maxSize));
         }
 
@@ -358,6 +360,48 @@ public partial class CameraManager : MonoBehaviour
 
         SetCameraSize(_exploreCam, size);
         _exploreConfiner.InvalidateLensCache();
+    }
+
+    private void FitCombatZoomToRoom()
+    {
+        if (_trainingMode || _combatCam == null || _combatGroupFraming == null) return;
+
+        Vector2 range = _bossFramingActive ? _bossOrthoSizeRange : _defaultCombatOrthoSizeRange;
+        float baseSize = _authoredCombatSize;
+        if (TryGetCombatRoomBounds(_combatConfiner, out Vector3 dimensions, out float aspect))
+        {
+            range = RoomBoundaryMath.LimitCombatOrthoRange(range, dimensions.x, aspect);
+            float maxSize = Mathf.Min(range.y, Mathf.Max(.01f, dimensions.y * .5f - .05f));
+            range = new Vector2(Mathf.Min(range.x, maxSize), maxSize);
+            baseSize = Mathf.Min(baseSize, maxSize);
+        }
+
+        // Shrinking the range must take effect before group-framing damping runs.
+        if (range.y < _combatGroupFraming.OrthoSizeRange.y)
+            _combatCam.PreviousStateIsValid = false;
+        _combatGroupFraming.OrthoSizeRange = range;
+
+        if (Mathf.Approximately(baseSize, _combatCam.Lens.OrthographicSize)) return;
+        SetCameraSize(_combatCam, baseSize);
+        _combatConfiner?.InvalidateLensCache();
+    }
+
+    private bool TryGetCombatRoomBounds(CinemachineConfiner2D confiner, out Vector3 dimensions, out float aspect)
+    {
+        dimensions = Vector3.zero;
+        aspect = 0f;
+        RoomData room = _zoneStateProvider != null ? _zoneStateProvider.CurrentRoom : null;
+        if (room == null || room.RoomKind != RoomKind.Combat || room.UseStaticCamera
+            || confiner == null || !confiner.isActiveAndEnabled
+            || !(confiner.BoundingShape2D is BoxCollider2D bounds) || !bounds.isActiveAndEnabled)
+            return false;
+
+        Camera output = _brain != null ? _brain.OutputCamera : Camera.main;
+        if (output == null || output.aspect <= 0f) return false;
+
+        aspect = output.aspect;
+        dimensions = bounds.bounds.size;
+        return dimensions.x > 0f && dimensions.y > 0f;
     }
 
     private void TickEngagedEnemies()
@@ -736,13 +780,21 @@ public partial class CameraManager : MonoBehaviour
     /// <summary>
     /// Room enter / layout swap: drop leftover combat framing and snap follow to the player.
     /// </summary>
-    public void SnapToPlayerForRoomEnter(Vector3 warpDelta)
+    public void SnapToPlayerForRoomEnter(Vector3 warpDelta, Rigidbody2D playerBody = null)
     {
         ClearEngagedEnemies();
         ExitCombatMode();
-        _cameraLookAhead?.SnapToPlayer();
+        if (_cameraLookAhead != null)
+        {
+            Vector3 previousTargetPosition = _cameraLookAhead.transform.position;
+            _cameraLookAhead.BindPlayerRigidbody(playerBody);
+            _cameraLookAhead.SnapToPlayer();
+            if (_playerTransform == _cameraLookAhead.transform)
+                warpDelta = _cameraLookAhead.transform.position - previousTargetPosition;
+        }
         NotifyPlayerWarp(warpDelta);
         FitExploreZoomToRoom();
+        FitCombatZoomToRoom();
         BeginTemporaryPlayerSnap(0.05f, smoothTransition: false);
     }
 
@@ -1373,6 +1425,8 @@ public partial class CameraManager : MonoBehaviour
 
     private void UpdateCameraForRoom(RoomData room)
     {
+        FitExploreZoomToRoom();
+        FitCombatZoomToRoom();
         if (_trainingMode) { _isInCombat = true; SetCombatMode(); return; }
         if (room != null && room.UseStaticCamera)
         {
@@ -1545,14 +1599,15 @@ public partial class CameraManager : MonoBehaviour
 
     private void ApplyBossCombatFraming()
     {
+        if (_bossFramingActive) return;
         if (_combatGroupFraming == null)
             CacheCombatGroupFraming();
         if (_combatGroupFraming == null)
             return;
 
-        _combatGroupFraming.OrthoSizeRange = _bossOrthoSizeRange;
         _combatGroupFraming.FramingSize = _bossFramingSize;
         _bossFramingActive = true;
+        FitCombatZoomToRoom();
     }
 
     private void RestoreDefaultCombatFraming()
@@ -1560,9 +1615,9 @@ public partial class CameraManager : MonoBehaviour
         if (!_bossFramingActive || _combatGroupFraming == null)
             return;
 
-        _combatGroupFraming.OrthoSizeRange = _defaultCombatOrthoSizeRange;
         _combatGroupFraming.FramingSize = _defaultCombatFramingSize;
         _bossFramingActive = false;
+        FitCombatZoomToRoom();
     }
 
     private void CleanupNullTargets()

@@ -89,6 +89,9 @@ public class Boss112EntranceTests
         typeof(CameraManager).GetField("_playerTransform", Private).SetValue(manager, player.transform);
         var host = new GameObject("Layout host"); host.transform.SetParent(root.transform);
         var layout = host.AddComponent<RoomLayoutHost>();
+        var transition = new GameObject("Boss entrance transition").AddComponent<SceneTransitionManager>();
+        var transitioning = typeof(SceneTransitionManager).GetField("isTransitioning", Private);
+        transitioning.SetValue(transition, true);
         try
         {
             Assert.That(layout.MountRoom(Resources.Load<RoomData>("MapSO/RoomData_Boss_02")), Is.True);
@@ -99,9 +102,20 @@ public class Boss112EntranceTests
             var boundary = arena.GetComponent<SceneBoundaryController>();
             Assert.That(camera.enabled, Is.False);
             Assert.That(gate.isTrigger, Is.True);
-            player.transform.position = entrance.SpawnPosition;
+            // Room loading yields before entrance placement. The outgoing room pose
+            // can overlap the new boss trigger during that physics step.
+            var trigger = arena.transform.Find("BossSpawnTrigger").GetComponent<BoxCollider2D>();
+            player.transform.position = new Vector3(trigger.bounds.center.x, entrance.SpawnPosition.y, 0f);
             var driver = PlayerIntroRevealTests.AttachRealAnimator(player, character);
             player.Movement.RB.constraints = RigidbodyConstraints2D.FreezeRotation;
+            Physics2D.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            yield return null;
+            Assert.That(Object.FindFirstObjectByType<Boss112Controller>(), Is.Null,
+                "The previous room pose must not start the boss during loading.");
+            Assert.That(gate.isTrigger, Is.True, "The gate must stay open until the player enters the arena.");
+            player.Movement.RB.position = entrance.SpawnPosition;
+            player.transform.position = entrance.SpawnPosition;
             Physics2D.SyncTransforms();
             boundary.PrepareForIntro(entrance);
             var intro = player.StateMachine.IntroState;
@@ -116,6 +130,7 @@ public class Boss112EntranceTests
             }
             Assert.That(player.transform.position.x, Is.EqualTo(entrance.StopPosition.x).Within(.3f));
             Assert.That(player.StateMachine.IsCinematicTraversal, Is.False);
+            transitioning.SetValue(transition, false);
             float stoppedAt = Time.time;
             while (Time.time - stoppedAt < .4f) yield return null;
             Assert.That(Object.FindFirstObjectByType<Boss112Controller>(), Is.Null, "Stopping at the entrance must not start the fight.");
@@ -140,6 +155,7 @@ public class Boss112EntranceTests
         finally
         {
             Object.DestroyImmediate(root); Object.DestroyImmediate(profile); Object.DestroyImmediate(provider);
+            Object.DestroyImmediate(transition.gameObject);
             if (Project.UI.BossHealthHUD.Instance != null) Object.DestroyImmediate(Project.UI.BossHealthHUD.Instance.gameObject);
         }
         yield return new ExitPlayMode();

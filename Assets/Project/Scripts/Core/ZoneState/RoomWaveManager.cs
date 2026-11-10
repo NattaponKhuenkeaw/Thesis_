@@ -134,6 +134,11 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            // A newly mounted layout can overlap the player's previous-room pose before
+            // the transition places them at the entrance. Do not seal the arena yet.
+            if (SceneTransitionManager.Instance != null && SceneTransitionManager.Instance.IsTransitioning)
+                return;
+
             StartEncounter();
         }
 
