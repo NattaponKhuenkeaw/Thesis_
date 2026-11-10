@@ -17,6 +17,7 @@ public class EnemyAttackHitbox : MonoBehaviour
     private bool hitboxWindowActive;
     private AudioClip windowImpactSfx;
     private float windowImpactSfxVolume = 1f;
+    private Bounds? windowDamageLane;
 
     public EnemyAttackProperty AttackProperty => attackProperty;
 
@@ -35,6 +36,7 @@ public class EnemyAttackHitbox : MonoBehaviour
         hitboxWindowActive = false;
         hitTargetsThisWindow.Clear();
         windowImpactSfx = null;
+        windowDamageLane = null;
     }
 
     public void SetHitboxWindowActive(bool active)
@@ -48,8 +50,11 @@ public class EnemyAttackHitbox : MonoBehaviour
         else
         {
             windowImpactSfx = null;
+            windowDamageLane = null;
         }
     }
+
+    public void SetWindowDamageLane(Bounds lane) => windowDamageLane = lane;
 
     // Configure before opening the window; closing it prevents audio leaking into the next attack.
     public void SetWindowImpactAudio(AudioClip clip, float volume = 1f)
@@ -83,6 +88,14 @@ public class EnemyAttackHitbox : MonoBehaviour
     {
         if (!hitboxWindowActive || enemyController == null || !enemyController.IsCombatReady)
             return;
+
+        if (windowDamageLane is Bounds lane)
+        {
+            Bounds target = other.bounds;
+            if (target.max.x <= lane.min.x || target.min.x >= lane.max.x
+                || target.max.y <= lane.min.y || target.min.y >= lane.max.y)
+                return;
+        }
 
         PlayerCharacter playerCharacter = other.GetComponentInParent<PlayerCharacter>();
         if (playerCharacter == null)

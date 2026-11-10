@@ -13,6 +13,7 @@ public static class Boss112RunAuthoring
     public const string ArenaPath = "Assets/Project/Resources/RoomLayouts/RoomLayout_Boss_Observer112.prefab";
     public const string EncounterPath = "Assets/Project/Resources/EncounterSO/Encounter_Boss_Observer112.asset";
     public const string RoomPath = "Assets/Project/Resources/MapSO/RoomData_Boss_02.asset";
+    private const float ArenaHalfWidth = 23.678f;
 
     public static void Apply()
     {
@@ -57,30 +58,40 @@ public static class Boss112RunAuthoring
         ApplyEntranceCorridor();
     }
 
-    private static void BuildBoss()
+    public static void BuildBoss()
     {
-        if (AssetDatabase.LoadAssetAtPath<GameObject>(BossPath) != null) return;
-        var root = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Boss112PrototypeAuthoring.BossPath));
+        bool existing = AssetDatabase.LoadAssetAtPath<GameObject>(BossPath) != null;
+        var root = existing ? PrefabUtility.LoadPrefabContents(BossPath)
+            : (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Boss112PrototypeAuthoring.BossPath));
         try
         {
-            root.name = "Boss112_Run";
-            var controller = root.GetComponent<Boss112Controller>();
-            using (var data = new SerializedObject(controller))
+            if (!existing)
             {
-                data.FindProperty("autoAttack").boolValue = true;
-                data.FindProperty("useRunBossFlow").boolValue = true;
-                data.ApplyModifiedPropertiesWithoutUndo();
+                root.name = "Boss112_Run";
+                var controller = root.GetComponent<Boss112Controller>();
+                using (var data = new SerializedObject(controller))
+                {
+                    data.FindProperty("autoAttack").boolValue = true;
+                    data.FindProperty("useRunBossFlow").boolValue = true;
+                    data.ApplyModifiedPropertiesWithoutUndo();
+                }
+                var enemy = root.GetComponent<EnemyController>();
+                using (var data = new SerializedObject(enemy))
+                {
+                    data.FindProperty("useSpawnPresentation").boolValue = false;
+                    data.ApplyModifiedPropertiesWithoutUndo();
+                }
+                PrefabUtility.RecordPrefabInstancePropertyModifications(controller);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(enemy);
             }
-            using (var data = new SerializedObject(root.GetComponent<EnemyController>()))
-            {
-                data.FindProperty("useSpawnPresentation").boolValue = false;
-                data.ApplyModifiedPropertiesWithoutUndo();
-            }
-            PrefabUtility.RecordPrefabInstancePropertyModifications(controller);
-            PrefabUtility.RecordPrefabInstancePropertyModifications(root.GetComponent<EnemyController>());
-            PrefabUtility.SaveAsPrefabAsset(root, BossPath);
+            if (Boss112WormTestAuthoring.AttachBody(root) || !existing)
+                PrefabUtility.SaveAsPrefabAsset(root, BossPath);
         }
-        finally { Object.DestroyImmediate(root); }
+        finally
+        {
+            if (existing) PrefabUtility.UnloadPrefabContents(root);
+            else Object.DestroyImmediate(root);
+        }
     }
 
     private static void BuildArena()
@@ -96,6 +107,12 @@ public static class Boss112RunAuthoring
             var floor = boxes.Single(c => c.name == "Floor");
             var left = boxes.Single(c => c.name == "LeftWall");
             var right = boxes.Single(c => c.name == "RightWall");
+            var ceiling = boxes.Single(c => c.name == "Ceiling");
+            float terrainWidth = 2f * ArenaHalfWidth + left.size.x + right.size.x;
+            floor.size = new Vector2(terrainWidth, floor.size.y);
+            ceiling.size = new Vector2(terrainWidth, ceiling.size.y);
+            left.transform.localPosition = new Vector3(-ArenaHalfWidth - left.size.x * .5f, left.transform.localPosition.y, 0f);
+            right.transform.localPosition = new Vector3(ArenaHalfWidth + right.size.x * .5f, right.transform.localPosition.y, 0f);
             var arena = root.AddComponent<Boss112Arena>();
             Bind(arena, "floor", floor); Bind(arena, "leftWall", left); Bind(arena, "rightWall", right);
             Bind(arena, "departurePoint", Child(root.transform, "DeparturePoint", new Vector3(0f, 23f, 0f)));
@@ -116,7 +133,7 @@ public static class Boss112RunAuthoring
             }
             var camera = Child(root.transform, "Boss112ArenaCamera", new Vector3(0f, 9f, -17f)).gameObject.AddComponent<CinemachineCamera>();
             camera.Priority = 250;
-            var lens = camera.Lens; lens.OrthographicSize = 10.5f; lens.ModeOverride = LensSettings.OverrideModes.Orthographic; camera.Lens = lens;
+            var lens = camera.Lens; lens.OrthographicSize = 14f; lens.ModeOverride = LensSettings.OverrideModes.Orthographic; camera.Lens = lens;
             PrefabUtility.SaveAsPrefabAsset(root, ArenaPath);
         }
         finally { Object.DestroyImmediate(root); }

@@ -218,6 +218,12 @@ public class EnemyColorVariantTests
                         var oldMask = EnemyColorVariantAuthoring.ReadMask(oldTexture, original.rect);
                         var mask = EnemyColorVariantAuthoring.ReadMask(texture, sprite.rect);
                         Assert.That(mask.count, Is.GreaterThan(0));
+                        if (id == 111 && original.name is "Boss_Final_256_7" or "Boss_Final_256_8")
+                        {
+                            // The cleave impact poses use a deliberate bottom-quarter pivot.
+                            Assert.That(sprite.pivot, Is.EqualTo(new Vector2(sprite.rect.width * .25f, 0f)), original.name);
+                            continue;
+                        }
                         Vector2 oldCenter = (oldMask.center - original.pivot) / original.pixelsPerUnit;
                         Vector2 center = (mask.center - sprite.pivot) / sprite.pixelsPerUnit;
                         Assert.That(Vector2.Distance(center, oldCenter), Is.LessThan(.0001f), original.name);

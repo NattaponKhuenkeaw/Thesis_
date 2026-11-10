@@ -45,8 +45,12 @@ namespace Project.Core.ZoneState
         [Header("Spawn Separation")]
         [Tooltip("Minimum center clearance from living enemies. 2.4 includes the 101 body's width, rounded collider edges and a small gap.")]
         [SerializeField, Min(0f)] private float minSpawnSeparation = 2.4f;
-        [Tooltip("How far a spawn may slide sideways to find clear ground before giving up. Stays inside the span of the authored slots.")]
+        [Tooltip("Legacy spawn nudge distance inside the authored slot span. Zero also restricts batch groups to authored marker positions.")]
         [SerializeField, Min(0f)] private float maxSpawnNudge = 2.5f;
+
+        [Header("Batch Spawn Group")]
+        [SerializeField, Min(4f)] private float spawnGroupWidth = 16f;
+        [SerializeField, Min(0f)] private float spawnPlayerClearance = 3.5f;
 
         [Header("Room Clear")]
         [SerializeField] private bool unlockSceneExitOnClear = true;
@@ -76,6 +80,7 @@ namespace Project.Core.ZoneState
         private int encounterVisit = -1;
         private readonly List<Vector3> livingEnemyPositions = new List<Vector3>();
         private readonly Dictionary<EnemyController, Vector3> spawnOrigins = new Dictionary<EnemyController, Vector3>();
+        private readonly EncounterSpawnGroupPlanner groupPlanner = new EncounterSpawnGroupPlanner();
 
         private void Awake()
         {
@@ -127,6 +132,13 @@ namespace Project.Core.ZoneState
         private void TryStartFromPlayerTrigger(Collider2D other)
         {
             if ((startOnlyOnce && hasStarted) || !IsPlayer(other))
+            {
+                return;
+            }
+
+            // The new arena can overlap the player before the entrance teleport.
+            var transition = SceneTransitionManager.Instance;
+            if (useBossDeathFlow && transition != null && transition.IsTransitioning)
             {
                 return;
             }
@@ -270,7 +282,7 @@ namespace Project.Core.ZoneState
             }
 
             pressureDirector = quota != null && quota.Count > 0
-                ? new EncounterPressureDirector(runtimeAliveCap, quota)
+                ? new EncounterPressureDirector(Mathf.Min(runtimeAliveCap, 5), quota)
                 : null;
 
             if (pressureDirector == null || pressureDirector.Remaining == 0)
@@ -783,7 +795,7 @@ namespace Project.Core.ZoneState
         {
             List<GameObject> quota = CollectQuotaPrefabs();
             pressureDirector = quota.Count > 0
-                ? new EncounterPressureDirector(aliveCap, quota)
+                ? new EncounterPressureDirector(Mathf.Min(aliveCap, 5), quota)
                 : null;
         }
 
@@ -832,7 +844,12 @@ namespace Project.Core.ZoneState
             }
 
             if (!TryResolveSeparatedPosition(spawnPoint, out Vector3 spawnPosition)) return SpawnResult.Occupied;
-            GameObject enemyObject = Instantiate(prefab, spawnPosition, spawnPoint.rotation);
+            return SpawnAtPosition(prefab, spawnPosition, spawnPoint.rotation);
+        }
+
+        private SpawnResult SpawnAtPosition(GameObject prefab, Vector3 spawnPosition, Quaternion rotation)
+        {
+            GameObject enemyObject = Instantiate(prefab, spawnPosition, rotation);
             EnemyController enemy = enemyObject.GetComponentInChildren<EnemyController>();
             if (enemy == null)
             {
@@ -925,7 +942,8 @@ namespace Project.Core.ZoneState
                 return true;
             }
 
-            if (TryGetNudgeRange(basePosition, out float minX, out float maxX))
+            if (runtimeSpawnMode != EncounterSpawnMode.Pressure &&
+                TryGetNudgeRange(basePosition, out float minX, out float maxX))
             {
                 float step = Mathf.Max(0.25f, minSpawnSeparation * 0.5f);
                 for (float offset = step; offset <= maxSpawnNudge + Mathf.Epsilon; offset += step)

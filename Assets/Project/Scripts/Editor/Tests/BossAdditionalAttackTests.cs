@@ -58,12 +58,15 @@ public class BossAdditionalAttackTests
     }
 
     [Test]
-    public void WaveIsAnAuthoredPixelPrefabLowEnoughToJumpOver()
+    public void WaveIsAnAuthoredPixelPrefabWithTheCoreCharacterTrigger()
     {
         var wave = AssetDatabase.LoadAssetAtPath<GameObject>(BossAdditionalAttacksAuthoring.WavePath);
         Assert.That(wave, Is.Not.Null);
-        Assert.That(wave.GetComponent<BoxCollider2D>().isTrigger, Is.True);
-        Assert.That(wave.GetComponent<BoxCollider2D>().size.y, Is.LessThan(.8f));
+        var hitbox = wave.GetComponent<BoxCollider2D>();
+        Assert.That(hitbox.isTrigger, Is.True);
+        Assert.That(hitbox.size, Is.EqualTo(new Vector2(1.1f, .65f)));
+        Assert.That(hitbox.offset, Is.EqualTo(new Vector2(0f, .325f)));
+        Assert.That(wave.transform.localScale, Is.EqualTo(new Vector3(2f, 2f, 1f)));
         Assert.That(wave.GetComponent<Rigidbody2D>().bodyType, Is.EqualTo(RigidbodyType2D.Kinematic));
         using var settings = new SerializedObject(wave.GetComponent<BossGroundWave>());
         var frames = settings.FindProperty("frames");
@@ -73,7 +76,36 @@ public class BossAdditionalAttackTests
             var sprite = (Sprite)frames.GetArrayElementAtIndex(i).objectReferenceValue;
             Assert.That(sprite.texture.filterMode, Is.EqualTo(FilterMode.Point));
             Assert.That(sprite.pivot.y, Is.EqualTo(0f));
+            Assert.That(sprite.GetPhysicsShapeCount(), Is.GreaterThan(0));
         }
+    }
+
+    [UnityTest]
+    public IEnumerator FirstWindupDoesNotRememberAnExistingHitTint()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        using (var f = new Fixture())
+        {
+            yield return f.Ready();
+            Set(f.Boss, "flashDuringTelegraph", true);
+            var renderer = f.Enemy.GetComponentInChildren<Animator>().GetComponent<SpriteRenderer>();
+            Color original = renderer.color;
+            renderer.color = Color.red;
+
+            f.Start(BossPatternId.HeavyCleave);
+            Assert.That(renderer.color, Is.Not.EqualTo(original), "The windup still flashes.");
+            float deadline = Time.realtimeSinceStartup + 5f;
+            while (!f.Enemy.attackHitbox.enabled && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.That(f.Enemy.attackHitbox.enabled, Is.True);
+            Assert.That(renderer.color, Is.EqualTo(original), "The strike must not inherit the hit tint.");
+
+            Call(f.Boss, "StartTelegraphFlash");
+            f.Boss.ForceClearCombatHazards();
+            Assert.That(renderer.color, Is.EqualTo(original), "Cancelling a warning must also restore the base tint.");
+        }
+        yield return new ExitPlayMode();
     }
 
     [UnityTest]
@@ -81,19 +113,45 @@ public class BossAdditionalAttackTests
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
-        using (var f = new Fixture())
+        using (var f = new Fixture(playWarning: true))
         {
             yield return f.Ready();
             f.Start(BossPatternId.AlternatingCleave);
             var directions = new List<float>();
             var attackSprites = new HashSet<Sprite>();
-            var renderer = f.Enemy.GetComponentInChildren<Animator>().GetComponent<SpriteRenderer>();
+            var animator = f.Enemy.GetComponentInChildren<Animator>();
+            var renderer = animator.GetComponent<SpriteRenderer>();
             bool activeLast = false;
+            Sprite heldSprite = null;
+            float roarStarted = -1f;
             float lastClose = 0f, start = Time.time;
             float deadline = Time.realtimeSinceStartup + 12f;
             while (f.Boss.IsBusy && Time.realtimeSinceStartup < deadline)
             {
                 bool active = f.Enemy.attackHitbox.enabled;
+                var warning = f.Boss.transform.Find("BossAttackWarningAudio")?.GetComponent<AudioSource>();
+                if (!active && directions.Count == 1 && !activeLast)
+                {
+                    if (warning?.clip != null)
+                    {
+                        if (roarStarted < 0f)
+                        {
+                            roarStarted = Time.time;
+                            Assert.That(Time.time - lastClose, Is.GreaterThanOrEqualTo(.25f));
+                            Assert.That(warning.clip, Is.SameAs(f.Boss.AttackWarningSfx));
+                        }
+                    }
+                    else if (roarStarted < 0f)
+                    {
+                        Assert.That(EnemyFacingUtil.GetFacingSign(f.Enemy.transform), Is.EqualTo(1f));
+                        Assert.That(animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.AttackCleave"), Is.True);
+                        var clip = animator.GetCurrentAnimatorClipInfo(0)[0].clip;
+                        var spriteBinding = AnimationUtility.GetObjectReferenceCurveBindings(clip)
+                            .Single(binding => binding.propertyName == "m_Sprite");
+                        heldSprite = renderer.sprite;
+                        Assert.That(heldSprite, Is.SameAs(AnimationUtility.GetObjectReferenceCurve(clip, spriteBinding).Last().value));
+                    }
+                }
                 if (active && renderer != null) attackSprites.Add(renderer.sprite);
                 if (active && !activeLast)
                 {
@@ -101,6 +159,13 @@ public class BossAdditionalAttackTests
                     Assert.That(f.Enemy.FacingLocked, Is.True);
                     if (directions.Count == 1)
                         Assert.That(Time.time - start, Is.GreaterThanOrEqualTo(1.15f));
+                    else if (directions.Count == 2)
+                    {
+                        Assert.That(heldSprite, Is.Not.Null);
+                        Assert.That(roarStarted, Is.GreaterThan(lastClose));
+                        Assert.That(Time.time - roarStarted, Is.GreaterThanOrEqualTo(1.1f));
+                        Assert.That(warning?.clip, Is.Null);
+                    }
                     else Assert.That(Time.time - lastClose, Is.GreaterThanOrEqualTo(.30f));
                     // Escaping does not cancel or retarget an already committed flurry.
                     f.Target.transform.position = Vector3.right * 20f;
@@ -113,6 +178,86 @@ public class BossAdditionalAttackTests
             Assert.That(directions, Is.EqualTo(new[] { 1f, -1f, 1f, -1f }));
             Assert.That(attackSprites.Count, Is.GreaterThanOrEqualTo(2), "The slash and follow-through sprites must both be visible");
             Assert.That(Time.time - lastClose, Is.GreaterThan(1.45f));
+            f.AssertClean();
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator SeismicBarrageCrouchesAndRoarsOnlyBeforeItsFirstJumpWithoutWarningUi()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        using (var f = new Fixture(playWarning: true))
+        {
+            yield return f.Ready();
+            Set(f.Boss, "phase", 2);
+            var animator = f.Enemy.GetComponentInChildren<Animator>();
+            var renderer = animator.GetComponent<SpriteRenderer>();
+            // The world canvas detaches at runtime; use the controller's bound UI.
+            var worldUi = (EnemyWorldUI)typeof(EnemyController).GetField("worldUI", Private).GetValue(f.Enemy);
+            Assert.That(worldUi, Is.Not.Null);
+            var icon = (GameObject)typeof(EnemyWorldUI).GetField("attackWarningIcon", Private).GetValue(worldUi);
+            var marker = f.Enemy.GetComponentInChildren<BossGroundTelegraph>(true).GetComponent<SpriteRenderer>();
+            var waveIds = new HashSet<int>();
+            bool wasAirborne = false, wasRoaring = false, crouchedBeforeRoar = false;
+            float started = Time.time, roarStarted = 0f;
+            int roars = 0, jumps = 0, landingsWithWaves = 0;
+            f.Start(BossPatternId.SeismicBarrage);
+            float deadline = Time.realtimeSinceStartup + 15f;
+            while (f.Boss.IsBusy && Time.realtimeSinceStartup < deadline)
+            {
+                bool airborne = f.Enemy.rb.bodyType == RigidbodyType2D.Kinematic;
+                var warning = f.Boss.transform.Find("BossAttackWarningAudio")?.GetComponent<AudioSource>();
+                bool roaring = warning?.clip != null;
+                bool crouching = renderer.sprite != null && renderer.sprite.name.StartsWith("Gif_Jump_00");
+                Assert.That(icon.activeSelf, Is.False);
+                Assert.That(marker.enabled, Is.False);
+                Assert.That(f.Enemy.attackHitbox.enabled, Is.False);
+                if (roaring)
+                {
+                    Assert.That(airborne, Is.False);
+                    Assert.That(jumps, Is.Zero);
+                    Assert.That(warning.clip, Is.SameAs(f.Boss.AttackWarningSfx));
+                    Assert.That(animator.GetFloat("JumpPhase"), Is.Zero);
+                    Assert.That(crouching, Is.True, "The actual crouch sprite must remain visible throughout the roar.");
+                    if (!wasRoaring)
+                    {
+                        roars++;
+                        roarStarted = Time.time;
+                        Assert.That(crouchedBeforeRoar, Is.True);
+                        Assert.That(roarStarted - started, Is.GreaterThanOrEqualTo(.27f));
+                    }
+                }
+                else if (jumps == 0 && !airborne && crouching)
+                    crouchedBeforeRoar = true;
+
+                if (airborne && !wasAirborne)
+                {
+                    if (jumps == 0)
+                    {
+                        Assert.That(roars, Is.EqualTo(1));
+                        Assert.That(Time.time - roarStarted, Is.GreaterThanOrEqualTo(f.Boss.AttackWarningSfx.length - .05f));
+                    }
+                    jumps++;
+                }
+                int freshWaves = Object.FindObjectsByType<BossGroundWave>(FindObjectsSortMode.None)
+                    .Count(wave => waveIds.Add(wave.GetInstanceID()));
+                if (freshWaves > 0)
+                {
+                    landingsWithWaves++;
+                    Assert.That(freshWaves, Is.EqualTo(2));
+                    Assert.That(airborne, Is.False);
+                    Assert.That((bool)Call(f.Enemy, "HasSpawnGroundSupport"), Is.True);
+                }
+                wasAirborne = airborne;
+                wasRoaring = roaring;
+                yield return null;
+            }
+            Assert.That(f.Boss.IsBusy, Is.False);
+            Assert.That(jumps, Is.EqualTo(3));
+            Assert.That(landingsWithWaves, Is.EqualTo(3));
+            Assert.That(roars, Is.EqualTo(1));
             f.AssertClean();
         }
         yield return new ExitPlayMode();
@@ -145,11 +290,10 @@ public class BossAdditionalAttackTests
                     Assert.That((bool)Call(f.Enemy, "HasSpawnGroundSupport"), Is.True);
                     foreach (var wave in fresh)
                     {
-                        var bounds = wave.GetComponent<BoxCollider2D>().bounds;
-                        Assert.That(bounds.max.y, Is.LessThan(.8f));
-                        // Standing target overlaps, but raising feet one unit clears the entire wave.
-                        Assert.That(bounds.Intersects(new Bounds(new Vector3(bounds.center.x, 1.3f), new Vector3(1f, 2.6f))), Is.True);
-                        Assert.That(bounds.Intersects(new Bounds(new Vector3(bounds.center.x, 2.3f), new Vector3(1f, 2.6f))), Is.False);
+                        var outline = wave.GetComponent<Collider2D>();
+                        Assert.That(outline.bounds.min.y, Is.EqualTo(.02f).Within(.05f));
+                        Assert.That(outline.bounds.max.y,
+                            Is.LessThanOrEqualTo(wave.GetComponent<SpriteRenderer>().bounds.max.y + .01f));
                     }
                 }
                 yield return null;
@@ -226,7 +370,6 @@ public class BossAdditionalAttackTests
             playerHost.SetActive(false);
             var player = playerHost.AddComponent<PlayerCharacter>();
             var playerBox = playerHost.AddComponent<BoxCollider2D>();
-            playerBox.enabled = false;
             player.enabled = false;
             playerHost.SetActive(true);
             Set(player, "currentHP", 1000f);
@@ -244,6 +387,7 @@ public class BossAdditionalAttackTests
                 Set(player, "damageInvulnerableUntil", float.NegativeInfinity);
                 Call(right, "TryDamage", playerBox);
                 Assert.That(player.CurrentHP, Is.EqualTo(835f));
+                playerBox.enabled = false;
                 float deadline = Time.time + .3f;
                 while (Time.time < deadline) yield return null;
                 Assert.That(left.transform.position.x, Is.LessThan(-3f));
@@ -298,7 +442,7 @@ public class BossAdditionalAttackTests
         public readonly GameObject Target;
         public readonly BossPatternController Boss;
         public readonly EnemyController Enemy;
-        public Fixture()
+        public Fixture(bool playWarning = false)
         {
             root.AddComponent<AudioListener>();
             var floor = new GameObject("Arena floor");
@@ -319,7 +463,8 @@ public class BossAdditionalAttackTests
             Set(Boss, "revealOnSpawn", false);
             Set(Boss, "bindScreenHealthHud", false);
             Set(Boss, "flashDuringTelegraph", false);
-            foreach (string sound in new[] { "cleaveSfx", "attackWarningSfx", "jumpTakeoffSfx", "jumpLandSfx" }) Set(Boss, sound, null);
+            foreach (string sound in new[] { "cleaveSfx", "jumpTakeoffSfx", "jumpLandSfx" }) Set(Boss, sound, null);
+            if (!playWarning) Set(Boss, "attackWarningSfx", null);
             Set(Boss, "target", Target.transform);
             holder.SetActive(true);
             Enemy.InitializeSpawn(boss.transform.position, boss.transform.rotation);

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// Combat cards pick a shared Encounter palette. Chambers only author enemy count.
+    /// Combat cards pick a shared Encounter palette and a whole-layout enemy budget.
     /// </summary>
     public static class CombatRouteContent
     {
@@ -52,13 +52,14 @@ namespace Project.Core.ZoneState
         public static bool TryResolveActiveDifficultyPalette(out EncounterSO palette)
         {
             palette = null;
-            if (!TryGetActiveDifficulty(out RouteDifficulty difficulty)) return false;
+            if (!TryGetActiveDifficulty(out RouteDifficulty difficulty))
+                return false;
 
             palette = LoadPalette(difficulty);
             return palette != null && palette.HasTypePool;
         }
 
-        public static bool TryGetActiveDifficulty(out RouteDifficulty difficulty)
+        internal static bool TryGetActiveDifficulty(out RouteDifficulty difficulty)
         {
             difficulty = default;
             if (!ActiveRouteOffer.HasSelection)
@@ -67,7 +68,7 @@ namespace Project.Core.ZoneState
             }
 
             RoomChoiceOffer offer = ActiveRouteOffer.Current;
-            if (!offer.UsesCombatPalette)
+            if (!offer.ShowsDifficulty)
             {
                 return false;
             }
@@ -90,15 +91,12 @@ namespace Project.Core.ZoneState
             return true;
         }
 
-        public static int GetRoomEnemyBudget(RouteDifficulty difficulty)
+        internal static int GetLayoutEnemyBudget(RouteDifficulty difficulty) => difficulty switch
         {
-            return difficulty switch
-            {
-                RouteDifficulty.Hard => 20,
-                RouteDifficulty.Medium => 16,
-                _ => 12
-            };
-        }
+            RouteDifficulty.Hard => 20,
+            RouteDifficulty.Medium => 16,
+            _ => 12
+        };
 
         public static EncounterSO ResolveChamberEncounter(EncounterSO chamberEncounter)
         {

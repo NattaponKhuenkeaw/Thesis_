@@ -27,62 +27,13 @@ public class HitFeedbackResolver : MonoBehaviour
 
     private void HandleFeedbackRequest(HitFeedbackRequest request)
     {
-        PlayHitFeedback(request.Hitbox, request.Tier, request.HitPoint, request.HitDirection, request.ProjectileData);
+        PlayHitFeedback(request.Hitbox, request.Tier, request.HitPoint, request.HitDirection, request.ProjectileData, request.PlayAudio);
     }
 
-    public void PlayHitFeedback(HitboxBase hitbox, DamageImpactTier tier, Vector2 hitPoint, Vector2 hitDirection, ProjectileData projectileData = null)
+    public void PlayHitFeedback(HitboxBase hitbox, DamageImpactTier tier, Vector2 hitPoint, Vector2 hitDirection,
+        ProjectileData projectileData = null, bool playAudio = true)
     {
-        // 1. Resolve Audio
-        AudioClip sfxToPlay = null;
-        if (hitbox is NormalHitbox normalHitbox && normalHitbox.hitSFX != null)
-        {
-            sfxToPlay = normalHitbox.hitSFX;
-        }
-        else if (hitbox is GrabHitbox grabHitbox && grabHitbox.hitSFX != null)
-        {
-            sfxToPlay = grabHitbox.hitSFX;
-        }
-        else if (projectileData != null && projectileData.impactAudio != null)
-        {
-            sfxToPlay = projectileData.impactAudio;
-        }
-        else if (defaultConfig != null)
-        {
-            sfxToPlay = defaultConfig.GetSFX(tier);
-        }
-        
-        // ... (rest of audio logic)
-        else
-        {
-            Debug.LogWarning("HitFeedbackResolver: defaultConfig is null! Please assign a HitFeedbackConfig ScriptableObject.", this);
-        }
-
-        if (sfxToPlay != null)
-        {
-            if (GameAudioManager.Instance != null)
-            {
-                float volume = 1f;
-                float basePitch = 1f;
-                if (hitbox is NormalHitbox normal)
-                {
-                    volume = normal.hitSFXVolume;
-                    basePitch = normal.hitSFXPitch;
-                }
-                else if (hitbox is GrabHitbox grab)
-                {
-                    volume = grab.hitSFXVolume;
-                    basePitch = grab.hitSFXPitch;
-                }
-
-                // Preserve the existing variation around the authored pitch.
-                float pitch = Mathf.Clamp(basePitch * Random.Range(0.95f, 1.05f), 0.1f, 3f);
-                GameAudioManager.Instance.PlayHitSFX(sfxToPlay, GameAudioManager.ClampSFXGain(volume), pitch);
-            }
-            else
-            {
-                Debug.LogWarning("HitFeedbackResolver: GameAudioManager.Instance is null! Cannot play hit SFX.", this);
-            }
-        }
+        if (playAudio) PlayHitAudio(hitbox, tier, projectileData);
 
         if (hitbox != null && hitbox.suppressContactVfx) return;
 
@@ -151,6 +102,59 @@ public class HitFeedbackResolver : MonoBehaviour
             else
             {
                 Destroy(vfxInstance, 3f);
+            }
+        }
+    }
+
+    private void PlayHitAudio(HitboxBase hitbox, DamageImpactTier tier, ProjectileData projectileData)
+    {
+        AudioClip sfxToPlay = null;
+        if (hitbox is NormalHitbox normalHitbox && normalHitbox.hitSFX != null)
+        {
+            sfxToPlay = normalHitbox.hitSFX;
+        }
+        else if (hitbox is GrabHitbox grabHitbox && grabHitbox.hitSFX != null)
+        {
+            sfxToPlay = grabHitbox.hitSFX;
+        }
+        else if (projectileData != null && projectileData.impactAudio != null)
+        {
+            sfxToPlay = projectileData.impactAudio;
+        }
+        else if (defaultConfig != null)
+        {
+            sfxToPlay = defaultConfig.GetSFX(tier);
+        }
+
+        else
+        {
+            Debug.LogWarning("HitFeedbackResolver: defaultConfig is null! Please assign a HitFeedbackConfig ScriptableObject.", this);
+        }
+
+        if (sfxToPlay != null)
+        {
+            if (GameAudioManager.Instance != null)
+            {
+                float volume = 1f;
+                float basePitch = 1f;
+                if (hitbox is NormalHitbox normal)
+                {
+                    volume = normal.hitSFXVolume;
+                    basePitch = normal.hitSFXPitch;
+                }
+                else if (hitbox is GrabHitbox grab)
+                {
+                    volume = grab.hitSFXVolume;
+                    basePitch = grab.hitSFXPitch;
+                }
+
+                // Preserve the existing variation around the authored pitch.
+                float pitch = Mathf.Clamp(basePitch * Random.Range(0.95f, 1.05f), 0.1f, 3f);
+                GameAudioManager.Instance.PlayHitSFX(sfxToPlay, GameAudioManager.ClampSFXGain(volume), pitch);
+            }
+            else
+            {
+                Debug.LogWarning("HitFeedbackResolver: GameAudioManager.Instance is null! Cannot play hit SFX.", this);
             }
         }
     }

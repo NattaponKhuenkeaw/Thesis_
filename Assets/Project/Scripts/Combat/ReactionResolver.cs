@@ -22,7 +22,8 @@ public static class ReactionResolver
 
     public static void ResolveAgainstTarget(EnemyController enemy, ref HitReactionData reactionData)
     {
-        if (enemy == null || reactionData.reactionKind == EnemyReactionKind.Grab)
+        if (enemy == null || reactionData.reactionKind == EnemyReactionKind.Grab
+            || (reactionData.hasAuthoredReactionTarget && !reactionData.preserveReactionMotionTiming))
         {
             return;
         }
@@ -30,6 +31,8 @@ public static class ReactionResolver
         EnemyReactionState targetState = enemy.CurrentReactionState;
         if (TryGetRule(targetState, out ReactionRuleTable.Rule rule))
         {
+            // The target-state override describes a different motion than the neutral authored target.
+            reactionData.hasAuthoredReactionTarget = false;
             ApplyRule(ref reactionData, rule);
         }
 

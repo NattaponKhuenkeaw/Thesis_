@@ -27,6 +27,8 @@ namespace Project.Parallax
         private float _textureUnitSizeX;
         private float _textureUnitSizeY;
         private bool _warnedMissingCamera;
+        private Camera _skyCamera;
+        private SpriteRenderer[] _skyImages;
 
         private void Start()
         {
@@ -92,6 +94,7 @@ namespace Project.Parallax
                 _startPosition.y + moveY + loopOffsetY,
                 _startPosition.z
             );
+            KeepSkyInsideViewport();
         }
 
         /// <summary>
@@ -128,6 +131,12 @@ namespace Project.Parallax
 
             _startCameraPosition = targetCamera.position;
             _startPosition = transform.position;
+            if (centerVerticallyOnCamera)
+            {
+                _skyCamera = targetCamera.GetComponent<Camera>();
+                _skyImages = GetComponentsInChildren<SpriteRenderer>(true);
+                System.Array.Sort(_skyImages, (a, b) => a.bounds.min.x.CompareTo(b.bounds.min.x));
+            }
             CenterSkyOnCamera();
             _warnedMissingCamera = false;
             return true;
@@ -138,6 +147,34 @@ namespace Project.Parallax
             if (!centerVerticallyOnCamera) return;
             _startPosition.y = targetCamera.position.y;
             transform.position = _startPosition;
+            KeepSkyInsideViewport();
+        }
+
+        private void KeepSkyInsideViewport()
+        {
+            if (!centerVerticallyOnCamera || _skyCamera == null || !_skyCamera.orthographic || _skyImages == null)
+                return;
+
+            float halfWidth = _skyCamera.orthographicSize * _skyCamera.aspect;
+            float coveredTo = targetCamera.position.x - halfWidth - .05f;
+            float right = targetCamera.position.x + halfWidth + .05f;
+            foreach (var image in _skyImages)
+            {
+                if (!image.enabled || !image.gameObject.activeInHierarchy) continue;
+                Bounds bounds = image.bounds;
+                if (bounds.max.x <= coveredTo) continue;
+                if (bounds.min.x > coveredTo + .001f) break;
+                coveredTo = bounds.max.x;
+                if (coveredTo >= right) return;
+            }
+
+            // A layout can bind while the output camera is still in the previous room.
+            // Re-anchor only an exposed sky row; never move scenery or resize its artwork.
+            var center = GetComponent<SpriteRenderer>();
+            if (center == null || center.sprite == null) return;
+            float correction = targetCamera.position.x - center.bounds.center.x;
+            _startPosition.x += correction;
+            transform.position += Vector3.right * correction;
         }
     }
 }

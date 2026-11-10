@@ -28,6 +28,7 @@ public sealed class Boss112PrototypeTests
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(Boss112PrototypeAuthoring.BossPath);
         Assert.That(prefab.GetComponent<Boss112Controller>(), Is.Not.Null);
+        Assert.That(prefab.GetComponent<Boss112WormBody>(), Is.Null);
         Assert.That(prefab.GetComponent<BossPatternController>(), Is.Null);
         Assert.That(prefab.GetComponent<EnemyBehaviorBrain>(), Is.Null);
         Assert.That(System.Enum.GetValues(typeof(Boss112Pattern)).Length, Is.EqualTo(5));
@@ -40,6 +41,9 @@ public sealed class Boss112PrototypeTests
         Assert.That(boss.AutoAttack, Is.False);
         Assert.That(prefab.GetComponent<EnemyController>().maxHP, Is.EqualTo(4000f));
         var panel = AssetDatabase.LoadAssetAtPath<GameObject>(Boss112PrototypeAuthoring.PanelPath);
+        using (var panelData = new SerializedObject(panel.GetComponent<Boss112TestRoom>()))
+            Assert.That(AssetDatabase.GetAssetPath(panelData.FindProperty("bossPrefab").objectReferenceValue),
+                Is.EqualTo(Boss112WormTestAuthoring.TestBossPath));
         var buttons = panel.GetComponentsInChildren<Button>(true);
         Assert.That(buttons.Length, Is.EqualTo(12));
         foreach (var button in buttons)
@@ -213,8 +217,7 @@ public sealed class Boss112PrototypeTests
         yield return new EnterPlayMode();
         Directory.CreateDirectory("Logs/Boss112");
         var room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null
-            && PlayerCharacter.Instance.StateMachine.CurrentStateId == PlayerStateId.Idle, 15f);
+        yield return WalkIntoTestArena(room);
         yield return Wait(.5f);
         var button = room.GetComponentsInChildren<Button>(true).Single(b => b.name == "TRIPLE SLAM");
         Assert.That(button.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(Boss112TestRoom.TestTripleSlam)));
@@ -551,23 +554,27 @@ public sealed class Boss112PrototypeTests
         Directory.CreateDirectory("Logs/Boss112");
         Screen.SetResolution(1280, 720, false);
         var room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null
-            && PlayerCharacter.Instance.StateMachine.CurrentStateId == PlayerStateId.Idle, 15f);
+        yield return WalkIntoTestArena(room);
         Assert.That(TrainingSession.IsTrainingContext, Is.True);
         Assert.That(TeamLoader.Instance.RunInventory, Is.SameAs(TrainingSession.Instance.Inventory));
         Assert.That(Object.FindObjectsByType<RoomWaveManager>(FindObjectsSortMode.None), Is.Empty);
         yield return Wait(.5f);
+        Assert.That(Camera.main.WorldToViewportPoint(Vector3.up * room.Boss.FloorY).y, Is.GreaterThan(.2f),
+            "The arena floor should be above the bottom player HUD.");
         Capture("01_Ready"); yield return null;
         float cameraX = Camera.main.transform.position.x;
         Button Find(string name) => room.GetComponentsInChildren<Button>(true).Single(b => b.name == name);
         Find("PRECISION BEAM").onClick.Invoke();
         yield return Until(() => room.Boss.Phase == Boss112Phase.BeamLocked);
+        var beamVisual = room.Boss.Beam.GetComponentInChildren<SpriteRenderer>();
+        Assert.That(beamVisual.enabled && beamVisual.sprite.name.StartsWith("BeamWarning_"), Is.True);
         Capture("02_BeamLocked"); yield return null;
         var player = PlayerCharacter.Instance;
         var body = player.GetComponent<Rigidbody2D>();
         body.position = new Vector2(room.Boss.LockedX, 0f); body.linearVelocity = Vector2.zero;
         float hp = player.CurrentHP;
         yield return Until(() => room.Boss.Beam.IsDamaging);
+        Assert.That(beamVisual.enabled && beamVisual.sprite.name.StartsWith("BeamActive"), Is.True);
         Capture("03_BeamActive"); yield return null;
         yield return Until(() => player.CurrentHP < hp);
         float hitHp = player.CurrentHP;
@@ -577,7 +584,7 @@ public sealed class Boss112PrototypeTests
         Assert.That(player.CurrentHP, Is.EqualTo(hitHp), "A beam deals at most one accepted hit per activation.");
         Assert.That(Camera.main.transform.position.x, Is.EqualTo(cameraX).Within(.2f));
         Find("RESET TEST").onClick.Invoke();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady);
+        yield return WalkIntoTestArena(room);
         Assert.That(player.CurrentHP, Is.EqualTo(player.MaxHP));
         Assert.That(Object.FindObjectsByType<Boss112Controller>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
         Find("HEAVY SLAM").onClick.Invoke();
@@ -781,7 +788,7 @@ public sealed class Boss112PrototypeTests
         EditorSceneManager.OpenScene(Boss112PrototypeAuthoring.ScenePath);
         yield return new EnterPlayMode();
         var room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null, 15f);
+        yield return WalkIntoTestArena(room);
         Button Find(string name) => room.GetComponentsInChildren<Button>(true).Single(b => b.name == name);
         Find("PHASE: 1").onClick.Invoke();
         yield return Wait(.05f);
@@ -909,6 +916,483 @@ public sealed class Boss112PrototypeTests
     }
 
     [UnityTest]
+    public IEnumerator GroundAttacksReachWormBodyWhileHeadStaysHigh()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        using (var f = new Fixture(Boss112WormTestAuthoring.TestBossPath))
+        {
+            yield return f.Ready();
+            var body = f.Boss.GetComponent<Rigidbody2D>();
+            var worm = f.Boss.GetComponent<Boss112WormBody>();
+            Assert.That(worm, Is.Not.Null);
+            yield return Until(() => worm.GroundHurtbox.enabled);
+            Assert.That(worm.GroundHurtbox.GetComponentInParent<EnemyController>(), Is.SameAs(f.Enemy));
+            Assert.That(body.position.y, Is.EqualTo(f.Boss.FloorY + 7f).Within(.1f));
+            Assert.That(f.Boss.Phase, Is.EqualTo(Boss112Phase.Idle));
+
+            var groundAttackTables = new[]
+            {
+                "Assets/Project/Character/Hero/test_0_Main/ActionResolverTable_main.asset",
+                "Assets/Project/Character/Hero/test_1_CameraGirl/ActionResolverTable_cg.asset"
+            };
+            foreach (string path in groundAttackTables)
+            {
+                var actions = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(path);
+                var groundHit = actions.comboActions.First().comboTree.rootNode.stepData.hitData.hitboxes
+                    .OfType<NormalHitbox>().First();
+                var probeObject = new GameObject("Ground attack reach probe");
+                try
+                {
+                    probeObject.transform.position = new Vector3(body.position.x - 3f + groundHit.offset.x,
+                        f.Boss.FloorY + groundHit.offset.y, 0f);
+                    var probe = probeObject.AddComponent<BoxCollider2D>();
+                    probe.size = groundHit.size;
+                    Physics2D.SyncTransforms();
+                    Assert.That(probe.Distance(worm.GroundHurtbox).isOverlapped, Is.True, path);
+                }
+                finally { Object.DestroyImmediate(probeObject); }
+            }
+
+            Assert.That(f.Boss.TryStartPattern(Boss112Pattern.PrecisionBeam), Is.True);
+            yield return Until(() => f.Boss.Phase == Boss112Phase.BeamLocked);
+            Assert.That(body.position.y, Is.EqualTo(f.Boss.FloorY + 7f).Within(.1f));
+
+            yield return Until(() => f.Boss.Phase == Boss112Phase.Recovery);
+            Assert.That(body.position.y, Is.EqualTo(f.Boss.FloorY).Within(.1f));
+            yield return Until(() => worm.SegmentHurtboxes.All(piece => piece.enabled));
+            Assert.That(f.Boss.IsStaggered, Is.True);
+            Assert.That(((CircleCollider2D)f.Enemy.bodyCollider).offset.y, Is.EqualTo(3.2f));
+            var source = new GameObject("Staggered multi-segment hit probe");
+            var contacts = new List<HitFeedbackRequest>();
+            void RecordContact(HitFeedbackRequest contact) => contacts.Add(contact);
+            HitFeedbackEvents.FeedbackRequested += RecordContact;
+            try
+            {
+                var attack = source.AddComponent<BoxCollider2D>();
+                var hit = source.AddComponent<HitBoxDamage>();
+                foreach (string path in groundAttackTables)
+                {
+                    var actions = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(path);
+                    var groundHit = actions.comboActions.First().comboTree.rootNode.stepData.hitData.hitboxes
+                        .OfType<NormalHitbox>().First();
+                    source.transform.position = new Vector3(body.position.x - 3f + groundHit.offset.x,
+                        f.Boss.FloorY + groundHit.offset.y, 0f);
+                    attack.size = groundHit.size;
+                    Physics2D.SyncTransforms();
+                    Assert.That(attack.Distance(f.Enemy.bodyCollider).isOverlapped, Is.True, path);
+                }
+
+                source.transform.position = body.position;
+                attack.size = new Vector2(22f, 12f);
+                hit.SetHitData(10f, false, false, 0f, 1f, new NormalHitbox(), AttackCategory.Normal,
+                    "StaggeredMultiSegmentHitTest", null, null);
+                Physics2D.SyncTransforms();
+                Assert.That(worm.SegmentHurtboxes.All(piece => attack.Distance(piece).isOverlapped), Is.True);
+                float hp = f.Enemy.currentHP;
+                foreach (var piece in worm.SegmentHurtboxes) hit.ProcessHit(f.Enemy, piece);
+                Assert.That(hit.DamageValue, Is.EqualTo(10f));
+                Assert.That(hp - f.Enemy.currentHP, Is.EqualTo(10f).Within(.02f));
+                Assert.That(contacts, Has.Count.EqualTo(6), "Head plus five segments should show feedback without additional damage.");
+                Assert.That(contacts.Count(contact => contact.PlayAudio), Is.EqualTo(1));
+                Assert.That(f.Enemy.bodyCollider.bounds.Contains(contacts[0].HitPoint), Is.True);
+            }
+            finally
+            {
+                HitFeedbackEvents.FeedbackRequested -= RecordContact;
+                Object.DestroyImmediate(source);
+            }
+            yield return Until(() => f.Boss.Phase == Boss112Phase.Idle);
+            Assert.That(body.position.y, Is.EqualTo(f.Boss.FloorY + 7f).Within(.1f));
+            Assert.That(worm.GroundHurtbox.enabled, Is.True);
+            Assert.That(((CircleCollider2D)f.Enemy.bodyCollider).offset.y, Is.EqualTo(3.5f));
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator WormTailHitFlashesOnlyThatSegmentAndPlacesFeedbackAtContact()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        using (var f = new Fixture(Boss112WormTestAuthoring.TestBossPath))
+        {
+            yield return f.Ready();
+            var worm = f.Boss.GetComponent<Boss112WormBody>();
+            yield return Until(() => worm.GroundHurtbox.enabled);
+            var tail = worm.GroundHurtbox.GetComponent<SpriteRenderer>();
+            var head = f.Boss.transform.Find("Visual").GetComponent<SpriteRenderer>();
+            var neighbor = f.Boss.transform.Find("BodySegment_4").GetComponent<SpriteRenderer>();
+            Color originalTail = tail.color, originalHead = head.color, originalNeighbor = neighbor.color;
+            var source = new GameObject("Tail hit probe");
+            var collider = source.AddComponent<BoxCollider2D>();
+            collider.size = Vector2.one * .3f;
+            var damage = source.AddComponent<HitBoxDamage>();
+            damage.SetHitData(100f, false, false, 0f, 1f, new NormalHitbox { flashColor = Color.cyan, flashFrames = 6 },
+                AttackCategory.Normal, "TailHitTest", null, null);
+            var contacts = new List<Vector2>();
+            void OnFeedback(HitFeedbackRequest request) => contacts.Add(request.HitPoint);
+            HitFeedbackEvents.FeedbackRequested += OnFeedback;
+            try
+            {
+                source.transform.position = worm.GroundHurtbox.bounds.center + Vector3.down * .7f;
+                Physics2D.SyncTransforms();
+                Assert.That(worm.GetSegmentContacts(collider), Is.EqualTo(1 << 4));
+                float hp = f.Enemy.currentHP;
+                Vector2 expected = collider.ClosestPoint(worm.GroundHurtbox.bounds.center);
+                typeof(HitBoxDamage).GetMethod("OnTriggerEnter2D", Private).Invoke(damage, new object[] { worm.GroundHurtbox });
+                Assert.That(hp - f.Enemy.currentHP, Is.EqualTo(65f).Within(.02f));
+                Assert.That(contacts, Has.Count.EqualTo(1));
+                Assert.That(Vector2.Distance(contacts[0], expected), Is.LessThan(.02f));
+                Assert.That(f.Enemy.bodyCollider.bounds.Contains(contacts[0]), Is.False);
+
+                damage.ProcessHit(f.Enemy, f.Enemy.bodyCollider);
+                Assert.That(contacts, Has.Count.EqualTo(1), "The same attack cannot hit both the head and tail for damage.");
+                yield return null;
+                typeof(Boss112WormBody).GetMethod("LateUpdate", Private).Invoke(worm, null);
+                Assert.That(tail.color.r, Is.EqualTo(1f));
+                Assert.That(tail.color.g, Is.LessThan(.2f));
+                Assert.That(head.color, Is.EqualTo(originalHead));
+                Assert.That(neighbor.color, Is.EqualTo(originalNeighbor));
+                yield return Wait(.18f);
+                Assert.That(tail.color, Is.EqualTo(originalTail));
+
+                Bounds headBounds = f.Enemy.bodyCollider.bounds;
+                source.transform.position = new Vector3(headBounds.center.x, headBounds.max.y - .2f, headBounds.center.z);
+                Physics2D.SyncTransforms();
+                Assert.That(worm.GetSegmentContacts(collider), Is.Zero);
+                damage.ResetActivationState();
+                hp = f.Enemy.currentHP;
+                damage.ProcessHit(f.Enemy, f.Enemy.bodyCollider);
+                Assert.That(hp - f.Enemy.currentHP, Is.EqualTo(100f).Within(.02f));
+                Assert.That(contacts, Has.Count.EqualTo(2));
+                Assert.That(f.Enemy.bodyCollider.bounds.Contains(contacts[1]), Is.True);
+                Assert.That(head.color, Is.EqualTo(Color.cyan));
+            }
+            finally
+            {
+                HitFeedbackEvents.FeedbackRequested -= OnFeedback;
+                Object.DestroyImmediate(source);
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator ShinSkillAndUltimateHitEveryOverlappedSegmentButDamageTheBossOnce()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        foreach (var category in new[] { AttackCategory.Skill, AttackCategory.Ultimate })
+        {
+            using var f = new Fixture(Boss112WormTestAuthoring.TestBossPath);
+            yield return f.Ready();
+            var worm = f.Boss.GetComponent<Boss112WormBody>();
+            yield return Until(() => worm.SegmentHurtboxes.All(collider => collider != null && collider.enabled));
+            string suffix = category == AttackCategory.Skill ? "skill" : "ult";
+            var asset = AssetDatabase.LoadAssetAtPath<ProjectileData>(
+                $"Assets/Project/Character/Hero/test_0_Main/ProjectileData_main_{suffix}.asset");
+            var data = Object.Instantiate(asset);
+            data.playSpawnAnimation = false;
+            var host = new GameObject("Shin " + suffix);
+            var requests = new List<HitFeedbackRequest>();
+            void OnFeedback(HitFeedbackRequest request) => requests.Add(request);
+            HitFeedbackEvents.FeedbackRequested += OnFeedback;
+            try
+            {
+                var projectile = host.AddComponent<ProjectileRuntime>();
+                var owner = host.AddComponent<Project.Combat.GenericProjectilePlayer>();
+                f.Target.transform.position = new Vector2(f.Boss.transform.position.x - data.spawnOffset.x, f.Boss.FloorY);
+                projectile.Initialize(owner, null, ProjectileType.None, data, new ProjectileSpawnContext
+                {
+                    casterTransform = f.Target.transform,
+                    targetTransform = f.Boss.transform,
+                    origin = (Vector2)f.Target.transform.position + data.spawnOffset,
+                    direction = Vector2.right,
+                    category = category,
+                    sourceAttack = 100f,
+                    actionDamageMultiplier = 1f,
+                    remainingHits = data.maxHits,
+                    isSkillOrUltimate = true
+                });
+                var hitbox = host.GetComponent<BoxCollider2D>();
+                Physics2D.SyncTransforms();
+                var segments = worm.SegmentHurtboxes.Where(piece => hitbox.Distance(piece).isOverlapped).ToArray();
+                Assert.That(segments.Length, Is.GreaterThan(1), category.ToString());
+                Assert.That(hitbox.Distance(f.Enemy.bodyCollider).isOverlapped, Is.False,
+                    "This regression requires a hit that cannot reach the head.");
+                Vector2[] expectedPoints = segments.Select(piece => hitbox.ClosestPoint(piece.bounds.center)).ToArray();
+                Assert.That(expectedPoints.Distinct().Count(), Is.EqualTo(segments.Length));
+                float hp = f.Enemy.currentHP;
+                var trigger = typeof(ProjectileRuntime).GetMethod("OnTriggerEnter2D", Private);
+                foreach (var segment in segments) trigger.Invoke(projectile, new object[] { segment });
+                float damage = host.GetComponent<HitBoxDamage>().DamageValue;
+                Assert.That(damage, Is.GreaterThan(0f));
+                Assert.That(hp - f.Enemy.currentHP, Is.EqualTo(damage).Within(.02f));
+                Assert.That(requests.Count, Is.EqualTo(segments.Length));
+                Assert.That(requests.Count(request => request.PlayAudio), Is.EqualTo(1));
+                for (int i = 0; i < expectedPoints.Length; i++)
+                    Assert.That(Vector2.Distance(requests[i].HitPoint, expectedPoints[i]), Is.LessThan(.02f));
+
+                typeof(ProjectileRuntime).GetMethod("OnTriggerExit2D", Private).Invoke(projectile, new object[] { segments[0] });
+                var tracked = (HashSet<EnemyController>)typeof(ProjectileRuntime).GetField("trackedEnemies", Private).GetValue(projectile);
+                Assert.That(tracked.Contains(f.Enemy), Is.True, "Leaving one segment must not untrack the whole boss.");
+
+                typeof(Boss112WormBody).GetMethod("LateUpdate", Private).Invoke(worm, null);
+                foreach (var segment in worm.SegmentHurtboxes)
+                {
+                    Color color = segment.GetComponent<SpriteRenderer>().color;
+                    Assert.That(color.r == 1f && color.g < .2f, Is.EqualTo(segments.Contains(segment)));
+                }
+            }
+            finally
+            {
+                HitFeedbackEvents.FeedbackRequested -= OnFeedback;
+                Object.DestroyImmediate(host);
+                Object.DestroyImmediate(data);
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator SegmentAnimationLoopsInTheSelectedColorInBothPrefabs()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        foreach (var path in new[] { Boss112WormTestAuthoring.TestBossPath, Boss112RunAuthoring.BossPath })
+        {
+            using var f = new Fixture(path);
+            f.Boss.AutoAttack = false;
+            yield return f.Ready();
+            var appearance = f.Boss.GetComponent<EnemyColorVariants>();
+            var renderers = f.Boss.GetComponent<Boss112WormBody>().SegmentHurtboxes
+                .Select(collider => collider.GetComponent<SpriteRenderer>()).ToArray();
+            for (int color = 0; color < 3; color++)
+            {
+                Assert.That(appearance.ApplyVariant(color), Is.True);
+                yield return Wait(.05f);
+                var seen = new HashSet<Sprite>();
+                int changes = 0;
+                Sprite last = null;
+                float until = Time.time + .9f;
+                while (Time.time < until)
+                {
+                    yield return null;
+                    foreach (var renderer in renderers)
+                    {
+                        Assert.That(renderer.sprite.texture.name, Is.EqualTo($"Boss112_Segments_{(char)('a' + color)}"));
+                        Assert.That(renderer.color, Is.EqualTo(Color.white));
+                    }
+                    var current = renderers[0].sprite;
+                    if (current != last) { changes++; seen.Add(current); last = current; }
+                }
+                Assert.That(seen, Has.Count.EqualTo(5));
+                Assert.That(changes, Is.GreaterThan(5), "The animation must return to earlier frames.");
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator WormSegmentsTrailTheMovingHeadWithoutGaps()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        using (var f = new Fixture(Boss112WormTestAuthoring.TestBossPath))
+        {
+            yield return f.Ready();
+            var head = f.Boss.transform.Find("Visual").GetComponent<SpriteRenderer>();
+            var segments = Enumerable.Range(1, 5)
+                .Select(i => f.Boss.transform.Find($"BodySegment_{i}"))
+                .ToArray();
+            yield return null;
+            Vector3 idlePosition = segments[0].position;
+            yield return Wait(.4f);
+            Assert.That(Vector3.Distance(segments[0].position, idlePosition), Is.GreaterThan(.01f));
+
+            Vector3 initialTail = segments[segments.Length - 1].position;
+            f.Target.transform.position = Vector3.left * 10f;
+            Assert.That(f.Boss.TryStartPattern(Boss112Pattern.PrecisionBeam), Is.True);
+            yield return Until(() => f.Boss.transform.position.x < -5f);
+            yield return Wait(.25f);
+            Assert.That(initialTail.x - segments[segments.Length - 1].position.x, Is.GreaterThan(.3f));
+
+            Vector3 previous = head.transform.TransformPoint(head.sprite.bounds.center);
+            foreach (var segment in segments)
+            {
+                Assert.That(Vector3.Distance(previous, segment.position), Is.LessThanOrEqualTo(2.71f));
+                previous = segment.position;
+            }
+            Assert.That(f.Boss.GetComponent<Boss112WormBody>().GroundHurtbox.enabled, Is.True);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator WormSlamsFromHoverWithAVisibleTrailAndKeepsTheLockedLanding()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        foreach (var pattern in new[] { Boss112Pattern.HeavySlam, Boss112Pattern.PrecisionBeam,
+                     Boss112Pattern.DelayedSlam, Boss112Pattern.SweepingBeam })
+        {
+            using (var f = new Fixture(Boss112WormTestAuthoring.TestBossPath))
+            {
+                yield return f.Ready();
+                f.Enemy.currentHP = f.Enemy.maxHP * .5f;
+                var body = f.Boss.GetComponent<Rigidbody2D>();
+                var worm = f.Boss.GetComponent<Boss112WormBody>();
+                var head = f.Boss.transform.Find("Visual").GetComponent<SpriteRenderer>();
+                var segments = Enumerable.Range(1, 5).Select(i => f.Boss.transform.Find($"BodySegment_{i}")
+                    .GetComponent<SpriteRenderer>()).ToArray();
+                var lane = f.Boss.GetComponentInChildren<EnemyChargeTelegraph>();
+                var warning = lane.transform.Find("background").GetComponent<LineRenderer>();
+                float hoverY = body.position.y;
+                AssertWormTailOnFloor(f.Boss, worm, head, segments);
+                Assert.That(f.Boss.TryStartPattern(pattern), Is.True, pattern.ToString());
+                if (pattern is Boss112Pattern.PrecisionBeam or Boss112Pattern.SweepingBeam)
+                {
+                    yield return Until(() => f.Boss.Beam.IsDamaging);
+                    var beam = f.Boss.Beam.GetComponentInChildren<SpriteRenderer>();
+                    while (f.Boss.Beam.IsDamaging)
+                    {
+                        typeof(Boss112Beam).GetMethod("LateUpdate", Private).Invoke(f.Boss.Beam, null);
+                        AssertWormTailOnFloor(f.Boss, worm, head, segments);
+                        var laneBounds = beam.bounds;
+                        laneBounds.Expand(new Vector3(-.05f, -.05f, 0f));
+                        foreach (var piece in segments)
+                        {
+                            Bounds pieceBounds = WormSegmentArtBounds(piece);
+                            Assert.That(pieceBounds.Intersects(laneBounds), Is.False,
+                                $"{pattern}: {piece.name} {pieceBounds} crosses the beam {laneBounds}.");
+                        }
+                        yield return null;
+                    }
+                }
+                yield return Until(() => f.Boss.Phase == Boss112Phase.SlamLocked);
+                float lockedX = f.Boss.LockedX;
+                f.Target.transform.position = Vector3.left * 12f;
+                yield return null;
+                typeof(Boss112Controller).GetMethod("LateUpdate", Private).Invoke(f.Boss, null);
+                Assert.That(warning.enabled, Is.True);
+                Assert.That(warning.GetPosition(0).y, Is.EqualTo(hoverY).Within(.03f));
+                Assert.That(body.position.y, Is.EqualTo(hoverY).Within(.03f));
+                AssertWormTailOnFloor(f.Boss, worm, head, segments);
+                var tail = segments.Last().transform;
+                float plantedX = tail.position.x;
+                void AssertPlanted()
+                {
+                    AssertWormTailOnFloor(f.Boss, worm, head, segments);
+                    Assert.That(tail.position.x, Is.EqualTo(plantedX).Within(.01f));
+                    Assert.That(worm.SegmentHurtboxes.All(piece => piece.enabled == f.Boss.IsStaggered),
+                        Is.True, f.Boss.Phase.ToString());
+                }
+                AssertPlanted();
+                Assert.That(f.Boss.ImpactCollider.enabled, Is.False);
+
+                bool sawTrail = false;
+                yield return Until(() => f.Boss.Phase == Boss112Phase.SlamFalling);
+                while (f.Boss.Phase == Boss112Phase.SlamFalling)
+                {
+                    Assert.That(body.position.y, Is.LessThanOrEqualTo(hoverY + .03f));
+                    Assert.That(f.Boss.LockedX, Is.EqualTo(lockedX));
+                    AssertPlanted();
+                    Vector3 center = head.transform.TransformPoint(head.sprite.bounds.center);
+                    if (hoverY - body.position.y > 1.6f && segments[0].transform.position.y > center.y + 1f)
+                        sawTrail = true;
+                    yield return null;
+                }
+                Assert.That(sawTrail, Is.True, $"{pattern} should leave the first segment trailing above the descending head.");
+                yield return Until(() => { AssertPlanted(); return f.Boss.IsStunPoseHeld; });
+                Assert.That(body.position, Is.EqualTo(new Vector2(lockedX, f.Boss.FloorY)));
+                Assert.That(head.sprite.name, Is.EqualTo("Slam_08"));
+                Assert.That(worm.SegmentHurtboxes.All(piece => piece.enabled), Is.True);
+                yield return Until(() =>
+                {
+                    if (f.Boss.Phase != Boss112Phase.Recovery) return true;
+                    AssertPlanted();
+                    return false;
+                });
+                yield return Until(() => f.Boss.Phase == Boss112Phase.Idle);
+                AssertWormTailOnFloor(f.Boss, worm, head, segments);
+            }
+        }
+        yield return new ExitPlayMode();
+    }
+
+    [UnityTest]
+    public IEnumerator WormBracesAndCompressesOnceFromHeadToPlantedTail()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        yield return new EnterPlayMode();
+        using (var f = new Fixture(Boss112WormTestAuthoring.TestBossPath))
+        {
+            yield return f.Ready();
+            var worm = f.Boss.GetComponent<Boss112WormBody>();
+            var head = f.Boss.transform.Find("Visual").GetComponent<SpriteRenderer>();
+            var segments = Enumerable.Range(1, 5).Select(i => f.Boss.transform.Find($"BodySegment_{i}")
+                .GetComponent<SpriteRenderer>()).ToArray();
+            Assert.That(f.Boss.TryStartPattern(Boss112Pattern.HeavySlam), Is.True);
+            yield return Until(() => f.Boss.Phase == Boss112Phase.SlamLocked && f.Boss.PhaseElapsed >= .08f);
+            AssertWormTailOnFloor(f.Boss, worm, head, segments);
+            var bracedPose = segments.Select(piece => piece.transform.position).ToArray();
+            yield return Wait(.12f);
+            Assert.That(f.Boss.Phase, Is.EqualTo(Boss112Phase.SlamLocked));
+            AssertWormTailOnFloor(f.Boss, worm, head, segments);
+            for (int i = 0; i < segments.Length; i++)
+                Assert.That(Vector3.Distance(bracedPose[i], segments[i].transform.position), Is.LessThan(.03f));
+
+            int joints = segments.Length - 1;
+            var pulses = new int[joints];
+            var onset = Enumerable.Repeat(float.PositiveInfinity, joints).ToArray();
+            var compressed = new bool[joints];
+            yield return Until(() => f.Boss.Phase == Boss112Phase.SlamImpact);
+            yield return Until(() =>
+            {
+                AssertWormTailOnFloor(f.Boss, worm, head, segments);
+                Assert.That(Vector3.Distance(bracedPose[joints], segments[joints].transform.position), Is.LessThan(.01f));
+                Assert.That(segments[joints].transform.localScale, Is.EqualTo(Vector3.one * 1.05f));
+                for (int i = 0; i < joints; i++)
+                {
+                    bool active = segments[i].transform.localScale.y < .89f;
+                    if (active && !compressed[i]) { pulses[i]++; onset[i] = Time.time; }
+                    compressed[i] = active;
+                }
+                return f.Boss.Phase == Boss112Phase.Recovery && f.Boss.PhaseElapsed >= .4f;
+            });
+            Assert.That(pulses, Is.All.EqualTo(1));
+            Assert.That(onset, Is.Ordered);
+            Assert.That(onset.Last(), Is.GreaterThan(onset.First()));
+            Assert.That(compressed, Is.All.False);
+        }
+        yield return new ExitPlayMode();
+    }
+
+    private static void AssertWormTailOnFloor(Boss112Controller boss, Boss112WormBody worm,
+        SpriteRenderer head, SpriteRenderer[] segments)
+    {
+        // The test coroutine can run before the presentation's LateUpdate.
+        typeof(Boss112WormBody).GetMethod("LateUpdate", Private).Invoke(worm, null);
+        Assert.That(WormSegmentArtBounds(segments.Last()).min.y, Is.EqualTo(boss.FloorY).Within(.025f), boss.Phase.ToString());
+        Vector3 previous = head.transform.TransformPoint(head.sprite.bounds.center);
+        foreach (var piece in segments)
+        {
+            Assert.That(piece.enabled, Is.True);
+            Assert.That(Vector3.Distance(previous, piece.transform.position), Is.LessThanOrEqualTo(2.71f));
+            previous = piece.transform.position;
+        }
+    }
+
+    private static Bounds WormSegmentArtBounds(SpriteRenderer renderer)
+    {
+        // The new segment core is about 116 pixels across; exclude the cell padding and arms.
+        float diameter = 116f / renderer.sprite.pixelsPerUnit;
+        return new Bounds(renderer.transform.position,
+            Vector3.Scale(new Vector3(diameter, diameter, 0f), renderer.transform.lossyScale));
+    }
+
+    [UnityTest]
     public IEnumerator CancellingOrDyingDuringTheFinisherWarningPreventsTheDelayedImpact()
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -1025,7 +1509,7 @@ public sealed class Boss112PrototypeTests
         EditorSceneManager.OpenScene(Boss112PrototypeAuthoring.ScenePath);
         yield return new EnterPlayMode();
         var room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null, 15f);
+        yield return WalkIntoTestArena(room);
         var runEnd = Object.FindFirstObjectByType<Project.Core.RunEnd.RunEndController>(FindObjectsInactive.Include);
         Assert.That(runEnd.enabled, Is.False, "The normal training death flow must not send this test back to MainMenu.");
         int biome = RunProgressionManager.EnsureInstance().CurrentBiomeIndex;
@@ -1041,8 +1525,7 @@ public sealed class Boss112PrototypeTests
         yield return Until(() => Object.FindFirstObjectByType<Boss112TestRoom>() != null
             && Object.FindFirstObjectByType<Boss112TestRoom>() != room, 15f);
         room = Object.FindFirstObjectByType<Boss112TestRoom>();
-        yield return Until(() => room.Boss != null && room.Boss.Enemy.IsCombatReady && PlayerCharacter.Instance != null
-            && !PlayerCharacter.Instance.IsDead, 15f);
+        yield return WalkIntoTestArena(room);
         Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Test_Boss112"));
         Assert.That(TrainingSession.IsTrainingContext, Is.True);
         Assert.That(PlayerCharacter.Instance.CurrentHP, Is.EqualTo(PlayerCharacter.Instance.MaxHP));
@@ -1051,6 +1534,28 @@ public sealed class Boss112PrototypeTests
         Assert.That(SaveSlotStore.ActiveSlot, Is.EqualTo(slot));
         Capture("07_AfterDeathReset");
         yield return new ExitPlayMode();
+    }
+
+    private static IEnumerator WalkIntoTestArena(Boss112TestRoom room)
+    {
+        yield return Until(() => PlayerCharacter.Instance != null && !PlayerCharacter.Instance.IsDead
+            && PlayerCharacter.Instance.StateMachine?.CurrentStateId == PlayerStateId.Idle, 15f);
+        yield return Wait(.4f);
+        Assert.That(room.Boss, Is.Null, "Waiting at the entrance must not spawn the boss.");
+
+        var player = PlayerCharacter.Instance;
+        float startX = player.transform.position.x;
+        float deadline = Time.realtimeSinceStartup + 5f;
+        while (room.Boss == null)
+        {
+            Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), "The player could not reach the arena.");
+            Assert.That(player.transform.position.y, Is.GreaterThan(-.15f), "The player fell through the entrance floor.");
+            player.StateMachine.CurrentState.OnMoveInput(Vector2.right);
+            yield return null;
+        }
+        player.StateMachine.CurrentState.OnMoveInput(Vector2.zero);
+        Assert.That(player.transform.position.x, Is.GreaterThan(startX + 4f));
+        yield return Until(() => room.Boss.Enemy.IsCombatReady);
     }
 
     private static IEnumerator Until(System.Func<bool> predicate, float timeout = 10f)
@@ -1101,13 +1606,13 @@ public sealed class Boss112PrototypeTests
         public readonly GameObject Target;
         public readonly Boss112Controller Boss;
         public EnemyController Enemy => Boss.Enemy;
-        public Fixture()
+        public Fixture(string bossPath = Boss112PrototypeAuthoring.BossPath)
         {
             var floor = new GameObject("Floor"); floor.transform.SetParent(root.transform); floor.layer = LayerMask.NameToLayer("Ground");
             floor.transform.position = Vector3.down; floor.AddComponent<BoxCollider2D>().size = new Vector2(48, 2);
             Target = new GameObject("Target"); Target.transform.SetParent(root.transform); Target.transform.position = Vector3.right * 6;
             var holder = new GameObject("Inactive boss"); holder.transform.SetParent(root.transform); holder.SetActive(false);
-            var instance = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Boss112PrototypeAuthoring.BossPath), holder.transform);
+            var instance = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(bossPath), holder.transform);
             Boss = instance.GetComponent<Boss112Controller>();
             using (var data = new SerializedObject(Boss))
             {

@@ -71,14 +71,14 @@ namespace Project.Core.ZoneState
         public float NormalEnemyHealthMultiplier => ResolveNormalEnemyHealthMultiplier(CurrentBiomeIndex, normalEnemyHealthBonusPerLevel);
         public float NormalEnemyAttackMultiplier => ResolveNormalEnemyAttackMultiplier(CurrentBiomeIndex, normalEnemyAttackBonusPerLevel);
 
-        public static float ResolveNormalEnemyHealthMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyHealthBonus)
-        {
-            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Clamp(biomeIndex, 0, LastTunedBiomeIndex));
-        }
-
         public static float ResolveBossHealthMultiplier(int biomeIndex)
         {
             return BossHealthMultipliers[Mathf.Clamp(biomeIndex, 0, BossHealthMultipliers.Length - 1)];
+        }
+
+        public static float ResolveNormalEnemyHealthMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyHealthBonus)
+        {
+            return Mathf.Pow(1f + Mathf.Max(0f, bonusPerLevel), Mathf.Clamp(biomeIndex, 0, LastTunedBiomeIndex));
         }
 
         public static float ResolveNormalEnemyAttackMultiplier(int biomeIndex, float bonusPerLevel = DefaultNormalEnemyAttackBonus)
@@ -110,13 +110,12 @@ namespace Project.Core.ZoneState
             }
 
             RunProgressionManager progression = Instance ?? EnsureInstance();
-            if (progression == null) return;
-
-            // Elite variants use the normal enemy curve.
+            // Elite flags are also used by normal-enemy variants; only an actual boss uses this curve.
             if (enemy.HasBossDriver)
             {
-                float basicMultiplier = progression.EnemyBasicStatMultiplier;
-                enemy.ApplyStatMultipliers(progression.BossHealthMultiplier, basicMultiplier, basicMultiplier);
+                float legacyScale = progression != null ? progression.EnemyBasicStatMultiplier : 1f;
+                enemy.ApplyStatMultipliers(progression != null ? progression.BossHealthMultiplier : 1f,
+                    legacyScale, legacyScale);
                 return;
             }
 

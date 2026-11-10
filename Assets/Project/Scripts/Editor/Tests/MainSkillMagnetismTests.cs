@@ -87,6 +87,54 @@ public class MainSkillMagnetismTests
     }
 
     [TestCase(RigidbodyType2D.Dynamic)] [TestCase(RigidbodyType2D.Kinematic)]
+    public void AuthoredReactionDoesNotPullBackAgainstTheMagnetismField(RigidbodyType2D bodyType)
+    {
+        typeof(EnemyHitReactionHandler).GetField("usePositionReactions", Private).SetValue(_reaction, true);
+        _enemy.rb.bodyType = bodyType;
+        _enemy.rb.position = _origin + Vector2.right * 2f;
+        Physics2D.SyncTransforms();
+        _reaction.StartReaction(new HitReactionData
+        {
+            damage = 10f,
+            sourceCategory = AttackCategory.Skill,
+            reactionKind = EnemyReactionKind.Knockback,
+            reactionTiming = HitReactionData.CreateTiming(1, 15, 9),
+            knockbackDirection = Vector2.right,
+            hasAuthoredReactionTarget = true,
+            reactionTargetOffset = new Vector2(.05f, 0f),
+            preserveReactionMotionTiming = true
+        }, _origin);
+        for (int i = 0; i < 12; i++) Tick();
+        Assert.That(_reaction.IsInReaction, Is.True);
+        Assert.That(_enemy.rb.position.x - _origin.x, Is.LessThan(1.9f));
+    }
+
+    [TestCase("test_0_Main/ProjectileData_main_skill.asset", false)]
+    [TestCase("test_0_Main/ProjectileData_main_skill_lv4.asset", false)]
+    [TestCase("test_15_goenitz/ProjectileData_goe_ex_skill_lv4.asset", false)]
+    [TestCase("test_15_goenitz/ProjectileData_goe_ex_skill_lv4.asset", true)]
+    public void AuthoredProjectilePhasePassesItsTargetToTheEnemy(string path, bool spawning)
+    {
+        var projectile = AssetDatabase.LoadAssetAtPath<ProjectileData>("Assets/Project/Character/Hero/" + path);
+        var authored = (NormalHitbox)(spawning ? projectile.ResolveSpawningHitbox() : projectile.ResolveRoutineHitbox());
+        var hit = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(authored));
+        hit.flashFrames = 0;
+        var context = new ProjectileSpawnContext
+        {
+            origin = _origin, direction = Vector2.right, remainingHits = 2, category = AttackCategory.Skill,
+            sourceAttack = 10f
+        };
+        _runtime.Initialize(_projectileHost.GetComponent<GenericProjectilePlayer>(), null, ProjectileType.None, projectile, context);
+        var module = (ProjectileHitboxModule)typeof(ProjectileRuntime).GetField("hitboxModule", Private).GetValue(_runtime);
+        typeof(EnemyHitReactionHandler).GetField("usePositionReactions", Private).SetValue(_reaction, true);
+        Assert.That(module.Activate(hit, context, 1f, true), Is.True);
+        Assert.That(module.TryProcessHit(_enemy), Is.True);
+        var current = (HitReactionData)typeof(EnemyHitReactionHandler).GetField("currentReaction", Private).GetValue(_reaction);
+        Assert.That(current.hasAuthoredReactionTarget, Is.True);
+        Assert.That(current.reactionTargetOffset, Is.EqualTo(authored.reactionTargetOffset));
+    }
+
+    [TestCase(RigidbodyType2D.Dynamic)] [TestCase(RigidbodyType2D.Kinematic)]
     public void EnemyIsDetectedWithoutPrepopulatingTheTrackedSet(RigidbodyType2D bodyType)
     {
         _runtime.RegisterSuccessfulHit(_enemy);
@@ -111,7 +159,7 @@ public class MainSkillMagnetismTests
         _enemy.rb.position = _origin + Vector2.right * x;
         Physics2D.SyncTransforms();
         var touching = typeof(ProjectileRuntime).GetMethod("IsEnemyTouchingTrigger", Private);
-        Assert.That(touching.Invoke(_runtime, new object[] { _enemy }), Is.False);
+        Assert.That(touching.Invoke(_runtime, new object[] { _enemy, null }), Is.False);
         float start = _enemy.rb.position.x;
         Tick();
         Assert.That(Mathf.Abs(_enemy.rb.position.x - _origin.x), Is.LessThan(Mathf.Abs(start - _origin.x)));

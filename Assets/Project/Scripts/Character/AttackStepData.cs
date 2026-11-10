@@ -57,6 +57,8 @@ public class AttackStepData : ActionFrameData
     [SerializeReference] public VFXFrameData vfxData;
     [SerializeReference] public AudioFrameData audioData;
     [SerializeReference] public HitFrameData hitData;
+    [Tooltip("Optional hit data used only when this step runs as a QTE intro.")]
+    [SerializeReference] public HitFrameData qteHitDataOverride;
     [SerializeReference] public ActionEventFrameData eventData;
     [HideInInspector] public List<string> componentOrder = new List<string>(DefaultComponentOrder);
 
@@ -68,7 +70,14 @@ public class AttackStepData : ActionFrameData
         vfxData?.Rescale(ratio);
         audioData?.Rescale(ratio);
         hitData?.Rescale(ratio);
+        if (qteHitDataOverride != hitData)
+            qteHitDataOverride?.Rescale(ratio);
         eventData?.Rescale(ratio);
+    }
+
+    public HitFrameData ResolveHitData(bool isQteIntro)
+    {
+        return isQteIntro && qteHitDataOverride != null ? qteHitDataOverride : hitData;
     }
 
     public void EnsureComponentOrder()

@@ -29,6 +29,7 @@ public class Boss112EntranceTests
             var corridor = root.transform.Find("EntranceCorridorFloor").GetComponent<BoxCollider2D>();
             var floor = root.transform.Find("ArenaTerrain/Floor").GetComponent<BoxCollider2D>();
             var gate = root.transform.Find("ArenaTerrain/LeftWall").GetComponent<BoxCollider2D>();
+            var wall = root.transform.Find("ArenaTerrain/RightWall").GetComponent<BoxCollider2D>();
             var trigger = root.transform.Find("BossSpawnTrigger").GetComponent<BoxCollider2D>();
             var boundary = root.GetComponent<SceneBoundaryController>();
             using var data = new SerializedObject(boundary);
@@ -36,6 +37,9 @@ public class Boss112EntranceTests
                 Is.SameAs(root.transform.Find("StageStartWall").GetComponent<BoxCollider2D>()));
             Assert.That(data.FindProperty("_fightEntranceWall").objectReferenceValue, Is.SameAs(gate));
             Assert.That(gate.isTrigger, Is.True);
+            Assert.That(wall.bounds.min.x - gate.bounds.max.x, Is.EqualTo(ExecutionerArenaWidth()).Within(.001f));
+            Assert.That(floor.bounds.min.x, Is.LessThanOrEqualTo(gate.bounds.min.x + .001f));
+            Assert.That(floor.bounds.max.x, Is.GreaterThanOrEqualTo(wall.bounds.max.x - .001f));
             Assert.That(corridor.bounds.max.y, Is.EqualTo(floor.bounds.max.y).Within(.001f));
             Assert.That(corridor.bounds.min.x, Is.LessThan(entrance.SpawnPosition.x - 2f));
             Assert.That(corridor.bounds.max.x, Is.GreaterThan(floor.bounds.min.x));
@@ -48,6 +52,20 @@ public class Boss112EntranceTests
                     || x >= floor.bounds.min.x && x <= floor.bounds.max.x, Is.True, $"Unsupported entrance X={x}");
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    private static float ExecutionerArenaWidth()
+    {
+        var reference = PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(
+            Resources.Load<RoomData>("MapSO/RoomData_Boss_01").LayoutPrefab));
+        try
+        {
+            Physics2D.SyncTransforms();
+            var walls = reference.GetComponentsInChildren<BoxCollider2D>(true);
+            return walls.Single(c => c.name == "ExitWall").bounds.min.x
+                - walls.Single(c => c.name == "ArenaGate").bounds.max.x;
+        }
+        finally { PrefabUtility.UnloadPrefabContents(reference); }
     }
 
     [UnityTest] public IEnumerator MainCanWalkInBeforeStartingTheBoss()

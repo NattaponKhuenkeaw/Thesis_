@@ -91,7 +91,6 @@ namespace Project.TeamBuilder.UI.Panels
         {
             BindUpgradeHandler(select == null ? null : _ => select());
             BindCloseHandler(close);
-            PlaceForTrack(family);
             gameObject.SetActive(true);
             if (nodeNameText != null) nodeNameText.text = title;
             if (nodeLevelText != null) nodeLevelText.text = step;

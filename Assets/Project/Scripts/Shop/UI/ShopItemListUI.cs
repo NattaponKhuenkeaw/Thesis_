@@ -93,7 +93,7 @@ namespace Project.ShopSystem.UI
         private void AutoBindReferences()
         {
             contentPanel ??= transform.Find("ContentPanel")?.gameObject;
-            buyPanel ??= transform.Find("BuyPanel")?.gameObject;
+            buyPanel ??= (transform.Find("OfferActions") ?? transform.Find("BuyPanel"))?.gameObject;
             soldPanel ??= transform.Find("Brought")?.gameObject;
 
             Transform contentTransform = contentPanel != null ? contentPanel.transform : null;
@@ -364,7 +364,7 @@ namespace Project.ShopSystem.UI
 
         private void SendAnimatorTrigger(int triggerHash)
         {
-            if (animator == null)
+            if (animator == null || !animator.isActiveAndEnabled)
             {
                 return;
             }

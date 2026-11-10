@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using Project.InventorySystem.Items;
+using Project.UI;
 using UnityEngine;
 
 namespace Project.Core.ZoneState
 {
     /// <summary>
     /// Rolls difficulty + reward for a RouteOffer.
-    /// Chamber layouts spawn from Medium/Hard encounter palettes;
+    /// Chamber layouts spawn from Easy/Medium/Hard Encounter palettes;
     /// generated waves are only attached for single-room combat fallback.
     /// </summary>
     public static class RouteOfferGenerator
@@ -72,8 +73,8 @@ namespace Project.Core.ZoneState
 
         private static RouteOfferTables.DifficultyProfile RollProfile(RouteOfferTables tables)
         {
-            RouteOfferTables.DifficultyProfile medium = tables.GetProfile(RouteDifficulty.Medium);
-            RouteOfferTables.DifficultyProfile hard = tables.GetProfile(RouteDifficulty.Hard);
+            var medium = tables.GetProfile(RouteDifficulty.Medium);
+            var hard = tables.GetProfile(RouteDifficulty.Hard);
             float mediumWeight = Mathf.Max(0f, medium?.rollWeight ?? 0f);
             float hardWeight = Mathf.Max(0f, hard?.rollWeight ?? 0f);
             if (hardWeight <= 0f) return medium ?? hard;
@@ -196,7 +197,8 @@ namespace Project.Core.ZoneState
             out RouteReward reward)
         {
             reward = null;
-            if (Project.Training.TrainingSession.IsTrainingContext)
+            ArtifactRewardPickerUI picker = Resources.Load<ArtifactRewardPickerUI>(ArtifactRewardPickerUI.ResourcePath);
+            if (picker == null || !picker.IsConfigured || Project.Training.TrainingSession.IsTrainingContext)
                 return false;
 
             float total = 0f;

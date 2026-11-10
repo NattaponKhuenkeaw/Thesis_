@@ -38,6 +38,36 @@ public class SkyBackgroundTests
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
+    [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)]
+    public void BiomeOneAuthoredSkyIsUprightAndHasNoGapsBeforePlay(int level)
+    {
+        var root = PrefabUtility.LoadPrefabContents(BiomeLayoutAuthoring.LayoutPath(level));
+        try
+        {
+            var sky = MainSky(root);
+            Assert.That(root.GetComponentsInChildren<ParallaxBackground>().Where(SkyBackgroundRepair.IsSky), Is.EqualTo(new[] { sky }));
+            var row = SkyBackgroundRepair.RowImages(sky).OrderBy(r => r.bounds.min.x).ToArray();
+            var plan = LevelDesignLayoutBuilder.GetPlan(level);
+            Assert.That(row[0].bounds.min.x, Is.LessThanOrEqualTo(LevelDesignLayoutBuilder.WorldX(plan, 108f) - 28f));
+            Assert.That(row.Last().bounds.max.x, Is.GreaterThanOrEqualTo(LevelDesignLayoutBuilder.WorldX(plan, 1812f) + 28f));
+            float roof = plan.solids.Max(s => LevelDesignLayoutBuilder.ToWorld(plan, s).yMax);
+            for (int i = 0; i < row.Length; i++)
+            {
+                var image = row[i];
+                Assert.That(image.enabled && image.gameObject.activeInHierarchy, Is.True);
+                Assert.That(Vector3.Dot(image.transform.TransformVector(Vector3.up).normalized, Vector3.up), Is.GreaterThan(.999f));
+                Assert.That(image.flipY, Is.False);
+                Assert.That(image.bounds.min.y, Is.LessThan(0f));
+                Assert.That(image.bounds.max.y, Is.GreaterThan(roof + 3f));
+                if (i == 0) continue;
+                Assert.That(image.bounds.min.x, Is.EqualTo(row[i - 1].bounds.max.x).Within(.001f));
+                Assert.That(image.bounds.center.y, Is.EqualTo(row[i - 1].bounds.center.y).Within(.001f));
+                Assert.That(image.flipX, Is.Not.EqualTo(row[i - 1].flipX));
+            }
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     [UnityTest]
     public IEnumerator LayoutFiveRuntimeSkyStaysSingleAndCoversStreetRoofsAndExit()
     {
@@ -171,7 +201,7 @@ public class SkyBackgroundTests
         finally { Object.DestroyImmediate(camera); PrefabUtility.UnloadPrefabContents(root); }
     }
 
-    [TestCase(1)] [TestCase(5)] [TestCase(6)] [TestCase(10)]
+    [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)] [TestCase(6)] [TestCase(10)]
     public void RenderedSkyHasNoDefaultBackgroundAtStreetOrHighestRoof(int level)
     {
         var scene = EditorSceneManager.NewPreviewScene();
@@ -246,6 +276,11 @@ public class SkyBackgroundTests
 
     [TestCase("Assets/Project/Prefab/Environment/CombatBackground_B1.prefab")]
     [TestCase("Assets/Project/Prefab/Environment/CombatBackground_B2.prefab")]
+    [TestCase("Assets/Project/Resources/RoomLayouts/LV/RoomLayout_LV_01.prefab")]
+    [TestCase("Assets/Project/Resources/RoomLayouts/LV/RoomLayout_LV_02.prefab")]
+    [TestCase("Assets/Project/Resources/RoomLayouts/LV/RoomLayout_LV_03.prefab")]
+    [TestCase("Assets/Project/Resources/RoomLayouts/LV/RoomLayout_LV_04.prefab")]
+    [TestCase("Assets/Project/Resources/RoomLayouts/LV/RoomLayout_LV_05.prefab")]
     public void RenderedSimpleCloudJoinsDoNotHaveAHardVerticalCut(string path)
     {
         var scene = EditorSceneManager.NewPreviewScene();
@@ -275,7 +310,7 @@ public class SkyBackgroundTests
                 }
                 Assert.That(cuts, Is.LessThanOrEqualTo(2), "Mirrored cloud edges must agree in the rendered image, not merely touch in world space");
                 Directory.CreateDirectory("Logs/SkyRepair");
-                string theme = path.EndsWith("B1.prefab") ? "B1" : "B2";
+                string theme = Path.GetFileNameWithoutExtension(path);
                 File.WriteAllBytes($"Logs/SkyRepair/{theme}_SimpleSeam.png", screenshot.EncodeToPNG());
             }
             finally { Object.DestroyImmediate(screenshot); }

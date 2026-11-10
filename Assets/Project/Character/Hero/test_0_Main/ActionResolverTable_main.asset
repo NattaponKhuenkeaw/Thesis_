@@ -369,6 +369,8 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -409,6 +411,8 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.75, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -724,6 +728,9 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.85, y: 0}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -3020,6 +3027,9 @@ MonoBehaviour:
         launchSpeed: 10
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 1, y: 2}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 1
@@ -3442,6 +3452,9 @@ MonoBehaviour:
         launchSpeed: 10
         useSnapToAnchor: 0
         snapOffset: {x: 2, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.3333, y: 1.6509}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 1
@@ -3504,6 +3517,9 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.75, y: 0}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -3744,6 +3760,9 @@ MonoBehaviour:
         launchSpeed: 7
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0, y: 1.9968}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 1
@@ -3784,6 +3803,9 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.75, y: 0.1222}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 1
@@ -3889,6 +3911,9 @@ MonoBehaviour:
         launchSpeed: 4
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 1.5, y: 1}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 1
@@ -4018,6 +4043,8 @@ MonoBehaviour:
         launchSpeed: 0
         useSnapToAnchor: 0
         snapOffset: {x: 2.5, y: -2}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -4121,6 +4148,8 @@ MonoBehaviour:
         launchSpeed: 8
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.65, y: 1.55}
         landingBehavior: 0
         canAirJuggle: 1
         juggleLaunchScale: 1
@@ -4250,6 +4279,8 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.18, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -4772,6 +4803,8 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 1, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 1, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -4883,6 +4916,8 @@ MonoBehaviour:
         launchSpeed: 5
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.75, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -4929,6 +4964,9 @@ MonoBehaviour:
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 1, y: 0}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
@@ -6725,6 +6763,9 @@ MonoBehaviour:
         launchSpeed: 7
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 0.15, y: 0.1722}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 1
@@ -9702,6 +9743,9 @@ MonoBehaviour:
         launchSpeed: 7
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
+        useAuthoredReactionTarget: 1
+        reactionTargetOffset: {x: 1.5, y: 1.75}
+        preserveReactionMotionTiming: 1
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 1

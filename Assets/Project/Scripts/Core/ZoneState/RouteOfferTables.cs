@@ -22,7 +22,7 @@ namespace Project.Core.ZoneState
         [Serializable]
         public sealed class DifficultyProfile
         {
-            public RouteDifficulty difficulty = RouteDifficulty.Medium;
+            public RouteDifficulty difficulty = RouteDifficulty.Easy;
             [Range(0f, 100f)] public float rollWeight = 40f;
             [Min(1)] public int minWaves = 1;
             [Min(1)] public int maxWaves = 1;
@@ -38,6 +38,8 @@ namespace Project.Core.ZoneState
         {
             [Min(0f)] public float weight;
             [Min(0)] public int artifactPulls;
+            [Min(0)] public int minSoul;
+            [Min(0)] public int maxSoul;
             public bool grantsMemory;
         }
 
@@ -46,7 +48,7 @@ namespace Project.Core.ZoneState
         [SerializeField, Min(0f)] private float delayBetweenWaves = 1.25f;
         [SerializeField, Min(1)] private int aliveCap = 5;
         [SerializeField, Min(0f)] private float spawnInterval = 0.35f;
-        [Tooltip("Allows direct artifact drops when a Hard reward pattern is unavailable.")]
+        [Tooltip("When false, route clears never grant artifacts (coins only).")]
         [SerializeField] private bool grantArtifacts = false;
 
         [Header("Difficulty Profiles")]
@@ -74,6 +76,7 @@ namespace Project.Core.ZoneState
                 }
             }
 
+            // Do not silently substitute Easy for Hard/Medium — callers treat null as bare room.
             return null;
         }
 
@@ -95,7 +98,7 @@ namespace Project.Core.ZoneState
                 new DifficultyProfile
                 {
                     difficulty = RouteDifficulty.Medium,
-                    rollWeight = 40f,
+                    rollWeight = 35f,
                     minWaves = 1,
                     maxWaves = 1,
                     minEnemiesPerWave = 6,
@@ -106,7 +109,7 @@ namespace Project.Core.ZoneState
                 new DifficultyProfile
                 {
                     difficulty = RouteDifficulty.Hard,
-                    rollWeight = 60f,
+                    rollWeight = 25f,
                     minWaves = 1,
                     maxWaves = 1,
                     minEnemiesPerWave = 8,

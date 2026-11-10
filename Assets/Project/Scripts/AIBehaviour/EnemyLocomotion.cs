@@ -160,6 +160,7 @@ public class EnemyLocomotion : MonoBehaviour
     public bool UsesSoftGroundSeparation => softGroundSeparation && UsesMeleeFlanking;
     public Vector2 AttackSlotOffset => attackSlotOffset;
     public bool UsesFixedHeightFlight => allowNonGroundMove && moveMode == EnemyMoveMode.Fly && fixedHeightFlight;
+    public float SpawnFlightHeight => flightHeight;
     public bool FlightInitialized => flightInitialized;
     public float FlightWorldY => flightWorldY;
     public bool UsesRoamingFlight => UsesFixedHeightFlight && roamingFlight;

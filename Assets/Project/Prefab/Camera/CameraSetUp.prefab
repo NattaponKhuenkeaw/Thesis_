@@ -358,7 +358,7 @@ MonoBehaviour:
   _ultimateCam: {fileID: 5597668265040310873}
   _zoneStateProvider: {fileID: 11400000, guid: becbee9470c028f4a8e6ee3f1b3c6383, type: 2}
   _combatTargetGroup: {fileID: 2371794833611722877}
-  _playerTransform: {fileID: 8140162959712842425}
+  _playerTransform: {fileID: 0}
   _activePriority: 20
   _inactivePriority: 0
   _weightLerpSpeed: 2

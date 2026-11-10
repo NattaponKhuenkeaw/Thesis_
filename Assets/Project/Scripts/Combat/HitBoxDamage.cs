@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project.AIBehaviour.Boss;
 using UnityEngine;
 
 public class HitBoxDamage : MonoBehaviour
@@ -74,7 +75,7 @@ public class HitBoxDamage : MonoBehaviour
         EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy != null)
         {
-            ProcessHit(enemy);
+            ProcessHit(enemy, other);
         }
     }
 
@@ -192,7 +193,7 @@ public class HitBoxDamage : MonoBehaviour
         hitEnemiesThisActivation.Clear();
     }
 
-    public void ProcessHit(EnemyController enemy)
+    public void ProcessHit(EnemyController enemy, Collider2D contactCollider = null)
     {
         LastDamageDealt = 0f;
         if (enemy == null || !enemy.IsTargetable || hitEnemiesThisActivation.Contains(enemy))
@@ -207,13 +208,24 @@ public class HitBoxDamage : MonoBehaviour
 
         hitEnemiesThisActivation.Add(enemy);
 
+        Boss112WormBody worm = enemy.GetComponent<Boss112WormBody>();
+        Collider2D attack = worm != null ? GetActiveHitboxCollider() : null;
+        int segmentContacts = worm != null ? worm.GetSegmentContacts(attack, contactCollider) : 0;
+        bool hitHead = segmentContacts != 0 && worm.HitsHead(attack, contactCollider);
         Vector2 direction = GetHitDirection();
-        ResolveDamageAgainstEnemy(enemy);
+        ResolveDamageAgainstEnemy(enemy, segmentContacts != 0 && !hitHead ? worm.SegmentDamageMultiplier : 1f);
         HitReactionData reactionData = currentGrabHitbox != null
             ? BuildGrabReactionData(direction)
             : BuildReactionData(enemy, direction);
-        if (currentNormalHitbox != null && currentGrabHitbox == null && projectileOwner == null)
-            playerCombat?.PrepareDashHitAnchor(this, enemy, ref reactionData);
+        Vector2 headHitPoint = hitHead ? CalculateHitPoint(enemy, enemy.bodyCollider) : default;
+        System.Span<Vector2> segmentHitPoints = segmentContacts != 0 ? stackalloc Vector2[worm.SegmentHurtboxes.Count] : default;
+        if (segmentContacts != 0)
+        {
+            if (!hitHead) reactionData.flashFrames = 0;
+            for (int i = 0; i < segmentHitPoints.Length; i++)
+                if ((segmentContacts & (1 << i)) != 0)
+                    segmentHitPoints[i] = CalculateHitPoint(enemy, worm.SegmentHurtboxes[i]);
+        }
 
         ProjectileData grabProjectile = projectileOwner != null ? projectileOwner.ProjectileData : null;
         if (reactionData.reactionKind == EnemyReactionKind.Grab
@@ -264,10 +276,23 @@ public class HitBoxDamage : MonoBehaviour
         DamageImpactTier resolvedTier = currentGrabHitbox != null
             ? currentGrabHitbox.impactTier
             : (currentNormalHitbox != null ? currentNormalHitbox.impactTier : DamageImpactTier.Low);
-        Vector2 hitPoint = CalculateHitPoint(enemy);
         ProjectileData projectileData = projectileOwner != null ? projectileOwner.ProjectileData : null;
 
-        HitFeedbackEvents.Raise(activeHitbox, resolvedTier, hitPoint, direction, projectileData);
+        if (segmentContacts == 0)
+            HitFeedbackEvents.Raise(activeHitbox, resolvedTier, CalculateHitPoint(enemy), direction, projectileData);
+        else
+        {
+            // Damage and hit stop belong to the boss; only the contact visuals are per segment.
+            if (hitHead) HitFeedbackEvents.Raise(activeHitbox, resolvedTier, headHitPoint, direction, projectileData);
+            bool playAudio = !hitHead;
+            for (int i = 0; i < segmentHitPoints.Length; i++)
+            {
+                if ((segmentContacts & (1 << i)) == 0) continue;
+                if (primaryDamageDealt > 0f) worm.FlashSegment(i);
+                HitFeedbackEvents.Raise(activeHitbox, resolvedTier, segmentHitPoints[i], direction, projectileData, playAudio);
+                playAudio = false;
+            }
+        }
 
         enemy.SetInCombat(true);
 
@@ -308,7 +333,7 @@ public class HitBoxDamage : MonoBehaviour
         projectileOwner?.RegisterSuccessfulHit(enemy);
     }
 
-    private void ResolveDamageAgainstEnemy(EnemyController enemy)
+    private void ResolveDamageAgainstEnemy(EnemyController enemy, float damageMultiplier)
     {
         currentResolvedDamage = currentDamage;
         if (enemy == null)
@@ -368,6 +393,9 @@ public class HitBoxDamage : MonoBehaviour
             currentDamageRequest.hasExplicitProcPolicy = true;
         }
         currentDamageResult = CombatDamageProcessor.Resolve(currentDamageRequest);
+        if (damageMultiplier != 1f)
+            currentDamageResult = new DamageResult(currentDamageResult.UnroundedDamage * damageMultiplier,
+                currentDamageResult.IsCriticalHit, currentDamageResult.Descriptor, currentDamageResult.AcceptedSideEffects);
         float finalDamage = currentDamageResult.Damage;
         currentIsCrit = currentDamageResult.IsCriticalHit;
 
@@ -543,6 +571,9 @@ public class HitBoxDamage : MonoBehaviour
 
         if (currentNormalHitbox != null)
         {
+            if (projectileOwner == null)
+                playerCombat?.PrepareDashHitAnchor(this, enemy, ref data);
+
             data.flashColor = currentNormalHitbox.flashColor;
             data.flashFrames = currentNormalHitbox.flashFrames;
             data.impactTier = currentNormalHitbox.impactTier;
@@ -567,6 +598,15 @@ public class HitBoxDamage : MonoBehaviour
                     currentNormalHitbox.juggleStunScale,
                     currentNormalHitbox.useSnapToAnchor,
                     currentNormalHitbox.snapOffset);
+
+                if (data.actionAnchor == null && currentNormalHitbox.useAuthoredReactionTarget && !currentNormalHitbox.useSnapToAnchor
+                    && currentNormalHitbox.reactionKind != EnemyReactionKind.Grab)
+                {
+                    data.hasAuthoredReactionTarget = true;
+                    data.reactionTargetOffset = currentNormalHitbox.reactionTargetOffset;
+                    data.reactionTargetTravelFrames = currentNormalHitbox.reactionTargetTravelFrames;
+                    data.preserveReactionMotionTiming = currentNormalHitbox.preserveReactionMotionTiming;
+                }
 
                 if (currentNormalHitbox.useSnapToAnchor)
                 {
@@ -915,18 +955,21 @@ public class HitBoxDamage : MonoBehaviour
         return Vector2.right;
     }
 
-    private Vector2 CalculateHitPoint(EnemyController enemy)
+    private Vector2 CalculateHitPoint(EnemyController enemy, Collider2D contactCollider = null)
     {
         if (enemy == null) return transform.position;
 
         Collider2D attackerCollider = GetActiveHitboxCollider();
 
-        Collider2D victimCollider = enemy.bodyCollider;
+        Collider2D victimCollider = contactCollider != null ? contactCollider : enemy.bodyCollider;
 
         if (attackerCollider == null || victimCollider == null)
         {
-            return enemy.transform.position;
+            return contactCollider != null ? contactCollider.bounds.center : enemy.transform.position;
         }
+
+        if (contactCollider != null)
+            return attackerCollider.ClosestPoint(victimCollider.bounds.center);
 
         // Get the closest points between the two colliders to approximate the hit point
         Vector2 attackerPoint = attackerCollider.bounds.center;

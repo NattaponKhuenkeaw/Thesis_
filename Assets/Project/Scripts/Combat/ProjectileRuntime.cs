@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project.AIBehaviour.Boss;
 using UnityEngine;
 using Project.Combat;
 using Project.ShopSystem;
@@ -321,7 +322,7 @@ public class ProjectileRuntime : MonoBehaviour
     private void OnTriggerExit2D(Collider2D other)
     {
         EnemyController enemy = other != null ? other.GetComponentInParent<EnemyController>() : null;
-        if (enemy != null)
+        if (enemy != null && (!enemy.TryGetComponent<Boss112WormBody>(out _) || !IsEnemyTouchingTrigger(enemy, other)))
         {
             trackedEnemies.Remove(enemy);
         }
@@ -1021,24 +1022,27 @@ public class ProjectileRuntime : MonoBehaviour
         return remainingHits;
     }
 
-    private bool IsEnemyTouchingTrigger(EnemyController enemy)
+    private bool IsEnemyTouchingTrigger(EnemyController enemy, Collider2D excluded = null)
     {
         if (enemy == null || triggerCollider == null || !triggerCollider.enabled)
         {
             return false;
         }
 
-        if (enemy.bodyCollider != null)
-        {
-            return enemy.bodyCollider.IsTouching(triggerCollider)
-                || enemy.bodyCollider.bounds.Intersects(triggerCollider.bounds);
-        }
+        if (enemy.bodyCollider != null && enemy.bodyCollider != excluded
+            && (enemy.bodyCollider.IsTouching(triggerCollider) || enemy.bodyCollider.bounds.Intersects(triggerCollider.bounds)))
+            return true;
+
+        if (enemy.TryGetComponent<Boss112WormBody>(out var worm) && worm.GetSegmentContacts(triggerCollider, excluded: excluded) != 0)
+            return true;
+
+        if (enemy.bodyCollider != null) return false;
 
         Collider2D[] colliders = enemy.GetCachedColliders();
         for (int i = 0; i < colliders.Length; i++)
         {
             Collider2D collider = colliders[i];
-            if (collider != null
+            if (collider != null && collider != excluded
                 && (collider.IsTouching(triggerCollider) || collider.bounds.Intersects(triggerCollider.bounds)))
             {
                 return true;

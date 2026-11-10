@@ -39,8 +39,7 @@ public static class SkyBackgroundRepair
     {
         var image = layer.GetComponent<SpriteRenderer>();
         if (image == null || image.sprite == null) throw new InvalidOperationException("Missing sky sprite: " + layer.name);
-        float width = Mathf.Max(worldWidth, RowBounds(layer).size.x,
-            image.size.x * Mathf.Abs(layer.transform.lossyScale.x));
+        float authoredWidth = image.size.x * Mathf.Abs(layer.transform.lossyScale.x);
         image.drawMode = SpriteDrawMode.Simple;
         layer.transform.localScale = Vector3.one * SkyScale;
         image.size = image.sprite.bounds.size;
@@ -48,6 +47,12 @@ public static class SkyBackgroundRepair
         layer.infiniteHorizontal = false;
         layer.infiniteVertical = false;
         layer.centerVerticallyOnCamera = true;
+
+        // Normalize native sizing before measuring a hand-edited, possibly asymmetric row.
+        // Measuring only its old width can require another tile on every reapplication.
+        Bounds row = RowBounds(layer);
+        float radius = Mathf.Max(Mathf.Abs(row.min.x - image.bounds.center.x), Mathf.Abs(row.max.x - image.bounds.center.x));
+        float width = Mathf.Max(worldWidth, authoredWidth, radius * 2f);
 
         float tileWidth = image.sprite.bounds.size.x;
         float worldTileWidth = tileWidth * Mathf.Abs(layer.transform.lossyScale.x);
@@ -77,6 +82,44 @@ public static class SkyBackgroundRepair
         PrefabUtility.RecordPrefabInstancePropertyModifications(image);
         PrefabUtility.RecordPrefabInstancePropertyModifications(layer.transform);
         PrefabUtility.RecordPrefabInstancePropertyModifications(layer);
+    }
+
+    [MenuItem("Tools/Project/Level Design/Repair Biome 1 Combat Sky Rows")]
+    public static void RepairBiomeOneCombatRows()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play Mode first.");
+        for (int level = 1; level <= 5; level++)
+        {
+            string path = BiomeLayoutAuthoring.LayoutPath(level);
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                string protectedBefore = ProtectedSnapshot(root);
+                string physicsBefore = BiomeLayoutAuthoring.PhysicsSnapshot(root);
+                var skies = root.GetComponentsInChildren<ParallaxBackground>(true).Where(IsSky).ToArray();
+                string before = SkySnapshot(skies);
+                var primary = skies.Single(s => s.name == "background");
+                var duplicates = skies.Where(s => s != primary && s.gameObject.activeSelf).ToArray();
+                foreach (var duplicate in duplicates)
+                    duplicate.gameObject.SetActive(false);
+
+                var plan = LevelDesignLayoutBuilder.GetPlan(level);
+                float left = LevelDesignLayoutBuilder.WorldX(plan, 108f);
+                float right = LevelDesignLayoutBuilder.WorldX(plan, 1812f);
+                float roof = plan.solids.Max(s => LevelDesignLayoutBuilder.ToWorld(plan, s).yMax);
+                var position = primary.transform.position;
+                primary.transform.SetPositionAndRotation(new Vector3((left + right) * .5f, (roof + 3f) * .5f, position.z), Quaternion.identity);
+                var image = primary.GetComponent<SpriteRenderer>();
+                image.flipX = image.flipY = false;
+                Configure(primary, right - left + 56f);
+
+                if (protectedBefore != ProtectedSnapshot(root) || physicsBefore != BiomeLayoutAuthoring.PhysicsSnapshot(root))
+                    throw new InvalidOperationException("Biome 1 sky repair modified non-sky content: " + path);
+                if (duplicates.Length > 0 || before != SkySnapshot(skies)) PrefabUtility.SaveAsPrefabAsset(root, path);
+                Debug.Log("[Sky Repair] Verified unchanged scenery and collision: " + path);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
     }
 
     [MenuItem("Tools/Project/Level Design/Use Simple Sky Rows In Both Biomes")]

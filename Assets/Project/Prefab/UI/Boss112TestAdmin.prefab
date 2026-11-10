@@ -2317,7 +2317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e5edcd3688c8874d97db7bc3665d962, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Training.Boss112TestRoom
-  bossPrefab: {fileID: 666464397964723813, guid: 58cf828c3305c194796fdd1b73684ffe, type: 3}
+  bossPrefab: {fileID: 7846405395204844580, guid: 386cb537947f61044b81f246430ad6de, type: 3}
   spawnPoint: {fileID: 0}
   playerStart: {fileID: 0}
   cameraAnchor: {fileID: 0}

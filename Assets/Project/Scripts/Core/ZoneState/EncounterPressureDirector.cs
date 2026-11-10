@@ -46,6 +46,16 @@ namespace Project.Core.ZoneState
             return remaining.Count > 0 ? remaining.Dequeue() : null;
         }
 
+        public void CopyNext(int count, List<GameObject> destination)
+        {
+            destination.Clear();
+            foreach (var prefab in remaining)
+            {
+                if (destination.Count >= count) break;
+                destination.Add(prefab);
+            }
+        }
+
         public void Requeue(GameObject prefab)
         {
             if (prefab != null)

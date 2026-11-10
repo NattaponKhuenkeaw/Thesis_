@@ -799,6 +799,8 @@ MonoBehaviour:
   - {fileID: 1593312639483370288}
   - {fileID: 695851071976150479}
   biomeTwoEnvironment: {fileID: 7474426625481729285}
+  biomeOneArtworkDefaults: 
+  biomeOneParallaxDefaults: 
 --- !u!1 &1686257653497086573
 GameObject:
   m_ObjectHideFlags: 0
@@ -1821,7 +1823,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 1307269479615220345, guid: c5fab7f4d1dbdd142bf894c91df58b08, type: 3}
+    - {fileID: 3741872969996794365, guid: c5fab7f4d1dbdd142bf894c91df58b08, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 1496304459009536125, guid: c5fab7f4d1dbdd142bf894c91df58b08, type: 3}
       insertIndex: -1

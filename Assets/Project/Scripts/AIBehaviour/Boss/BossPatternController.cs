@@ -100,6 +100,8 @@ namespace Project.AIBehaviour.Boss
         };
         [SerializeField, Range(2, 6)] private int alternatingCleaveCount = 4;
         [SerializeField, Min(.15f)] private float alternatingCleaveInterval = .36f;
+        [SerializeField, Min(.1f)] private float alternatingCleaveFirstHold = .3f;
+        [SerializeField, Min(.15f)] private float alternatingCleaveRoarDuration = 1.2f;
 
         [Header("Seismic Barrage (Phase 2)")]
         [SerializeField] private BossPatternTiming seismicBarrage = new BossPatternTiming
@@ -108,6 +110,7 @@ namespace Project.AIBehaviour.Boss
         };
         [SerializeField, Range(2, 5)] private int seismicJumpCount = 3;
         [SerializeField, Min(.2f)] private float seismicJumpInterval = .65f;
+        [SerializeField, Min(.1f)] private float seismicFirstCrouchHold = .3f;
         [SerializeField] private BossGroundWave groundWavePrefab;
         [SerializeField, Min(1f)] private float groundWaveSpeed = 14f;
         [SerializeField, Min(1f)] private float groundWaveDistance = 80f;
@@ -170,6 +173,8 @@ namespace Project.AIBehaviour.Boss
 
         private Transform target;
         private Coroutine brainRoutine;
+        private bool trainingControl;
+        private bool trainingAuto;
         private Coroutine spawnRevealRoutine;
         private bool spawnRevealStarted;
         private bool spawnRevealPending;
@@ -198,12 +203,14 @@ namespace Project.AIBehaviour.Boss
 
         private Color[] flashOriginalColors;
         private SpriteRenderer[] flashRenderers;
-        private bool flashRenderersCached;
         private readonly WaitForSeconds flashWait = new WaitForSeconds(0.12f);
         private readonly WaitForFixedUpdate waitFixed = new WaitForFixedUpdate();
 
         public int Phase => phase;
         public bool IsBusy => isBusy;
+        public EnemyController Enemy => enemy;
+        public bool TrainingAuto => trainingAuto;
+        internal IReadOnlyList<BossGroundWave> TrainingWaves => groundWaves;
         public BossHitboxPreviewMode HitboxPreviewMode => hitboxPreviewMode;
         public bool PreviewRanges => previewRanges;
         public BossPatternTiming CleaveTiming => cleave;
@@ -242,6 +249,7 @@ namespace Project.AIBehaviour.Boss
         private void Awake()
         {
             CacheReferences();
+            CacheFlashColors();
             ApplyDefaultStatsIfNeeded();
 
             // Boss owns AI; trash enemies keep Behavior Graph.
@@ -309,6 +317,7 @@ namespace Project.AIBehaviour.Boss
         {
             if (enemy == null
                 || !isActiveAndEnabled
+                || (trainingControl && !trainingAuto)
                 || !enemy.IsCombatReady
                 || spawnRevealPending
                 || brainRoutine != null)
@@ -318,6 +327,42 @@ namespace Project.AIBehaviour.Boss
 
             enemy.SetInCombat(true);
             brainRoutine = StartCoroutine(BrainLoop());
+        }
+
+        internal void ConfigureTrainingControl()
+        {
+            trainingControl = true;
+            revealOnSpawn = false;
+        }
+
+        internal bool TryStartTrainingPattern(BossPatternId pattern)
+        {
+            if (!trainingControl || !isActiveAndEnabled || !CanContinuePattern() || isBusy
+                || (pattern == BossPatternId.SeismicBarrage && phase < 2) || !TryAcquireTarget()) return false;
+            SetTrainingAuto(false);
+            brainRoutine = StartCoroutine(RunTrainingPattern(pattern));
+            return true;
+        }
+
+        private IEnumerator RunTrainingPattern(BossPatternId pattern)
+        {
+            yield return ExecutePattern(pattern);
+            brainRoutine = null;
+        }
+
+        internal void SetTrainingAuto(bool enabled)
+        {
+            if (!trainingControl) return;
+            trainingAuto = enabled;
+            ForceClearCombatHazards();
+        }
+
+        internal void ToggleTrainingPhase()
+        {
+            if (!trainingControl || enemy == null || !enemy.IsCombatReady) return;
+            SetTrainingAuto(false);
+            enemy.currentHP = enemy.maxHP * (phase == 1 ? phase2HpRatio : 1f);
+            EvaluatePhase();
         }
 
         private void OnDisable()
@@ -408,7 +453,7 @@ namespace Project.AIBehaviour.Boss
             }
 
             PlayDeathAudio();
-            BossDeathSequence.EnsureInstance().BeginFromBoss(enemy);
+            if (!trainingControl) BossDeathSequence.EnsureInstance().BeginFromBoss(enemy);
         }
 
         private void PlayDeathAudio()
@@ -711,7 +756,8 @@ namespace Project.AIBehaviour.Boss
 
         private bool ShouldChainCleave(BossPatternId starter)
         {
-            return phase >= 2 && (starter == BossPatternId.JumpSmash || starter == BossPatternId.BullCharge) && CanContinuePattern()
+            return (!trainingControl || trainingAuto) && phase >= 2
+                && (starter == BossPatternId.JumpSmash || starter == BossPatternId.BullCharge) && CanContinuePattern()
                 && enemy.HasSpawnGroundSupport() && IsTargetInCleaveRange()
                 && Random.value < phase2ChainCleaveChance;
         }
@@ -724,21 +770,37 @@ namespace Project.AIBehaviour.Boss
             yield return Telegraph(alternatingCleave, BossPatternId.AlternatingCleave, null, 0f);
             for (int i = 0; i < Mathf.Clamp(alternatingCleaveCount, 2, 6) && CanContinuePattern(); i++)
             {
+                if (i == 1)
+                {
+                    StopAttackWarningAudio();
+                    // Keep the first slash's follow-through and facing until the roar starts.
+                    for (float held = 0f; held < alternatingCleaveFirstHold && CanContinuePattern(); held += Time.deltaTime)
+                    {
+                        animHandler?.SampleBossCleave(.9f);
+                        ZeroVelocity();
+                        yield return null;
+                    }
+                    if (!CanContinuePattern()) yield break;
+                }
+
                 // Alternate the committed sides, never home in on a player who escaped the sequence.
                 enemy.ReleaseFacing();
                 EnemyFacingUtil.FaceHorizontal(transform, initialFacing * (i % 2 == 0 ? 1f : -1f));
                 enemy.LockFacing();
                 if (i > 0)
                 {
+                    float duration = i == 1 ? alternatingCleaveRoarDuration : alternatingCleaveInterval;
                     float pause = 0f;
-                    enemy.TriggerAttackWarning(alternatingCleaveInterval);
-                    while (pause < alternatingCleaveInterval && CanContinuePattern())
+                    enemy.TriggerAttackWarning(duration);
+                    if (i == 1) PlayAttackWarningAudio();
+                    while (pause < duration && CanContinuePattern())
                     {
                         animHandler?.SampleBossCleave(0f);
                         ZeroVelocity();
                         pause += Time.deltaTime;
                         yield return null;
                     }
+                    if (i == 1) StopAttackWarningAudio();
                 }
                 if (!CanContinuePattern()) yield break;
                 EmitCleaveAudio();
@@ -751,14 +813,39 @@ namespace Project.AIBehaviour.Boss
             FaceTarget();
             for (int i = 0; i < Mathf.Clamp(seismicJumpCount, 2, 5) && CanContinuePattern(); i++)
             {
-                var timing = new BossPatternTiming
-                {
-                    telegraphDuration = i == 0 ? seismicBarrage.telegraphDuration : seismicJumpInterval,
-                    activeDuration = seismicBarrage.activeDuration,
-                    recoveryDuration = seismicBarrage.recoveryDuration
-                };
-                yield return JumpSmashAt(transform.position, timing, seismic: true);
+                yield return CrouchForSeismicJump(firstJump: i == 0);
+                if (!CanContinuePattern()) yield break;
+                yield return JumpSmashAt(transform.position, seismicBarrage, seismic: true);
             }
+        }
+
+        private IEnumerator CrouchForSeismicJump(bool firstJump)
+        {
+            enemy.LockFacing();
+            BeginArmored();
+            enemy.SetAttackHitboxActive(false);
+            enemy.HideAttackWarning();
+            groundTelegraph?.Hide();
+            animHandler?.PlayBossJumpCrouch();
+
+            float holdUntil = Time.time + (firstJump ? seismicFirstCrouchHold : seismicJumpInterval);
+            while (Time.time < holdUntil && CanContinuePattern())
+            {
+                ZeroVelocity();
+                yield return null;
+            }
+
+            if (!firstJump || !CanContinuePattern()) yield break;
+            PlayAttackWarningAudio();
+            float roarDuration = Mathf.Max(seismicBarrage.telegraphDuration - seismicFirstCrouchHold,
+                attackWarningSfx != null && AttackWarningSfxVolume > 0f ? attackWarningSfx.length : 0f);
+            float roarUntil = Time.time + roarDuration;
+            while (Time.time < roarUntil && CanContinuePattern())
+            {
+                ZeroVelocity();
+                yield return null;
+            }
+            StopAttackWarningAudio();
         }
 
         private void EmitGroundWaves()
@@ -813,7 +900,8 @@ namespace Project.AIBehaviour.Boss
 
         private IEnumerator JumpSmashAt(Vector3 lockPoint, BossPatternTiming timing, bool seismic)
         {
-            yield return Telegraph(timing, BossPatternId.JumpSmash, lockPoint, ResolveSmashMarkerRadius());
+            if (!seismic)
+                yield return Telegraph(timing, BossPatternId.JumpSmash, lockPoint, ResolveSmashMarkerRadius());
 
             if (!CanContinuePattern())
             {
@@ -1408,27 +1496,13 @@ namespace Project.AIBehaviour.Boss
             return EnemyFacingUtil.GetFacingSign(transform);
         }
 
-        private void EnsureFlashRenderersCached()
+        private void CacheFlashColors()
         {
-            if (flashRenderersCached)
-                return;
-
+            // Capture the base tint before a hit or a warning can change it.
             flashRenderers = GetComponentsInChildren<SpriteRenderer>(true);
-            if (flashRenderers == null || flashRenderers.Length == 0)
-            {
-                flashOriginalColors = null;
-                flashRenderersCached = true;
-                return;
-            }
-
             flashOriginalColors = new Color[flashRenderers.Length];
             for (int i = 0; i < flashRenderers.Length; i++)
-            {
-                if (flashRenderers[i] != null)
-                    flashOriginalColors[i] = flashRenderers[i].color;
-            }
-
-            flashRenderersCached = true;
+                flashOriginalColors[i] = flashRenderers[i].color;
         }
 
         private void StartTelegraphFlash()
@@ -1439,12 +1513,10 @@ namespace Project.AIBehaviour.Boss
 
         private void StopTelegraphFlash()
         {
-            if (flashRoutine != null)
-            {
-                StopCoroutine(flashRoutine);
-                flashRoutine = null;
-            }
+            if (flashRoutine == null) return;
 
+            StopCoroutine(flashRoutine);
+            flashRoutine = null;
             RestoreFlashColors();
         }
 
@@ -1462,7 +1534,6 @@ namespace Project.AIBehaviour.Boss
 
         private IEnumerator TelegraphFlashRoutine()
         {
-            EnsureFlashRenderersCached();
             if (flashRenderers == null || flashRenderers.Length == 0)
                 yield break;
 

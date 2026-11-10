@@ -35,9 +35,7 @@ namespace Project.UI
             [NonSerialized] public ScrollRect detailsScroll;
             [NonSerialized] public RectTransform detailsContent;
             [NonSerialized] public Vector2 restPosition;
-            [NonSerialized] public bool hasRestPosition;
             [NonSerialized] public Coroutine selectionMotion;
-            [NonSerialized] public UnityAction selectAction;
         }
 
         [SerializeField] private TMP_Text pullLabel;
@@ -63,6 +61,7 @@ namespace Project.UI
         private Func<int, bool> commit;
         private string confirmPrompt;
         private string acquiredText;
+        private bool committing;
         private Action releasePauseHold;
 
         public bool IsConfigured
@@ -457,7 +456,6 @@ namespace Project.UI
         {
             if (!ArtifactStatCatalog.IsPlayerVisible(roll.statKind) || Mathf.Abs(roll.Value) <= .001f) return;
             var row = Instantiate(statItemPrefab, card.stats.transform).GetComponent<StatItemUI>();
-            row.FitToContainer();
             row.Setup(ArtifactStatCatalog.GetLabel(roll.statKind), roll.Value, ArtifactStatCatalog.GetFormatKey(roll.statKind));
             var sizing = row.GetComponent<LayoutElement>() ?? row.gameObject.AddComponent<LayoutElement>();
             sizing.minHeight = sizing.preferredHeight = 26f;

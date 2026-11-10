@@ -150,45 +150,25 @@ public class CameraLookAhead : MonoBehaviour
 
     private bool TryResolvePlayerRigidbody()
     {
-        if (playerRigidbody == null)
-        {
-            if (Time.unscaledTime < nextPlayerSearchTime)
-                return false;
+        if (target == null || !target.gameObject.activeInHierarchy) return null;
 
-            nextPlayerSearchTime = Time.unscaledTime + PlayerSearchInterval;
-            GameObject playerObject = GameObject.FindWithTag("Player");
-            if (playerObject != null)
-            {
-                PlayerMovement movement = playerObject.GetComponent<PlayerMovement>()
-                    ?? playerObject.GetComponentInChildren<PlayerMovement>(true);
-                Rigidbody2D body = movement != null ? movement.RB : null;
-                BindPlayerRigidbody(body != null ? body : playerObject.GetComponent<Rigidbody2D>());
-            }
-
-            if (playerRigidbody == null)
-            {
-                PlayerMovement movement = Object.FindFirstObjectByType<PlayerMovement>();
-                if (movement != null)
-                    BindPlayerRigidbody(movement.RB);
-            }
-        }
-
-        return playerRigidbody != null;
+        // Tagged visuals and hitboxes belong to the motor, even if the hitbox has its own body.
+        PlayerMovement movement = target.GetComponentInParent<PlayerMovement>()
+            ?? target.GetComponentInChildren<PlayerMovement>();
+        return movement != null
+            ? movement.RB ?? movement.GetComponent<Rigidbody2D>()
+            : target.GetComponent<Rigidbody2D>();
     }
 
     public void BindPlayerRigidbody(Rigidbody2D playerBody)
     {
-        if (playerBody == null)
+        if (playerBody == null || playerRigidbody == playerBody)
             return;
 
         playerRigidbody = playerBody;
-        if (initializedPlayerRigidbody != playerRigidbody)
-        {
-            initializedPlayerRigidbody = playerRigidbody;
-            currentProxyX = playerRigidbody.position.x;
-            proxyVelocityX = 0f;
-            CheckFacingDirection(true);
-        }
+        currentProxyX = playerRigidbody.position.x;
+        proxyVelocityX = 0f;
+        CheckFacingDirection(true);
     }
 
     /// <summary>

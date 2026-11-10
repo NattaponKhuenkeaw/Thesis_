@@ -53,16 +53,27 @@ public class BiomeDifficultyCurveTests
     public void NegativeBiomeClampsToBaseline()
     {
         Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(-2), Is.EqualTo(1f));
+        Assert.That(RunProgressionManager.ResolveBossHealthMultiplier(-2), Is.EqualTo(2f));
+    }
+
+    [TestCase(0, 2f)] [TestCase(1, 4f)] [TestCase(2, 6f)]
+    [TestCase(3, 6.625f)] [TestCase(4, 7.25f)] [TestCase(5, 7.875f)]
+    [TestCase(6, 8.5f)] [TestCase(7, 9.125f)] [TestCase(8, 9.75f)]
+    [TestCase(9, 10.5f)] [TestCase(10, 10.5f)] [TestCase(99, 10.5f)]
+    public void BossHealthUsesMilestonesAndCapsAfterLevelTen(int biome, float health)
+    {
+        progression.SetCurrentBiomeIndex(biome);
+        Assert.That(progression.BossHealthMultiplier, Is.EqualTo(health).Within(.00001f));
     }
 
     [TestCase(-2, 1f, 1f)]
     [TestCase(0, 1f, 1f)]
     [TestCase(1, 1.18f, 1.15f)]
     [TestCase(2, 1.3924f, 1.3225f)]
-    [TestCase(3, 1.643032f, 1.520875f)]
     [TestCase(4, 1.93877776f, 1.74900625f)]
-    [TestCase(5, 2.28775776f, 2.01135719f)]
-    public void NormalEnemyHealthAndAttackCompoundFromLevelOne(int biome, float health, float attack)
+    [TestCase(9, 4.43545386f, 3.51787629f)]
+    [TestCase(19, 4.43545386f, 14.23177165f)]
+    public void NormalHealthCapsAfterLevelTenButAttackKeepsCompounding(int biome, float health, float attack)
     {
         progression.SetCurrentBiomeIndex(biome);
         Assert.That(progression.NormalEnemyHealthMultiplier, Is.EqualTo(health).Within(.00001f));
@@ -88,6 +99,7 @@ public class BiomeDifficultyCurveTests
             Assert.That(progression.NormalEnemyHealthMultiplier, Is.EqualTo(Mathf.Pow(1.18f, biome)).Within(.00001f));
             Assert.That(progression.NormalEnemyAttackMultiplier, Is.EqualTo(Mathf.Pow(1.15f, biome)).Within(.00001f));
             Assert.That(progression.EnemyBasicStatMultiplier, Is.EqualTo(1f + biome * .2f).Within(.00001f));
+            Assert.That(progression.BossHealthMultiplier, Is.EqualTo(RunProgressionManager.ResolveBossHealthMultiplier(biome)));
             progression.NotifyRoomCleared(bossRoom);
         }
         progression.ResetRun();
@@ -95,6 +107,7 @@ public class BiomeDifficultyCurveTests
         Assert.That(progression.NormalEnemyHealthMultiplier, Is.EqualTo(1f));
         Assert.That(progression.NormalEnemyAttackMultiplier, Is.EqualTo(1f));
         Assert.That(progression.EnemyBasicStatMultiplier, Is.EqualTo(1f));
+        Assert.That(progression.BossHealthMultiplier, Is.EqualTo(2f));
     }
 
     [TestCase("Enm101/Enemy1.prefab", 0)]
@@ -121,23 +134,55 @@ public class BiomeDifficultyCurveTests
         AssertNormalStats(enemy, source, biome);
     }
 
-    [TestCase(0, 8000f)]
-    [TestCase(1, 16000f)]
-    [TestCase(4, 29000f)]
-    [TestCase(9, 42000f)]
-    [TestCase(15, 42000f)]
-    public void ActualBossReceivesBiomeHealthAndSeparateAttackScaling(int biome, float health)
+    [TestCase(BossPath, 0)] [TestCase(BossPath, 1)] [TestCase(BossPath, 2)] [TestCase(BossPath, 4)] [TestCase(BossPath, 5)]
+    [TestCase(ObserverPath, 0)] [TestCase(ObserverPath, 1)] [TestCase(ObserverPath, 2)] [TestCase(ObserverPath, 4)] [TestCase(ObserverPath, 5)]
+    public void BothBossesUseHealthMilestonesAndLinearAttackAndDefense(string path, int biome)
     {
         progression.SetCurrentBiomeIndex(biome);
-        var source = AssetDatabase.LoadAssetAtPath<GameObject>(BossPath).GetComponent<EnemyController>();
+        var source = AssetDatabase.LoadAssetAtPath<GameObject>(path).GetComponent<EnemyController>();
+        Assert.That(source.maxHP, Is.EqualTo(4000f));
+        string authored = EditorJsonUtility.ToJson(source);
         var enemy = Object.Instantiate(source.gameObject, holder.transform).GetComponent<EnemyController>();
         RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
         float scale = 1f + biome * .2f;
-        Assert.That(enemy.maxHP, Is.EqualTo(health).Within(.001f));
+        Assert.That(enemy.HasBossDriver, Is.True);
+        Assert.That(enemy.maxHP, Is.EqualTo(4000f * RunProgressionManager.ResolveBossHealthMultiplier(biome)).Within(.01f));
         Assert.That(enemy.currentHP, Is.EqualTo(enemy.maxHP));
         Assert.That(enemy.attackDamage, Is.EqualTo(source.attackDamage * scale).Within(.001f));
         Assert.That(enemy.defense, Is.EqualTo(source.defense * scale).Within(.001f));
         Assert.That(enemy.damageRes, Is.EqualTo(source.damageRes));
+        Assert.That(EditorJsonUtility.ToJson(source), Is.EqualTo(authored), "Runtime scaling must not write back into the prefab.");
+    }
+
+    [TestCase(BossPath, 0)] [TestCase(BossPath, 1)] [TestCase(BossPath, 4)]
+    [TestCase(ObserverPath, 0)] [TestCase(ObserverPath, 1)] [TestCase(ObserverPath, 4)]
+    public void ScalingRefreshesTheBoundFiveLayerHudUsingTheNewMaximum(string path, int biome)
+    {
+        progression.SetCurrentBiomeIndex(biome);
+        var enemy = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(path), holder.transform).GetComponent<EnemyController>();
+        var root = Object.Instantiate(Resources.Load<GameObject>("UI/BossHealthHUD"));
+        var hud = root.GetComponent<Project.UI.BossHealthHUD>();
+        var instance = typeof(Project.UI.BossHealthHUD).GetField("<Instance>k__BackingField", BindingFlags.Static | BindingFlags.NonPublic);
+        var previousHud = instance.GetValue(null);
+        instance.SetValue(null, hud);
+        try
+        {
+            hud.Bind(enemy, "Scaled boss", 5);
+            RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
+            var slider = (UnityEngine.UI.Slider)typeof(Project.UI.BossHealthHUD).GetField("healthSlider", Private).GetValue(hud);
+            var bars = (TMPro.TMP_Text)typeof(Project.UI.BossHealthHUD).GetField("remainingBarsText", Private).GetValue(hud);
+            Assert.That(slider.value, Is.EqualTo(1f));
+            Assert.That(bars.text, Is.EqualTo("\u00d75"));
+            enemy.currentHP = enemy.maxHP * .7f;
+            hud.RefreshIfBound(enemy);
+            Assert.That(slider.value, Is.EqualTo(.5f).Within(.00001f));
+            Assert.That(bars.text, Is.EqualTo("\u00d74"));
+        }
+        finally
+        {
+            Object.DestroyImmediate(root);
+            instance.SetValue(null, previousHud);
+        }
     }
 
     [Test]
@@ -156,11 +201,12 @@ public class BiomeDifficultyCurveTests
     [TestCase("Enm102/Enemy102.prefab")]
     [TestCase("Enm103/Enemy103.prefab")]
     [TestCase(BossPath)]
+    [TestCase(ObserverPath)]
     public void WaveManagerAppliesTheCorrectCurveDuringSpawn(string path)
     {
         const int biome = 2;
         progression.SetCurrentBiomeIndex(biome);
-        bool boss = path == BossPath;
+        bool boss = path == BossPath || path == ObserverPath;
         var source = AssetDatabase.LoadAssetAtPath<GameObject>(boss ? path : EnemyFolder + path)
             .GetComponent<EnemyController>();
         var template = Object.Instantiate(source.gameObject, holder.transform);
@@ -177,7 +223,7 @@ public class BiomeDifficultyCurveTests
             var enemy = enemies[0];
             if (boss)
             {
-                Assert.That(enemy.maxHP, Is.EqualTo(24000f).Within(.001f));
+                Assert.That(enemy.maxHP, Is.EqualTo(source.maxHP * 6f).Within(.01f));
                 Assert.That(enemy.attackDamage, Is.EqualTo(source.attackDamage * 1.4f).Within(.001f));
                 Assert.That(enemy.defense, Is.EqualTo(source.defense * 1.4f).Within(.001f));
             }
@@ -194,7 +240,7 @@ public class BiomeDifficultyCurveTests
 
     private static void AssertNormalStats(EnemyController enemy, EnemyController source, int biome)
     {
-        Assert.That(enemy.maxHP, Is.EqualTo(source.maxHP * Mathf.Pow(1.18f, biome)).Within(.001f));
+        Assert.That(enemy.maxHP, Is.EqualTo(source.maxHP * Mathf.Pow(1.18f, Mathf.Clamp(biome, 0, 9))).Within(.001f));
         Assert.That(enemy.currentHP, Is.EqualTo(enemy.maxHP));
         Assert.That(enemy.attackDamage, Is.EqualTo(source.attackDamage * Mathf.Pow(1.15f, biome)).Within(.001f));
         Assert.That(enemy.defense, Is.EqualTo(source.defense));

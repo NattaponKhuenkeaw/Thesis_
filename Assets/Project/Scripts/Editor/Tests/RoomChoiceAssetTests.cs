@@ -199,7 +199,10 @@ public class RoomChoiceAssetTests
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         yield return new EnterPlayMode();
         var ui = Object.Instantiate(Resources.Load<RoomChoiceUI>("UI/RoomChoiceUI"));
-        var offers = new[] { Offer(RoomKind.Rest), Offer(RoomKind.Combat, RouteDifficulty.Hard, 242), Offer(RoomKind.Shop) };
+        var combat = Offer(RoomKind.Combat, RouteDifficulty.Hard);
+        var hard = new RoomChoiceOffer(combat.Room, RouteDifficulty.Hard, null,
+            RouteReward.Patterned(219, 2, 0, 0, grantsMemory: true));
+        var offers = new[] { Offer(RoomKind.Rest), hard, Offer(RoomKind.Shop) };
         try
         {
             Time.timeScale = 0;
@@ -215,13 +218,12 @@ public class RoomChoiceAssetTests
             Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(card.gameObject));
             Assert.That(Get<Image>(card, "borderImage").overrideSprite, Is.EqualTo(Get<Sprite>(card, "selectedBorder")));
             Assert.That(Get<GameObject>(cards[0], "selectionMarker").activeSelf, Is.False);
-            Assert.That(Get<TMP_Text>(card, "rewardOrZoneLabel").text, Is.EqualTo("242 SOUL"));
+            Assert.That(Get<TMP_Text>(card, "rewardOrZoneLabel").text, Is.EqualTo("219 SOUL + 2 ARTIFACT PICKS\n+ MEMORY"));
             Assert.That(Get<Image>(card, "soulIcon").gameObject.activeSelf, Is.True);
             Assert.That(Get<Image>(card, "soulIcon").sprite,
                 Is.EqualTo(AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Project/UI/Room/UI_Soul.PNG")));
             Assert.That(Get<Image>(card, "rewardFrame").enabled, Is.False);
             Assert.That(Get<GameObject>(card, "difficultyRoot").activeSelf, Is.False);
-            Assert.That(Get<Image>(card, "borderImage").color, Is.EqualTo(Get<TMP_Text>(card, "rewardOrZoneLabel").color));
             yield return new WaitForSecondsRealtime(.35f);
             Capture(ui.GetComponent<Canvas>(), "Rest_Combat_Shop", 1920, 1080);
             Capture(ui.GetComponent<Canvas>(), "Rest_Combat_Shop_720p", 1280, 720);

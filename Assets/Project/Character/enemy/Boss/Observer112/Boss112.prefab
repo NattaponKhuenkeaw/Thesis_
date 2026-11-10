@@ -440,8 +440,8 @@ MonoBehaviour:
   sweepPositionDuration: 0.6
   sweepChargeDuration: 1.5
   sweepActiveDuration: 2
-  shockwavePrefab: {fileID: 3276834560360714860, guid: 29e1e56690c889346a36b5b086c564ea, type: 3}
-  shockwaveSpeed: 10
+  shockwavePrefab: {fileID: 8774167939271709899, guid: 0f51e0e3caacc1b4aa382ae24837f44f, type: 3}
+  shockwaveSpeed: 14
   hoverHeight: 7
   trackingSpeed: 12
   targetInset: 3.5

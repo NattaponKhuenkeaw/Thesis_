@@ -45,17 +45,12 @@ namespace Project.ShopSystem
         private int rerollCount;
 
         public event Action OnShopOffersChanged;
+        public event Action<int> OnRerollCostChanged;
         public event Action<float> OnRerollPriceMultiplierChanged;
 
-        public float CurrentRerollPriceIncreasePercent => rerollCount * rerollPriceIncreasePercent;
-
-        public float CurrentRerollPriceMultiplier
-        {
-            get
-            {
-                return 1f + (CurrentRerollPriceIncreasePercent / 100f);
-            }
-        }
+        public int CurrentRerollCost => 0;
+        public float CurrentRerollPriceIncreasePercent => rerollCount * Mathf.Max(0f, rerollPriceIncreasePercent);
+        public float CurrentRerollPriceMultiplier => 1f + CurrentRerollPriceIncreasePercent / 100f;
 
         private void Start()
         {
@@ -74,6 +69,7 @@ namespace Project.ShopSystem
         {
             rerollCount = 0;
             PopulateShopItemLists(reserveEarlyArtifact: true);
+            OnRerollCostChanged?.Invoke(CurrentRerollCost);
             OnRerollPriceMultiplierChanged?.Invoke(CurrentRerollPriceMultiplier);
         }
 
@@ -97,10 +93,24 @@ namespace Project.ShopSystem
 
         public bool TryRerollOffers()
         {
+            if (playerInventory == null || codexInventory == null || codexInventory.allItems.Count == 0)
+            {
+                PlayPurchaseAudio(false);
+                return false;
+            }
+            ResolveItemLists();
+            if (!activeItemLists.Any(list => codexInventory.allItems.Any(item => item != null
+                && MatchesItemListType(item, list.ItemType) && !ShouldExcludeFromShopRoll(item))))
+            {
+                PlayPurchaseAudio(false);
+                return false;
+            }
+
             rerollCount++;
             PopulateShopItemLists();
+            OnRerollCostChanged?.Invoke(CurrentRerollCost);
             OnRerollPriceMultiplierChanged?.Invoke(CurrentRerollPriceMultiplier);
-            Debug.Log($"Rerolled shop offers. Shop prices increased by {CurrentRerollPriceIncreasePercent:0.#}%.");
+            Debug.Log($"Rerolled shop offers for free. Shop prices increased by {CurrentRerollPriceIncreasePercent:0.#}%.");
             return true;
         }
 
