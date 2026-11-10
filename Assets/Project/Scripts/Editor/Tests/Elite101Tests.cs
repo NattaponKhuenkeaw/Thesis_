@@ -67,24 +67,24 @@ public class Elite101Tests
         Assert.That(PrefabUtility.GetCorrespondingObjectFromSource(warnings[0].gameObject), Is.EqualTo(shared));
     }
 
-    [TestCase(0, 0)]
-    [TestCase(0, 2)]
-    [TestCase(1, 0)]
-    [TestCase(3, 5)]
-    public void HardContainsExactlyOneEliteInTheLastChamberAndKeepsEightPerChamber(int biome, int depth)
+    [TestCase(0, 0, false)]
+    [TestCase(0, 2, false)]
+    [TestCase(1, 0, true)]
+    [TestCase(3, 5, true)]
+    public void HardIntroducesOneEliteInTheLastChamberFromBiomeTwo(int biome, int depth, bool expectElite)
     {
         var hard = Resources.Load<EncounterSO>("EncounterSO/Encounter_Hard");
         Assert.That(hard.FinalChamberElite, Is.Not.Null);
         Assert.That(hard.EnemyTypes.Any(entry => entry.prefab == hard.FinalChamberElite), Is.False);
         var encounters = new[] { hard, hard, hard, hard };
         var quotas = encounters.Select(e => EncounterPhaseComposition.Roll(e, 8, biome, depth, true)).ToArray();
-        Assert.That(EncounterPhaseComposition.ApplyFinalChamberElite(encounters, quotas), Is.True);
-        Assert.That(EncounterPhaseComposition.ApplyFinalChamberElite(encounters, quotas), Is.True);
-        Assert.That(quotas.Sum(q => q.Count(p => p == hard.FinalChamberElite)), Is.EqualTo(1));
+        Assert.That(EncounterPhaseComposition.ApplyFinalChamberElite(encounters, quotas, biome), Is.EqualTo(expectElite));
+        Assert.That(EncounterPhaseComposition.ApplyFinalChamberElite(encounters, quotas, biome), Is.EqualTo(expectElite));
+        Assert.That(quotas.Sum(q => q.Count(p => p == hard.FinalChamberElite)), Is.EqualTo(expectElite ? 1 : 0));
         for (int i = 0; i < quotas.Length; i++)
         {
             Assert.That(quotas[i].Count, Is.EqualTo(8));
-            Assert.That(quotas[i].Count(p => p == hard.FinalChamberElite), Is.EqualTo(i == quotas.Length - 1 ? 1 : 0));
+            Assert.That(quotas[i].Count(p => p == hard.FinalChamberElite), Is.EqualTo(expectElite && i == quotas.Length - 1 ? 1 : 0));
         }
         Assert.That(hard.AliveCap, Is.EqualTo(5));
         Assert.That(hard.SpawnMode, Is.EqualTo(EncounterSpawnMode.Pressure));
@@ -97,7 +97,7 @@ public class Elite101Tests
         var encounter = Resources.Load<EncounterSO>("EncounterSO/" + name);
         Assert.That(encounter.FinalChamberElite, Is.Null);
         var quotas = new[] { EncounterPhaseComposition.Roll(encounter, encounter.ChamberQuota, 0, 0, false) };
-        Assert.That(EncounterPhaseComposition.ApplyFinalChamberElite(new[] { encounter }, quotas), Is.False);
+        Assert.That(EncounterPhaseComposition.ApplyFinalChamberElite(new[] { encounter }, quotas, 1), Is.False);
     }
 
     [Test]
@@ -106,7 +106,7 @@ public class Elite101Tests
         var hard = Resources.Load<EncounterSO>("EncounterSO/Encounter_Hard");
         var quota = Enumerable.Repeat(hard.EliteReplaces, 8).ToList();
         var quotas = new[] { new List<GameObject>(), quota, new List<GameObject>() };
-        Assert.That(EncounterPhaseComposition.ApplyFinalChamberElite(new[] { hard, hard, hard }, quotas), Is.True);
+        Assert.That(EncounterPhaseComposition.ApplyFinalChamberElite(new[] { hard, hard, hard }, quotas, 1), Is.True);
         Assert.That(quota.Count(p => p == hard.FinalChamberElite), Is.EqualTo(1));
     }
 
@@ -182,10 +182,19 @@ public class Elite101Tests
         bool hadOffer = ActiveRouteOffer.HasSelection;
         var previousOffer = ActiveRouteOffer.Current;
         GameObject layout = null;
+        GameObject progressionHost = null;
+        RunProgressionManager progression = RunProgressionManager.Instance;
+        int previousBiome = progression != null ? progression.currentBiomeIndex : 0;
         try
         {
             var room = Resources.Load<RoomData>("MapSO/LV/RoomData_LV_01");
             ActiveRouteOffer.Set(new RoomChoiceOffer(room, RouteDifficulty.Hard, null, null));
+            if (progression == null)
+            {
+                progressionHost = new GameObject("Biome two progression");
+                progression = progressionHost.AddComponent<RunProgressionManager>();
+            }
+            progression.currentBiomeIndex = 1;
             layout = Object.Instantiate(Resources.Load<GameObject>("RoomLayouts/LV/RoomLayout_LV_01"));
             var stage = layout.GetComponentInChildren<CombatStageController>(true);
             var waves = layout.GetComponentInChildren<RoomWaveManager>(true);
@@ -193,6 +202,11 @@ public class Elite101Tests
             var quotas = (List<GameObject>[])typeof(CombatStageController).GetField("slices", Private).GetValue(stage);
             var elite = Resources.Load<EncounterSO>("EncounterSO/Encounter_Hard").FinalChamberElite;
             Assert.That(quotas.Select(quota => quota.Count), Is.EqualTo(new[] { 7, 7, 6 }));
+            Assert.That(quotas.Take(quotas.Length - 1).SelectMany(quota => quota)
+                .Any(prefab => prefab.GetComponent<EnemyController>().CombatRole == EnemyCombatRole.ShieldGuard), Is.True,
+                "The Hard biome-two layout must teach the shield response before its elite.");
+            Assert.That(quotas[quotas.Length - 1].Any(prefab => prefab.GetComponent<EnemyController>().CombatRole == EnemyCombatRole.ShieldGuard), Is.True,
+                "The elite must retain the shield encounter's teaching role in its chamber.");
             for (int i = 0; i < quotas.Length; i++)
             {
                 Assert.That(quotas[i].Count(p => p == elite), Is.EqualTo(i == quotas.Length - 1 ? 1 : 0));
@@ -201,6 +215,8 @@ public class Elite101Tests
         finally
         {
             if (layout != null) Object.Destroy(layout);
+            if (progressionHost != null) Object.Destroy(progressionHost);
+            else if (progression != null) progression.currentBiomeIndex = previousBiome;
             if (hadOffer) ActiveRouteOffer.Set(previousOffer); else ActiveRouteOffer.Clear();
         }
         yield return new ExitPlayMode();

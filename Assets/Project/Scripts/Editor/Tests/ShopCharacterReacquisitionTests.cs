@@ -19,7 +19,7 @@ public class ShopCharacterReacquisitionTests
     [TestCase("char_1_CameraGIrl", true, false)]
     [TestCase("char_1_CameraGIrl", false, true)]
     [TestCase("char_1_CameraGIrl", false, false)]
-    public void ProductionShopReacquiresDefeatedCharacterOnlyWhenFundsCoverRealPrice(
+    public void ProductionShopRejectsOwnedDeadCharacterRegardlessOfFundsOrProgression(
         string resource, bool enoughMoney, bool withProgression)
     {
         var scene = EditorSceneManager.OpenPreviewScene(AssetDatabase.GUIDToAssetPath("d36c77798e07625409da16f442bc42f5"));
@@ -45,33 +45,28 @@ public class ShopCharacterReacquisitionTests
             inventory.SetRunCharacterCurrentHP(survivor.characterObjectData, 100f);
             Assert.That(inventory.TryRemoveDefeatedTeamCharacter(
                 item.characterObjectData, survivor.characterObjectData, out _), Is.True);
-            Assert.That(inventory.HasItem(item), Is.False);
+            Assert.That(inventory.HasItem(item), Is.True);
             Assert.That(inventory.IsCharacterDefeated(item.characterObjectData), Is.True);
             inventory.currency = enoughMoney ? item.price + 100 : item.price - 1;
             int before = inventory.currency;
             shop.playerInventory = inventory;
             if (!withProgression) shop.metaProgression = null;
-            Assert.That(inventory.CanReacquireDefeatedCharacter(item), Is.True);
+            Assert.That(inventory.CanReacquireDefeatedCharacter(item), Is.False);
             var excluded = typeof(ShopManager).GetMethod("ShouldExcludeFromShopRoll",
                 BindingFlags.NonPublic | BindingFlags.Instance);
-            Assert.That((bool)excluded.Invoke(shop, new object[] { item }), Is.False);
+            Assert.That((bool)excluded.Invoke(shop, new object[] { item }), Is.True);
             offer.Populate(item, 1, item.price);
-            Assert.That(shop.CanPurchaseOffer(item, 1, item.price), Is.EqualTo(enoughMoney));
-            Assert.That(shop.TryPurchaseOffer(offer), Is.EqualTo(enoughMoney));
-            Assert.That(offer.IsSold, Is.EqualTo(enoughMoney));
-            Assert.That(inventory.HasItem(item), Is.EqualTo(enoughMoney));
-            Assert.That(inventory.IsCharacterDefeated(item.characterObjectData), Is.EqualTo(!enoughMoney));
-            Assert.That(inventory.currency, Is.EqualTo(enoughMoney ? before - item.price : before));
+            Assert.That(shop.CanPurchaseOffer(item, 1, item.price), Is.False);
+            Assert.That(shop.TryPurchaseOffer(offer), Is.False);
+            Assert.That(offer.IsSold, Is.False);
+            Assert.That(inventory.HasItem(item), Is.True);
+            Assert.That(inventory.IsCharacterDefeated(item.characterObjectData), Is.True);
+            Assert.That(inventory.currency, Is.EqualTo(before));
             Assert.That(typeof(CharacterInventoryState).GetField("suppressAutoBootstrap",
                 BindingFlags.NonPublic | BindingFlags.Instance).GetValue(inventory), Is.False);
-            if (enoughMoney)
-            {
-                Assert.That(inventory.GetRunCharacter(item.characterObjectData), Is.Not.Null);
-                inventory.DeployTeam(new[] { survivor.characterObjectData, item.characterObjectData }, 0);
-                Assert.That(inventory.ContainsTeamCharacter(item.characterObjectData), Is.True);
-                Assert.That(shop.TryPurchaseOffer(offer), Is.False);
-                Assert.That(inventory.currency, Is.EqualTo(before - item.price));
-            }
+            Assert.That(inventory.GetRunCharacter(item.characterObjectData).isDead, Is.True);
+            inventory.DeployTeam(new[] { survivor.characterObjectData, item.characterObjectData }, 0);
+            Assert.That(inventory.ContainsTeamCharacter(item.characterObjectData), Is.False);
         }
         finally
         {
@@ -99,7 +94,7 @@ public class ShopCharacterReacquisitionTests
             Assert.That(inventory.CanReacquireDefeatedCharacter(main), Is.False);
             Assert.That(shop.CanPurchaseOffer(main, 1, 0), Is.False);
             Assert.That(shop.TryPurchase(main, 1, 0), Is.False);
-            Assert.That(inventory.HasItem(main), Is.False);
+            Assert.That(inventory.HasItem(main), Is.True);
             Assert.That(inventory.currency, Is.EqualTo(currency));
         }
         finally

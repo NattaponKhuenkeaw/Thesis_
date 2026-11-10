@@ -1416,13 +1416,7 @@ MonoBehaviour:
   nextCharacterButton: {fileID: 701968373}
   characterLabel: {fileID: 157839059}
   teamLevel: {fileID: 10923625}
-  skill: {fileID: 1728071297}
-  ultimate: {fileID: 1511464080}
-  passive: {fileID: 1769573645}
   teamLevelValue: {fileID: 1904196102}
-  skillValue: {fileID: 1494657648}
-  ultimateValue: {fileID: 1438247751}
-  passiveValue: {fileID: 1988696738}
 --- !u!114 &259684858
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2253,17 +2247,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1068387717141365166, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
   m_PrefabInstance: {fileID: 495679380}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &537336954 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8795553743258663716, guid: 644a7f50330012d4dbd19bc50719680e, type: 3}
-  m_PrefabInstance: {fileID: 8245801616042046452}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7132655c664c05d4b9b8540a662addcc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Project.UI.UIManager
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -10232,17 +10215,6 @@ Material:
     - _UnderlayColor: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!114 &729008943279367373 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 729008942358398209, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-  m_PrefabInstance: {fileID: 962912716}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c8018b1e5c9b834eae04ce65d26d8e3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerCharacter
 --- !u!4 &2100287460612552604 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2100287461037987408, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
@@ -10349,17 +10321,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b33d76e5937d0e8499a9298216307d19, type: 3}
---- !u!114 &3236367017019084513 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3236367016635035437, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-  m_PrefabInstance: {fileID: 962912716}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 241dabbf04ae263478c8f63af571a3a3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TeamLoader
 --- !u!1001 &3970786016572162724
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10573,11 +10534,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.5
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.5
+      value: 8.35
       objectReference: {fileID: 0}
     - target: {fileID: 1596864833993384329, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_Name
@@ -10629,7 +10590,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7003089252169759538, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: orthographic size
-      value: 5
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -10647,17 +10608,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
---- !u!114 &5987486934906660413 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-  m_PrefabInstance: {fileID: 962912716}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afc73ed630e759549b882dd868006dec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerStateMachine
 --- !u!114 &5987486934906660419 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6805025547357927974, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
@@ -10962,18 +10912,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 240064049182392406, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: teamLoader
-      value: 
-      objectReference: {fileID: 3236367017019084513}
-    - target: {fileID: 240064049182392406, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: playerCharacter
-      value: 
-      objectReference: {fileID: 729008943279367373}
-    - target: {fileID: 604372292376047984, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 537336954}
     - target: {fileID: 723245880051527303, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -11019,22 +10957,6 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2063411716205235953, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2232698989527225073, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2232698989527225073, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2232698989527225073, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2232698989527225073, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
@@ -11052,6 +10974,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2534605867796680313, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2534605867796680313, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
+      propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2975028043752143859, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
@@ -11078,14 +11004,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4325132260802469588, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: teamLoader
-      value: 
-      objectReference: {fileID: 3236367017019084513}
-    - target: {fileID: 4325132260802469588, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: stateMachine
-      value: 
-      objectReference: {fileID: 5987486934906660413}
     - target: {fileID: 5070790927867508221, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -11274,14 +11192,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8551180002215020973, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: playerCharacter
-      value: 
-      objectReference: {fileID: 729008943279367373}
-    - target: {fileID: 8559042592432292473, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 537336954}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

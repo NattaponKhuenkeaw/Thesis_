@@ -23,11 +23,11 @@ public class EncounterPhaseCompositionTests
         foreach (var difficulty in new[] { RouteDifficulty.Easy, RouteDifficulty.Medium, RouteDifficulty.Hard })
         {
             yield return new TestCaseData(difficulty, 0, 0, false, 0, 0);
-            yield return new TestCaseData(difficulty, 0, 1, false, 1, 0);
-            yield return new TestCaseData(difficulty, 0, 1, true, 1, 0);
-            yield return new TestCaseData(difficulty, 0, 2, false, 1, 0);
-            yield return new TestCaseData(difficulty, 0, 3, true, 1, 0);
-            yield return new TestCaseData(difficulty, 0, 20, true, 1, 0);
+            yield return new TestCaseData(difficulty, 0, 1, false, 1, 1);
+            yield return new TestCaseData(difficulty, 0, 1, true, 1, 1);
+            yield return new TestCaseData(difficulty, 0, 2, false, 1, 1);
+            yield return new TestCaseData(difficulty, 0, 3, true, 1, 1);
+            yield return new TestCaseData(difficulty, 0, 20, true, 1, 1);
             yield return new TestCaseData(difficulty, 1, 0, false, 0, 1);
             yield return new TestCaseData(difficulty, 1, 1, false, 1, 1);
             yield return new TestCaseData(difficulty, 1, 2, true, 1, 1);
@@ -98,8 +98,8 @@ public class EncounterPhaseCompositionTests
 
     [TestCase(0, 0, 0, 0, false)]
     [TestCase(0, 0, 0, 0, true)]
-    [TestCase(0, 1, 1, 0, false)]
-    [TestCase(0, 1, 1, 0, true)]
+    [TestCase(0, 1, 1, 1, false)]
+    [TestCase(0, 1, 1, 1, true)]
     [TestCase(0, 2, 1, 0, false)]
     [TestCase(0, 2, 1, 0, true)]
     [TestCase(0, 3, 1, 0, true)]
@@ -247,7 +247,7 @@ public class EncounterPhaseRuntimeTests
                     Assert.That(seen.Count, Is.EqualTo(expected), label);
                     int expectedRanged = phase.x == 0 ? (phase.y >= 1 ? 1 : 0)
                         : phase.x == 1 && phase.y == 0 ? 0 : 1;
-                    int expectedGuards = phase.x == 0 ? 0 : 1;
+                    int expectedGuards = phase.x == 0 ? (phase.y >= 1 ? 1 : 0) : 1;
                     Assert.That(ranged, Is.EqualTo(expectedRanged), label);
                     Assert.That(guards, Is.EqualTo(expectedGuards), label);
                 }

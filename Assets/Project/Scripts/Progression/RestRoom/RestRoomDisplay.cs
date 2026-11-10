@@ -52,9 +52,18 @@ namespace Project.Progression.RestRoom
 
         public void ShowHealed(float percentOfMaxHp)
         {
+            ShowHealed(percentOfMaxHp, 0);
+        }
+
+        public void ShowHealed(float percentOfMaxHp, int revivedCharacters)
+        {
             float percent = Mathf.Clamp01(percentOfMaxHp);
             SetNumber("HP+", doneColor);
-            if (Mathf.Approximately(percent, 1f))
+            if (revivedCharacters > 0)
+            {
+                SetStatus($"Healed {percent * 100f:0.#}% / Revived {revivedCharacters} (30% HP)", true);
+            }
+            else if (Mathf.Approximately(percent, 1f))
             {
                 SetStatus("Team restored", true);
             }

@@ -465,10 +465,11 @@ Run Global Level is casual, run-scoped growth shared by the complete character r
 - **Shop Lore** : a opportunist devil that collect a dead soul on Cursed Realm and sell for high price.
 - **Shop Rule** : The Soul Shop act as a safe haven for players. It is the only place where players can change, replace, or purchase their loadout (Character/Artifact) before venturing into the next Cursed Realm.  
 - **Shop Environment** : A Whole Scene-Fixed Camera-Walkable-Background UI-driven rather than Overlay UI (Like Blazblue Entropy Effect). Player can walk Right off-screen to leave the Shop Scene.
-- **Shop Algorithm**: Each shop offer remains one-time per generated offer. Buying an Artifact always creates a new independent Artifact instance with new stat rolls, even if its definition is already owned. Duplicate Characters still convert to Character Potential Fragments.
+- **Shop Algorithm**: Each shop offer remains one-time per generated offer. Buying an Artifact always creates a new independent Artifact instance with new stat rolls, even if its definition is already owned. Owned Characters, including dead and benched characters, are excluded from shop offers and cannot be purchased again. Once all shop-eligible Characters are owned, Character offer lists roll Artifacts instead.
+- **Character Death / Rest**: Individual defeat retains character ownership and runtime state, marks the character dead, and removes them from deployed CharSlots and active switching. Rest revives every owned dead character at 30% of their current Max HP; they can then be equipped again. Living deployed characters keep the authored additive Rest heal. Full team wipe retains the terminal run-loss and Lobby reset flow.
 - **Shop Reroll**: Rerolling refreshes every world-space offer. Prices increase linearly by the shop's authored percentage per reroll; the current default is **+15% of base price per reroll**.
 - **Sell Zone**: There is a Sell Zone that connects to the Player Inventory (Backpack System UI) where players can sell items for a cheap price.
-- **Duplicate Progression**: Reacquiring an owned Character converts the duplicate into permanent Potential Fragments. Artifacts are intentionally duplicate-able and never convert to fragments.
+- **Duplicate Progression**: Owned Character duplicates from non-shop acquisition sources retain their existing permanent Potential Fragment conversion. Artifacts are intentionally duplicate-able and never convert to fragments.
 - **Current Implementation Note**: Artifact ownership is instance-based and run-persistent. Artifact Transcendence and Artifact fragments are retired.
 
 ### Utility Resource

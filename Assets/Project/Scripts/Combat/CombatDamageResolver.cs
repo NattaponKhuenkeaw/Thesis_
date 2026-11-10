@@ -46,7 +46,9 @@ public static class CombatDamageResolver
         in DamageResult outgoing)
     {
         float damage = outgoing.UnroundedDamage;
-        float defense = request.ignoreDefense ? 0f : Mathf.Max(0f, request.defenderDefense);
+        // QTE entry damage retains its DEF bypass on projectiles after the entry ends.
+        bool ignoreDefense = request.ignoreDefense || request.execution?.isQteIntro == true;
+        float defense = ignoreDefense ? 0f : Mathf.Max(0f, request.defenderDefense);
         float resistance = request.ignoreDamageResistance
             ? 0f
             : request.defenderDamageResistance;

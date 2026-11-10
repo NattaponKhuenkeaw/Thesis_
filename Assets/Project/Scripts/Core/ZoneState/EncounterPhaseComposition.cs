@@ -33,6 +33,8 @@ namespace Project.Core.ZoneState
             if (biomeIndex <= 0)
             {
                 rangedCount = combatDepth >= 1 ? 1 : 0;
+                // Introduce the shield guard after the opening room, before Hard can add an elite.
+                guardCount = combatDepth >= 1 ? 1 : 0;
             }
             else if (biomeIndex == 1)
             {
@@ -53,9 +55,10 @@ namespace Project.Core.ZoneState
         }
 
         public static bool ApplyFinalChamberElite(
-            IReadOnlyList<EncounterSO> encounters, IReadOnlyList<List<GameObject>> quotas)
+            IReadOnlyList<EncounterSO> encounters, IReadOnlyList<List<GameObject>> quotas, int biomeIndex = 0)
         {
-            if (encounters == null || quotas == null) return false;
+            // Biome index is zero-based: the final-chamber elite first appears in biome 2.
+            if (biomeIndex < 1 || encounters == null || quotas == null) return false;
             for (int i = quotas.Count - 1; i >= 0; i--)
             {
                 var quota = quotas[i];

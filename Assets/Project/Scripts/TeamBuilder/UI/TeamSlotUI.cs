@@ -135,6 +135,10 @@ namespace Project.TeamBuilder.UI
 
         public void SetCharacter(CharacterItem character)
         {
+            if (character != null && parentBuilder != null && parentBuilder.PlayerInventory != null
+                && parentBuilder.PlayerInventory.IsCharacterUnavailable(character.characterObjectData))
+                return;
+
             ResetDragState();
             EnsureEmptySlotLabel();
             currentCharacter = character;

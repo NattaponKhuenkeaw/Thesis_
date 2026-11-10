@@ -17,16 +17,6 @@ MonoBehaviour:
   aliveCap: 5
   spawnInterval: 0.35
   grantArtifacts: 0
-  hardRewardPatterns:
-  - weight: 25
-    artifactPulls: 2
-    grantsMemory: 1
-  - weight: 50
-    artifactPulls: 1
-    grantsMemory: 1
-  - weight: 25
-    artifactPulls: 0
-    grantsMemory: 1
   profiles:
   - difficulty: 1
     rollWeight: 40
@@ -58,13 +48,18 @@ MonoBehaviour:
       weight: 2
     - prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
       weight: 2
-  artifactPool:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  hardRewardPatterns:
+  - weight: 10
+    artifactPulls: 2
+    grantsMemory: 0
+  - weight: 30
+    artifactPulls: 1
+    grantsMemory: 0
+  - weight: 30
+    artifactPulls: 0
+    grantsMemory: 1
+  - weight: 30
+    artifactPulls: 0
+    grantsMemory: 0
+    bigSoul: 1
+  artifactPool: []

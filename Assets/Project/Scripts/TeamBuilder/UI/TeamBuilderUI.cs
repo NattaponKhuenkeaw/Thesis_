@@ -512,7 +512,8 @@ namespace Project.TeamBuilder.UI
 
         public void TryAssignCharacterToSelectedSlot(CharacterItem incomingChar)
         {
-            if (currentMode != ZoneMode.SafeZone || incomingChar == null)
+            if (currentMode != ZoneMode.SafeZone || incomingChar == null
+                || (PlayerInventory != null && PlayerInventory.IsCharacterUnavailable(incomingChar.characterObjectData)))
             {
                 return;
             }

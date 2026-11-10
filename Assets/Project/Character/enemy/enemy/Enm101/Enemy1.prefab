@@ -191,14 +191,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: groundMeleeFlanking
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: softGroundSeparation
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: comboHitTravel
       value: 1
@@ -245,19 +237,19 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: 5a0029ffb5e4b304abef51df4fd45475, type: 2}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
-      value: 200
+      value: 145
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: defense
-      value: 10
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: currentHP
-      value: 200
+      value: 145
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: damageRes
-      value: 10
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: combatRole
@@ -265,7 +257,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: attackDamage
-      value: 100
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: startArmored
@@ -733,6 +725,14 @@ PrefabInstance:
     - target: {fileID: 8056175369050843716, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: groundMeleeFlanking
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: softGroundSeparation
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Name

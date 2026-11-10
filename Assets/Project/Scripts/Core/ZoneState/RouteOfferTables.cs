@@ -39,6 +39,7 @@ namespace Project.Core.ZoneState
             [Min(0f)] public float weight;
             [Min(0)] public int artifactPulls;
             public bool grantsMemory;
+            public bool bigSoul;
         }
 
         [Header("Spawn")]

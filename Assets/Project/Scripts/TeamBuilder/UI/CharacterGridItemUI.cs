@@ -116,8 +116,10 @@ namespace Project.TeamBuilder.UI
             isInTeam = inTeam;
             if (frameImage != null && normalFrameSprite != null) frameImage.sprite = isSelected ? selectedFrameSprite : normalFrameSprite;
             canvasGroup = canvasGroup != null ? canvasGroup : GetComponent<CanvasGroup>();
+            bool isDead = runInventory != null && characterItem != null
+                && runInventory.IsCharacterUnavailable(characterItem.characterObjectData);
 
-            if (inTeam)
+            if (inTeam || isDead)
             {
                 canvasGroup.alpha = inTeamAlpha;
                 if (frameImage != null) frameImage.color = inTeamFrameColor;
@@ -130,10 +132,10 @@ namespace Project.TeamBuilder.UI
 
             if (equippedText != null)
             {
-                equippedText.text = "Equipped";
-                equippedText.gameObject.SetActive(inTeam);
+                equippedText.text = isDead ? "Death" : "Equipped";
+                equippedText.gameObject.SetActive(inTeam || isDead);
             }
-            if (isSelected)
+            if (isSelected && !isDead)
             {
                 canvasGroup.alpha = 1f;
                 if (frameImage != null) frameImage.color = selectedFrameSprite != null ? Color.white : new Color(1f, .9f, .15f);

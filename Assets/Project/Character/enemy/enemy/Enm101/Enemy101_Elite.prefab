@@ -14,11 +14,15 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: c045642bdd7eed44cad8bc399ed1b8a8, type: 2}
     - target: {fileID: 3682925780710360539, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
       propertyPath: maxHP
-      value: 600
+      value: 350
+      objectReference: {fileID: 0}
+    - target: {fileID: 3682925780710360539, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
+      propertyPath: defense
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 3682925780710360539, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
       propertyPath: currentHP
-      value: 600
+      value: 350
       objectReference: {fileID: 0}
     - target: {fileID: 3682925780710360539, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
       propertyPath: resistOrdinaryHitReactions

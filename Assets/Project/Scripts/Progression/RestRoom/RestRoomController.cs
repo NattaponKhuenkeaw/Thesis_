@@ -6,8 +6,7 @@ using UnityEngine;
 namespace Project.Progression.RestRoom
 {
     /// <summary>
-    /// Owns the Rest-room heal presentation. Heals remaining teammates once per visit
-    /// by a tunable percent of Max HP (Inspector).
+    /// Heals deployed teammates once per visit and revives owned dead characters at 30% Max HP.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class RestRoomController : MonoBehaviour
@@ -45,6 +44,7 @@ namespace Project.Progression.RestRoom
         private bool ownsCameraFocus;
         private bool hasClaimedThisVisit;
         private bool hasAppliedHeal;
+        private int revivedCharacterCount;
 
         public bool IsSequenceActive => sequenceRoutine != null;
         public bool HasClaimedThisVisit => hasClaimedThisVisit;
@@ -115,7 +115,7 @@ namespace Project.Progression.RestRoom
                         hasClaimedThisVisit = true;
                     }
 
-                    display?.ShowHealed(percent);
+                    display?.ShowHealed(percent, revivedCharacterCount);
                 }
                 else
                 {
@@ -170,7 +170,7 @@ namespace Project.Progression.RestRoom
                 return percent;
             }
 
-            teamLoader.HealTeamByMaxHpPercent(percent);
+            revivedCharacterCount = teamLoader.RestTeam(percent);
             Debug.Log($"[RestRoomController] Applied team heal ({percent * 100f:0.#}% Max HP).");
             return percent;
         }

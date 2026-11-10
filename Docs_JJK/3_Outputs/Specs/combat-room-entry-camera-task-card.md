@@ -21,6 +21,7 @@ Follow-up reports the camera pointing above the player in Biome 2 combat rooms a
 Boss112 follow-up requires the encounter trigger to stay unarmed during room loading. A new layout can overlap the previous room's player pose before entrance placement, prematurely spawning the boss and sealing its arena gate outside the player.
 
 - Keep the player visible as the room fades in with the first gate closed.
-- Fit both follow and combat framing to the active bounds, including the first enemy engagement. Recover authored zoom as the room opens up.
+- Preserve the authored Explore lens and Combat group range through entry and room opening. Confine undersized rectangular rooms independently on each axis instead of lowering those values.
+- Keep CamLookAhead as the manager's player camera reference through character swaps. Bind the movement body only as the proxy's position source.
 - Move the player's physics body and snap the camera to that same body under black before starting the entrance walk.
 - Verify at standard and ultrawide aspects with `CombatChamberCameraTests`. Review entrance framing in the running game.

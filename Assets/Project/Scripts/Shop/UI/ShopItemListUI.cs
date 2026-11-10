@@ -62,8 +62,11 @@ namespace Project.ShopSystem.UI
         private int currentPrice;
         private bool isPlayerInRange;
         private ShopItemListState currentState = ShopItemListState.Close;
+        private ShopItemListType? offerType;
 
-        public ShopItemListType ItemType => itemType;
+        public ShopItemListType ConfiguredItemType => itemType;
+        public ShopItemListType ItemType => offerType ?? itemType;
+        public void SetOfferType(ShopItemListType type) => offerType = type;
         public BaseItem CurrentItem => currentItem;
         public int CurrentQuantity => currentQuantity;
         public int CurrentPrice => currentPrice;

@@ -56,6 +56,9 @@ public class TeamSelectionLifecycleTests
     [TearDown]
     public void TearDown()
     {
+        // EditMode destruction does not run the panel's runtime disable cleanup.
+        if (builder != null) Call(builder, "OnDisable");
+        if (shell != null) Call(shell, "OnDisable");
         for (int i = temporary.Count - 1; i >= 0; i--)
             if (temporary[i] != null) Object.DestroyImmediate(temporary[i]);
         temporary.Clear();
@@ -148,6 +151,33 @@ public class TeamSelectionLifecycleTests
         Assert.That(AudioListener.volume, Is.EqualTo(.71f).Within(.001f));
         Assert.That(shell.GetComponent<Canvas>().sortingOrder, Is.EqualTo(order));
         Assert.That(InputLockManager.IsLocked, Is.EqualTo(locks > 0));
+    }
+
+    [Test]
+    public void OwnedDeadCharacterIsVisibleButCannotBeAssignedUntilRevived()
+    {
+        Set(builder, "teamLoader", Loader(false));
+        inventory.TryRemoveDefeatedTeamCharacter(camera.characterObjectData, main.characterObjectData, out _);
+        builder.OpenPanel();
+        var slots = Get<TeamSlotUI[]>(builder, "teamSlots");
+        builder.BeginCharacterSwitch(1);
+        var panel = Get<InventoryBuilderPanel>(builder, "inventoryPanel");
+        var grid = Get<CharacterGridInventoryUI>(panel, "characterGridPanel");
+        var card = grid.GetComponentsInChildren<CharacterGridItemUI>().Single(c => c.CharacterData == camera);
+        Assert.That(Get<TMPro.TMP_Text>(card, "equippedText").text, Is.EqualTo("Death"));
+        card.OnPointerClick(new PointerEventData(null));
+        var preview = Get<CharacterPreviewPanel>(grid, "previewPanel");
+        Assert.That(Get<Button>(preview, "assignButton").interactable, Is.False);
+        builder.TryAssignCharacterToSelectedSlot(camera);
+        Assert.That(slots[1].CurrentCharacter, Is.Null);
+        slots[1].SetCharacter(camera);
+        Assert.That(slots[1].CurrentCharacter, Is.Null);
+        Assert.That(inventory.TryReviveOwnedCharacter(camera.characterObjectData, 30f), Is.True);
+        preview.Open(camera);
+        Assert.That(Get<Button>(preview, "assignButton").interactable, Is.True);
+        builder.TryAssignCharacterToSelectedSlot(camera);
+        Assert.That(slots[1].CurrentCharacter, Is.SameAs(camera));
+        builder.ClosePanel();
     }
 
     [Test]

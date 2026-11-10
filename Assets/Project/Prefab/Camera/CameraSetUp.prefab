@@ -703,9 +703,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 4444728088541422226}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f453f694addf4275988fac205bc91968, type: 3}
+  m_Script: {fileID: 11500000, guid: 8dbd7a09770f4ce8bfa36921bd020816, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineConfiner2D
+  m_EditorClassIdentifier: Assembly-CSharp::RoomCameraConfiner2D
   BoundingShape2D: {fileID: 3592715534242637191}
   Damping: 0
   SlowingDistance: 5
@@ -825,9 +825,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 4815327143407226409}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f453f694addf4275988fac205bc91968, type: 3}
+  m_Script: {fileID: 11500000, guid: 8dbd7a09770f4ce8bfa36921bd020816, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineConfiner2D
+  m_EditorClassIdentifier: Assembly-CSharp::RoomCameraConfiner2D
   BoundingShape2D: {fileID: 3592715534242637191}
   Damping: 0
   SlowingDistance: 5

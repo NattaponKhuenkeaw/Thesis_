@@ -189,7 +189,7 @@ namespace Project.Core.ZoneState
         private static int ResolveCombatSoul(RouteDifficulty difficulty, int biomeIndex)
         {
             int baseline = biomeIndex < 3 ? 175 : biomeIndex < 6 ? 250 : 350;
-            return difficulty == RouteDifficulty.Hard ? Mathf.CeilToInt(baseline * 1.25f) : baseline;
+            return difficulty == RouteDifficulty.Hard ? Mathf.CeilToInt(baseline * 1.5f) : baseline;
         }
 
         private static bool TryBuildHardReward(IReadOnlyList<RouteOfferTables.HardRewardPattern> patterns, int biome, int coins,
@@ -215,8 +215,15 @@ namespace Project.Core.ZoneState
             }
 
             reward = RouteReward.Patterned(
-                coins, Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome, selected.grantsMemory);
+                selected.bigSoul ? ResolveBigSoul(biome) : coins,
+                Mathf.Max(0, selected.artifactPulls), Random.Range(0, int.MaxValue), biome, selected.grantsMemory);
             return true;
+        }
+
+        private static int ResolveBigSoul(int biomeIndex)
+        {
+            int baseline = biomeIndex < 3 ? 175 : biomeIndex < 6 ? 250 : 350;
+            return Mathf.CeilToInt(baseline * 3.5f);
         }
 
         private static GameObject PickEnemy(List<RouteOfferTables.EnemyEntry> pool)

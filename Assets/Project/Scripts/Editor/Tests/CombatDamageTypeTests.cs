@@ -58,6 +58,37 @@ public class CombatDamageTypeTests
         Assert.That(CombatDamageResolver.Resolve(additional).Damage, Is.EqualTo(100f).Within(0.001f));
     }
 
+    [TestCase(false, false, 15)]
+    [TestCase(true, false, 60)]
+    [TestCase(false, true, 60)]
+    public void QteEntryBypassesDefenseButPreservesResistanceAndTypeReduction(
+        bool isQteIntro, bool explicitBypass, int expectedDamage)
+    {
+        DamageRequest request = CreateRequest(100f, DamageDelivery.Primary, ElementType.None);
+        // A detached execution also represents a projectile whose owner has since swapped out.
+        request.execution = new CombatExecutionContext(null, null, 0, isQteIntro);
+        request.ignoreDefense = explicitBypass;
+        request.defenderDefense = 300f;
+        request.defenderDamageResistance = 20f;
+        request.typeReductionPercent = 25f;
+
+        Assert.That(CombatDamageResolver.Resolve(request).Damage, Is.EqualTo(expectedDamage));
+        Assert.That(CombatDamageProcessor.Resolve(request).Damage, Is.EqualTo(expectedDamage));
+    }
+
+    [Test]
+    public void QteBypassDoesNotCarryIntoTheNextOrdinaryAttack()
+    {
+        DamageRequest qte = CreateRequest(100f, DamageDelivery.Primary, ElementType.None);
+        qte.defenderDefense = 300f;
+        qte.execution = new CombatExecutionContext(null, null, 0, true);
+        DamageRequest ordinary = qte;
+        ordinary.execution = new CombatExecutionContext(null, null, 0, false);
+
+        Assert.That(CombatDamageResolver.Resolve(qte).Damage, Is.EqualTo(100));
+        Assert.That(CombatDamageResolver.Resolve(ordinary).Damage, Is.EqualTo(25));
+    }
+
     [Test]
     public void TypeReductionIsAppliedExactlyOnceByThePureResolver()
     {

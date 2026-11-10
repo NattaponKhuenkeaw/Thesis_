@@ -15,6 +15,28 @@ public class CombatChamberCameraTests
 {
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
+    [Test]
+    public void CharacterSwapKeepsTheLookAheadProxyAsTheCameraReference()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        var rig = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Prefab/Camera/CameraSetUp.prefab"));
+        var player = new GameObject("Incoming player body");
+        try
+        {
+            var manager = rig.GetComponent<CameraManager>();
+            var proxy = rig.GetComponentInChildren<CameraLookAhead>();
+            var explore = rig.transform.Find("CinemachineCamera_Explore").GetComponent<CinemachineCamera>();
+            var body = player.AddComponent<Rigidbody2D>();
+            manager.ResetLookAheadForCharacterSwap(body, .1f);
+            Assert.That(proxy.playerRigidbody, Is.SameAs(body));
+            Assert.That(explore.Follow, Is.SameAs(proxy.transform));
+            Assert.That(typeof(CameraManager).GetField("_playerTransform", Private).GetValue(manager),
+                Is.SameAs(proxy.transform));
+        }
+        finally { Object.DestroyImmediate(rig); Object.DestroyImmediate(player); }
+    }
+
     [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)]
     [TestCase(6)] [TestCase(7)] [TestCase(8)] [TestCase(9)] [TestCase(10)]
     public void BindingFirstChamberReplacesTheWholeStageCameraBounds(int level)
@@ -93,10 +115,13 @@ public class CombatChamberCameraTests
                             $"LV{level:00} aspect={aspect:F2} player={body.position}, camera={output.transform.position}, output size={output.orthographicSize}, explore size={explore.Lens.OrthographicSize}, bounds={confiner.BoundingShape2D.bounds}");
                         var bounds = confiner.BoundingShape2D.bounds;
                         float halfWidth = output.orthographicSize * output.aspect;
-                        Assert.That(output.transform.position.x - halfWidth, Is.GreaterThanOrEqualTo(bounds.min.x - .03f));
-                        Assert.That(output.transform.position.x + halfWidth, Is.LessThanOrEqualTo(bounds.max.x + .03f));
-                        if (bounds.size.x >= 2f * (authoredSize + .05f) * aspect)
-                            Assert.That(explore.Lens.OrthographicSize, Is.EqualTo(authoredSize).Within(.001f));
+                        Assert.That(explore.Lens.OrthographicSize, Is.EqualTo(authoredSize).Within(.001f));
+                        Assert.That(output.orthographicSize, Is.EqualTo(authoredSize).Within(.001f));
+                        if (bounds.size.x >= 2f * halfWidth)
+                        {
+                            Assert.That(output.transform.position.x - halfWidth, Is.GreaterThanOrEqualTo(bounds.min.x - .03f));
+                            Assert.That(output.transform.position.x + halfWidth, Is.LessThanOrEqualTo(bounds.max.x + .03f));
+                        }
                     }
                     finally { Object.DestroyImmediate(layout); }
                     yield return null;
@@ -188,11 +213,18 @@ public class CombatChamberCameraTests
             Assert.That(first.exitWall.enabled, Is.True);
             Assert.That(boundary.IsExitAvailable, Is.False);
             Assert.That(bounds.bounds.max.x, Is.EqualTo(right).Within(.01f), "First chamber camera bounds changed before clear");
-            float viewRight = output.transform.position.x + output.orthographicSize * output.aspect;
-            Assert.That(viewRight, Is.LessThanOrEqualTo(right + .03f),
-                $"{brain.ActiveVirtualCamera?.Name}: viewport right={viewRight}, gate={right}, size={output.orthographicSize}, combat={manager.IsInCombat}");
+            var explore = rig.transform.Find("CinemachineCamera_Explore").GetComponent<CinemachineCamera>();
+            var combatCamera = rig.transform.Find("CinemachineCamera_Combat").GetComponent<CinemachineCamera>();
+            Assert.That(explore.Lens.OrthographicSize, Is.EqualTo(8.5f).Within(.001f));
+            Assert.That(combatCamera.GetComponent<CinemachineGroupFraming>().OrthoSizeRange,
+                Is.EqualTo(new Vector2(8.3f, 9.5f)));
+            Assert.That(output.orthographicSize, Is.GreaterThanOrEqualTo(8.3f - .001f));
+            Assert.That(output.WorldToViewportPoint((Vector3)body.position + Vector3.up).y, Is.InRange(.02f, .98f));
+            float halfWidth = output.orthographicSize * output.aspect;
+            if (bounds.bounds.size.x >= 2f * halfWidth)
+                Assert.That(output.transform.position.x + halfWidth, Is.LessThanOrEqualTo(right + .03f));
             if (combat) Assert.That(manager.IsInCombat, Is.True);
-            else
+            else if (bounds.bounds.size.x > 2f * halfWidth + 2f)
             {
                 float previousX = output.transform.position.x;
                 float left = first.entranceWall.bounds.max.x;
@@ -267,8 +299,9 @@ public class CombatChamberCameraTests
                     for (int frame = 0; frame < 90; frame++) yield return null;
                     Assert.That(bounds.bounds.max.x, Is.EqualTo(right).Within(.03f), $"LV{level} Room{room + 1}: bounds cross the closed gate");
                     float viewportRight = output.transform.position.x + output.orthographicSize * output.aspect;
-                    Assert.That(viewportRight, Is.LessThanOrEqualTo(right + .05f),
-                        $"LV{level} Room{room + 1}: viewport={viewportRight}, gate={right}, size={output.orthographicSize}");
+                    if (bounds.bounds.size.x >= 2f * output.orthographicSize * output.aspect)
+                        Assert.That(viewportRight, Is.LessThanOrEqualTo(right + .05f),
+                            $"LV{level} Room{room + 1}: viewport={viewportRight}, gate={right}, size={output.orthographicSize}");
                     Assert.That(Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None).Any(e => e.IsAlive), Is.True);
                     if (room == stage.ChamberCount - 1) break;
 

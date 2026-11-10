@@ -165,7 +165,9 @@ namespace Project.Core.ZoneState
             var encounters = new EncounterSO[chambers.Length];
             for (int i = 0; i < chambers.Length; i++)
                 encounters[i] = ResolveEncounter(chambers[i]);
-            EncounterPhaseComposition.ApplyFinalChamberElite(encounters, slices);
+            int biomeIndex = RunProgressionManager.Instance != null
+                ? RunProgressionManager.Instance.CurrentBiomeIndex : 0;
+            EncounterPhaseComposition.ApplyFinalChamberElite(encounters, slices, biomeIndex);
 
             currentIndex = -1;
             waitingForIndex = -1;

@@ -36,3 +36,11 @@ The Boss_02 layout's fight trigger can overlap the outgoing Shop player's positi
 Boss112EntranceTests now simulates an outgoing pose inside the fight trigger before entrance placement, verifies the gate stays open through loading, and verifies normal walking seals the gate behind the player.
 
 All three Boss112EntranceTests passed in the isolated Unity batch run, including Main and CameraGirl walking into the arena after the simulated load overlap. Scoped diff validation passed. Full visual verification of the reported run remains pending.
+
+## Authored zoom correction
+
+The user reports unwanted 6.6/5 entry zoom despite authored Explore 8.5 and Combat minimum 8.3. The earlier FitExploreZoomToRoom and FitCombatZoomToRoom changes caused this directly. Their per-frame room-width limits reduced both lenses and even rewrote the combat group's minimum. Removed those methods and their calls. The native OversizeWindow trial still centered the view vertically in narrow rooms. Explore and Combat now use RoomCameraConfiner2D, a CinemachineConfiner2D subclass that confines each axis independently for undersized axis-aligned boxes and otherwise delegates to Cinemachine. This preserves the authored lenses. A narrow chamber can show beyond its gate at that zoom.
+
+Removed character-swap assignment of the movement body to CameraManager's authored player proxy reference. CameraLookAhead still reads the movement Rigidbody2D and supplies the follow target. Combat uses the target group containing that proxy. The swap only changes the proxy's body source.
+
+All 26 CombatChamberCameraTests passed in the isolated Unity batch run. Coverage includes authored lenses and group limits, entry player visibility across ten layouts at 16:9 and 21:9, first combat engagement, chamber progression, and proxy ownership after a swap. The scoped diff check passed. Visual playtest remains pending.

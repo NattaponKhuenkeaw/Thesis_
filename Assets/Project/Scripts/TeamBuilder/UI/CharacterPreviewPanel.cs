@@ -33,13 +33,16 @@ namespace Project.TeamBuilder.UI
             var data = character.characterObjectData;
             characterNameText.text = data != null ? data.metaData.displayName : character.itemName;
             var assignedSlot = parentBuilder.FindSlotWithCharacter(character);
+            bool isDead = parentBuilder.PlayerInventory != null
+                && parentBuilder.PlayerInventory.IsCharacterUnavailable(data);
             bool isCurrent = assignedSlot != null && assignedSlot.SlotIndex == parentBuilder.SelectedCharacterSlotIndex;
             var stats = parentBuilder.ResolveCharacterRuntimeStats(data,
                 assignedSlot != null ? assignedSlot.GetEquippedArtifacts() : System.Array.Empty<Project.InventorySystem.Artifacts.ArtifactInstance>());
             statsText.text = $"ATK     {stats.attack:0}\nDEF     {stats.defense:0}\nHP       {stats.maxHP:0}";
-            assignmentText.text = assignedSlot != null ? $"Assigned to slot {assignedSlot.SlotIndex + 1:00}." : "Available for this team slot.";
-            assignLabel.text = isCurrent ? "CURRENT CHARACTER" : assignedSlot != null ? "SWAP CHARACTER" : "ASSIGN CHARACTER";
-            assignButton.interactable = !isCurrent && parentBuilder.SelectedCharacterSlotIndex >= 0;
+            assignmentText.text = isDead ? "Death - revive at Rest (30% Max HP)."
+                : assignedSlot != null ? $"Assigned to slot {assignedSlot.SlotIndex + 1:00}." : "Available for this team slot.";
+            assignLabel.text = isDead ? "DEAD CHARACTER" : isCurrent ? "CURRENT CHARACTER" : assignedSlot != null ? "SWAP CHARACTER" : "ASSIGN CHARACTER";
+            assignButton.interactable = !isDead && !isCurrent && parentBuilder.SelectedCharacterSlotIndex >= 0;
             gameObject.SetActive(true);
         }
 

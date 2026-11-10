@@ -31,6 +31,7 @@ namespace Project.ShopSystem
         public CharacterUpgrade upgrade = new CharacterUpgrade();
         public float currentHP = -1f;
         public float currentAE = -1f;
+        public bool isDead;
         [NonSerialized] protected List<RuntimeEffectInstance> activeEffects = new List<RuntimeEffectInstance>();
         [NonSerialized] protected bool hasTickingEffects;
 
@@ -191,6 +192,7 @@ namespace Project.ShopSystem
         public CharacterUpgrade upgrade = new CharacterUpgrade();
         public float currentHP = -1f;
         public float currentAE = -1f;
+        public bool isDead;
     }
 
     [Serializable]
@@ -926,6 +928,9 @@ namespace Project.ShopSystem
                     }
                 }
                 RecordCharacterDefeat(ResolveMainCharacter());
+                // Ownership is lost at the terminal run reset, never on individual defeat.
+                ownedItems.RemoveAll(item => item is CharacterItem characterItem
+                    && IsCharacterDefeated(characterItem.characterObjectData));
                 runCharacters.Clear();
                 SetCurrency(DefaultCurrency);
                 _globalLevel = 1;
@@ -1162,7 +1167,16 @@ namespace Project.ShopSystem
 
         public bool IsCharacterDefeated(CharacterObject character)
         {
-            if (character == null || defeatedCharactersThisRun == null) return false;
+            if (character == null) return false;
+            if (runCharacters != null)
+            {
+                foreach (RunCharacterState state in runCharacters)
+                {
+                    if (state != null && state.isDead && IsSameTeamCharacter(state.character, character))
+                        return true;
+                }
+            }
+            if (defeatedCharactersThisRun == null) return false;
             foreach (CharacterObject defeated in defeatedCharactersThisRun)
             {
                 if (IsSameTeamCharacter(defeated, character)
@@ -1180,45 +1194,33 @@ namespace Project.ShopSystem
 
         public bool CanReacquireDefeatedCharacter(CharacterItem item)
         {
-            if (item == null || item.characterObjectData == null || HasItem(item))
-            {
-                return false;
-            }
-
-            if (!IsCharacterDefeated(item.characterObjectData))
-            {
-                return false;
-            }
-
-            // A full wipe still owns the death flow. Buying Main there would skip the lobby reset.
-            return !IsMainCharacter(item.characterObjectData) || !isDeathTeardown;
+            // Compatibility API: death retains ownership; only Rest can revive it.
+            return false;
         }
 
         public bool TryReacquireDefeatedCharacter(CharacterItem item)
         {
-            if (!CanReacquireDefeatedCharacter(item))
-            {
-                return false;
-            }
+            return false;
+        }
 
-            // Main's default ownership must not race the explicit repurchase.
-            bool previousAutoBootstrapSuppression = suppressAutoBootstrap;
-            suppressAutoBootstrap = true;
-            try
+        public bool TryReviveOwnedCharacter(CharacterObject character, float restoredHp)
+        {
+            if (character == null || isDeathTeardown || isDeathLobby || restoredHp <= 0f
+                || FindOwnedCharacterItem(character) == null || !IsCharacterDefeated(character))
+                return false;
+
+            ReleaseCharacterDefeat(character);
+            foreach (RunCharacterState state in runCharacters)
             {
-                ReleaseCharacterDefeat(item.characterObjectData);
-                if (TryAddItem(item))
+                if (state != null && (IsSameTeamCharacter(state.character, character)
+                    || (IsMainCharacter(state.character) && IsMainCharacter(character))))
                 {
-                    return true;
+                    state.isDead = false;
+                    state.currentHP = restoredHp;
                 }
-
-                RecordCharacterDefeat(item.characterObjectData);
-                return false;
             }
-            finally
-            {
-                suppressAutoBootstrap = previousAutoBootstrapSuppression;
-            }
+            PostInventoryMutation(save: true);
+            return true;
         }
 
         private bool CannotAcquireCharacter(CharacterObject character)
@@ -1228,7 +1230,7 @@ namespace Project.ShopSystem
                 return true;
             }
 
-            // Only the explicit New Run boundary clears a defeat during the same session.
+            // Ownership and revival have separate entry points; generic additions cannot clear death.
             if (IsMainCharacter(character))
             {
                 return isDeathTeardown || IsCharacterDefeated(character);
@@ -1606,7 +1608,7 @@ namespace Project.ShopSystem
         /// <summary>
         /// Removes a defeated teammate from the run team, returns their equipped
         /// artifacts to inventory, and compacts survivors so the preferred survivor
-        /// lands at index 0. Defeat removes ownership even when no survivors remain.
+        /// lands at index 0. Ownership and the dead runtime record remain for Rest.
         /// </summary>
         public bool TryRemoveDefeatedTeamCharacter(
             CharacterObject defeatedCharacter,
@@ -1738,20 +1740,24 @@ namespace Project.ShopSystem
         {
             if (character == null) return;
             defeatedCharactersThisRun ??= new List<CharacterObject>();
-            if (!IsCharacterDefeated(character)) defeatedCharactersThisRun.Add(character);
+            if (!defeatedCharactersThisRun.Exists(value => IsSameTeamCharacter(value, character)))
+                defeatedCharactersThisRun.Add(character);
 
-            for (int i = ownedItems.Count - 1; i >= 0; i--)
+            RunCharacterState state = FindRunCharacterState(character);
+            if (state == null)
             {
-                if (ownedItems[i] is CharacterItem item
-                    && (IsSameTeamCharacter(item.characterObjectData, character)
-                        || (IsMainCharacter(item.characterObjectData) && IsMainCharacter(character))))
-                {
-                    ownedItems.RemoveAt(i);
-                }
+                state = new RunCharacterState { character = character, upgrade = CreateRunUpgrade(character) };
+                runCharacters.Add(state);
             }
-            itemIndexById = null;
-            characterItemsByCharacterId = null;
-            RemoveRunCharacterState(character);
+            foreach (RunCharacterState ownedState in runCharacters)
+            {
+                if (ownedState == null || (!IsSameTeamCharacter(ownedState.character, character)
+                    && !(IsMainCharacter(ownedState.character) && IsMainCharacter(character)))) continue;
+                ownedState.isDead = true;
+                ownedState.currentHP = 0f;
+                ownedState.currentAE = 0f;
+                ownedState.ClearTransientRuntimeEffects();
+            }
         }
 
         private void RemoveRunCharacterState(CharacterObject character)
@@ -2941,7 +2947,7 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                return record.currentHP >= 0f && record.currentHP <= 0.01f;
+                return record.isDead || (record.currentHP >= 0f && record.currentHP <= 0.01f);
             }
 
             return false;
@@ -3031,7 +3037,8 @@ namespace Project.ShopSystem
                     characterId = state.character.characterId,
                     upgrade = state.upgrade != null ? state.upgrade.Clone() : new CharacterUpgrade(),
                     currentHP = state.currentHP,
-                    currentAE = state.currentAE
+                    currentAE = state.currentAE,
+                    isDead = state.isDead
                 });
             }
 
@@ -3617,6 +3624,7 @@ namespace Project.ShopSystem
             ownedItems.Clear();
             itemStacks.Clear();
             runCharacters.Clear();
+            defeatedCharactersThisRun.Clear();
             artifactInstances.Clear();
             artifactInstancesById = null;
             currency = Mathf.Max(0, data.currency);
@@ -3686,6 +3694,7 @@ namespace Project.ShopSystem
                     {
                         state.currentHP = record.currentHP;
                         state.currentAE = record.currentAE;
+                        state.isDead = record.isDead || (record.currentHP >= 0f && record.currentHP <= 0.01f);
                     }
                 }
             }
@@ -3947,7 +3956,7 @@ namespace Project.ShopSystem
             for (int i = runCharacters.Count - 1; i >= 0; i--)
             {
                 RunCharacterState state = runCharacters[i];
-                if (state == null || IsCharacterUnavailable(state.character) || !retainedCharacters.Contains(state.character))
+                if (state == null || !retainedCharacters.Contains(state.character))
                 {
                     runCharacters.RemoveAt(i);
                     continue;
@@ -4029,7 +4038,9 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                while (ownedIndex < ownedCharacters.Count && assignedCharacters.Contains(ownedCharacters[ownedIndex]))
+                while (ownedIndex < ownedCharacters.Count
+                    && (assignedCharacters.Contains(ownedCharacters[ownedIndex])
+                        || IsCharacterUnavailable(ownedCharacters[ownedIndex])))
                 {
                     ownedIndex++;
                 }

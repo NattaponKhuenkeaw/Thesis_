@@ -523,7 +523,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
 
     /// <summary>
-    /// Starts death-anim → delete defeated teammate → compact survivors to index 0 → switch.
+    /// Marks the owned teammate dead, then plays death and switches to a compacted survivor.
     /// Returns false when no living teammate remains (caller should raise team wipe).
     /// </summary>
     public bool TryBeginActiveDefeatRecovery()
@@ -644,7 +644,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             string displayName = nextCharacter != null && nextCharacter.metaData != null && !string.IsNullOrWhiteSpace(nextCharacter.metaData.displayName)
                 ? nextCharacter.metaData.displayName
                 : (nextCharacter != null ? nextCharacter.name : "Unknown");
-            Debug.Log($"[TeamLoader] Active character defeated and removed. Switched to survivor at index 0: {displayName}", this);
+            Debug.Log($"[TeamLoader] Owned character marked dead. Switched to survivor at index 0: {displayName}", this);
         }
         finally
         {
@@ -1089,6 +1089,33 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public void HealAndReviveEntireTeam()
     {
         HealTeamByMaxHpPercent(1f);
+    }
+
+    /// <summary>Rest heals the deployed team and revives owned dead characters without equipping them.</summary>
+    public int RestTeam(float healPercentOfMaxHp)
+    {
+        ResolveDependencies();
+        if (runInventory == null || runInventory.IsDeathTeardown || runInventory.IsDeathLobby)
+            return 0;
+
+        HealTeamByMaxHpPercent(healPercentOfMaxHp);
+        int revived = 0;
+        // Revival notifies inventory listeners, so iterate a snapshot of roster identities.
+        var characters = new List<CharacterObject>();
+        foreach (RunCharacterState state in runInventory.RunCharacters)
+        {
+            if (state != null && runInventory.IsCharacterDefeated(state.character))
+                characters.Add(state.character);
+        }
+        foreach (CharacterObject character in characters)
+        {
+            if (!runInventory.TryReviveOwnedCharacter(character, GetCharacterMaxHP(character) * 0.3f))
+                continue;
+            revived++;
+            NotifyCharacterHealthUpdated(character);
+        }
+        if (revived > 0) NotifyTeamChanged();
+        return revived;
     }
 
     /// <summary>

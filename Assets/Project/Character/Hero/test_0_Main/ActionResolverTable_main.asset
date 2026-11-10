@@ -30,7 +30,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 4.5
+    actionDamageMultiplier: 4
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -139,7 +139,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 5
+    actionDamageMultiplier: 5.5
     auraEnergyReward: 3
     comboTree:
       treeName: Combo
@@ -223,7 +223,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 2
+    actionDamageMultiplier: 2.5
     auraEnergyReward: 0
     comboTree:
       treeName: QTE Lightning Plunge

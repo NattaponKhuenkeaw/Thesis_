@@ -50,7 +50,7 @@ public class DeathResetOwnershipTests
     }
 
     [Test]
-    public void MainDefeatWithSurvivorCannotBeReownedRedeployedOrHealed()
+    public void MainDefeatRetainsOwnershipButCannotBeRedeployedOrOrdinarilyHealed()
     {
         inventory.SetRunCharacterCurrentHP(main, 0f);
         Assert.That(inventory.TryRemoveDefeatedTeamCharacter(main, ally, out int active), Is.True);
@@ -65,9 +65,9 @@ public class DeathResetOwnershipTests
             inventory.DeployTeam(new[] { main, ally }, 1);
             Assert.That(inventory.CanAddItem(mainItem), Is.False);
             Assert.That(inventory.TryAddItem(mainItem), Is.False);
-            Assert.That(Owns(main), Is.False);
+            Assert.That(Owns(main), Is.True);
             Assert.That(Contains(inventory.GetTeamSnapshot(), main), Is.False);
-            Assert.That(inventory.GetRunCharacter(main), Is.Null);
+            Assert.That(inventory.GetRunCharacter(main).isDead, Is.True);
         }
 
         TeamLoader loader = CreateLoader(main, out PlayerCharacter player);
@@ -78,18 +78,18 @@ public class DeathResetOwnershipTests
     }
 
     [Test]
-    public void NonMainDefeatWithSurvivorLosesOwnershipImmediately()
+    public void NonMainDefeatRetainsDeadRuntimeAndOwnership()
     {
         inventory.SetRunCharacterCurrentHP(ally, 0f);
         Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _), Is.True);
-        Assert.That(Owns(ally), Is.False);
+        Assert.That(Owns(ally), Is.True);
         Assert.That(Owns(main), Is.True);
-        Assert.That(inventory.GetRunCharacter(ally), Is.Null);
+        Assert.That(inventory.GetRunCharacter(ally).isDead, Is.True);
         Assert.That(inventory.TryAddItem(allyItem), Is.False);
     }
 
     [Test]
-    public void ShopPurchaseReacquiresDefeatedAllyWithoutOpeningGenericAdd()
+    public void ShopCannotReviveAnOwnedDeadAlly()
     {
         inventory.SetRunCharacterCurrentHP(ally, 0f);
         Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _), Is.True);
@@ -101,12 +101,12 @@ public class DeathResetOwnershipTests
         ShopManager shop = shopObject.AddComponent<ShopManager>();
         shop.playerInventory = inventory;
 
-        Assert.That(shop.CanPurchaseOffer(allyItem, 1, 10), Is.True);
-        Assert.That(shop.TryPurchase(allyItem, 1, 10), Is.True);
+        Assert.That(shop.CanPurchaseOffer(allyItem, 1, 10), Is.False);
+        Assert.That(shop.TryPurchase(allyItem, 1, 10), Is.False);
         Assert.That(Owns(ally), Is.True);
-        Assert.That(inventory.IsCharacterDefeated(ally), Is.False);
+        Assert.That(inventory.IsCharacterDefeated(ally), Is.True);
         Assert.That(inventory.GetRunCharacter(ally), Is.Not.Null);
-        Assert.That(inventory.currency, Is.EqualTo(currencyBefore - 10));
+        Assert.That(inventory.currency, Is.EqualTo(currencyBefore));
     }
 
     [TestCase(false)]
@@ -120,8 +120,8 @@ public class DeathResetOwnershipTests
         inventory.SetRunCharacterCurrentHP(last, 0f);
         Assert.That(inventory.TryRemoveDefeatedTeamCharacter(last, null, out int active), Is.False);
         Assert.That(active, Is.EqualTo(-1));
-        Assert.That(Owns(main), Is.False);
-        Assert.That(Owns(ally), Is.False);
+        Assert.That(Owns(main), Is.True);
+        Assert.That(Owns(ally), Is.True);
         Assert.That(inventory.GetDeployedTeamMemberCount(), Is.Zero);
 
         inventory.ResetRunProgressForDeath();
@@ -152,7 +152,7 @@ public class DeathResetOwnershipTests
         inventory.SetRunCharacterCurrentHP(ally, 0f);
         Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _), Is.True);
         Assert.That(inventory.IsCharacterDefeated(ally), Is.True);
-        Assert.That(Owns(ally), Is.False);
+        Assert.That(Owns(ally), Is.True);
         Assert.That(inventory.TryAddItem(allyItem), Is.False);
     }
 
@@ -182,7 +182,7 @@ public class DeathResetOwnershipTests
     }
 
     [Test]
-    public void NewRunWithSurvivingMainAllowsReacquiringDefeatedAlly()
+    public void NewRunWithSurvivingMainKeepsOwnedAllyAndClearsDeath()
     {
         inventory.SetRunCharacterCurrentHP(ally, 0f);
         Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _), Is.True);
@@ -191,36 +191,36 @@ public class DeathResetOwnershipTests
 
         Assert.That(inventory.TryPrepareForNewRun(1, out string reason), Is.True, reason);
         Assert.That(Owns(main), Is.True);
-        Assert.That(Owns(ally), Is.False);
+        Assert.That(Owns(ally), Is.True);
         Assert.That(inventory.GetDeployedTeamMemberCount(), Is.EqualTo(1));
         Assert.That(Contains(inventory.GetRunStartTeamOrCurrent(), ally), Is.False);
         Assert.That(inventory.IsCharacterDefeated(ally), Is.False);
-        Assert.That(inventory.TryAddItem(allyItem), Is.True);
+        Assert.That(inventory.TryAddItem(allyItem), Is.False);
     }
 
     [Test]
-    public void TerminalTeamLoaderPathRemovesLastNonMainBeforeWipe()
+    public void TerminalTeamLoaderMarksLastOwnedCharacterDeadBeforeWipe()
     {
         inventory.SetRunCharacterCurrentHP(main, 0f);
         inventory.TryRemoveDefeatedTeamCharacter(main, ally, out _);
         inventory.SetRunCharacterCurrentHP(ally, 0f);
         TeamLoader loader = CreateLoader(ally, out _);
         Assert.That(loader.TryBeginActiveDefeatRecovery(), Is.False);
-        Assert.That(Owns(ally), Is.False);
+        Assert.That(Owns(ally), Is.True);
         Assert.That(inventory.IsCharacterDefeated(ally), Is.True);
         Assert.That(inventory.GetDeployedTeamMemberCount(), Is.Zero);
         Assert.That(loader.GetCharacterCurrentHP(ally), Is.Zero);
     }
 
     [Test]
-    public void TerminalCharacterMissingFromSlotsStillLosesOwnership()
+    public void TerminalCharacterMissingFromSlotsStillRetainsDeadOwnership()
     {
         inventory.DeployTeam(new[] { main }, 0);
         inventory.SetRunCharacterCurrentHP(main, 0f);
         inventory.SetRunCharacterCurrentHP(ally, 0f);
         Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, null, out _), Is.False);
-        Assert.That(Owns(main), Is.False);
-        Assert.That(Owns(ally), Is.False);
+        Assert.That(Owns(main), Is.True);
+        Assert.That(Owns(ally), Is.True);
         Assert.That(inventory.GetDeployedTeamMemberCount(), Is.Zero);
     }
 
@@ -369,7 +369,7 @@ public class DeathResetOwnershipTests
     }
 
     [Test]
-    public void MainIdentityAliasCannotEscapeDefeatRemoval()
+    public void MainIdentityAliasCannotEscapeDefeatLock()
     {
         CharacterObject alias = Create<CharacterObject>();
         alias.name = "CharacterObject_main";
@@ -379,9 +379,9 @@ public class DeathResetOwnershipTests
         inventory.ownedItems.Add(item);
         inventory.SetRunCharacterCurrentHP(main, 0f);
         inventory.TryRemoveDefeatedTeamCharacter(main, ally, out _);
-        Assert.That(Owns(alias), Is.False);
+        Assert.That(Owns(alias), Is.True);
         Assert.That(inventory.IsCharacterDefeated(alias), Is.True);
-        Assert.That(inventory.GetRunCharacter(alias), Is.Null);
+        Assert.That(inventory.GetRunCharacter(alias).isDead, Is.True);
     }
 
     [Test]
@@ -397,7 +397,7 @@ public class DeathResetOwnershipTests
         inventory.SetRunCharacterCurrentHP(main, 0f);
         inventory.TryRemoveDefeatedTeamCharacter(main, ally, out _);
         Assert.That(draft.FindCharacterItem(main), Is.Null);
-        Assert.That(Owns(main), Is.False);
+        Assert.That(Owns(main), Is.True);
     }
 
     [Test]
@@ -433,6 +433,91 @@ public class DeathResetOwnershipTests
         inventory.ResetRunStateForMenuStart(resetCurrency: false);
 
         Assert.That(inventory.currency, Is.EqualTo(4321));
+    }
+
+    [TestCase(true, .3f)]
+    [TestCase(false, .3f)]
+    [TestCase(false, 1f)]
+    public void RestRevivesOwnedDeadCharacterAtThirtyPercentWithoutEquipping(bool defeatMain, float livingHealPercent)
+    {
+        CharacterObject dead = defeatMain ? main : ally;
+        CharacterObject survivor = defeatMain ? ally : main;
+        RunCharacterState originalState = inventory.GetRunCharacter(dead);
+        inventory.SetRunCharacterCurrentHP(dead, 0f);
+        inventory.SetRunCharacterCurrentAE(dead, 50f);
+        inventory.TryRemoveDefeatedTeamCharacter(dead, survivor, out _);
+        Assert.That(inventory.GetRunCharacter(dead), Is.SameAs(originalState));
+        Assert.That(originalState.isDead, Is.True);
+        Assert.That(originalState.currentAE, Is.Zero);
+        Assert.That(inventory.ContainsTeamCharacter(dead), Is.False);
+
+        TeamLoader loader = CreateLoader(survivor, out _);
+        float maxHp = loader.GetCharacterMaxHP(dead);
+        loader.HealTeamByMaxHpPercent(1f);
+        Assert.That(inventory.IsCharacterDefeated(dead), Is.True, "Generic heals cannot revive the roster.");
+        Assert.That(loader.RestTeam(livingHealPercent), Is.EqualTo(1));
+        Assert.That(inventory.IsCharacterDefeated(dead), Is.False);
+        Assert.That(originalState.currentHP, Is.EqualTo(maxHp * .3f).Within(.001f));
+        Assert.That(inventory.ContainsTeamCharacter(dead), Is.False);
+        inventory.DeployTeam(new[] { survivor, dead }, 0);
+        Assert.That(inventory.GetTeamCharacterAt(1), Is.SameAs(dead));
+        Assert.That(originalState.currentHP, Is.EqualTo(maxHp * .3f).Within(.001f));
+        Assert.That(loader.RestTeam(.3f), Is.Zero, "A living character is not revived twice.");
+    }
+
+    [Test]
+    public void RestHealsLivingTeamAdditivelyAndClampsAtMaxHp()
+    {
+        TeamLoader loader = CreateLoader(main, out _);
+        float maxHp = loader.GetCharacterMaxHP(ally);
+        loader.SetCharacterCurrentHP(ally, maxHp * .5f);
+        loader.RestTeam(.3f);
+        Assert.That(loader.GetCharacterCurrentHP(ally), Is.EqualTo(maxHp * .8f).Within(.001f));
+        loader.RestTeam(.3f);
+        Assert.That(loader.GetCharacterCurrentHP(ally), Is.EqualTo(maxHp).Within(.001f));
+    }
+
+    [Test]
+    public void RestCannotBypassTerminalWipe()
+    {
+        inventory.SetRunCharacterCurrentHP(main, 0f);
+        inventory.TryRemoveDefeatedTeamCharacter(main, ally, out _);
+        inventory.SetRunCharacterCurrentHP(ally, 0f);
+        inventory.TryRemoveDefeatedTeamCharacter(ally, null, out _);
+        TeamLoader loader = CreateLoader(ally, out _);
+        Assert.That(loader.RestTeam(.3f), Is.Zero);
+        Assert.That(inventory.IsCharacterDefeated(main), Is.True);
+        Assert.That(inventory.IsCharacterDefeated(ally), Is.True);
+        Assert.That(inventory.IsDeathTeardown, Is.True);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void SavedDeadOwnedCharacterRestoresAsDeadAndCanRestAgain(bool hasDeathMarker)
+    {
+        CharacterItem cameraItem = Resources.Load<CharacterItem>("ItemSO/char_1_CameraGIrl");
+        inventory.TryAddItem(cameraItem);
+        CharacterObject camera = cameraItem.characterObjectData;
+        inventory.DeployTeam(new[] { main, camera }, 0);
+        inventory.TryRemoveDefeatedTeamCharacter(camera, main, out _);
+        MethodInfo capture = typeof(CharacterInventoryState).GetMethod("CaptureRunSnapshot", BindingFlags.Instance | BindingFlags.NonPublic);
+        MethodInfo apply = typeof(CharacterInventoryState).GetMethod("ApplyPersistentState", BindingFlags.Instance | BindingFlags.NonPublic);
+        object snapshot = capture.Invoke(inventory, null);
+        if (!hasDeathMarker)
+        {
+            string legacyJson = JsonUtility.ToJson(snapshot).Replace(",\"isDead\":true", string.Empty)
+                .Replace(",\"isDead\":false", string.Empty);
+            snapshot = JsonUtility.FromJson(legacyJson, snapshot.GetType());
+        }
+        PlayerRunInventory restored = Create<PlayerRunInventory>();
+        apply.Invoke(restored, new[] { snapshot });
+        Assert.That(restored.HasItem(cameraItem), Is.True);
+        Assert.That(restored.GetRunCharacter(camera).isDead, Is.True);
+        Assert.That(restored.IsCharacterUnavailable(camera), Is.True);
+        restored.DeployTeam(new[] { main, camera }, 0);
+        Assert.That(restored.ContainsTeamCharacter(camera), Is.False);
+        Assert.That(restored.TryReviveOwnedCharacter(camera, 30f), Is.True);
+        Assert.That(restored.GetRunCharacter(camera).currentHP, Is.EqualTo(30f));
     }
 
     private TeamLoader CreateLoader(CharacterObject character, out PlayerCharacter player)

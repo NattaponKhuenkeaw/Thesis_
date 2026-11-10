@@ -100,7 +100,7 @@ namespace Project.ShopSystem
             }
             ResolveItemLists();
             if (!activeItemLists.Any(list => codexInventory.allItems.Any(item => item != null
-                && MatchesItemListType(item, list.ItemType) && !ShouldExcludeFromShopRoll(item))))
+                && MatchesItemListType(item, ResolveItemListType(list)) && !ShouldExcludeFromShopRoll(item))))
             {
                 PlayPurchaseAudio(false);
                 return false;
@@ -139,13 +139,14 @@ namespace Project.ShopSystem
             BaseItem item = offer.CurrentItem;
             int quantity = offer.CurrentQuantity;
             int price = offer.CurrentPrice;
-            bool success = TryPurchase(item, quantity, price);
+            bool success = TryPurchaseItem(item, quantity, price);
             if (!success)
             {
                 return false;
             }
 
             offer.MarkSold();
+            RefreshOwnedCharacterOffers();
             OnShopOffersChanged?.Invoke();
 
             // Floor shop has no clear gate; keep the SafeZone exit passable after purchases.
@@ -183,14 +184,16 @@ namespace Project.ShopSystem
                 }
 
                 BaseItem item;
-                if (itemList.ItemType == ShopItemListType.Artifact)
+                ShopItemListType offerType = ResolveItemListType(itemList);
+                itemList.SetOfferType(offerType);
+                if (offerType == ShopItemListType.Artifact)
                 {
                     item = GetRandomArtifact(reserveEarlyArtifact);
                     reserveEarlyArtifact = false;
                 }
                 else
                 {
-                    item = GetRandomItemForType(itemList.ItemType);
+                    item = GetRandomItemForType(offerType);
                 }
                 if (item == null)
                 {
@@ -217,6 +220,17 @@ namespace Project.ShopSystem
 
         public bool TryPurchase(BaseItem item, int quantity, int price)
         {
+            bool success = TryPurchaseItem(item, quantity, price);
+            if (success && item is CharacterItem)
+            {
+                RefreshOwnedCharacterOffers();
+                OnShopOffersChanged?.Invoke();
+            }
+            return success;
+        }
+
+        private bool TryPurchaseItem(BaseItem item, int quantity, int price)
+        {
             if (playerInventory == null || item == null) return false;
 
             int purchaseQuantity = Mathf.Max(1, quantity);
@@ -236,21 +250,6 @@ namespace Project.ShopSystem
                     bool acquired = playerInventory.TryAcquireArtifact(artifact, purchasePrice, out _);
                     PlayPurchaseAudio(acquired);
                     return acquired;
-                }
-
-                if (item is CharacterItem defeatedCharacter && playerInventory.CanReacquireDefeatedCharacter(defeatedCharacter))
-                {
-                    if (!playerInventory.TryReacquireDefeatedCharacter(defeatedCharacter))
-                    {
-                        PlayPurchaseAudio(false);
-                        Debug.Log($"Cannot acquire shop item: {item.itemName}");
-                        return false;
-                    }
-
-                    playerInventory.SpendCurrency(purchasePrice);
-                    PlayPurchaseAudio(true);
-                    Debug.Log($"Acquired {item.itemName}.");
-                    return true;
                 }
 
                 AcquisitionResult result = InventoryAcquisitionResolver.Acquire(item, playerInventory, metaProgression, purchaseQuantity);
@@ -651,8 +650,9 @@ namespace Project.ShopSystem
                 return false;
             }
 
-            if (item is CharacterItem shopCharacter && !shopCharacter.availableInShop)
-                return false;
+            if (item is CharacterItem shopCharacter)
+                return shopCharacter.availableInShop && !OwnsCharacter(shopCharacter)
+                    && playerInventory.CanAddItem(item);
 
             int amount = Mathf.Max(1, quantity);
             if (item is Item)
@@ -663,11 +663,6 @@ namespace Project.ShopSystem
             if (item is ArtifactDefinition)
             {
                 return playerInventory.CanAddItem(item, amount);
-            }
-
-            if (item is CharacterItem defeatedCharacter && playerInventory.CanReacquireDefeatedCharacter(defeatedCharacter))
-            {
-                return true;
             }
 
             if (!playerInventory.HasItem(item))
@@ -691,8 +686,9 @@ namespace Project.ShopSystem
 
         private bool ShouldExcludeFromShopRoll(BaseItem item)
         {
-            if (item is CharacterItem character && !character.availableInShop)
-                return true;
+            if (item is CharacterItem character)
+                return !character.availableInShop || OwnsCharacter(character)
+                    || (playerInventory != null && playerInventory.IsCharacterUnavailable(character.characterObjectData));
 
             if (!excludeOwnedItems || playerInventory == null || item == null || !playerInventory.HasItem(item))
             {
@@ -705,6 +701,49 @@ namespace Project.ShopSystem
             }
 
             return metaProgression == null;
+        }
+
+        private bool OwnsCharacter(CharacterItem item)
+        {
+            if (playerInventory == null || item == null) return false;
+            if (playerInventory.HasItem(item)) return true;
+            CharacterObject character = item.characterObjectData;
+            if (character == null) return false;
+            return playerInventory.ownedItems.Any(owned => owned is CharacterItem ownedCharacter
+                && ownedCharacter.characterObjectData != null
+                && (ownedCharacter.characterObjectData == character
+                    || (!string.IsNullOrWhiteSpace(character.characterId)
+                        && ownedCharacter.characterObjectData.characterId == character.characterId)));
+        }
+
+        private ShopItemListType ResolveItemListType(ShopItemListUI list)
+        {
+            if (list.ConfiguredItemType != ShopItemListType.Character || codexInventory == null)
+                return list.ConfiguredItemType;
+
+            bool hasUnownedCharacter = codexInventory.allItems.Any(item => item is CharacterItem character
+                && character.availableInShop && !OwnsCharacter(character));
+            return hasUnownedCharacter ? ShopItemListType.Character : ShopItemListType.Artifact;
+        }
+
+        private void RefreshOwnedCharacterOffers()
+        {
+            foreach (ShopItemListUI list in activeItemLists)
+            {
+                if (list == null || list.IsSold || list.CurrentItem is not CharacterItem character
+                    || !OwnsCharacter(character)) continue;
+                ShopItemListType offerType = ResolveItemListType(list);
+                list.SetOfferType(offerType);
+                BaseItem item = offerType == ShopItemListType.Artifact
+                    ? GetRandomArtifact(false) : GetRandomItemForType(offerType);
+                list.Populate(item, 1, CalculateOfferPrice(item, 1));
+            }
+            currentShopItems.Clear();
+            foreach (ShopItemListUI list in activeItemLists)
+            {
+                if (list != null && !list.IsSold && list.CurrentItem != null)
+                    currentShopItems.Add(list.CurrentItem);
+            }
         }
     }
 }

@@ -55,6 +55,8 @@ public class AdminConsole : MonoBehaviour
     {
         Button[] buttons = GetComponentsInChildren<Button>(true);
         Button runBtn = null;
+        Button fullAllAEButton = null;
+        Button runCurrencyTemplate = null;
 
         foreach (var btn in buttons)
         {
@@ -65,6 +67,14 @@ public class AdminConsole : MonoBehaviour
             if (bName.Contains("RunCurrency") || bText.Contains("Run Currency"))
             {
                 runBtn = btn;
+            }
+            else if (bName.Contains("FullAllAEGauge") || bText.Contains("Full All AE Gauge"))
+            {
+                fullAllAEButton = btn;
+            }
+            else if (bName.Contains("Add +10000 Currency") || bText.Contains("+10000 Currency"))
+            {
+                runCurrencyTemplate = btn;
             }
             else if (bName.Contains("MetaCurrency") || bText.Contains("Meta Currency"))
             {
@@ -78,6 +88,52 @@ public class AdminConsole : MonoBehaviour
             runBtn.onClick.RemoveListener(AddRunCurrency1000);
             runBtn.onClick.AddListener(AddRunCurrency1000);
         }
+
+        if (fullAllAEButton == null && runCurrencyTemplate != null)
+        {
+            GameObject buttonObject = Instantiate(runCurrencyTemplate.gameObject, runCurrencyTemplate.transform.parent);
+            buttonObject.name = "FullAllAEGauge";
+            fullAllAEButton = buttonObject.GetComponent<Button>();
+            var label = buttonObject.GetComponentInChildren<TMPro.TMP_Text>(true);
+            if (label != null)
+            {
+                label.text = "Full All AE Gauge";
+            }
+        }
+
+        if (fullAllAEButton != null)
+        {
+            // The currency template has a persistent Inspector callback; replace it
+            // so the cloned button cannot also grant currency.
+            fullAllAEButton.onClick = new Button.ButtonClickedEvent();
+            fullAllAEButton.onClick.AddListener(FullAllAEGauge);
+        }
+    }
+
+    public void FullAllAEGauge()
+    {
+        TeamLoader team = TeamLoader.Instance;
+        if (team == null)
+        {
+            Debug.LogWarning("[AdminConsole] Cannot fill AE gauges because TeamLoader was not found.");
+            return;
+        }
+
+        CharacterObject[] characters = team.GetTeamSnapshot();
+        int filledCount = 0;
+        for (int i = 0; i < characters.Length; i++)
+        {
+            CharacterObject character = characters[i];
+            if (character == null)
+            {
+                continue;
+            }
+
+            team.SetCharacterCurrentAE(character, team.GetCharacterMaxAE(character));
+            filledCount++;
+        }
+
+        Debug.Log($"[AdminConsole] Filled AE gauges for {filledCount} deployed team character(s).");
     }
 
     public void TeleportPlayer()

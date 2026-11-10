@@ -71,7 +71,7 @@ namespace Project.UI
                 });
             }
 
-            pullLabel.text = "Choose a character";
+            pullLabel.text = "Choose Character Memory";
             if (!isCurrent()) yield break;
             releasePauseHold = GameFreezeManager.AcquirePauseHold();
             group.blocksRaycasts = true;
@@ -87,7 +87,7 @@ namespace Project.UI
             while (isCurrent() && !accepted && !stale)
             {
                 characterIndex = -1;
-                pullLabel.text = "Choose a character";
+                pullLabel.text = "Choose Character Memory";
                 roster.gameObject.SetActive(true);
                 GameObject focus = portraits[lastCharacter].button.gameObject;
                 while (isCurrent() && PauseMenuController.IsOpen) yield return null;
@@ -118,9 +118,8 @@ namespace Project.UI
 
                 var candidate = candidates[characterIndex];
                 int step = candidate.progress.CompletedSteps + 1;
-                string title = $"{candidate.name}   /   Memory {step} of {CharacterMemoryProgress.StepCount}";
-                pullLabel.text = title;
-                confirmPrompt = "Select again to claim   /   " + title;
+                pullLabel.text = "Choose Memory";
+                confirmPrompt = "Choose Memory";
                 bool major = CharacterMemoryProgress.IsChoiceStep(step);
                 int choiceCount = major ? CharacterMemoryProgress.ChoiceCount : 1;
                 selected = -1;
